@@ -1,0 +1,7 @@
+name = "unfold"
+uuid = "181c99d8-e21b-4ff3-b70b-c233eddec679"
+authors = ["Benedikt Ehinger <behinger@uos.de>"]
+version = "0.1.0"
+
+[deps]
+StatsModels = "3eaba693-59b7-5ba5-a881-562e759f1c8d"
