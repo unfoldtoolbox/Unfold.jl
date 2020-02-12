@@ -3,6 +3,7 @@ module unfold
 using SparseArrays
 using StatsModels
 using IterativeSolvers
+
 using DataFrames
 include("basisfunctions.jl")
 include("designmatrix.jl")
