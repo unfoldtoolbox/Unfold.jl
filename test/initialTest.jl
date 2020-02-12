@@ -25,9 +25,9 @@ evts_subset.conditionA  = Missings.disallowmissing(evts_subset.conditionA)
 basis = unfold.firbasis(τ=(-0.5,1),sfreq=10)
 
 
-form  = @formula y~1+conditionA*continuousA+(1|subject)
+form  = @formula y~1+conditionA*continuousA#+(1|subject)
 
 ufdesign          = unfold.DesignMatrix(form,evts_subset,basis)
-beta,history = unfold.fit(ufdesign.Xdc,data)
+beta,history = unfold.fit(ufdesign,data)
 
 plot(reshape(beta,length(basis.times),Int64(length(beta)/length(basis.times))))

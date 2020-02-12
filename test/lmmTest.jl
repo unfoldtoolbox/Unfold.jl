@@ -13,7 +13,7 @@ evts = CSV.read("test\\"*testCase*"_events.csv")
 
 basis = unfold.firbasis(τ=(-0.5,1),sfreq=10)
 
-form  = @formula y~1+condA*condB+(1|subject)
+form  = @formula 0~1+condA*condB+(1|subject)
 
 
 

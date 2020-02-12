@@ -1,6 +1,6 @@
 # the (sparse) lm fit & mixed model fit functionality is populated here
 function fit(ufdesign::unfold.DesignMatrix,y)
-if  0#formula has random effects
+if  false#formula has random effects
     out = fit_lmm(ufdesign,y)
 else
     out = fit_lm(ufdesign.Xdc,y)

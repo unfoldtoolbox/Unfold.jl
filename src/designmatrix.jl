@@ -24,13 +24,9 @@ function Base.show(io::IO, obj::DesignMatrix)
 end
 
 function DesignMatrix(formula::FormulaTerm,tbl::DataFrame,basisfunction::BasisFunction)
-        tbl[:,:y] .=0
-        # TODO Ask if formulas without lhs can exist
-
         #tbl, _ = StatsModels.missing_omit(tbl, formula)
-        #formula = apply_schema(formula,schema(formula,tbl),LinearMixedModel)
-        formula = apply_schema(formula,schema(formula,tbl))
-        # TODO What does the LinearMixedMOdel do?
+        formula = apply_schema(formula,schema(formula,tbl),LinearMixedModel)
+
 
         resp,X = modelcols(formula,tbl)
         ncolsX = size(X)[2]
@@ -66,7 +62,6 @@ function DesignMatrix(formula::FormulaTerm,tbl::DataFrame,basisfunction::BasisFu
                 fixefCols(col)= !isa(X,ReTerm)
 
         end
-        print(fixefCols)
         Xdc = A
 #        Xdc = A[:,fixefCols]
         #Zdc = A[:,!fixefCols]
