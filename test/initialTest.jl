@@ -21,13 +21,18 @@ evts_subset = evts[evts.type.=="stimulus2",:]
 evts_subset.continuousA = Missings.disallowmissing(evts_subset.continuousA)
 evts_subset.conditionA  = Missings.disallowmissing(evts_subset.conditionA)
 
-
+##
 basis = unfold.firbasis(τ=(-0.5,1),sfreq=10)
-
-
 form  = @formula y~1+conditionA*continuousA#+(1|subject)
 
 ufdesign          = unfold.DesignMatrix(form,evts_subset,basis)
 beta,history = unfold.fit(ufdesign,data)
 
 plot(reshape(beta,length(basis.times),Int64(length(beta)/length(basis.times))))
+##
+
+formula = @formula 0~1+conditionA*continuousA
+formula  = apply_schema(formula,schema(formula,evts_subset))#+(1|subject)
+basisfunction = unfold.firbasis(τ=(-0.5,1),sfreq=10)
+form2 = unfold.TimeExpandedTerm(formula.rhs,basisfunction)
+Xdc = modelcols(form2,evts_subset)
