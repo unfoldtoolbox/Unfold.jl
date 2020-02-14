@@ -28,11 +28,17 @@ form  = @formula y~1+conditionA*continuousA#+(1|subject)
 ufdesign          = unfold.DesignMatrix(form,evts_subset,basis)
 beta,history = unfold.fit(ufdesign,data)
 
-plot(reshape(beta,length(basis.times),Int64(length(beta)/length(basis.times))))
 ##
-
-formula = @formula 0~1+conditionA*continuousA
-formula  = apply_schema(formula,schema(formula,evts_subset))#+(1|subject)
-basisfunction = unfold.firbasis(τ=(-0.5,1),sfreq=10)
-form2 = unfold.TimeExpandedTerm(formula.rhs,basisfunction)
+f = @formula 0~1+conditionA*continuousA
+tbl = evts
+formula  = apply_schema(f,schema(f,tbl))#+(1|subject)
+formula = unfold.TimeExpandedTerm(formula.rhs,basisfunction)
 Xdc = modelcols(form2,evts_subset)
+
+
+basisfunction = unfold.firbasis(τ=(-0.5,1),sfreq=10)
+
+m = unfold.fit(unfold.UnfoldLinearModel,f,tbl,dropdims(data,dims=1),basisfunction)
+
+
+plot(reshape(m.beta,length(m.basisfunction.times),Int64(length(m.beta)/length(m.basisfunction.times))))
