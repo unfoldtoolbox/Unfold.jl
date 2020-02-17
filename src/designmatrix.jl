@@ -13,11 +13,12 @@ function StatsModels.coefnames(term::TimeExpandedTerm)
         end
         return kron(names.*" : ",string.(times))
 end
-
+function StatsModels.coefnames(term::MixedModels.ZeroCorr)
+        coefnames(term.term)
+end
 function StatsModels.coefnames(term::RandomEffectsTerm)
         coefnames(term.lhs)
 end
-
 function TimeExpandedTerm(term,basisfunction;eventtime=:latency)
         TimeExpandedTerm(term, basisfunction,eventtime)
 end
@@ -29,10 +30,7 @@ function Base.show(io::IO, p::TimeExpandedTerm)
         println(io,"")
  end
 
-# This captures (FeTerm,ReTerm,REterm...)
-# function StatsModels.modelcols(term::TimeExpandedTerm{<:NTuple{N,AbstractTerm}} where {N},tbl)
-#
-# end
+
 
 function StatsModels.modelcols(term::TimeExpandedTerm,tbl)
         X = modelcols(term.term,tbl)
@@ -52,7 +50,7 @@ function StatsModels.modelcols(term::TimeExpandedTerm{<:RandomEffectsTerm},tbl)
         time = tbl[term.eventtime]
         onsets = time_expand_getRandomGrouping(group,time,term.basisfunction)
         #print(size(reMat.z))
-        refs = zeros(size(z)[2])
+        refs = zeros(size(z)[2]).+1
         for (i,o) in enumerate(onsets[2:end])
                 if (minimum(o) <= maximum(onsets[i+1])) & (maximum(o) <= minimum(onsets[i+1]))
                         error("overlap in random effects structure detected, not currently supported")
@@ -62,6 +60,7 @@ function StatsModels.modelcols(term::TimeExpandedTerm{<:RandomEffectsTerm},tbl)
 
         # because the above method with refs did not work, because he complains about not increasing values, I do it hacky:
         # we can assume no overlap by here!
+        refs = zeros(size(z)[2]).+1
         uGroup = unique(group)
         for (i,g) = enumerate(uGroup[1:end-1])
                 ix_start = findfirst(g.==group)
@@ -69,12 +68,19 @@ function StatsModels.modelcols(term::TimeExpandedTerm{<:RandomEffectsTerm},tbl)
                         ix_start = 1
                 end
                 ix_end = findfirst(uGroup[i+1].==group)
-                refs[ix_start:ix_end] .= g
+
+                refs[Int64(time[ix_start]):Int64(time[ix_end])] .= g
         end
         # due to local scope
         ix_end = findlast(uGroup[end-1].==group)
-        refs[ix_end:end] .= uGroup[end]
+        refs[Int64(time[ix_end]):end] .= uGroup[end]
+        println(size(refs))
+        println(minimum(refs))
+        println(maximum(refs))
+        println(size(z))
 
+        print(refs[1:100])
+        print(refs[end-100:end])
         wtz = z
         trm = term
 
@@ -83,8 +89,17 @@ function StatsModels.modelcols(term::TimeExpandedTerm{<:RandomEffectsTerm},tbl)
         λ  = LowerTriangular(Matrix{T}(I, S, S))
 
         inds = MixedModels.sizehint!(Int[], (S * (S + 1)) >> 1)
+        m = reshape(1:abs2(S), (S, S))
+        inds = sizehint!(Int[], (S * (S + 1)) >> 1)
+        for j = 1:S, i = j:S
+                if i == j # for diagonal
+                        push!(inds, m[i, j])
+                end
+        end
 
-        levels = nothing#vcat(transpose(hcat(repeat([reMat.levels],1,ntimes)...))...)
+
+
+        levels = reMat.levels#vcat(transpose(hcat(repeat([reMat.levels],1,ntimes)...))...)
         refs =refs
 
 
@@ -94,7 +109,7 @@ function StatsModels.modelcols(term::TimeExpandedTerm{<:RandomEffectsTerm},tbl)
         adjA = MixedModels.adjA(refs, z)
         scratch = Matrix{T}(undef, (S, length(uGroup)))
 
-        MixedModels.ReMat(trm,
+        ReMat{T,S}(term.term.rhs,
         refs,
         levels,
         cnames,
@@ -138,11 +153,12 @@ function time_expand(X,term,tbl)
         A = spzeros(ceil(maximum(tbl.latency))+npos+1,ntimes*ncolsX)
         for row in 1:nrowsX
                 onset = tbl[term.eventtime][row]
-                fromRowIx = floor(onset)-nneg
-                toRowIx = floor(onset)+npos
 
                 basis = term.basisfunction.kernel(onset)
                 for col in 1:ncolsX
+                        fromRowIx = floor(onset)-nneg
+                        toRowIx = floor(onset)+npos
+
                         content = X[row,col]
                         # move it by the event latency
 
@@ -150,12 +166,12 @@ function time_expand(X,term,tbl)
 
                         # border case of very early event
                         if fromRowIx<1
+                                tmp = (abs(fromRowIx)+2)
+                                Gc = Gc[tmp:end,:]
                                 fromRowIx = 1
-                                Gc = Gc[sum(fromRowIx.<0):end,:]
                         end
                         fromColIx = 1+(col-1)*ntimes
                         toColIx = fromColIx + ntimes
-
                         A[fromRowIx:toRowIx,fromColIx:toColIx-1] = sparse(Gc)
                 end
         end

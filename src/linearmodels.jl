@@ -1,19 +1,19 @@
-struct UnfoldLinearMixedModel{T<:AbstractMatrix,T2<:AbstractMatrix}
+struct UnfoldModel{M<:Union{AbstractArray{LinearMixedModel},LinearMixedModel}}
+    model::M
     formula::FormulaTerm
     tbl::DataFrame
-    lmm::MixedModel
+    results::DataFrame
 end
 
-struct UnfoldLinearModel{T<:AbstractMatrix,T2<:AbstractMatrix}
-    formula::FormulaTerm
-    tbl::DataFrame
-    X::T
-    beta::T2
-    optim::Any
-end
-
-
-function Base.show(io::IO, obj::UnfoldLinearModel)
+function Base.show(io::IO, obj::UnfoldModel)
         println(io, "LinearModelTimeExpanded object")
         println(io, "formula: $(obj.formula)")
+end
+
+struct UnfoldLinearModel
+
+end
+
+struct UnfoldLinearMixedModel
+
 end
