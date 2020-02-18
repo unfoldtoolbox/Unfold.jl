@@ -20,6 +20,9 @@ import Plots
 import unfold
 Plots.gr()
 ```
+
+In this notebook we will fit regression models to (simulated) EEG data. We will see that we need some type of overlap correction, as external events are so close to each other, that the respective brain responses overlap.
+If you want more detailed introduction to this topic check out my paper: https://peerj.com/articles/7838/
 ```julia
 testCase = "testCase2"
 #testCase = "testCaseMultisubject"
@@ -39,7 +42,8 @@ Plots.plot(data[1:300])
 
 
 ## Traditional Mass Univariate Analysis
-We will first epoch the data and fit a linear model to each time point.
+In order to demonstrate why overlap correction is important, we will first epoch the data and fit a linear model to each time point.
+This is a "traditional mass-univariate analysis".
 ```julia
 # for future multi-channel support (not yet there!)
 data_r = reshape(data,(1,:))
@@ -133,7 +137,7 @@ plot(d,x=:time,y=:estimate,color=:term,Geom.LineGeometry)
 ```
 
 
-```julia;eval=false
+```julia;eval=false;echo=false
 using Weave
 
 # convert to html

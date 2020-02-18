@@ -1,12 +1,8 @@
 function condense(m,tbl,times)
     # no random effects no Timeexpansion
-    println(coefnames(m.formula))
-    println(times)
     cnames = coefnames(m.formula.rhs)
     cnames_rep = repeat(cnames,length(times))
-    if typeof(times) <: Number
-        times = [times]
-    end
+
     times_rep = repeat(times,1,length(cnames))
     times_rep = dropdims(reshape(times_rep',:,1),dims=2)
 
@@ -21,12 +17,14 @@ function condense(m,tbl,times)
 
 end
 
-function condense(mm_array::Array{MixedModel},tbl,times)
+function condense(mm_array::Array{LinearMixedModel,1},tbl,times)
     # with random effects, no timeexpansion
+
     results = condense_fixef.(mm_array,times)
 
     results = vcat(results,condense_ranef.(mm_array,times))
-    return UnfoldModel(mm_array,mm_array[1].formula,tbl,results)
+    # XXX TODO Return an Array of Models, not only the first one!
+    return UnfoldModel(mm_array[1],mm_array[1].formula,tbl,vcat(results...))
 
 end
 
@@ -63,12 +61,13 @@ function condense_fixef(mm,times)
     else
         fixefPart = mm.formula.rhs
     end
+    if typeof(times) <: Number
+        times = [times]
+    end
     cnames = [c[1] for c in split.(coefnames(fixefPart)," :")]
-    println(size(times))
+
     times =  repeat(times,length(unique(cnames)))
 
-    println(length(unique(cnames)))
-    println(size(cnames))
     #size(fixefPart)
     return DataFrame(term=cnames,estimate=MixedModels.fixef(mm),stderror=MixedModels.stderror(mm),group="fixed",time=times)
 end
@@ -97,7 +96,9 @@ function condense_ranef(mm,times)
     for n in zip(nmvec,nvec)
         append!(group,repeat([n[1]],n[2]))
     end
-
+    if typeof(times) <: Number
+        times = [times]
+    end
     times =  repeat(times,length(unique(cnames)))
     # combine
     return DataFrame(term=cnames,estimate=σvec,stderror=NaN,group=group,time=times)

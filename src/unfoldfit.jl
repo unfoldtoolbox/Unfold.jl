@@ -5,21 +5,21 @@ function fit(::Type{UnfoldLinearMixedModel},f::FormulaTerm,tbl::DataFrame,data::
 
 
     tbl,y = dropMissingEpochs(tbl,data)
-    println(typeof(y))
-    println(typeof(Array{Float64}(y)))
+
     form  = apply_schema(f,schema(f,tbl,contrasts),LinearMixedModel)
 
     X = modelcols(form.rhs,tbl)
     #
 
-    df = []
+    df = Array{LinearMixedModel,1}()
     for t in range(1,stop=size(data,2))
 
         mm = LinearMixedModel_wrapper(form,y[:,t,:],X)
         fit!(mm)
         push!(df,mm)
     end
-    condense.(df,Ref(tbl),times)
+
+    condense(df,tbl,times)
 
 end
 

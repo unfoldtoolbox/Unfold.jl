@@ -10,7 +10,7 @@ struct UnfoldLinearMixedModel
 end
 
 
-struct UnfoldModel{M<:Union{AbstractArray{Union{UnfoldLinearModel,UnfoldLinearMixedModel}},UnfoldLinearModel,LinearMixedModel,UnfoldLinearMixedModel}}
+struct UnfoldModel{M<:Union{AbstractArray{Union{LinearMixedModel,UnfoldLinearModel,UnfoldLinearMixedModel},1}, UnfoldLinearModel,LinearMixedModel,UnfoldLinearMixedModel}}
     model::M
     formula::FormulaTerm
     tbl::DataFrame
