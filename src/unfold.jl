@@ -10,6 +10,7 @@ using MixedModels
 using StatsBase
 using LinearAlgebra
 using Tables
+using GLM
 import MixedModels.FeMat
 include("linearmodels.jl")
 include("basisfunctions.jl")

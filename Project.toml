@@ -4,10 +4,12 @@ authors = ["Benedikt Ehinger <behinger@uos.de>"]
 version = "0.1.0"
 
 [deps]
+Cairo = "159f3aea-2a34-519c-b102-8c37f9878175"
 DSP = "717857b8-e6f2-59f4-9121-6e50c889abd2"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DataFramesMeta = "1313f7d8-7da2-5740-9ea0-a2ca25f37964"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+GLM = "38e38edf-8417-5370-95a0-9cbb8c7f171a"
 Gadfly = "c91e804a-d5a3-530f-b6f0-dfbca275c004"
 IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a"
 IterativeSolvers = "42fd0dbc-a981-5370-80f2-aaf504508153"

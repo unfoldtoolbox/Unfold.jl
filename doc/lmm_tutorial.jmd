@@ -1,6 +1,6 @@
 ---
-title: "Overlap Correction with Mixed Models"
-author: "Benedikt Ehinger, Dave Kleinschmidt"
+title: "Overlap Correction with Linear Mixed Models (aka unmixed.jl)"
+author: "Benedikt Ehinger with help from Dave Kleinschmidt"
 date: 2020-02-17
 ---
 
@@ -13,6 +13,9 @@ using DataFrames
 using DataFramesMeta
 import Plots
 import unfold
+using Gadfly
+using DataFramesMeta
+
 Plots.gr()
 ```
 ## Reading input
@@ -22,9 +25,9 @@ The output we have is for the formula `y~1+condA + (1+condA|subject) + (1|item)`
 That is, the `(1|item)` cannot be modelled at the moment.
 
 ```julia
-testCase = "testCaseMultisubject_small"
+testCase = "testCaseMultisubject2"
 data = CSV.read("test\\"*testCase*"_data.csv", header=0)
-data = convert(Matrix,data)
+data = convert(Array,data)
 evts = CSV.read("test\\"*testCase*"_events.csv")
 categorical!(evts,:subject);
 ```
@@ -34,19 +37,34 @@ first(evts,6)
 ```
 With the important fields being `latency`, `condA`, `condB` and `subject`.
 
-The data are a big vector
+The data are a vector.
 ```julia
 println(typeof(data))
 println(size(data))
 ```
+**Limitation** Note how small it is! Only 12k samples, that is only ~5minutes of recording in total for 25 subjects. More realistic samples quickly take hours to fit.
 We are now ready to go for the model!
 
 We define the formula & basis function identically to the linear model case.
 ```julia
-f  = @formula 0~1+condA*condB+(1+condA*condB|subject);
-basisfunction = unfold.firbasis(τ=(-0.1,.4),sfreq=50)
+f  = @formula 0~1+condA*condB+(1|subject);
 ```
-**Limitation:** Currently we cannot model correlation between time-points / random slopes.
+
+```julia
+data_r = reshape(data,(1,:))
+# cut the data into epochs
+data_epochs,times = unfold.epoch(data=data_r,tbl=evts,τ=(-0.4,0.8),sfreq=50)
+```
+
+```julia
+m = unfold.fit(unfold.UnfoldLinearMixedModel,f,evts,data_epochs,times)
+```
+
+```julia
+basisfunction = unfold.firbasis(τ=(-0.05,.4),sfreq=40)
+```
+**Limitation:** Currently we cannot model correlation between time-points or random slopes.
+**Limitation:** See the low sampling frequency? This is because the modelfit increases quadratically with the number of predictors
 
 We can now run the mixed model
 Simple way: Specify formula, events, EEG-data & the basis function
@@ -54,16 +72,20 @@ Simple way: Specify formula, events, EEG-data & the basis function
 @time mm = unfold.fit(unfold.UnfoldLinearMixedModel,f,evts,data,basisfunction)
 ```
 
-We receive back an object containing a *tidy*-dataframe with the results
+
+We receive back an object containing the mixed model:
+```julia
+print(mm.model)
+```
+
+And also a *tidy*-dataframe with the results
 ```julia
 first(mm.results,6)
 ```
 
-and we can plot the fixed effect results.
+and thus we can easily plot the fixed effect results.
 ```julia
-using Gadfly
-using DataFramesMeta
-Gadfly.push_theme(:dark)
+#Gadfly.push_theme(:dark)
 
 d = @linq mm.results |> where(:group.=="fixed")
 plot(d,x=:time,y=:estimate,color=:term,Geom.LineGeometry)
@@ -77,16 +99,15 @@ plot(d,x=:time,y=:estimate,color=:term,Geom.LineGeometry)
 
 ```
 
-
-More verbose way:
+## What is happening under the hood?
 ```julia
-Xs,data2,form = unfold.LinearMixedModel_formula(f,evts,data,basisfunction, contrasts = Dict{Symbol,Any}())
+Xs,data2,form = unfold.LinearMixedModel_formula(f,evts,data,basisfunction, contrasts = Dict{Symbol,Any}());
 ```
 
 Formula-Terms are wrapped with a `TimeExpandedTerm`, which upon calling `modelcols` will timeexpand the designmatrix.
 There is one TimeExpandedTerm for the FixedEffects and one for each RandomEffectsTerm. **Limitation** Currently it is not possible to combine different formulas & different basis-functions, but that is planned
 ```julia
-dump(form.rhs)
+typeof(form.rhs)
 ```
 
 Visualizing the designmatrices.
@@ -97,15 +118,18 @@ Plots.heatmap(Matrix(Xs[1][1:300,:]))
 
 Random Effects
 ```julia
-Plots.heatmap(Matrix(Xs[2][1:2000,1:1000]))
+Plots.heatmap(Matrix(Xs[2][1:2000,1:500]))
 ```
 
-```julia
+
+And finally, generate the linear mixed model manually & fit it.
+```julia;eval=false
 mm = unfold.LinearMixedModel_wrapper(form,data2,Xs)
 fit!(mm)
 mm = unfold.condense(mm,evts)
 #@time mm = unfold.fit(unfold.UnfoldLinearMixedModel,f,evts,data,basisfunction)
 ```
+
 
 
 ```julia;eval=false

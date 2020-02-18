@@ -1,6 +1,6 @@
 ---
 title: "Overlap Correction with Linear Models (aka unfold.jl)"
-author: "Benedikt Ehinger, Dave Kleinschmidt"
+author: "Benedikt Ehinger, with help Dave Kleinschmidt"
 date: 2020-02-17
 options:
     line_width: 92
@@ -14,37 +14,67 @@ using StatsModels
 using MixedModels
 using DataFrames
 using DataFramesMeta
+using Gadfly
 import DSP
 import Plots
 import unfold
 Plots.gr()
 ```
 ```julia
-testCase = "testCase15"
+testCase = "testCase2"
 #testCase = "testCaseMultisubject"
 data = CSV.read("test\\"*testCase*"_data.csv", header=0)
 data = convert(Matrix,data)
 data = dropdims(data,dims=1) # convert to vector
 evts = CSV.read("test\\"*testCase*"_events.csv");
 ```
-For now we have to subset the data to contain only event-type. (limitation: We also have to remove some missings)
 ```julia
-evts_subset = evts[evts.type.=="stimulus2",:]
+show(first(evts,6,),allcols=true)
+```
 
-# Is it possible to pass Missing Type through? That would be fantastic
-evts_subset.continuousA = Missings.disallowmissing(evts_subset.continuousA)
-evts_subset.conditionA  = Missings.disallowmissing(evts_subset.conditionA);
-```
-```julia
-showall(first(evts_subset,6,))
-```
 The data has little noise and the underlying signal is a pos-neg spike pattern
 ```julia
 Plots.plot(data[1:300])
 ```
 
+
+## Traditional Mass Univariate Analysis
+We will first epoch the data and fit a linear model to each time point.
+```julia
+# for future multi-channel support (not yet there!)
+data_r = reshape(data,(1,:))
+# cut the data into epochs
+data_epochs,times = unfold.epoch(data=data_r,tbl=evts,τ=(-0.4,0.8),sfreq=50)
+```
+
+We define a formula that we want to apply to each point in time
+```julia
+f  = @formula 0~1+conditionA*conditionB
+```
+
+We fit the special-type `UnfoldLinearModel` to the data
+```julia
+m = unfold.fit(unfold.UnfoldLinearModel,f,evts,data_epochs,times)
+```
+The object has the following fields
+```julia
+println(typeof(m))
+println(fieldnames(typeof(m)))
+```
+Which contain the model, the original formula, the original events and also a *tidy*-dataframe with the results
+```julia
+first(m.results,6)
+```
+
+We can also plot it using Gadfly
+```julia
+d = @linq m.results |> where(:group.=="mass univariate")
+plot(d,x=:time,y=:estimate,color=:term,Geom.LineGeometry)
+```
+
+
 ## Basis Functions
-### HRF / BOLD
+#### HRF / BOLD
 We are now ready to define a basisfunction. There are currently only two basisfunction implemented, so not much choice.
 We first have a look at the BOLD-HRF basisfunction:
 
@@ -70,7 +100,7 @@ Note that events could fall inbetween TR (the sampling rate). Some packages subs
 Okay, let's have a look at a different basis function: The FIR basisfunction.
 
 ```julia
-basisfunction = unfold.firbasis(τ=(-0.2,.4),sfreq=50)
+basisfunction = unfold.firbasis(τ=(-0.4,.8),sfreq=50)
 Plots.plot(basisfunction.kernel(0))
 ```
 
@@ -82,30 +112,27 @@ The FIR basisset consists of multiple basisfunctions. That is, each event will n
 This allows to model any arbitrary linear overlap shape, and doesn't force us to make assumptions on the convolution kernel (like we had to do in the BOLD case)
 
 
-## Single Subject ModelFit
-We can now define a formula
+## Timeexpanded / Deconvolved ModelFit
+We can now define the formula again
 ```julia
-f  = @formula 0~1+conditionA*continuousA#+(1|subject)
+f  = @formula 0~1+conditionA*conditionB
 ```
 
-And fit a `UnfoldLinearModel`
+For the left-handside we use "0" as the data is separated from the events. This will in the future allow us to fit multiple channels easily.
+
+And fit a `UnfoldLinearModel`. Not that instead of `times` as in the mass-univariate case, we have a `BasisFunction` object now.
 ```julia
-# TODO write the converter to the UnfoldObject
-#beta,history =
-m = unfold.fit(unfold.UnfoldLinearModel,f,evts_subset,data,basisfunction)
+m = unfold.fit(unfold.UnfoldLinearModel,f,evts,data,basisfunction)
 ```
 
 ```julia
-using Gadfly
-using DataFramesMeta
-Gadfly.push_theme(:dark)
-
+#Gadfly.push_theme(:dark)
 d = @linq m.results |> where(:group.=="fixed")
 plot(d,x=:time,y=:estimate,color=:term,Geom.LineGeometry)
 
 ```
 
-# TODO plotting
+
 ```julia;eval=false
 using Weave
 

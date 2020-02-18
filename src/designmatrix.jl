@@ -62,18 +62,40 @@ function StatsModels.modelcols(term::TimeExpandedTerm{<:RandomEffectsTerm},tbl)
         # we can assume no overlap by here!
         refs = zeros(size(z)[2]).+1
         uGroup = unique(group)
-        for (i,g) = enumerate(uGroup[1:end-1])
-                ix_start = findfirst(g.==group)
-                if i == 1
-                        ix_start = 1
-                end
-                ix_end = findfirst(uGroup[i+1].==group)
+        #println(group)
+        for (i,g) = enumerate(uGroup[1:end])
 
-                refs[Int64(time[ix_start]):Int64(time[ix_end])] .= g
+                ix_start = findfirst(g.==group)
+                ix_end = findlast(g.==group)
+                if i == 1
+                        time_start = 1
+                else
+                        time_start = time[ix_start]
+                        time_start = time_start - sum(term.basisfunction.times.<=0)
+                end
+                if i == length(uGroup)
+                        time_stop = size(refs,1)
+                else
+                        time_stop = time[ix_end]
+                        time_stop = time_stop + sum(term.basisfunction.times.>0)
+                end
+                if time_start < 0
+                        time_start = 1
+                end
+
+                if time_stop > size(refs,1)
+                        time_stop = size(refs,1)
+                end
+
+
+                #println("$g,$time_start,$time_stop")
+                refs[Int64(time_start):Int64(time_stop)] .= g
         end
+        #println( sum(term.basisfunction.times.<=0))
         # due to local scope
-        ix_end = findlast(uGroup[end-1].==group)
-        refs[Int64(time[ix_end]):end] .= uGroup[end]
+        #ix_end = findlast(uGroup[end-1].==group)
+        #print("new2")
+        #refs[Int64(time[ix_end]):end] .= uGroup[end]
 
         wtz = z
         trm = term
