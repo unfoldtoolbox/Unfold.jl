@@ -1,4 +1,16 @@
-struct UnfoldModel{M<:Union{AbstractArray{LinearMixedModel},LinearMixedModel}}
+struct UnfoldLinearModel
+    beta::AbstractArray
+    optim
+    formula::FormulaTerm
+    X::AbstractArray
+end
+
+struct UnfoldLinearMixedModel
+
+end
+
+
+struct UnfoldModel{M<:Union{AbstractArray{Union{UnfoldLinearModel,UnfoldLinearMixedModel}},UnfoldLinearModel,LinearMixedModel,UnfoldLinearMixedModel}}
     model::M
     formula::FormulaTerm
     tbl::DataFrame
@@ -10,10 +22,9 @@ function Base.show(io::IO, obj::UnfoldModel)
         println(io, "formula: $(obj.formula)")
 end
 
-struct UnfoldLinearModel
-
-end
-
-struct UnfoldLinearMixedModel
-
+function Base.show(io::IO, obj::UnfoldModel)
+    println(io, "UnfoldModel")
+    # TODO Save the original formula without time expansion
+    println(io, "Unique Terms: $(unique(obj.results.term))")
+    println(io, "Times: $(minimum(obj.results.time)) : $(maximum(obj.results.time))")
 end

@@ -16,5 +16,5 @@ include("basisfunctions.jl")
 include("designmatrix.jl")
 include("unfoldfit.jl")
 include("utilities.jl")
-
+include("condense.jl")
 end # module

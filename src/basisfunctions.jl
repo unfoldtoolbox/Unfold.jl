@@ -44,14 +44,18 @@ end
 
 #TODO Find out how to move the default inside the real boldbasis
 # Helper function for named arguments
-function hrfbasis(;TR::Float64,parameters::Float64= [6 16 1 1 6 0 32])
-    boldbasis(TR,parameters)
-end
+#function hrfbasis(;TR::Float64,parameters::Array{Union{Float,Integer}})
+#    hrfbasis(TR,parameters)
+#end
+
+#function hrfbasis(;TR::Float64)
+#    hrfbasis(TR)
+#end
 # Helper function to use sfreq instead of TR
-function hrfbasis(sfreq::Float64;parameters::Float64= [6 16 1 1 6 0 32])
-    boldbasis(sfreq,parameters)
-end
-function hrfbasis(TR::Float64;parameters::Float64= [6 16 1 1 6 0 32])
+#function hrfbasis(sfreq::Float64;parameters::Float64= [6 16 1 1 6 0 32])
+#    hrfbasis(sfreq,parameters)
+#end
+function hrfbasis(TR::Float64;parameters= [6. 16. 1. 1. 6. 0. 32.])
     # Haemodynamic response function adapted from SPM12b "spm_hrf.m"
     # Parameters:
     #                                                           defaults
@@ -66,7 +70,7 @@ function hrfbasis(TR::Float64;parameters::Float64= [6 16 1 1 6 0 32])
     times = 0
     kernel=e->hrfkernel(e,TR,parameters)
     type = "hrfkernel"
-    return BasisFunction(kernel,times,type)
+    return BasisFunction(kernel,[times],type)
 end
 
 function hrfkernel(e,TR,p)

@@ -3,7 +3,7 @@ for k = [1 15]
     
     switch k
         case 1
-            
+            %%
             % Basis functions
             intercept = struct();
             intercept.eventname = 'stimulus2';
@@ -32,11 +32,11 @@ for k = [1 15]
             signals{1}(3).overlap = -1;
             signals{1}(3).effectsize= -1.5;
             
-            EEGsim = simulate_data(signals,'noise',0);
+            EEGsim = simulate_data(signals,'noise',0.5,'basis','posneg');
             
         case 15
             
-            EEGsim = simulate_test_case(15,'noise',0,'basis','box');
+            EEGsim = simulate_test_case(15,'noise',0,'basis','posneg');
     end
     csvwrite(sprintf('../test/testCase%i_data.csv',k),EEGsim.data)
     writetable(struct2table(EEGsim.event),sprintf('../test/testCase%i_events.csv',k))

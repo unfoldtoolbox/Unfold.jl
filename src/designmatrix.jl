@@ -27,7 +27,7 @@ end
 
 function Base.show(io::IO, p::TimeExpandedTerm)
         #print(io, "timeexpand($(p.term), $(p.basisfunction.type),$(p.basisfunction.times))")
-        println(io,"")
+        println(io,"$(coefnames(p))")
  end
 
 
@@ -74,13 +74,7 @@ function StatsModels.modelcols(term::TimeExpandedTerm{<:RandomEffectsTerm},tbl)
         # due to local scope
         ix_end = findlast(uGroup[end-1].==group)
         refs[Int64(time[ix_end]):end] .= uGroup[end]
-        println(size(refs))
-        println(minimum(refs))
-        println(maximum(refs))
-        println(size(z))
 
-        print(refs[1:100])
-        print(refs[end-100:end])
         wtz = z
         trm = term
 
@@ -172,7 +166,8 @@ function time_expand(X,term,tbl)
                         end
                         fromColIx = 1+(col-1)*ntimes
                         toColIx = fromColIx + ntimes
-                        A[fromRowIx:toRowIx,fromColIx:toColIx-1] = sparse(Gc)
+
+                        A[fromRowIx:toRowIx,fromColIx:toColIx-1] = A[fromRowIx:toRowIx,fromColIx:toColIx-1]+sparse(Gc)
                 end
         end
         return(A)

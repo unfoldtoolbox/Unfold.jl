@@ -1,33 +1,55 @@
 
-times = [parse(Float64,k[2]) for k in split.(string.(names(d_tmp)[4:end]),'_')]
-pred = [k[1] for k in split.(string.(names(d_tmp)[4:end]),'_')]
-#times = parse.(Float64,string.(names(d_tmp)[3:end]))
-p_df = DataFrame(times = times,beta = fixef(mm)[2:end],cond = pred,se=stderror(mm)[2:end])
+function condense(mm,tbl)
 
-vc = VarCorr(mm).σρ
+    # TODO loop over al timeexpanded basisfunctions, in case there are multiple ones in case of multiple events
+    # TODO random correlations
+    # TODO somehow get rid of the split of the coefficient names. What if there is a ":" in a coefficient name?
+    if typeof(mm) == MixedModel
+        fixefPart = mm.formula.rhs[1]
+    else
+        fixefPart = mm.formula.rhs
+    end
+    cnames = [c[1] for c in split.(coefnames(fixefPart)," :")]
+    times =  repeat(fixefPart.basisfunction.times,length(unique(cnames)))
 
-ranef_sub =[k for k in vc[1].σ][2:end]
-ranef_stim = []
-groups = [v[1] for v in pairs(vc)]
-content = [v[2].σ for v in pairs(vc)]
+    # fixefs are easy
+    results = DataFrame(term=cnames,estimate=fixef(mm),stderror=stderror(mm),group="fixed",time=times)
 
-σρ = vc
-nmvec = string.([keys(σρ)...])
-cnmvec = string.(foldl(vcat, [keys(sig)...] for sig in getproperty.(values(σρ), :σ)))
-σvec = vcat(collect.(values.(getproperty.(values(σρ), :σ)))...)
-nvec = length.(keys.(getproperty.(values(vc),:σ)))
-
-nmvec2 = []
-for n in zip(nmvec,nvec)
-    append!(nmvec2,repeat([n[1]],n[2]))
+    # ranefs more complex
+    if typeof(mm) == MixedModel
+        cnames,σvec,group = condense_ranef(mm)
+        times =  repeat(fixefPart.basisfunction.times,length(unique(cnames)))
+        # combine
+        results = vcat(results,DataFrame(term=cnames,estimate=σvec,stderror=NaN,group=group,time=times))
+    end
+    #return
+    return UnfoldModel(mm,mm.formula,tbl,results)
 end
 
-p_ranef = DataFrame(grouping = [k[1] for k in split.(nmvec2,'_')],σ=σvec,term=cnmvec)
-p_ranef = p_ranef[2:end,:] # remove the lonely intercept
-p_ranef.times = [parse(Float64,k[2]) for k in split.(p_ranef.term,'_')]
-p_ranef.term = [k[1] for k in split.(p_ranef.term,'_')]
 
-plot(p_ranef,x=:times,y=:σ,color=:term,linestyle=:grouping,xgroup=:grouping,Geom.subplot_grid(Geom.LineGeometry))
+function fixef(m::UnfoldLinearModel)
+    # condense helper for the linear model which just returns a vector of fixef
+     return m.beta
+end
+function stderror(m::UnfoldLinearModel)
+    # for now we don't have an efficient way to calculate SEs for single subjects
+    return fill(NaN,size(m.beta))
+end
+function condense_ranef(mm)
+    vc = VarCorr(mm)
+    σρ = vc.σρ
 
-p_df.ymin = p_df.beta-p_df.se
-p_df.ymax = p_df.beta+p_df.se
+    cnames = string.(foldl(vcat, [keys(sig)...] for sig in getproperty.(values(σρ), :σ)))
+    cnames = [c[1] for c in split.(cnames," :")]
+
+    σvec = vcat(collect.(values.(getproperty.(values(σρ), :σ)))...)
+
+
+    nmvec = string.([keys(σρ)...])
+    nvec = length.(keys.(getproperty.(values(σρ),:σ)))
+    nmvec2 = []
+    for n in zip(nmvec,nvec)
+        append!(nmvec2,repeat([n[1]],n[2]))
+    end
+    return cnames,σvec,nmvec2
+end

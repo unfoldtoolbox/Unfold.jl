@@ -1,0 +1,122 @@
+---
+title: "Overlap Correction with Mixed Models"
+author: "Benedikt Ehinger, Dave Kleinschmidt"
+date: 2020-02-17
+---
+
+```julia;label=packages;
+using Revise
+using CSV
+using StatsModels
+using MixedModels
+using DataFrames
+using DataFramesMeta
+import Plots
+import unfold
+Plots.gr()
+```
+## Reading input
+The data were simulated in MatLab using the `unfold toolbox (www.unfoldtoolbox.org)` with `EEG_to_csv.m`.
+The output we have is for the formula `y~1+condA + (1+condA|subject) + (1|item)`
+**Limitation**: due to current implementation in MixedModels.jl, we cannot fit overlap-corrected random effects.
+That is, the `(1|item)` cannot be modelled at the moment.
+
+```julia
+testCase = "testCaseMultisubject_small"
+data = CSV.read("test\\"*testCase*"_data.csv", header=0)
+data = convert(Matrix,data)
+evts = CSV.read("test\\"*testCase*"_events.csv")
+categorical!(evts,:subject);
+```
+The `events` dataFrame looks like this
+```julia
+first(evts,6)
+```
+With the important fields being `latency`, `condA`, `condB` and `subject`.
+
+The data are a big vector
+```julia
+println(typeof(data))
+println(size(data))
+```
+We are now ready to go for the model!
+
+We define the formula & basis function identically to the linear model case.
+```julia
+f  = @formula 0~1+condA*condB+(1+condA*condB|subject);
+basisfunction = unfold.firbasis(τ=(-0.1,.4),sfreq=50)
+```
+**Limitation:** Currently we cannot model correlation between time-points / random slopes.
+
+We can now run the mixed model
+Simple way: Specify formula, events, EEG-data & the basis function
+```julia
+@time mm = unfold.fit(unfold.UnfoldLinearMixedModel,f,evts,data,basisfunction)
+```
+
+We receive back an object containing a *tidy*-dataframe with the results
+```julia
+first(mm.results,6)
+```
+
+and we can plot the fixed effect results.
+```julia
+using Gadfly
+using DataFramesMeta
+Gadfly.push_theme(:dark)
+
+d = @linq mm.results |> where(:group.=="fixed")
+plot(d,x=:time,y=:estimate,color=:term,Geom.LineGeometry)
+```
+
+And the random effect results.
+```julia
+
+d = @linq mm.results |> where(:group.=="subject")
+plot(d,x=:time,y=:estimate,color=:term,Geom.LineGeometry)
+
+```
+
+
+More verbose way:
+```julia
+Xs,data2,form = unfold.LinearMixedModel_formula(f,evts,data,basisfunction, contrasts = Dict{Symbol,Any}())
+```
+
+Formula-Terms are wrapped with a `TimeExpandedTerm`, which upon calling `modelcols` will timeexpand the designmatrix.
+There is one TimeExpandedTerm for the FixedEffects and one for each RandomEffectsTerm. **Limitation** Currently it is not possible to combine different formulas & different basis-functions, but that is planned
+```julia
+dump(form.rhs)
+```
+
+Visualizing the designmatrices.
+Fixed Effects:
+```julia
+Plots.heatmap(Matrix(Xs[1][1:300,:]))
+```
+
+Random Effects
+```julia
+Plots.heatmap(Matrix(Xs[2][1:2000,1:1000]))
+```
+
+```julia
+mm = unfold.LinearMixedModel_wrapper(form,data2,Xs)
+fit!(mm)
+mm = unfold.condense(mm,evts)
+#@time mm = unfold.fit(unfold.UnfoldLinearMixedModel,f,evts,data,basisfunction)
+```
+
+
+```julia;eval=false
+using Weave
+
+# convert to html
+weave("doc\\lmm_tutorial.jmd")
+
+# convert to a python notebook
+convert_doc("doc\\lmm_tutorial.jmd", "doc\\lmm_tutorial.ipynb")
+
+# convert to md for README
+#weave("doc\\lm_tutorial.jmd", doctype="pandoc", out_path = "README.md")
+```
