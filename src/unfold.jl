@@ -12,6 +12,7 @@ using LinearAlgebra
 using Tables
 using GLM
 import MixedModels.FeMat
+import Distributions.Gamma, Distributions.pdf # TODO replace this with direct implementation (used in basisfunction.jl)
 include("linearmodels.jl")
 include("basisfunctions.jl")
 include("designmatrix.jl")
