@@ -16,7 +16,7 @@ function epoch(data::Array{T,2},tbl::DataFrame,τ::Tuple{Number,Number},sfreq;ev
 
 
     # User feedback
-    @debug("Creating epochs: $lenEpochs x $numEpochs x $numChans")
+    println("Creating epochs: $numChans x $lenEpochs x $numEpochs")
 
     for si = 1:size(tbl,1)
         #eventonset = tbl[si,eventtime] # in samples
@@ -25,8 +25,9 @@ function epoch(data::Array{T,2},tbl::DataFrame,τ::Tuple{Number,Number},sfreq;ev
         d_end =  Int(ceil(tbl[si,eventtime]+lenEpochs-1 - sum(times.<0)))
         e_start = 1
         e_end = lenEpochs
+            #println("d: $(size(data)),e: $(size(epochs)) | $d_start,$d_end,$e_start,$e_end | $(tbl[si,eventtime])")
         if d_start<1
-            e_start = e_start + (d_start+1)
+            e_start = e_start + (-d_start+1)
             d_start = 1
         end
         if d_end >size(data,2)

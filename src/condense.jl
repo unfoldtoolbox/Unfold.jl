@@ -6,12 +6,14 @@ function condense(m,tbl,times)
     times_rep = repeat(times,1,length(cnames))
     times_rep = dropdims(reshape(times_rep',:,1),dims=2)
 
-
+    println(size(m.beta))
     betas = dropdims(reshape(m.beta,:,1),dims=2)
-    #println((cnames_rep))
-    #println((times_rep))
+    println(size(cnames))
+    println(size(times))
+    println(size(cnames_rep))
+    println(size(times_rep))
 
-    #println((betas))
+    println(size(betas))
     results = DataFrame(term=cnames_rep,estimate=betas,stderror=Missing,group="mass univariate",time=times_rep)
     return UnfoldModel(m,m.formula,tbl,results)
 
@@ -19,7 +21,7 @@ end
 
 function condense(mm_array::Array{LinearMixedModel,1},tbl,times)
     # with random effects, no timeexpansion
-
+    println(MixedModels.sqrtpwrss(mm_array[1]))
     results = condense_fixef.(mm_array,times)
 
     results = vcat(results,condense_ranef.(mm_array,times))
@@ -67,8 +69,11 @@ function condense_fixef(mm,times)
     cnames = [c[1] for c in split.(coefnames(fixefPart)," :")]
 
     times =  repeat(times,length(unique(cnames)))
+    println("condense_fixef")
+    println(size(cnames))
+    println(size(stderror(mm)))
+    println(size(MixedModels.fixef(mm)))
 
-    #size(fixefPart)
     return DataFrame(term=cnames,estimate=MixedModels.fixef(mm),stderror=MixedModels.stderror(mm),group="fixed",time=times)
 end
 

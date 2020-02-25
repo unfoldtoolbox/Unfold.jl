@@ -1,29 +1,51 @@
-# struct for behavior
+using StatsModels
+
+struct UnfoldDesignmatrix
+        formulas
+        Xs
+end
+
+# with basis expansion
+function unfoldDesignmatrix(type,f,tbl,basisfunction;kwargs...)
+        println(kwargs)
+        Xs,form = generateDesignmatrix(type,f,tbl,basisfunction; kwargs...)
+        UnfoldDesignmatrix(form,Xs)
+end
+
+#without basis expansion
+function unfoldDesignmatrix(type,f,tbl;kwargs...)
+        Xs,form = generateDesignmatrix(type,f,tbl,nothing; kwargs...)
+        UnfoldDesignmatrix(form,Xs)
+
+end
+function generateDesignmatrix(type,f,tbl,basisfunction;contrasts= Dict{Symbol,Any}())
+    form = apply_schema(f, schema(f, tbl, contrasts), LinearMixedModel)
+                println("generateDesignmatrix")
+    if !isnothing(basisfunction)
+
+            println(typeof(form.rhs))
+    if type <: UnfoldLinearMixedModel
+            println("Mixed Model")
+            form = FormulaTerm(form.lhs, TimeExpandedTerm.(form.rhs,Ref(basisfunction)))
+    else
+            println("not mixed model, $type")
+            form = FormulaTerm(form.lhs, TimeExpandedTerm(form.rhs,basisfunction))
+    end
+    end
+    X = modelcols(form.rhs, tbl)
+    return X,form
+end
+
+
 struct TimeExpandedTerm{T} <: AbstractTerm
     term::T
     basisfunction::BasisFunction
     eventtime::Symbol
 end
 
-function StatsModels.coefnames(term::TimeExpandedTerm)
-        names = coefnames(term.term)
-        times = term.basisfunction.times
-        if typeof(names) == String
-                names = [names]
-        end
-        return kron(names.*" : ",string.(times))
-end
-function StatsModels.coefnames(term::MixedModels.ZeroCorr)
-        coefnames(term.term)
-end
-function StatsModels.coefnames(term::RandomEffectsTerm)
-        coefnames(term.lhs)
-end
 function TimeExpandedTerm(term,basisfunction;eventtime=:latency)
         TimeExpandedTerm(term, basisfunction,eventtime)
 end
-
-
 
 function Base.show(io::IO, p::TimeExpandedTerm)
         #print(io, "timeexpand($(p.term), $(p.basisfunction.type),$(p.basisfunction.times))")
@@ -32,37 +54,45 @@ function Base.show(io::IO, p::TimeExpandedTerm)
 
 
 
+
+# Timeexpand the fixed effect part
 function StatsModels.modelcols(term::TimeExpandedTerm,tbl)
         X = modelcols(term.term,tbl)
         time_expand(X,term,tbl)
-
-
 end
-function StatsModels.modelcols(term::TimeExpandedTerm{<:RandomEffectsTerm},tbl)
-        # to start with, timeexpand the random effect lhs
-        reMat = modelcols(term.term,tbl)
 
-        z = transpose(time_expand(transpose(reMat.z),term,tbl))
+# This function timeexpands the random effects and generates a ReMat object
+function StatsModels.modelcols(term::TimeExpandedTerm{<:RandomEffectsTerm},tbl)
         ntimes = length(term.basisfunction.times)
 
-        #check for overlap
+        # get the non-timeexpanded reMat
+        reMat = modelcols(term.term,tbl)
+
+        # Timeexpand the designmatrix
+        z = transpose(time_expand(transpose(reMat.z),term,tbl))
+
+
+
+        # First we check if there is overlap in the timeexpanded term. If so, we cannot continue. Later implementations will remedy that
         group = tbl[term.term.rhs.sym]
         time = tbl[term.eventtime]
+
+        # get the from-to onsets of the grouping varibales
         onsets = time_expand_getRandomGrouping(group,time,term.basisfunction)
         #print(size(reMat.z))
         refs = zeros(size(z)[2]).+1
         for (i,o) in enumerate(onsets[2:end])
+                # check for overlap
                 if (minimum(o) <= maximum(onsets[i+1])) & (maximum(o) <= minimum(onsets[i+1]))
                         error("overlap in random effects structure detected, not currently supported")
                 end
-                refs[o] .= tbl[term.term.rhs.sym][i]
         end
 
-        # because the above method with refs did not work, because he complains about not increasing values, I do it hacky:
-        # we can assume no overlap by here!
+        # From now we can assume no overlap
+        # We want to fnd which subject is active when
         refs = zeros(size(z)[2]).+1
         uGroup = unique(group)
-        #println(group)
+
         for (i,g) = enumerate(uGroup[1:end])
 
                 ix_start = findfirst(g.==group)
@@ -91,12 +121,8 @@ function StatsModels.modelcols(term::TimeExpandedTerm{<:RandomEffectsTerm},tbl)
                 #println("$g,$time_start,$time_stop")
                 refs[Int64(time_start):Int64(time_stop)] .= g
         end
-        #println( sum(term.basisfunction.times.<=0))
-        # due to local scope
-        #ix_end = findlast(uGroup[end-1].==group)
-        #print("new2")
-        #refs[Int64(time[ix_end]):end] .= uGroup[end]
 
+        # Other variables with implementaions taken from the LinerMixedModel function
         wtz = z
         trm = term
 
@@ -108,14 +134,13 @@ function StatsModels.modelcols(term::TimeExpandedTerm{<:RandomEffectsTerm},tbl)
         m = reshape(1:abs2(S), (S, S))
         inds = sizehint!(Int[], (S * (S + 1)) >> 1)
         for j = 1:S, i = j:S
+                # We currently restrict to diagonal entries
                 if i == j # for diagonal
                         push!(inds, m[i, j])
                 end
         end
 
-
-
-        levels = reMat.levels#vcat(transpose(hcat(repeat([reMat.levels],1,ntimes)...))...)
+        levels = reMat.levels
         refs =refs
 
 
@@ -135,15 +160,14 @@ function StatsModels.modelcols(term::TimeExpandedTerm{<:RandomEffectsTerm},tbl)
         inds,
         adjA,
         scratch)
-
 end
 
-
+# Get the timeranges where the random grouping variable was applied
 function time_expand_getRandomGrouping(tblGroup,tblLatencies,basisfunction)
         ranges = time_expand_getTimeRange.(tblLatencies,Ref(basisfunction))
-
-
 end
+
+# helper function to get the ranges from where to where the basisfunction is added
 function time_expand_getTimeRange(onset,basisfunction)
         npos = sum(basisfunction.times.>=0)
         nneg = sum(basisfunction.times.<0)
@@ -154,13 +178,20 @@ function time_expand_getTimeRange(onset,basisfunction)
         toRowIx = floor(onset)+npos
 
         range(fromRowIx,stop=toRowIx)
-
 end
-function time_expand(X,term,tbl)
 
+# Applies the timebasis kernel saved in the "term"
+function time_expand(X,term,tbl)
         npos = sum(term.basisfunction.times.>=0)
         nneg = sum(term.basisfunction.times.<0)
         # make sure that this is a 2d matrix
+        #println("timeexpand")
+        #println(typeof(X))
+        #if typeof(X) == NTuple{N,Union{<:Array{Float64,2}, <:ReMat}} where {N}
+#                println("selecting first")
+#                X = X[1]#choose the MatrixTerm
+#        end
+#        println(typeof(X))
         X = reshape(X,size(X,1),:)
         ncolsX = size(X)[2]
         nrowsX = size(X)[1]
@@ -193,5 +224,22 @@ function time_expand(X,term,tbl)
                 end
         end
         return(A)
+end
 
+## Coefnames
+function StatsModels.coefnames(term::TimeExpandedTerm)
+        names = coefnames(term.term)
+        times = term.basisfunction.times
+        if typeof(names) == String
+                names = [names]
+        end
+        return kron(names.*" : ",string.(times))
+end
+
+function StatsModels.coefnames(term::MixedModels.ZeroCorr)
+        coefnames(term.term)
+end
+
+function StatsModels.coefnames(term::RandomEffectsTerm)
+        coefnames(term.lhs)
 end

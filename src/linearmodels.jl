@@ -20,6 +20,7 @@ end
 function Base.show(io::IO, obj::UnfoldModel)
         println(io, "LinearModelTimeExpanded object")
         println(io, "formula: $(obj.formula)")
+
 end
 
 function Base.show(io::IO, obj::UnfoldModel)
@@ -27,4 +28,5 @@ function Base.show(io::IO, obj::UnfoldModel)
     # TODO Save the original formula without time expansion
     println(io, "Unique Terms: $(unique(obj.results.term))")
     println(io, "Times: $(minimum(obj.results.time)) : $(maximum(obj.results.time))")
+    println(io, "Fields: .model, .formula, .tbl, .results")
 end

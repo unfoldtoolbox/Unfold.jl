@@ -172,7 +172,7 @@ using Weave
 weave("doc\\lmm_tutorial.jmd")
 
 # convert to a python notebook
-convert_doc("doc\\lmm_tutorial.jmd", "doc\\lmm_tutorial.ipynb")
+1convert_doc("doc\\lmm_tutorial.jmd", "doc\\lmm_tutorial.ipynb")
 
 # convert to md for README
 #weave("doc\\lm_tutorial.jmd", doctype="pandoc", out_path = "README.md")

@@ -7,6 +7,8 @@ struct BasisFunction{T<:AbstractVector}
     type::String
 end
 
+
+
 function Base.show(io::IO, obj::BasisFunction)
     println(io, "times: $(obj.times)")
     println(io, "kernel: $(obj.type)")
