@@ -39,7 +39,7 @@ function fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::Fo
 end
 
 
-
+## UnfoldFit functions
 # Mass Univariate Linear MOdel
 function unfoldFit(::Type{UnfoldLinearModel},X::UnfoldDesignmatrix,data::Array{T,2}) where {T}
     beta,optim = fit_lm(X.Xs, data)

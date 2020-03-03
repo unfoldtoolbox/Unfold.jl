@@ -19,28 +19,28 @@ function unfoldDesignmatrix(type,f,tbl;kwargs...)
 
 end
 function generateDesignmatrix(type,f,tbl,basisfunction;contrasts= Dict{Symbol,Any}())
-    form = apply_schema(f, schema(f, tbl, contrasts), LinearMixedModel)
-                println("generateDesignmatrix")
-    if !isnothing(basisfunction)
+        form = apply_schema(f, schema(f, tbl, contrasts), LinearMixedModel)
+        println("generateDesignmatrix")
+        if !isnothing(basisfunction)
 
-            println(typeof(form.rhs))
-    if type <: UnfoldLinearMixedModel
-            println("Mixed Model")
-            form = FormulaTerm(form.lhs, TimeExpandedTerm.(form.rhs,Ref(basisfunction)))
-    else
-            println("not mixed model, $type")
-            form = FormulaTerm(form.lhs, TimeExpandedTerm(form.rhs,basisfunction))
-    end
-    end
-    X = modelcols(form.rhs, tbl)
-    return X,form
+                println(typeof(form.rhs))
+                if type <: UnfoldLinearMixedModel
+                        println("Mixed Model")
+                        form = FormulaTerm(form.lhs, TimeExpandedTerm.(form.rhs,Ref(basisfunction)))
+                else
+                        println("not mixed model, $type")
+                        form = FormulaTerm(form.lhs, TimeExpandedTerm(form.rhs,basisfunction))
+                end
+        end
+        X = modelcols(form.rhs, tbl)
+        return X,form
 end
 
 
 struct TimeExpandedTerm{T} <: AbstractTerm
-    term::T
-    basisfunction::BasisFunction
-    eventtime::Symbol
+        term::T
+        basisfunction::BasisFunction
+        eventtime::Symbol
 end
 
 function TimeExpandedTerm(term,basisfunction;eventtime=:latency)
@@ -50,7 +50,7 @@ end
 function Base.show(io::IO, p::TimeExpandedTerm)
         #print(io, "timeexpand($(p.term), $(p.basisfunction.type),$(p.basisfunction.times))")
         println(io,"$(coefnames(p))")
- end
+end
 
 
 
@@ -180,6 +180,7 @@ function time_expand_getTimeRange(onset,basisfunction)
         range(fromRowIx,stop=toRowIx)
 end
 
+
 # Applies the timebasis kernel saved in the "term"
 function time_expand(X,term,tbl)
         npos = sum(term.basisfunction.times.>=0)
@@ -198,19 +199,22 @@ function time_expand(X,term,tbl)
 
         ntimes = length(term.basisfunction.times)
         A = spzeros(ceil(maximum(tbl.latency))+npos+1,ntimes*ncolsX)
+
+        onsets = tbl[term.eventtime]
+        bases = term.basisfunction.kernel.(onsets)
+
         for row in 1:nrowsX
                 onset = tbl[term.eventtime][row]
 
                 basis = term.basisfunction.kernel(onset)
                 for col in 1:ncolsX
-                        fromRowIx = floor(onset)-nneg
-                        toRowIx = floor(onset)+npos
+                        fromRowIx = floor(onsets[row])-nneg
+                        toRowIx   = floor(onsets[row])+npos
+
 
                         content = X[row,col]
-                        # move it by the event latency
 
-                        Gc = basis .*content
-
+                        Gc = bases[row] .*content
                         # border case of very early event
                         if fromRowIx<1
                                 tmp = (abs(fromRowIx)+2)
@@ -219,10 +223,92 @@ function time_expand(X,term,tbl)
                         end
                         fromColIx = 1+(col-1)*ntimes
                         toColIx = fromColIx + ntimes
-
-                        A[fromRowIx:toRowIx,fromColIx:toColIx-1] = A[fromRowIx:toRowIx,fromColIx:toColIx-1]+sparse(Gc)
+                        tmp = A[fromRowIx:toRowIx,fromColIx:toColIx-1]+Gc
+                        A[fromRowIx:toRowIx,fromColIx:toColIx-1] = tmp
                 end
         end
+        return(A)
+end
+# Applies the timebasis kernel saved in the "term"
+function time_expand_genSparse(X,term,tbl)
+        # implementation that generates a fresh sparse matrix instead of adding to a large one
+        error('this implementation is not working / tested properly, it is also not faster ')
+
+        npos = sum(term.basisfunction.times.>=0)
+        nneg = sum(term.basisfunction.times.<0)
+        # make sure that this is a 2d matrix
+
+        X = reshape(X,size(X,1),:)
+        ncolsX = size(X)[2]
+        nrowsX = size(X)[1]
+        to = TimerOutput()
+
+        ntimes = length(term.basisfunction.times)
+        A = spzeros(ceil(maximum(tbl.latency))+npos+1,ntimes*ncolsX)
+
+
+        # calculate the basisfunction for each onset
+        onsets = tbl[term.eventtime]
+        @timeit to "getbasis" Gc = term.basisfunction.kernel.(onsets)
+
+        fromRowIx = floor.(onsets).-nneg
+        toRowIx = floor.(onsets).+npos
+        println(size(Gc))
+        println(size(X))
+
+
+
+        @timeit to "colLoop" for col in 1:ncolsX # predictors
+                Gc = Gc .* X[:,col]
+                println(size(Gc))
+
+                @timeit to "rowLimit" for row in 1:nrowsX # events
+                        if  fromRowIx[row] .< 1
+                                tmp = (abs(fromRowIx[row])+2)
+                                Gc[row] = Gc[row][tmp:end,:]
+                                fromRowIx[row] = 1
+                        end
+                end
+
+
+                fromColIx = 1+(col-1)*ntimes
+                toColIx = fromColIx + ntimes
+
+                Gc_flat = vcat(Gc...)
+
+                rowix = []
+                @timeit to "rowappend" for row in 1:nrowsX
+                        r = range(fromRowIx[row],stop=toRowIx[row])
+                        append!(rowix,r)
+                end
+
+                ix_un = unique(rowix)
+                rowix_un = []
+                colix_un = []
+                content_un = fill(0.,(size(ix_un,1),ntimes))
+
+                @timeit to "rowmatch" for r in 1:length(ix_un)
+                        ix_tmp = ix_un[r] .== ix_un
+                        #println(dump(ix_tmp))
+                        tmp = sum(Gc_flat[ix_tmp,:],dims=1)
+                        #println(dump(tmp))
+
+                        content_un[r,:] = tmp
+                end
+                @timeit to "columnExpand" for cTimeexp in 1:ntimes
+                        append!(colix_un, repeat([cTimeexp+(ncolsX-1)*ntimes],size(ix_un,1)))
+                        append!(rowix_un,ix_un)
+
+                end
+
+                println("row $(size(rowix_un)), col $(size(colix_un)),content $(size(content_un))")
+                tmp = content_un[:]
+                @timeit to "genSparse" A = sparse(rowix_un,colix_un,tmp)
+                #@timeit to "colAssign" A[ix_un,fromColIx:toColIx-1] = content_un
+
+
+        end
+        println(to)
         return(A)
 end
 

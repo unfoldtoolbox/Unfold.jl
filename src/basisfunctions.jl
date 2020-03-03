@@ -31,13 +31,9 @@ end
 function firkernel(e,times)
     @assert(length(e)==2,"")
     e[isapprox.(e,0,atol = 1e-15)] .= 0
-    #shift=sum(times.<0) # shift the whole thing by how many negative
     ksize=length(times) # kernelsize
-    kernel = zeros(ksize+1,ksize)
-    i = 1
-    for lagix = 1:ksize
-            kernel[lagix:lagix+1,lagix]=e
-    end
+
+    kernel = spdiagm(ksize+1,ksize,0 => repeat([e[1]],ksize), -1 => repeat([e[2]],ksize))
 
     return(kernel)
 
