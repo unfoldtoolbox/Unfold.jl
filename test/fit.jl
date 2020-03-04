@@ -1,13 +1,13 @@
 using Revise
 using Test, StatsModels
 using DataFrames
-using Query
 
 import unfold
 include("test_utilities.jl")
 
-data,evts = loadtestdata("test/testCase1") #
-f  = @formula 0~1+continuousA+continuousB
+data,evts = loadtestdata("test/testCase4") #
+f  = @formula 0~1+conditionA+conditionB # 4
+f = @formula 0~1+continuousA+continuousB # 1
 
 data_r = reshape(data,(1,:))
 # cut the data into epochs
@@ -20,17 +20,22 @@ m_mul = unfold.fit(unfold.UnfoldLinearModel,f,evts,data_e,times)
 @test all(m_mul.results[(m_mul.results.time.==0.1),:estimate] .≈ [3.0 2.5 -1.5]')
 
 # Timexpanded Univariate Linear
-basisfunction = unfold.firbasis(τ=(-1,1.9),sfreq=10)
+basisfunction = unfold.firbasis(τ=(-1,1.9),sfreq=100)
 m_tul = unfold.fit(unfold.UnfoldLinearModel,f,evts,data,basisfunction)
 @test all(m_tul.results[(m_tul.results.time.==0.1),:estimate] .≈ [3.0 2.5 -1.5]')
 
+
+@time unfold.generateDesignmatrix(unfold.UnfoldLinearModel,f,evts,basisfunction)
+# new version 2.7s
 
 ###############################
 ##  Mixed Model tests
 ###############################
 data,evts = loadtestdata("test/testCase3") #
+data = data.+ 1*randn(size(data)) # we have to add minimal noise, else mixed models crashes.
 categorical!(evts,:subject)
 f  = @formula 0~1+condA+condB + (1+condA+condB|subject)
+f  = @formula 0~1 + (1|subject)
 
 
 data_r = reshape(data,(1,:))
@@ -42,7 +47,7 @@ evts_e,data_e = unfold.dropMissingEpochs(evts,data_e)
 
 
 # Mass Univariate Mixed
-@time m_mum = unfold.fit(unfold.UnfoldLinearMixedModel,f,evts,data_e,times,contrasts=Dict(:condA => EffectsCoding(), :condB => EffectsCoding()))
+@time m_mum = unfold.fit(unfold.UnfoldLinearMixedModel,f,evts,data_e    ,times,contrasts=Dict(:condA => EffectsCoding(), :condB => EffectsCoding()))
 #@test all(m_mul.results[(m_mul.results.time.==0.1),:estimate] .≈ [3.0 2.5 -1.5]')
 plot(m_mum.results.time,m_mum.results.estimate,group=(m_mum.results.term,m_mum.results.group),layout=2,legend=:outerbottom)
 
@@ -58,6 +63,11 @@ plot(m_tum.results.time,m_tum.results.estimate,group=(m_tum.results.term,m_tum.r
 Xs = unfold.unfoldDesignmatrix(unfold.UnfoldLinearMixedModel,f,evts,basisfunction)
 
 # Fit the model
-m = unfold.unfoldFit(unfold.UnfoldLinearMixedModel,Xs,data)
+m = unfold.unfoldFit(unfold.UnfoldLinearMixedModel,Xs,dropdims(data_f,dims=1))
 
-ufresult = unfold.condense(m,evts)
+ufresult = unfold.condense(m,evts,times)
+
+
+
+
+##########

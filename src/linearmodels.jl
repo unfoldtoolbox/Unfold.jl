@@ -1,7 +1,7 @@
 struct UnfoldLinearModel
     beta::AbstractArray
     optim
-    formula::FormulaTerm
+    formula
     X::AbstractArray
 end
 
@@ -12,7 +12,7 @@ end
 
 struct UnfoldModel{M<:Union{AbstractArray{Union{LinearMixedModel,UnfoldLinearModel,UnfoldLinearMixedModel},1}, UnfoldLinearModel,LinearMixedModel,UnfoldLinearMixedModel}}
     model::M
-    formula::FormulaTerm
+    formula
     tbl::DataFrame
     results::DataFrame
 end

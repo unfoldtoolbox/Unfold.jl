@@ -14,6 +14,7 @@ using Tables
 using GLM
 import MixedModels.FeMat
 using TimerOutputs
+using DSP
 import Distributions.Gamma, Distributions.pdf # TODO replace this with direct implementation (used in basisfunction.jl)
 include("linearmodels.jl")
 include("basisfunctions.jl")

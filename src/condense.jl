@@ -34,8 +34,27 @@ end
 
 function condense(mm::UnfoldLinearModel,tbl)
     # no random effects, timeexpansion
-    times = mm.formula.rhs.basisfunction.times
-    results = condense_fixef(mm,times)
+
+    if typeof(mm.formula)<: Array
+        # build new UnfoldLinearModel for each formula
+
+        times = [formula.rhs.basisfunction.times for formula in mm.formula]
+        fromTo = [0 cumsum(length.(times),dims=2)]
+
+        results = DataFrame()
+        for k = 1:length(mm.formula)
+            mm_tmp = UnfoldLinearModel(mm.beta[fromTo[k]+1:fromTo[k+1]],mm.optim,mm.formula[k],mm.X[:,fromTo[k]+1:fromTo[k+1]])
+            res = condense_fixef(mm_tmp,times[k])
+            results = vcat(results,res)
+        end
+
+
+
+    else
+        times = mm.formula.rhs.basisfunction.times
+        results = condense_fixef(mm,times)
+    end
+
     return UnfoldModel(mm,mm.formula,tbl,results)
 end
 

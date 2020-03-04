@@ -5,6 +5,7 @@ struct BasisFunction{T<:AbstractVector}
     kernel::Function
     times::T
     type::String
+    exact::Bool
 end
 
 
@@ -15,16 +16,21 @@ function Base.show(io::IO, obj::BasisFunction)
 end
 
 
-function firbasis(;τ,sfreq)
+function firbasis(;τ,sfreq,exact=true)
     # Helper function to call firbasis with named arguments
-    return firbasis(τ,sfreq)
+    return firbasis(τ,sfreq,exact)
 end
 
+
 function firbasis(τ,sfreq)
+    firbasis(τ,sfreq,true)
+end
+
+function firbasis(τ,sfreq,exact::Bool)
     times =range(τ[1],stop=τ[2],step=1 ./sfreq)
     kernel=e->firkernel([1-(e%1),e % 1],times)
     type = "firkernel"
-    return BasisFunction(kernel,times,type)
+    return BasisFunction(kernel,times,type,exact)
 end
 
 
