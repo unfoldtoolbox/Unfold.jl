@@ -15,8 +15,11 @@ function Base.show(io::IO, obj::BasisFunction)
     println(io, "kernel: $(obj.type)")
 end
 
+function firbasis(;τ,sfreq)
+    firbasis(τ,sfreq,"")
+end
 
-function firbasis(;τ,sfreq,name="")
+function firbasis(;τ,sfreq)
     # Helper function to call firbasis with named arguments
     return firbasis(τ,sfreq,name)
 end
