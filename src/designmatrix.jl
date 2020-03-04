@@ -206,9 +206,61 @@ function time_expand_getTimeRange(onset,basisfunction)
         range(fromRowIx,stop=toRowIx)
 end
 
-
-# Applies the timebasis kernel saved in the "term"
 function time_expand(X,term,tbl)
+
+        to = TimerOutput()
+        npos = sum(term.basisfunction.times.>=0)
+        nneg = sum(term.basisfunction.times.<0)
+        ntimes = length(term.basisfunction.times)
+        srate    = Float64(term.basisfunction.kernel.times.step)
+        mintimes = Int64(minimum(term.basisfunction.times) * srate)
+
+        X = reshape(X,size(X,1),:)
+
+        ncolsX = size(X)[2]
+        nrowsX = size(X)[1]
+        ncolsXdc = ntimes*ncolsX
+
+
+        onsets = tbl[!,term.eventtime]
+
+        bases = term.basisfunction.kernel.(onsets)
+
+
+        # generate rowindices
+        rows =  copy(rowvals.(bases))
+        for r in 1:length(rows)
+                rows[r] .+= floor(onsets[r]-1)+mintimes
+        end
+
+        rows = vcat(rows...)
+        rows = repeat(rows,ncolsX)
+
+        # generate column indices
+        cols = []
+        @timeit to "Col"  for Xcol in 1:ncolsX
+                for b in 1:length(bases)
+                        for c in 1:ntimes
+                                push!(cols,repeat([c+(Xcol-1)*ntimes],length(nzrange(bases[b],c))))
+                        end
+                end
+        end
+
+        cols = vcat(cols...)
+
+        # generate values
+        vals = []
+        for Xcol in 1:ncolsX
+                push!(vals,vcat(nonzeros.(bases).*X[:,Xcol]...))
+        end
+        vals = vcat(vals...)
+        ix = rows.>0
+        @timeit to "generate" A = sparse(rows[ix],cols[ix],vals[ix])
+        println(to)
+        return A
+end
+# Applies the timebasis kernel saved in the "term"
+function time_expand2(X,term,tbl)
         to = TimerOutput()
         npos = sum(term.basisfunction.times.>=0)
         nneg = sum(term.basisfunction.times.<0)
