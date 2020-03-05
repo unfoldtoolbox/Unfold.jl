@@ -5,9 +5,8 @@ using DataFrames
 import unfold
 include("test_utilities.jl")
 
-data,evts = loadtestdata("test/testCase4") #
-f  = @formula 0~1+conditionA+conditionB # 4
-f = @formula 0~1+continuousA+continuousB # 1
+data,evts = loadtestdata("testCase1") #
+f  = @formula 0~1+continuousA+continuousB # 1
 
 data_r = reshape(data,(1,:))
 # cut the data into epochs
@@ -20,18 +19,22 @@ m_mul = unfold.fit(unfold.UnfoldLinearModel,f,evts,data_e,times)
 @test all(m_mul.results[(m_mul.results.time.==0.1),:estimate] .≈ [3.0 2.5 -1.5]')
 
 # Timexpanded Univariate Linear
-basisfunction = unfold.firbasis(τ=(-1,1.9),sfreq=100)
+basisfunction = unfold.firbasis(τ=(-1,1),sfreq=10,eventname="A")
 m_tul = unfold.fit(unfold.UnfoldLinearModel,f,evts,data,basisfunction)
 @test all(m_tul.results[(m_tul.results.time.==0.1),:estimate] .≈ [3.0 2.5 -1.5]')
 
 
-@time unfold.generateDesignmatrix(unfold.UnfoldLinearModel,f,evts,basisfunction)
-# new version 2.7s
+data4,evts4 = loadtestdata("testCase4") #
+f4  = @formula 0~1+conditionA+conditionB # 4
+basisfunction4 = unfold.firbasis(τ=(-1,1),sfreq=1000,eventname="A")
+
+@time unfold.generateDesignmatrix(unfold.UnfoldLinearModel,f4,evts4,basisfunction4)
+# new version 7s-10s, dataset4, sfreq=1000, 1200stim,
 
 ###############################
 ##  Mixed Model tests
 ###############################
-data,evts = loadtestdata("test/testCase3") #
+data,evts = loadtestdata("testCase3") #
 data = data.+ 1*randn(size(data)) # we have to add minimal noise, else mixed models crashes.
 categorical!(evts,:subject)
 f  = @formula 0~1+condA+condB + (1+condA+condB|subject)
@@ -49,25 +52,16 @@ evts_e,data_e = unfold.dropMissingEpochs(evts,data_e)
 # Mass Univariate Mixed
 @time m_mum = unfold.fit(unfold.UnfoldLinearMixedModel,f,evts,data_e    ,times,contrasts=Dict(:condA => EffectsCoding(), :condB => EffectsCoding()))
 #@test all(m_mul.results[(m_mul.results.time.==0.1),:estimate] .≈ [3.0 2.5 -1.5]')
-plot(m_mum.results.time,m_mum.results.estimate,group=(m_mum.results.term,m_mum.results.group),layout=2,legend=:outerbottom)
+plot(m_mum)
 
 # Timexpanded Univariate Mixed
-basisfunction = unfold.firbasis(τ=(-0.2,0.3),sfreq=10)
+basisfunction = unfold.firbasis(τ=(-0.2,0.3),sfreq=10,eventname="")
 @time m_tum = unfold.fit(unfold.UnfoldLinearMixedModel,f,evts,data,basisfunction, contrasts=Dict(:condA => EffectsCoding(), :condB => EffectsCoding()) )
 #2@test all(m_tul.results[(m_tul.results.time.==0.1),:estimate] .≈ [3.0 2.5 -1.5]')
 plot(m_tum.results.time,m_tum.results.estimate,group=(m_tum.results.term,m_tum.results.group),layout=2,legend=:outerbottom)
 
-# simulation fixef: [10 -2.5 0]
-# simulation ranef: [5, 2 3]
-##
-Xs = unfold.unfoldDesignmatrix(unfold.UnfoldLinearMixedModel,f,evts,basisfunction)
-
-# Fit the model
-m = unfold.unfoldFit(unfold.UnfoldLinearMixedModel,Xs,dropdims(data_f,dims=1))
-
-ufresult = unfold.condense(m,evts,times)
-
-
+# simulation fixef: [10 5 10]
+# simulation ranef: [3, 3 3]
 
 
 ##########

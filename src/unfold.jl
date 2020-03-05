@@ -22,4 +22,5 @@ include("designmatrix.jl")
 include("fit.jl")
 include("utilities.jl")
 include("condense.jl")
+include("plot.jl")
 end # module

@@ -1,5 +1,12 @@
 using StatsModels
 
+
+struct TimeExpandedTerm{T} <: AbstractTerm
+        term::T
+        basisfunction::BasisFunction
+        eventtime::Symbol
+end
+
 struct UnfoldDesignmatrix
         formulas
         Xs
@@ -62,12 +69,6 @@ function generateDesignmatrix(type,f,tbl,basisfunction;contrasts= Dict{Symbol,An
         return X,form
 end
 
-
-struct TimeExpandedTerm{T} <: AbstractTerm
-        term::T
-        basisfunction::BasisFunction
-        eventtime::Symbol
-end
 
 function TimeExpandedTerm(term,basisfunction;eventtime=:latency)
         TimeExpandedTerm(term, basisfunction,eventtime)
@@ -212,7 +213,8 @@ function time_expand(X,term,tbl)
         npos = sum(term.basisfunction.times.>=0)
         nneg = sum(term.basisfunction.times.<0)
         ntimes = length(term.basisfunction.times)
-        srate    = Float64(term.basisfunction.kernel.times.step)
+        srate    = 1/Float64(term.basisfunction.kernel.times.step)
+        println("$srate - $(term.basisfunction.times)")
         mintimes = Int64(minimum(term.basisfunction.times) * srate)
 
         X = reshape(X,size(X,1),:)
@@ -221,8 +223,8 @@ function time_expand(X,term,tbl)
         nrowsX = size(X)[1]
         ncolsXdc = ntimes*ncolsX
 
-
-        onsets = tbl[!,term.eventtime]
+        println(dump(term.eventtime))
+        onsets = tbl[term.eventtime]
 
         bases = term.basisfunction.kernel.(onsets)
 

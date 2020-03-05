@@ -15,25 +15,15 @@ function Base.show(io::IO, obj::BasisFunction)
     println(io, "kernel: $(obj.type)")
 end
 
-function firbasis(;τ,sfreq)
-    firbasis(τ,sfreq,"")
-end
+firbasis(;τ,sfreq)           = firbasis(τ,sfreq,"")
+firbasis(;τ,sfreq,eventname) = firbasis(τ,sfreq,eventname)
+firbasis(τ,sfreq)            = firbasis(τ,sfreq,"")
 
-function firbasis(;τ,sfreq)
-    # Helper function to call firbasis with named arguments
-    return firbasis(τ,sfreq,name)
-end
-
-
-function firbasis(τ,sfreq)
-    firbasis(τ,sfreq,true)
-end
-
-function firbasis(τ,sfreq,name::String)
+function firbasis(τ,sfreq,eventname::String)
     times =range(τ[1],stop=τ[2],step=1 ./sfreq)
     kernel=e->firkernel([1-(e%1),e % 1],times)
     type = "firkernel"
-    return BasisFunction(kernel,times,type,name)
+    return BasisFunction(kernel,times,type,eventname)
 end
 
 
@@ -48,7 +38,7 @@ function firkernel(e,times)
 
 end
 
-function hrfbasis(TR::Float64;parameters= [6. 16. 1. 1. 6. 0. 32.],name::String="")
+function hrfbasis(TR::Float64;parameters= [6. 16. 1. 1. 6. 0. 32.],eventname::String="")
     # Haemodynamic response function adapted from SPM12b "spm_hrf.m"
     # Parameters:
     #                                                           defaults
@@ -63,7 +53,7 @@ function hrfbasis(TR::Float64;parameters= [6. 16. 1. 1. 6. 0. 32.],name::String=
     times = 0
     kernel=e->hrfkernel(e,TR,parameters)
     type = "hrfkernel"
-    return BasisFunction(kernel,[times],type,name)
+    return BasisFunction(kernel,[times],type,eventname)
 end
 
 function hrfkernel(e,TR,p)
