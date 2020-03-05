@@ -21,13 +21,14 @@ jobs:
         os: [ubuntu-latest]
     steps:
       - uses: actions/checkout@v1.0.0
-      - uses: julia-actions/setup-julia@latest
+      - name: setup julia
+        uses: julia-actions/setup-julia@v1.1
         with:
           version: ${{ matrix.julia-version }}
       - name: Install dependencies
-        run: julia --project=docs -e 'using Pkg; Pkg.instantiate()'
-      - name: Build and deploy
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
-        run: julia --project=docs --color=yes docs/make.jl
+        run: julia --project=test -e 'using Pkg; Pkg.instantiate()'
+     # - name: Build and deploy
+     #   env:
+     #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+     #     DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
+     #   run: julia --project=docs --color=yes docs/make.jl
