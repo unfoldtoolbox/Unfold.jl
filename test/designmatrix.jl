@@ -1,6 +1,6 @@
-using Test,DataFrames,StatsModels
-import unfold
 ##
+using Test,DataFrames,StatsModels
+using unfold
 tbl = DataFrame([1 4]',[:latency])
 X = ones(size(tbl))
 shouldBeNeg = zeros(4,4)

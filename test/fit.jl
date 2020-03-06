@@ -52,13 +52,13 @@ evts_e,data_e = unfold.dropMissingEpochs(evts,data_e)
 # Mass Univariate Mixed
 @time m_mum = unfold.fit(unfold.UnfoldLinearMixedModel,f,evts,data_e    ,times,contrasts=Dict(:condA => EffectsCoding(), :condB => EffectsCoding()))
 #@test all(m_mul.results[(m_mul.results.time.==0.1),:estimate] .≈ [3.0 2.5 -1.5]')
-plot(m_mum)
+#plot(m_mum)
 
 # Timexpanded Univariate Mixed
 basisfunction = unfold.firbasis(τ=(-0.2,0.3),sfreq=10,eventname="")
 @time m_tum = unfold.fit(unfold.UnfoldLinearMixedModel,f,evts,data,basisfunction, contrasts=Dict(:condA => EffectsCoding(), :condB => EffectsCoding()) )
 #2@test all(m_tul.results[(m_tul.results.time.==0.1),:estimate] .≈ [3.0 2.5 -1.5]')
-plot(m_tum.results.time,m_tum.results.estimate,group=(m_tum.results.term,m_tum.results.group),layout=2,legend=:outerbottom)
+#plot(m_tum.results.time,m_tum.results.estimate,group=(m_tum.results.term,m_tum.results.group),layout=2,legend=:outerbottom)
 
 # simulation fixef: [10 5 10]
 # simulation ranef: [3, 3 3]
@@ -81,8 +81,8 @@ for s in unique(evts.subject)
 end
 
 results = resAll[resAll.term.=="(Intercept)",:]
-plot(results.time,results.estimate,
-        group=(results.subject),
-        layout=1,legend=true)
+#plot(results.time,results.estimate,
+#        group=(results.subject),
+#        layout=1,legend=true)
 
 results[results.time .== .1,:]

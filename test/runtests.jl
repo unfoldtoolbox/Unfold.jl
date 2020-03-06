@@ -1,2 +1,3 @@
-import("basisfunctions.jl")
-import("fit.jl")
+include("basisfunctions.jl")
+include("fit.jl")
+include("designmatrix.jl")

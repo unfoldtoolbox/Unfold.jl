@@ -1,6 +1,3 @@
-using StatsModels
-
-
 struct TimeExpandedTerm{T} <: AbstractTerm
         term::T
         basisfunction::BasisFunction

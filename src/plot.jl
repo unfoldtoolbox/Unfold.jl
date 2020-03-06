@@ -1,4 +1,4 @@
-using Plots
+import Plots
 Plots.plot(m::unfold.UnfoldModel)  = plot_results(m.results)
 
 function plot_results(results::DataFrame)
