@@ -1,4 +1,3 @@
-using Revise
 using Test, StatsModels
 using DataFrames
 
@@ -57,6 +56,9 @@ evts_e,data_e = unfold.dropMissingEpochs(evts,data_e)
 # Timexpanded Univariate Mixed
 basisfunction = unfold.firbasis(τ=(-0.2,0.3),sfreq=10,eventname="")
 @time m_tum = unfold.fit(unfold.UnfoldLinearMixedModel,f,evts,data,basisfunction, contrasts=Dict(:condA => EffectsCoding(), :condB => EffectsCoding()) )
+
+f  = @formula 0~1+(1|subject)
+@test_broken  m_tum = unfold.fit(unfold.UnfoldLinearMixedModel,f,evts,data,basisfunction, contrasts=Dict(:condA => EffectsCoding(), :condB => EffectsCoding()) )
 #2@test all(m_tul.results[(m_tul.results.time.==0.1),:estimate] .≈ [3.0 2.5 -1.5]')
 #plot(m_tum.results.time,m_tum.results.estimate,group=(m_tum.results.term,m_tum.results.group),layout=2,legend=:outerbottom)
 
