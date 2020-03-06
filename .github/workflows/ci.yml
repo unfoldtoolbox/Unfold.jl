@@ -1,7 +1,6 @@
 # This is a basic workflow to help you get started with Actions
-
 name: CI
-
+     
 # Controls when the action will run. Triggers the workflow on push or pull request 
 # events but only for the master branch
 on:
@@ -21,12 +20,14 @@ jobs:
         os: [ubuntu-latest]
     steps:
       - uses: actions/checkout@v1.0.0
+      - run: pwd
       - name: setup julia
         uses: julia-actions/setup-julia@v1.1
         with:
-          version: ${{ matrix.julia-version }}
+          version: 1.3.0
       - name: Install dependencies
-        run: julia --project=test -e 'using Pkg; Pkg.instantiate()'
+        uses: julia-actions/julia-buildpkg@master
+        #run: julia --project=test -e 'using Pkg; Pkg.instantiate()'
       - uses: julia-actions/julia-runtest@master
      # - name: Build and deploy
      #   env:
