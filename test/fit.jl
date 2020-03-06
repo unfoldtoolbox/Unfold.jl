@@ -38,7 +38,7 @@ data,evts = loadtestdata("testCase3") #
 data = data.+ 1*randn(size(data)) # we have to add minimal noise, else mixed models crashes.
 categorical!(evts,:subject)
 f  = @formula 0~1+condA+condB + (1+condA+condB|subject)
-f  = @formula 0~1 + (1|subject)
+#f  = @formula 0~1 + (1|subject)
 
 
 data_r = reshape(data,(1,:))

@@ -11,12 +11,13 @@ end
 
 
 function Base.show(io::IO, obj::BasisFunction)
+    println(io, "eventname: $(obj.eventname)")
     println(io, "times: $(obj.times)")
     println(io, "kernel: $(obj.type)")
 end
 
 firbasis(;τ,sfreq)           = firbasis(τ,sfreq,"")
-firbasis(;τ,sfreq,eventname) = firbasis(τ,sfreq,eventname)
+firbasis(;τ,sfreq,eventname="") = firbasis(τ,sfreq,eventname)
 firbasis(τ,sfreq)            = firbasis(τ,sfreq,"")
 
 function firbasis(τ,sfreq,eventname::String)
