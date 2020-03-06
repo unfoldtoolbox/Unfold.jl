@@ -1,7 +1,9 @@
 using Plots
-function plot(m::UnfoldModel)
-    plot(m.results.time,m.results.estimate,
-            group=(m.results.term,m.results.group),
+Plots.plot(m::unfold.UnfoldModel)  = plot_results(m.results)
+
+function plot_results(results::DataFrame)
+    plot(results.time,results.estimate,
+            group=(results.term,results.group),
             layout=2,legend=:outerbottom)
 
 end

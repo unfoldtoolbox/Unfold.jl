@@ -65,3 +65,24 @@ plot(m_tum.results.time,m_tum.results.estimate,group=(m_tum.results.term,m_tum.r
 
 
 ##########
+basisfunction = unfold.firbasis(τ=(-.1,.4),sfreq=10,eventname="A")
+resAll = DataFrame()
+f  = @formula 0~1+condA+condB
+for s in unique(evts.subject)
+    ##
+    from = minimum(evts[evts.subject.==s,:latency])-10
+    to = maximum(evts[evts.subject.==s,:latency])+40
+    to = min(to,size(data,1))
+    evts_s = evts[evts.subject.==s,:]
+    evts_s.latency .-= from
+    m = unfold.fit(unfold.UnfoldLinearModel,f,evts_s,data[from:to],basisfunction,contrasts=Dict(:condA => EffectsCoding(), :condB => EffectsCoding()))
+    m.results.subject = s
+    append!(resAll,m.results)
+end
+
+results = resAll[resAll.term.=="(Intercept)",:]
+plot(results.time,results.estimate,
+        group=(results.subject),
+        layout=1,legend=true)
+
+results[results.time .== .1,:]

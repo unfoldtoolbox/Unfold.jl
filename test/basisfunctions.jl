@@ -1,4 +1,5 @@
-using Test,unfold
+using Test
+import unfold
 
 firbase = unfold.firbasis(τ=(-1,1),sfreq=10)
 
