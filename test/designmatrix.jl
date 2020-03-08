@@ -18,13 +18,13 @@ shouldBePos[4,:] = [0,0,1,0]
 
 ## test negative
 basisfunction = unfold.firbasis(τ=(-3,0),sfreq = 1)
-term =  unfold.TimeExpandedTerm(Term,basisfunction,:latency );
+term =  unfold.TimeExpandedTerm(FormulaTerm(Term,Term),basisfunction,:latency );
 Xdc = unfold.time_expand(X,term,tbl)
 @test all(isapprox.(Matrix(Xdc)[1:4,1:4], shouldBeNeg,atol=1e-15))
 
 ## Test Positive only
 basisfunction = unfold.firbasis(τ=(1,4),sfreq = 1)
-term =  unfold.TimeExpandedTerm(Term,basisfunction,:latency );
+term =  unfold.TimeExpandedTerm(FormulaTerm(Term,Term),basisfunction,:latency );
 Xdc = unfold.time_expand(X,term,tbl)
 println(Matrix(Xdc))
 
