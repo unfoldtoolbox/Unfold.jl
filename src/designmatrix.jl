@@ -1,7 +1,12 @@
-struct TimeExpandedTerm{T} <: AbstractTerm
+struct TimeExpandedTerm{T<:AbstractTerm} <: AbstractTerm
         term::T
         basisfunction::BasisFunction
         eventtime::Symbol
+end
+
+
+struct ZeroCorr2{T<:RandomEffectsTerm} <: AbstractTerm
+    term::T
 end
 
 struct UnfoldDesignmatrix
@@ -30,7 +35,9 @@ function combineDesignmatrices(X1::UnfoldDesignmatrix,X2::UnfoldDesignmatrix)
         else
 
         end
-
+        if X1.formulas.rhs.basisfunction.times.step != X2.formulas.rhs.basisfunction.times.step
+                warning("Concatenating formulas with different sampling rates. Be sure that this is what you want.")
+        end
         UnfoldDesignmatrix([X1.formulas X2.formulas],Xcomb)
 end
 
@@ -81,12 +88,17 @@ end
 
 # Timeexpand the fixed effect part
 function StatsModels.modelcols(term::TimeExpandedTerm,tbl)
+        println("Unspecified modelcols")
+        println(dump(term))
         X = modelcols(term.term,tbl)
         time_expand(X,term,tbl)
 end
 
 # This function timeexpands the random effects and generates a ReMat object
 function StatsModels.modelcols(term::TimeExpandedTerm{<:RandomEffectsTerm},tbl)
+#function StatsModels.modelcols(term::TimeExpandedTerm{<:Union{<:RandomEffectsTerm,<:AbstractTerm{<:RandomEffectsTerm}}},tbl)
+# exchange this to get ZeroCorr to work
+        println("RE modelcols")
         ntimes = length(term.basisfunction.times)
 
         # get the non-timeexpanded reMat
@@ -98,7 +110,22 @@ function StatsModels.modelcols(term::TimeExpandedTerm{<:RandomEffectsTerm},tbl)
 
 
         # First we check if there is overlap in the timeexpanded term. If so, we cannot continue. Later implementations will remedy that
-        group = tbl[term.term.rhs.sym]
+        #println(dump(term,))
+        if hasfield(typeof(term.term),:rhs)
+                rhs = term.term.rhs
+
+
+        elseif hasfield(typeof(term.term.term),:rhs)
+                # we probably have something like zerocorr, which does not need to show a .rhs necessarily
+                rhs = term.term.term.rhs
+        else
+
+                printn("term.term: $(dump(term.term))")
+                error("unknown RE structure, has no field .rhs:$(typeof(term.term))")
+
+        end
+
+        group = tbl[rhs.sym]
         time = tbl[term.eventtime]
 
         # get the from-to onsets of the grouping varibales
@@ -157,10 +184,13 @@ function StatsModels.modelcols(term::TimeExpandedTerm{<:RandomEffectsTerm},tbl)
         inds = MixedModels.sizehint!(Int[], (S * (S + 1)) >> 1)
         m = reshape(1:abs2(S), (S, S))
         inds = sizehint!(Int[], (S * (S + 1)) >> 1)
-        for j = 1:S, i = j:S
-                # We currently restrict to diagonal entries
-                if i == j # for diagonal
-                        push!(inds, m[i, j])
+        for j in 1:S
+                for i in j:S
+                        # We currently restrict to diagonal entries
+                        # Once mixedmodels#293 is pushed, we can relax this and use zerocorr()
+                        if i == j # for diagonal
+                                push!(inds, m[i, j])
+                        end
                 end
         end
 
@@ -174,7 +204,7 @@ function StatsModels.modelcols(term::TimeExpandedTerm{<:RandomEffectsTerm},tbl)
         adjA = MixedModels.adjA(refs, z)
         scratch = Matrix{T}(undef, (S, length(uGroup)))
 
-        ReMat{T,S}(term.term.rhs,
+        ReMat{T,S}(rhs,
         refs,
         levels,
         cnames,

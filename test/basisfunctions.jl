@@ -6,6 +6,7 @@ firbase = unfold.firbasis(τ=(-1,1),sfreq=10)
 # test optional call
 @test firbase == unfold.firbasis((-1,1),10)
 
+@test firbase.name == ""
 # test basics of basisfunction
 @test length(collect(firbase.times)) == 21
 @test unique(firbase.kernel(1))==[1.0,0.0]

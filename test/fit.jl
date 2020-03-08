@@ -18,14 +18,14 @@ m_mul = unfold.fit(unfold.UnfoldLinearModel,f,evts,data_e,times)
 @test all(m_mul.results[(m_mul.results.time.==0.1),:estimate] .≈ [3.0 2.5 -1.5]')
 
 # Timexpanded Univariate Linear
-basisfunction = unfold.firbasis(τ=(-1,1),sfreq=10,eventname="A")
+basisfunction = unfold.firbasis(τ=(-1,1),sfreq=10,name="A")
 m_tul = unfold.fit(unfold.UnfoldLinearModel,f,evts,data,basisfunction)
 @test all(m_tul.results[(m_tul.results.time.==0.1),:estimate] .≈ [3.0 2.5 -1.5]')
 
 
 data4,evts4 = loadtestdata("testCase4") #
 f4  = @formula 0~1+conditionA+conditionB # 4
-basisfunction4 = unfold.firbasis(τ=(-1,1),sfreq=1000,eventname="A")
+basisfunction4 = unfold.firbasis(τ=(-1,1),sfreq=1000,name="A")
 
 @time unfold.generateDesignmatrix(unfold.UnfoldLinearModel,f4,evts4,basisfunction4)
 # new version 7s-10s, dataset4, sfreq=1000, 1200stim,
@@ -54,20 +54,16 @@ evts_e,data_e = unfold.dropMissingEpochs(evts,data_e)
 #plot(m_mum)
 
 # Timexpanded Univariate Mixed
-basisfunction = unfold.firbasis(τ=(-0.2,0.3),sfreq=10,eventname="")
+basisfunction = unfold.firbasis(τ=(-0.2,0.3),sfreq=10)
 @time m_tum = unfold.fit(unfold.UnfoldLinearMixedModel,f,evts,data,basisfunction, contrasts=Dict(:condA => EffectsCoding(), :condB => EffectsCoding()) )
 
 f  = @formula 0~1+(1|subject)
 @test_broken  m_tum = unfold.fit(unfold.UnfoldLinearMixedModel,f,evts,data,basisfunction, contrasts=Dict(:condA => EffectsCoding(), :condB => EffectsCoding()) )
-#2@test all(m_tul.results[(m_tul.results.time.==0.1),:estimate] .≈ [3.0 2.5 -1.5]')
-#plot(m_tum.results.time,m_tum.results.estimate,group=(m_tum.results.term,m_tum.results.group),layout=2,legend=:outerbottom)
 
-# simulation fixef: [10 5 10]
-# simulation ranef: [3, 3 3]
 
 
 ##########
-basisfunction = unfold.firbasis(τ=(-.1,.4),sfreq=10,eventname="A")
+basisfunction = unfold.firbasis(τ=(-.1,.4),sfreq=10,name="A")
 resAll = DataFrame()
 f  = @formula 0~1+condA+condB
 for s in unique(evts.subject)
@@ -83,8 +79,16 @@ for s in unique(evts.subject)
 end
 
 results = resAll[resAll.term.=="(Intercept)",:]
-#plot(results.time,results.estimate,
-#        group=(results.subject),
-#        layout=1,legend=true)
 
 results[results.time .== .1,:]
+
+using MixedModels
+basisfunction = unfold.firbasis(τ=(-.1,.4),sfreq=10,name="A")
+f  = @formula 0~1+condA+zerocorr(1+condA|subject)
+form = apply_schema(f, schema(f, evts), LinearMixedModel)
+form = FormulaTerm(form.lhs, unfold.TimeExpandedTerm.(form.rhs,Ref(basisfunction)))
+
+@test_broken unfold.unfoldDesignmatrix(unfold.UnfoldLinearMixedModel,f,evts,basisfunction)
+
+f  = @formula 0~1+condA+(1+condA|subject)
+Xs2 = unfold.unfoldDesignmatrix(unfold.UnfoldLinearMixedModel,f,evts,basisfunction)
