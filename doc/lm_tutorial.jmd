@@ -85,7 +85,7 @@ Classically, we would convolve this HRF function with a impulse-vector, with imp
 ```julia
 y = zeros(100)
 y[[10,30,37,45]] .=1
-y_conv = DSP.conv(y,bold.kernel(0))
+y_conv = conv(y,bold.kernel(0))
 Plots.plot(y_conv)
 ```
 Which one would use as a regressor against the recorded BOLD timecourse.
@@ -123,20 +123,24 @@ m = unfold.fit(unfold.UnfoldLinearModel,f,evts,data,basisfunction)
 ```
 
 ```julia
-Plots.plot(m)
+Plots.plot(m.results.time,m.results.estimate,
+        group=m.results.term,
+        layout=1,legend=:outerbottom)
 
 ```
+Cool! All overlapping activity has been removed and we recovered the simulated underlying signal.
+
 
 
 ```julia;eval=false;echo=false
 using Weave
 
 # convert to html
-weave("doc\\lm_tutorial.jmd")
+weave("doc/lm_tutorial.jmd","doc/ipynb/html/lm_tutorial.ipynb")
 
 # convert to a python notebook
-convert_doc("doc\\lm_tutorial.jmd", "doc\\lm_tutorial.ipynb")
+convert_doc("doc/lm_tutorial.jmd", "doc/ipynb/lm_tutorial.ipynb")
 
 # convert to md for README
-weave("doc\\lm_tutorial.jmd", doctype="pandoc", out_path = "README.md")
+#weave("doc\\lm_tutorial.jmd", doctype="pandoc", out_path = "README.md")
 ```

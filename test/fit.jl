@@ -1,3 +1,4 @@
+##
 using Test, StatsModels
 using DataFrames
 
@@ -16,7 +17,7 @@ data_missing = Array{Union{Missing,Number}}(undef,size(data,1))
 data_missing .= data
 data_missing[4500:4600] .= missing
 
-# Mass Univariate Linear
+## Mass Univariate Linear
 m_mul = unfold.fit(unfold.UnfoldLinearModel,f,evts,data_e,times)
 @test all(m_mul.results[(m_mul.results.time.==0.1),:estimate] .≈ [3.0 2.5 -1.5]')
 # Timexpanded Univariate Linear
@@ -29,7 +30,7 @@ m_tul = unfold.fit(unfold.UnfoldLinearModel,f,evts,data,basisfunction)
 m_mul_missing = unfold.fit(unfold.UnfoldLinearModel,f,evts,data_e_missing,times)
 @test m_mul_missing.results.estimate ≈ m_mul.results.estimate
 # Timexpanded Univariate Linear
-@test_broken m_tul_missing = unfold.fit(unfold.UnfoldLinearModel,f,evts,data_missing,basisfunction)
+m_tul_missing = unfold.fit(unfold.UnfoldLinearModel,f,evts,data_missing,basisfunction)
 @test m_tul_missing.results.estimate ≈ m_tul.results.estimate
 
 for k in 1:3
@@ -51,7 +52,7 @@ for k in 1:3
 end
 
 
-
+##
 data4,evts4 = loadtestdata("testCase4") #
 f4  = @formula 0~1+conditionA+conditionB # 4
 basisfunction4 = unfold.firbasis(τ=(-1,1),sfreq=1000,name="A")
@@ -77,7 +78,7 @@ data_r = reshape(data,(1,:))
 # cut the data into epochs
 # TODO This ignores subject bounds
 data_e,times = unfold.epoch(data=data_r,tbl=evts,τ=(-1.,1.9),sfreq=10)
-
+evts,data_e = unfold.dropMissingEpochs(evts,data_e)
 
 
 # Mass Univariate Mixed
@@ -91,32 +92,24 @@ basisfunction = unfold.firbasis(τ=(-0.2,0.3),sfreq=10)
 
 
 ##########
-basisfunction = unfold.firbasis(τ=(-.1,.4),sfreq=10,name="A")
-resAll = DataFrame()
-f  = @formula 0~1+condA+condB
-for s in unique(evts.subject)
-    ##
-    from = minimum(evts[evts.subject.==s,:latency])-10
-    to = maximum(evts[evts.subject.==s,:latency])+40
-    to = min(to,size(data,1))
-    evts_s = evts[evts.subject.==s,:]
-    evts_s.latency .-= from
-    m = unfold.fit(unfold.UnfoldLinearModel,f,evts_s,data[from:to],basisfunction,contrasts=Dict(:condA => EffectsCoding(), :condB => EffectsCoding()))
-    m.results.subject = s
-    append!(resAll,m.results)
+if 1 == 0
+    # Fit mass-univariate 1st level for all subjects
+    basisfunction = unfold.firbasis(τ=(-.1,.4),sfreq=10,name="A")
+    resAll = DataFrame()
+    f  = @formula 0~1+condA+condB
+    for s in unique(evts.subject)
+        ##
+        from = minimum(evts[evts.subject.==s,:latency])-10
+        to = maximum(evts[evts.subject.==s,:latency])+40
+        to = min(to,size(data,1))
+        evts_s = evts[evts.subject.==s,:]
+        evts_s.latency .-= from
+        m = unfold.fit(unfold.UnfoldLinearModel,f,evts_s,data[from:to],basisfunction,contrasts=Dict(:condA => EffectsCoding(), :condB => EffectsCoding()))
+        m.results.subject = s
+        append!(resAll,m.results)
+    end
+
+    results = resAll[resAll.term.=="(Intercept)",:]
+
+    results[results.time .== .1,:]
 end
-
-results = resAll[resAll.term.=="(Intercept)",:]
-
-results[results.time .== .1,:]
-
-using MixedModels
-basisfunction = unfold.firbasis(τ=(-.1,.4),sfreq=10,name="A")
-f  = @formula 0~1+condA+zerocorr(1+condA|subject)
-form = apply_schema(f, schema(f, evts), LinearMixedModel)
-form = FormulaTerm(form.lhs, unfold.TimeExpandedTerm.(form.rhs,Ref(basisfunction)))
-
-@test_broken unfold.unfoldDesignmatrix(unfold.UnfoldLinearMixedModel,f,evts,basisfunction)
-
-f  = @formula 0~1+condA+(1+condA|subject)
-Xs2 = unfold.unfoldDesignmatrix(unfold.UnfoldLinearMixedModel,f,evts,basisfunction)

@@ -139,7 +139,6 @@ function LinearMixedModel_wrapper(form,data::Array{<:Union{TData},1},Xs;wts = []
             push!(reterms, x)
         else
             cnames = coefnames(form.rhs[i])
-            println(typeof(x))
             push!(feterms, MixedModels.FeMat(x, isa(cnames, String) ? [cnames] : collect(cnames)))
         end
     end

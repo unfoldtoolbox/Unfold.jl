@@ -4,7 +4,7 @@ function condense(m,tbl,times)
     if typeof(cnames)<:String
         cnames = [cnames]
     end
-    
+
     cnames_rep = repeat(cnames,length(times))
 
     times_rep = repeat(times,1,length(cnames))
@@ -76,7 +76,6 @@ end
 
 function condense_fixef(mm,times)
     if typeof(mm.formula.rhs) <: Tuple
-
         fixefPart = mm.formula.rhs[1]
     else
         fixefPart = mm.formula.rhs

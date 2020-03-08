@@ -1,0 +1,108 @@
+---
+title: "First tests of overlap corrected rERP LMMs in Julia"
+author: "Benedikt Ehinger"
+date: 2020-02-09
+options:
+    line_width: 92
+---
+
+
+```julia;label=packages;
+using Revise, CSV, SparseArrays,DataFrames, MixedModels
+using DataFramesMeta
+```
+
+A bunch of functions to import data & generate formulas
+```julia;label=functions;
+function unstackUnfoldDF(df::DataFrame)
+    mm = []
+    for c in unique(df.colnames)
+        d_tmp = copy(unstack(df[df.colnames.==c,:],:tau,:Xdc))
+        rename!(d_tmp,Symbol.(c.*'_'.*string.(names(d_tmp))))
+        rename!(d_tmp,Dict(names(d_tmp)[1]=>:colnames,
+                           names(d_tmp)[2]=>:times,
+                           names(d_tmp)[3]=>:y,
+                           names(d_tmp)[4]=>:subject))
+        categorical!(d_tmp,:subject)
+        select!(d_tmp,Not(:colnames))
+        if isempty(mm)
+            mm = copy(d_tmp)
+        else
+            mm = join(mm,d_tmp,on=[:y,:times,:subject])
+        end
+        #print(first(mm,6))
+    end
+
+    return mm
+end
+
+# Formula Helper function
+function expandargs(x)
+    :(+$(x...))
+end
+
+# formula to generate the overlapping mixed effects
+function expandranef(x)
+    s = ""
+    for k in x
+        l = "(Intercept)_"*split(string(k),'_')[2]
+        s = s*"+(0+var\"$l\"|var\"$k\")"
+    end
+    Meta.parse(s[2:end])
+
+end
+```
+## Reading input
+This input is from the `export_design_to_csv.m` matlab file
+The output we have is for the formula `y~1+condA + (1+condA|subject) + (1|item)`
+```julia
+d = CSV.read("cache/bielefeld_subjectItem.csv",header=1,delim=",")
+d = unstackUnfoldDF(d) # this function generates wide representation from long csv file
+
+d_stim = CSV.read("cache/bielefeld_subjectItem_ranef-stimulus.csv",header=1,delim=",")
+d_stim = unstackUnfoldDF(d_stim)
+
+d_subj = CSV.read("cache/bielefeld_subjectItem_ranef-subject.csv",header=1,delim=",")
+d_subj = unstackUnfoldDF(d_subj)
+```
+
+Some further adjustments needed
+```julia
+stim_ix = typeof.(match.(r"stimulus", string.(names(d_stim)))) .== RegexMatch
+subj_ix = typeof.(match.(r"subject", string.(names(d_subj)))) .== RegexMatch
+subj_ix[3] = 0
+# index where the time-expanded predictors start.
+xdc_start = 4
+cutOff = 10 # use only first 3 times
+n_fix = names(d)[xdc_start:end][1:cutOff]
+n_stim = names(d_stim)[stim_ix][1:cutOff]
+n_subj = names(d_subj)[subj_ix][1:cutOff]
+lhs = :y # not sure if I actually need this anymore
+
+# Make an additional dataframe concatenating the Random Effects and Fixed Effects matrices
+d_fit_stim = hcat(d,d_stim[:,stim_ix])
+for n in n_stim
+    categorical!(d_fit_stim,n)
+end
+d_fit_subj = hcat(d,d_subj[:,subj_ix])
+for n in n_subj
+    categorical!(d_fit_subj,n)
+end
+```
+
+```julia
+f_sub_simple   = @eval @formula($lhs ~ 0+$(expandargs(n_fix))+(1|subject)) # no random effects => fast
+f_sub_zerocorr = @eval @formula($lhs ~ 0+$(expandargs(n_fix))+ zerocorr(0+$(expandargs(n_fix))|subject)) # zerocorr
+f_sub_zerocorr_expanded               = @eval @formula($lhs ~ 0+$(expandargs(n_fix))+$(expandranef(n_subj))) # zerocorr
+f_sub_zerocorr_item_zerocorr_expanded = @eval @formula($lhs ~ 0+$(expandargs(n_fix))+$(expandranef(n_stim))+zerocorr(0+$(expandargs(n_fix))|subject)) # zerocorr
+#f_sub_zerocorr_item_zerocorr_expanded = @eval @formula($lhs ~ 0+$(expandargs(n_fix))+$(expandranef(n_stim))) # zerocorr
+```
+
+```julia
+
+@time mm_s = fit(LinearMixedModel,f_sub_simple,d_fit_subj,verbose=0)
+@time mm_s_zc = fit(LinearMixedModel,f_sub_zerocorr,d_fit_subj,verbose=0)
+@time mm_s_zc_ex = fit(LinearMixedModel,f_sub_zerocorr_expanded,d_fit_subj,verbose=0)
+@time mm_i_zc_ex = fit(LinearMixedModel,f_sub_zerocorr_item_zerocorr_expanded,d_fit_stim,verbose=0)
+
+```
