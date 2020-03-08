@@ -8,28 +8,17 @@ options:
 
 
 ```julia;label=packages;
-using Revise
-using CSV
-using StatsModels
-using MixedModels
-using DataFrames
-using DataFramesMeta
-using Gadfly
-import DSP
+using StatsModels, MixedModels, DataFrames
+import DSP.conv
 import Plots
 import unfold
-Plots.gr()
+include("../test/test_utilities.jl") # to load the simulated data
 ```
 
 In this notebook we will fit regression models to (simulated) EEG data. We will see that we need some type of overlap correction, as external events are so close to each other, that the respective brain responses overlap.
 If you want more detailed introduction to this topic check out my paper: https://peerj.com/articles/7838/
 ```julia
-testCase = "testCase2"
-#testCase = "testCaseMultisubject"
-data = CSV.read("test\\"*testCase*"_data.csv", header=0)
-data = convert(Matrix,data)
-data = dropdims(data,dims=1) # convert to vector
-evts = CSV.read("test\\"*testCase*"_events.csv");
+data, evts = loadtestdata("testcase2","../test/")
 ```
 ```julia
 show(first(evts,6,),allcols=true)
@@ -37,7 +26,8 @@ show(first(evts,6,),allcols=true)
 
 The data has little noise and the underlying signal is a pos-neg spike pattern
 ```julia
-Plots.plot(data[1:300])
+Plots.plot(range(1/50,length=300,step=1/50),data[1:300])
+Plots.vline!(evts[evts.latency.<=300,:latency]./50) # show events
 ```
 
 
@@ -53,7 +43,7 @@ data_epochs,times = unfold.epoch(data=data_r,tbl=evts,τ=(-0.4,0.8),sfreq=50)
 
 We define a formula that we want to apply to each point in time
 ```julia
-f  = @formula 0~1+conditionA*conditionB
+f  = @formula 0~1+conditionA+conditionB # 0 as a dummy, we will combine wit data later
 ```
 
 We fit the special-type `UnfoldLinearModel` to the data
@@ -70,11 +60,14 @@ Which contain the model, the original formula, the original events and also a *t
 first(m.results,6)
 ```
 
-We can also plot it using Gadfly
+We can also plot it:
 ```julia
-d = @linq m.results |> where(:group.=="mass univariate")
-plot(d,x=:time,y=:estimate,color=:term,Geom.LineGeometry)
+Plots.plot(m.results.time,m.results.estimate,
+        group=m.results.term,
+        layout=1,legend=:outerbottom)
+# equivalent: plot(m)
 ```
+As can be seen a lot is going on here. As we will see later, most of the activity is due to overlap with the next event
 
 
 ## Basis Functions
@@ -117,9 +110,9 @@ This allows to model any arbitrary linear overlap shape, and doesn't force us to
 
 
 ## Timeexpanded / Deconvolved ModelFit
-We can now define the formula again
+Remember our formula from above
 ```julia
-f  = @formula 0~1+conditionA*conditionB
+f
 ```
 
 For the left-handside we use "0" as the data is separated from the events. This will in the future allow us to fit multiple channels easily.
@@ -130,9 +123,7 @@ m = unfold.fit(unfold.UnfoldLinearModel,f,evts,data,basisfunction)
 ```
 
 ```julia
-#Gadfly.push_theme(:dark)
-d = @linq m.results |> where(:group.=="fixed")
-plot(d,x=:time,y=:estimate,color=:term,Geom.LineGeometry)
+Plots.plot(m)
 
 ```
 

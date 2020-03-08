@@ -17,13 +17,12 @@ end
 function combineDesignmatrices(X1::UnfoldDesignmatrix,X2::UnfoldDesignmatrix)
         Xs1 = X1.Xs
         Xs2 = X2.Xs
-        println(typeof(X1.Xs))
         if typeof(X1.Xs) <: SparseMatrixCSC
                 # easy case
 
                 sX1 = size(Xs1,1)
                 sX2 = size(Xs2,1)
-                println("$sX1,$sX2")
+
                 # append 0 to the shorter designmat
                 if sX1 < sX2
                         Xs1 = SparseMatrixCSC(sX2, Xs1.n, Xs1.colptr, Xs1.rowval, Xs1.nzval)
@@ -44,7 +43,6 @@ end
 Base.:+(X1::UnfoldDesignmatrix, X2::UnfoldDesignmatrix) = combineDesignmatrices(X1,X2)
 # with basis expansion
 function unfoldDesignmatrix(type,f,tbl,basisfunction;kwargs...)
-        println(kwargs)
         Xs,form = generateDesignmatrix(type,f,tbl,basisfunction; kwargs...)
         UnfoldDesignmatrix(form,Xs)
 end
@@ -60,7 +58,7 @@ function generateDesignmatrix(type,f,tbl,basisfunction;contrasts= Dict{Symbol,An
         println("generateDesignmatrix")
         if !isnothing(basisfunction)
 
-                println(typeof(form.rhs))
+
                 if type <: UnfoldLinearMixedModel
                         println("Mixed Model")
                         form = FormulaTerm(form.lhs, TimeExpandedTerm.(form.rhs,Ref(basisfunction)))
@@ -88,8 +86,7 @@ end
 
 # Timeexpand the fixed effect part
 function StatsModels.modelcols(term::TimeExpandedTerm,tbl)
-        println("Unspecified modelcols")
-        println(dump(term))
+
         X = modelcols(term.term,tbl)
         time_expand(X,term,tbl)
 end
@@ -98,7 +95,7 @@ end
 function StatsModels.modelcols(term::TimeExpandedTerm{<:RandomEffectsTerm},tbl)
 #function StatsModels.modelcols(term::TimeExpandedTerm{<:Union{<:RandomEffectsTerm,<:AbstractTerm{<:RandomEffectsTerm}}},tbl)
 # exchange this to get ZeroCorr to work
-        println("RE modelcols")
+
         ntimes = length(term.basisfunction.times)
 
         # get the non-timeexpanded reMat
@@ -236,12 +233,12 @@ end
 
 function time_expand(X,term,tbl)
 
-        to = TimerOutput()
+        #to = TimerOutput()
         npos = sum(term.basisfunction.times.>=0)
         nneg = sum(term.basisfunction.times.<0)
         ntimes = length(term.basisfunction.times)
         srate    = 1/Float64(term.basisfunction.kernel.times.step)
-        println("$srate - $(term.basisfunction.times)")
+
         mintimes = Int64(minimum(term.basisfunction.times) * srate)
 
         X = reshape(X,size(X,1),:)
@@ -250,7 +247,7 @@ function time_expand(X,term,tbl)
         nrowsX = size(X)[1]
         ncolsXdc = ntimes*ncolsX
 
-        println(dump(term.eventtime))
+
         onsets = tbl[term.eventtime]
 
         bases = term.basisfunction.kernel.(onsets)
@@ -267,7 +264,8 @@ function time_expand(X,term,tbl)
 
         # generate column indices
         cols = []
-        @timeit to "Col"  for Xcol in 1:ncolsX
+        #@timeit to "Col"
+        for Xcol in 1:ncolsX
                 for b in 1:length(bases)
                         for c in 1:ntimes
                                 push!(cols,repeat([c+(Xcol-1)*ntimes],length(nzrange(bases[b],c))))
@@ -284,8 +282,9 @@ function time_expand(X,term,tbl)
         end
         vals = vcat(vals...)
         ix = rows.>0
-        @timeit to "generate" A = sparse(rows[ix],cols[ix],vals[ix])
-        println(to)
+        #@timeit to "generate"
+        A = sparse(rows[ix],cols[ix],vals[ix])
+        #println(to)
         return A
 end
 ## Coefnames

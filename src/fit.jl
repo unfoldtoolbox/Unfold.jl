@@ -9,8 +9,8 @@ function fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::Fo
     # Fit the model
     @timeit to "fit" df = unfoldFit(type,Xs,dropdims(data,dims=1))
 
-    # Condense output and return
     @timeit to "condense" c = condense(df,tbl,times)
+    # Condense output and return
     println(to)
     return c
 end
@@ -41,20 +41,15 @@ end
 
 ## UnfoldFit functions
 # Mass Univariate Linear MOdel
-function unfoldFit(::Type{UnfoldLinearModel},X::UnfoldDesignmatrix,data::Array{T,2}) where {T}
+function unfoldFit(::Type{UnfoldLinearModel},X::UnfoldDesignmatrix,data)
     beta,optim = fit_lm(X.Xs, data)
     m = UnfoldLinearModel(beta,optim,X.formulas,X.Xs)
     return m
 end
-# Timeexpanded Model
-function unfoldFit(::Type{UnfoldLinearModel},X::UnfoldDesignmatrix,data::Array{T,1}) where {T}
-    beta,optim = fit_lm(X.Xs,data)
-    m = UnfoldLinearModel(beta,optim,X.formulas,X.Xs)
-    return m
-end
+
 
 # Massive Univariate Mixed Model
-function unfoldFit(::Type{UnfoldLinearMixedModel},X::UnfoldDesignmatrix,data::Array{T,2}) where {T}
+function unfoldFit(::Type{UnfoldLinearMixedModel},X::UnfoldDesignmatrix,data::AbstractArray{T,2}) where {T<:Union{Missing, <:Number}}
     df = Array{LinearMixedModel,1}()
     for t in range(1,stop=size(data,1))
         #println("calculating t $t from $(size(data,1))")
@@ -71,7 +66,7 @@ function unfoldFit(::Type{UnfoldLinearMixedModel},X::UnfoldDesignmatrix,data::Ar
     return mm
 end
 
-function fit_lm(X,data::Array{T,2}) where {T}
+function fit_lm(X,data::AbstractArray{T,2}) where {T<:Union{Missing, <:Number}}
     # msas univariate, data = times x epochs
     if size(X,1) > size(data,2)
         X = X[1:size(data,2),:]
@@ -79,18 +74,27 @@ function fit_lm(X,data::Array{T,2}) where {T}
     else
         data =data[:,1:size(X,1)]
     end
-    println("mass univariate case")
     # mass univariate
-    beta = X \ data'
+    beta = Array{Union{Missing,Number}}(undef,size(X,2),size(data,1))
+
+    for t in 1:size(data,1)
+        #println("$t,$(sum()")
+        ix = .!ismissing.(data[t,:])
+        beta[:,t] = X[ix,:] \ data[t,ix]
+    end
+
+    #beta = X \ data'
+
+    #println(dump(beta))
     history = [] # no history implemented (yet?)
     #beta = dropdims(beta,dims=1) #
     return(beta,[history])
 
 end
-function fit_lm(X,data::Array{T,1}) where {T}
+function fit_lm(X,data::AbstractArray{T,1}) where {T<:Union{Missing, <:Number}}
     # timeexpanded, data = vector
     # X is epochs x predictor
-    println("fit_lm \n, data $(size(data))\n X $(size(X)) \n)")
+
 
     # Cut X or y depending on which is larger
     if size(X,1) > size(data,1)
@@ -99,19 +103,18 @@ function fit_lm(X,data::Array{T,1}) where {T}
     else
         data =data[1:size(X,1)]
     end
-    println(size(data))
-
-    println("time expanded case")
+    ix = .!ismissing.(data)
     # likely much larger matrix, using lsqr
-    beta,history = lsqr(X,data,log=true)
+    beta,history = lsqr(X[ix,:],data[ix],log=true)
 
-    println("fitlm")
-    println(size(beta))
     return(beta,history)
 end
 
 
-function LinearMixedModel_wrapper(form,data::Array{T2,1},Xs;wts = []) where {T2}
+function LinearMixedModel_wrapper(form,data::Array{<:Union{TData},1},Xs;wts = []) where {TData<:Number}
+#    function LinearMixedModel_wrapper(form,data::Array{<:Union{Missing,TData},1},Xs;wts = []) where {TData<:Number}
+
+
     # Make sure X & y are the same size
     if size(Xs[1],1) > size(data,1)
         println("Timeexpanded designmat longer than data, adding zeros to data. Future versions will fix this")
@@ -123,18 +126,20 @@ function LinearMixedModel_wrapper(form,data::Array{T2,1},Xs;wts = []) where {T2}
     end
 
     # TODO what follows will be updated and potentially replaced when LinearMixedModel is refactored
-    # It is copied 1:1 from MixedModels.jl
+    # It is copied 0.98:1 from MixedModels.jl (the missing part is new)
 
     data= (reshape(float(data), (:, 1)))
-    T = eltype(data)
+    T = eltype(TData)
 
     reterms = ReMat{T}[]
     feterms = FeMat{T}[]
     for (i, x) in enumerate(Xs)
+
         if isa(x, ReMat{T})
             push!(reterms, x)
         else
             cnames = coefnames(form.rhs[i])
+            println(typeof(x))
             push!(feterms, MixedModels.FeMat(x, isa(cnames, String) ? [cnames] : collect(cnames)))
         end
     end

@@ -10,17 +10,46 @@ f  = @formula 0~1+continuousA+continuousB # 1
 data_r = reshape(data,(1,:))
 # cut the data into epochs
 data_e,times = unfold.epoch(data=data_r,tbl=evts,τ=(-1.,1.9),sfreq=10)
-# Additional step because the epoching function might return missing values
-evts_e,data_e = unfold.dropMissingEpochs(evts,data_e)
+data_e_missing = data_e
+data_e_missing[1,25,end-5:end] .= missing
+data_missing = Array{Union{Missing,Number}}(undef,size(data,1))
+data_missing .= data
+data_missing[4500:4600] .= missing
 
 # Mass Univariate Linear
 m_mul = unfold.fit(unfold.UnfoldLinearModel,f,evts,data_e,times)
 @test all(m_mul.results[(m_mul.results.time.==0.1),:estimate] .≈ [3.0 2.5 -1.5]')
-
 # Timexpanded Univariate Linear
 basisfunction = unfold.firbasis(τ=(-1,1),sfreq=10,name="A")
 m_tul = unfold.fit(unfold.UnfoldLinearModel,f,evts,data,basisfunction)
 @test all(m_tul.results[(m_tul.results.time.==0.1),:estimate] .≈ [3.0 2.5 -1.5]')
+
+
+# Add Missing in Data
+m_mul_missing = unfold.fit(unfold.UnfoldLinearModel,f,evts,data_e_missing,times)
+@test m_mul_missing.results.estimate ≈ m_mul.results.estimate
+# Timexpanded Univariate Linear
+m_tul_missing = unfold.fit(unfold.UnfoldLinearModel,f,evts,data_missing,basisfunction)
+@test m_tul_missing.results.estimate ≈ m_tul.results.estimate
+
+for k in 1:3
+    if k == 1
+        f  = @formula 0~1
+    elseif k == 2
+        f  = @formula 0~1+continuousA
+    elseif k == 3
+        f  = @formula 0~1+continuousB
+    end
+    println("Testing Runtime $k with Formula:$f")
+    Xs = unfold.unfoldDesignmatrix(unfold.UnfoldLinearModel,f,evts)
+
+    # Fit the model
+    df = unfold.unfoldFit(unfold.UnfoldLinearModel,Xs,dropdims(data_e,dims=1))
+    c = unfold.condense(df,evts,times)
+    unfold.fit(unfold.UnfoldLinearModel,f,evts,data_e,times)
+    unfold.fit(unfold.UnfoldLinearModel,f,evts,data,basisfunction)
+end
+
 
 
 data4,evts4 = loadtestdata("testCase4") #
@@ -35,6 +64,10 @@ basisfunction4 = unfold.firbasis(τ=(-1,1),sfreq=1000,name="A")
 ###############################
 data,evts = loadtestdata("testCase3") #
 data = data.+ 1*randn(size(data)) # we have to add minimal noise, else mixed models crashes.
+data_missing = Array{Union{Missing,Number}}(undef,size(data,1))
+data_missing .= data
+data_missing[4500:4600] .= missing
+
 categorical!(evts,:subject)
 f  = @formula 0~1+condA+condB + (1+condA+condB|subject)
 #f  = @formula 0~1 + (1|subject)
@@ -44,8 +77,7 @@ data_r = reshape(data,(1,:))
 # cut the data into epochs
 # TODO This ignores subject bounds
 data_e,times = unfold.epoch(data=data_r,tbl=evts,τ=(-1.,1.9),sfreq=10)
-# Additional step because the epoching function might return missing values
-evts_e,data_e = unfold.dropMissingEpochs(evts,data_e)
+
 
 
 # Mass Univariate Mixed
@@ -56,10 +88,6 @@ evts_e,data_e = unfold.dropMissingEpochs(evts,data_e)
 # Timexpanded Univariate Mixed
 basisfunction = unfold.firbasis(τ=(-0.2,0.3),sfreq=10)
 @time m_tum = unfold.fit(unfold.UnfoldLinearMixedModel,f,evts,data,basisfunction, contrasts=Dict(:condA => EffectsCoding(), :condB => EffectsCoding()) )
-
-f  = @formula 0~1+(1|subject)
-@test_broken  m_tum = unfold.fit(unfold.UnfoldLinearMixedModel,f,evts,data,basisfunction, contrasts=Dict(:condA => EffectsCoding(), :condB => EffectsCoding()) )
-
 
 
 ##########
