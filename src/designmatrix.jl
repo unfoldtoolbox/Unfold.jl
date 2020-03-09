@@ -35,7 +35,7 @@ function combineDesignmatrices(X1::UnfoldDesignmatrix,X2::UnfoldDesignmatrix)
 
         end
         if X1.formulas.rhs.basisfunction.times.step != X2.formulas.rhs.basisfunction.times.step
-                warning("Concatenating formulas with different sampling rates. Be sure that this is what you want.")
+                @warn("Concatenating formulas with different sampling rates. Be sure that this is what you want.")
         end
         UnfoldDesignmatrix([X1.formulas X2.formulas],Xcomb)
 end
