@@ -11,7 +11,7 @@ function fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::Fo
 
     @timeit to "condense" c = condense(df,tbl,times)
     # Condense output and return
-    println(to)
+    @debug(to)
     return c
 end
 
@@ -24,16 +24,17 @@ function fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::Fo
     @timeit to "unfoldDesignmat" Xs = unfoldDesignmatrix(type,f,tbl,basisfunction;kwargs...)
 
     # Fit the model
+
     @timeit to "unfoldFit" m = unfoldFit(type,Xs,dropdims(data,dims=2))
 
     @timeit to "unfoldCondense" c = condense(m,tbl)
-    println(to)
+    @debug(to)
     return c
 end
 
 # helper function for 1 channel data
 function fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::FormulaTerm, tbl::DataFrame, data::Array{T,1}, basisfunction::BasisFunction; kwargs...) where {T}
-    println("data array is size (X,), reshaping to (1,X)")
+    @debug("data array is size (X,), reshaping to (1,X)")
     data = reshape(data,:,1)
     fit(type,f,tbl,data,basisfunction;kwargs...)
 end
@@ -105,6 +106,13 @@ function fit_lm(X,data::AbstractArray{T,1}) where {T<:Union{Missing, <:Number}}
     end
     ix = .!ismissing.(data)
     # likely much larger matrix, using lsqr
+    println(typeof(X[ix,:]))
+    println(typeof(data[ix,:]))
+    println(eltype(data[ix,:]))
+    println(typeof(ix))
+    println(eltype(X[ix,:]))
+    #println(X[ix,:])
+    #println(data[ix])
     beta,history = lsqr(X[ix,:],data[ix],log=true)
 
     return(beta,history)
@@ -117,7 +125,7 @@ function LinearMixedModel_wrapper(form,data::Array{<:Union{TData},1},Xs;wts = []
 
     # Make sure X & y are the same size
     if size(Xs[1],1) > size(data,1)
-        println("Timeexpanded designmat longer than data, adding zeros to data. Future versions will fix this")
+        @warn("Timeexpanded designmat longer than data, adding zeros to data. Future versions will fix this")
         target = size(Xs[1],1)-size(data,1)
         push!(data,zeros(target)...)
         #data[end+1:size(Xs[1],1)] .= 0

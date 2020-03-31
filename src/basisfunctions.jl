@@ -1,18 +1,20 @@
 # implement different basisfunctions e.g.
 
 
-struct BasisFunction{T<:AbstractVector}
-    kernel::Function
-    times::T
-    type::String
-    name::String
+struct BasisFunction
+    kernel::Function # function that given an event onset, results in a kernel used to timeexpand
+    colnames::AbstractVector # vector of names along columns of kernel-output
+    times::AbstractVector # vector of times along rows of kernel-output (in seconds)
+    type::String # type of basisfunction (bookkeeping)
+    name::String # name of the event, XXX used for naming coefficients
+    shiftOnset::Integer # by how many samples do we need to shift the event onsets?
 end
 
 
 
 function Base.show(io::IO, obj::BasisFunction)
     println(io, "name: $(obj.name)")
-    println(io, "times: $(obj.times)")
+    println(io, "colnames: $(obj.colnames)")
     println(io, "kernel: $(obj.type)")
 end
 
@@ -21,19 +23,28 @@ firbasis(;τ,sfreq,name="") = firbasis(τ,sfreq,name)
 firbasis(τ,sfreq)            = firbasis(τ,sfreq,"")
 
 function firbasis(τ,sfreq,name::String)
-    times =range(τ[1],stop=τ[2],step=1 ./sfreq)
-    kernel=e->firkernel([1-(e%1),e % 1],times)
+
+    times =range(τ[1],stop=τ[2]+ 1 ./sfreq,step=1 ./sfreq)
+    kernel=e->firkernel(e,times)
     type = "firkernel"
-    return BasisFunction(kernel,times,type,name)
+
+    shiftOnset = Int64(τ[1] * sfreq)
+
+    return BasisFunction(kernel,times[1:end-1],times,type,name,shiftOnset)
 end
 
 
 function firkernel(e,times)
-    @assert(length(e)==2,"")
+    @assert ndims(e) <= 1 #either single onset or a row vector where we will take the first one :)
+    if size(e,1) > 1
+        # XXX we will soon assume that the second entry would be the duration
+        e = Float64(e[1])
+    end
+    e = [1 .- (e .% 1)  e .% 1]
     e[isapprox.(e,0,atol = 1e-15)] .= 0
     ksize=length(times) # kernelsize
 
-    kernel = spdiagm(ksize+1,ksize,0 => repeat([e[1]],ksize), -1 => repeat([e[2]],ksize))
+    kernel = spdiagm(ksize+1,ksize,0 => repeat([e[:,1]],ksize), -1 => repeat([e[:,2]],ksize))
 
     return(kernel)
 
@@ -51,10 +62,9 @@ function hrfbasis(TR::Float64;parameters= [6. 16. 1. 1. 6. 0. 32.],name::String=
     #        p(5) - ratio of response to undershoot                6
     #        p(6) - onset {seconds}                                0
     #        p(7) - length of kernel {seconds}                    32
-    times = 0
     kernel=e->hrfkernel(e,TR,parameters)
     type = "hrfkernel"
-    return BasisFunction(kernel,[times],type,name)
+    return BasisFunction(kernel,["hrf"],range(0,(length(kernel(0))-1)*TR,step=TR),type,name,0)
 end
 
 function hrfkernel(e,TR,p)
@@ -66,6 +76,6 @@ function hrfkernel(e,TR,p)
     hrf = hrf[range(1,stop=Int(1+floor(p[7] ./ TR )))];
     hrf = hrf ./ sum(hrf);
 
-    return(hrf)
+    return(SparseMatrixCSC(sparse(hrf)))
 
 end

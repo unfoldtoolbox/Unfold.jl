@@ -1,4 +1,4 @@
-for k = 4;[1 2 3 15]
+for k = 2;[1 2 3 15]
     
     rng(1);
     
@@ -49,16 +49,16 @@ for k = 4;[1 2 3 15]
             cat= struct();
             cat.eventname = 'stimulusA';
             cat.type = '1x2';
-            cat.overlap = 0.5;
+            cat.overlap = 0;
             cat.predictorName = 'conditionA';
             cat.effectsize = 1;
             cat.range = [0,100];
             
             signals{1} = intercept;
             signals{1}.range = nan;
-            signals{1}.overlap = -1;
+            signals{1}.overlap = 0;
             signals{1}(2) = cat;
-            signals{1}(2).overlap = 0.5;
+            signals{1}(2).overlap = 0;
             signals{1}(2).effectsize= 2.5;
             signals{1}(3) = cat;
             signals{1}(3).predictorName = 'conditionB';

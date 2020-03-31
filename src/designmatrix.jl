@@ -1,7 +1,7 @@
 struct TimeExpandedTerm{T<:AbstractTerm} <: AbstractTerm
         term::T
         basisfunction::BasisFunction
-        eventtime::Symbol
+        eventfields::Array{Symbol}
 end
 
 
@@ -53,27 +53,34 @@ function unfoldDesignmatrix(type,f,tbl;kwargs...)
         UnfoldDesignmatrix(form,Xs)
 
 end
-function generateDesignmatrix(type,f,tbl,basisfunction;contrasts= Dict{Symbol,Any}())
+function generateDesignmatrix(type,f,tbl,basisfunction;contrasts= Dict{Symbol,Any}(), kwargs...)
         form = apply_schema(f, schema(f, tbl, contrasts), LinearMixedModel)
-        println("generateDesignmatrix")
+        @debug("generateDesignmatrix")
         if !isnothing(basisfunction)
 
 
                 if type <: UnfoldLinearMixedModel
-                        println("Mixed Model")
-                        form = FormulaTerm(form.lhs, TimeExpandedTerm.(form.rhs,Ref(basisfunction)))
+                        @debug("Mixed Model")
+                        form = FormulaTerm(form.lhs, TimeExpandedTerm.(form.rhs,Ref(basisfunction),get(kwargs,:eventfields,nothing)))
                 else
-                        println("not mixed model, $type")
-                        form = FormulaTerm(form.lhs, TimeExpandedTerm(form.rhs,basisfunction))
+                        @debug("not mixed model, $type")
+                        println(keys(kwargs))
+                        form = FormulaTerm(form.lhs, TimeExpandedTerm(form.rhs,basisfunction,get(kwargs,:eventfields,nothing)))
                 end
         end
         X = modelcols(form.rhs, tbl)
         return X,form
 end
 
+function TimeExpandedTerm(term,basisfunction,eventfields::Nothing)
+        TimeExpandedTerm(term, basisfunction)
+end
+function TimeExpandedTerm(term,basisfunction,eventfields::Symbol)
+        TimeExpandedTerm(term, basisfunction,[eventfields])
+end
 
-function TimeExpandedTerm(term,basisfunction;eventtime=:latency)
-        TimeExpandedTerm(term, basisfunction,eventtime)
+function TimeExpandedTerm(term,basisfunction;eventfields=:latency)
+        TimeExpandedTerm(term, basisfunction,eventfields)
 end
 
 function Base.show(io::IO, p::TimeExpandedTerm)
@@ -96,7 +103,7 @@ function StatsModels.modelcols(term::TimeExpandedTerm{<:RandomEffectsTerm},tbl)
 #function StatsModels.modelcols(term::TimeExpandedTerm{<:Union{<:RandomEffectsTerm,<:AbstractTerm{<:RandomEffectsTerm}}},tbl)
 # exchange this to get ZeroCorr to work
 
-        ntimes = length(term.basisfunction.times)
+
 
         # get the non-timeexpanded reMat
         reMat = modelcols(term.term,tbl)
@@ -123,7 +130,7 @@ function StatsModels.modelcols(term::TimeExpandedTerm{<:RandomEffectsTerm},tbl)
         end
 
         group = tbl[rhs.sym]
-        time = tbl[term.eventtime]
+        time = tbl[term.eventfields]
 
         # get the from-to onsets of the grouping varibales
         onsets = time_expand_getRandomGrouping(group,time,term.basisfunction)
@@ -234,29 +241,36 @@ end
 function time_expand(X,term,tbl)
 
         #to = TimerOutput()
-        npos = sum(term.basisfunction.times.>=0)
-        nneg = sum(term.basisfunction.times.<0)
-        ntimes = length(term.basisfunction.times)
-        srate    = 1/Float64(term.basisfunction.kernel.times.step)
+        nColsBasis = size(term.basisfunction.kernel(0),2)
 
-        mintimes = Int64(minimum(term.basisfunction.times) * srate)
+
+
+        # We need the
+
 
         X = reshape(X,size(X,1),:)
 
         ncolsX = size(X)[2]
         nrowsX = size(X)[1]
-        ncolsXdc = ntimes*ncolsX
+        ncolsXdc = nColsBasis*ncolsX
+
+        onsets = tbl[term.eventfields[1]]
 
 
-        onsets = tbl[term.eventtime]
-
-        bases = term.basisfunction.kernel.(onsets)
-
-
+        if typeof(term.eventfields) <:Array && length(term.eventfields) == 1
+                bases = term.basisfunction.kernel.(tbl[term.eventfields[1]])
+                println("XXX easy")
+        else
+                bases = term.basisfunction.kernel.(eachrow(tbl[term.eventfields]))
+                println("XXX rowwise")
+        end
+        println(dump(bases))
         # generate rowindices
         rows =  copy(rowvals.(bases))
+
+
         for r in 1:length(rows)
-                rows[r] .+= floor(onsets[r]-1)+mintimes
+                rows[r] .+= floor(onsets[r]-1)+term.basisfunction.shiftOnset
         end
 
         rows = vcat(rows...)
@@ -265,10 +279,11 @@ function time_expand(X,term,tbl)
         # generate column indices
         cols = []
         #@timeit to "Col"
+
         for Xcol in 1:ncolsX
                 for b in 1:length(bases)
-                        for c in 1:ntimes
-                                push!(cols,repeat([c+(Xcol-1)*ntimes],length(nzrange(bases[b],c))))
+                        for c in 1:nColsBasis
+                                push!(cols,repeat([c+(Xcol-1)*nColsBasis],length(nzrange(bases[b],c))))
                         end
                 end
         end
@@ -290,11 +305,11 @@ end
 ## Coefnames
 function StatsModels.coefnames(term::TimeExpandedTerm)
         names = coefnames(term.term)
-        times = term.basisfunction.times
+        colnames = term.basisfunction.colnames
         if typeof(names) == String
                 names = [names]
         end
-        return kron(names.*" : ",string.(times))
+        return kron(names.*" : ",string.(colnames))
 end
 
 function StatsModels.coefnames(term::MixedModels.ZeroCorr)
