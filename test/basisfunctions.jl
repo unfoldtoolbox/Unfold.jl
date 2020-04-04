@@ -8,7 +8,7 @@ firbase = unfold.firbasis(τ=(-1,1),sfreq=10)
 
 @test firbase.name == ""
 # test basics of basisfunction
-@test length(collect(firbase.times)) == 21
+@test length(collect(firbase.colnames)) == 21
 @test unique(firbase.kernel(1))==[1.0,0.0]
 
 # testing the non-sampling rate samples
