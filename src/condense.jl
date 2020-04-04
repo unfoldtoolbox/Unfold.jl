@@ -84,8 +84,15 @@ function condense_fixef(mm,colnames_basis)
 
     cnames = [c[1] for c in split.(coefnames(fixefPart)," :")]
 
-    colnames_basis =  repeat(colnames_basis,length(unique(cnames)))
 
+    if length(colnames_basis)==1
+
+        colnames_basis = [colnames_basis]
+
+    end
+
+    colnames_basis =  repeat(colnames_basis,length(unique(cnames)))
+    
 
     return DataFrame(term=cnames,estimate=MixedModels.fixef(mm),stderror=MixedModels.stderror(mm),group="fixed",colnames_basis=colnames_basis)
 end
@@ -112,11 +119,14 @@ function condense_ranef(mm,colnames_basis)
     nvec = length.(keys.(getproperty.(values(σρ),:σ)))
     group = []
     for n in zip(nmvec,nvec)
+
         append!(group,repeat([n[1]],n[2]))
     end
-
+    if length(colnames_basis)==1
+        colnames_basis = [colnames_basis]
+    end
     colnames_basis =  repeat(colnames_basis,length(unique(cnames)))
     # combine
-    return DataFrame(term=cnames,estimate=σvec,stderror=NaN,group=group,time=colnames_basis)
+    return DataFrame(term=cnames,estimate=σvec,stderror=NaN,group=group,colnames_basis=colnames_basis)
 
 end

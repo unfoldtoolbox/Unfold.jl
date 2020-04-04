@@ -130,7 +130,7 @@ function StatsModels.modelcols(term::TimeExpandedTerm{<:RandomEffectsTerm},tbl)
         end
 
         group = tbl[rhs.sym]
-        time = tbl[term.eventfields]
+        time = tbl[term.eventfields[1]]
 
         # get the from-to onsets of the grouping varibales
         onsets = time_expand_getRandomGrouping(group,time,term.basisfunction)

@@ -8,7 +8,7 @@ function fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::Fo
 
     # Fit the model
     @timeit to "fit" df = unfoldFit(type,Xs,dropdims(data,dims=1))
-
+    
     @timeit to "condense" c = condense(df,tbl,times)
     # Condense output and return
     @debug(to)
