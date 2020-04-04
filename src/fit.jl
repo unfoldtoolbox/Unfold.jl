@@ -106,13 +106,6 @@ function fit_lm(X,data::AbstractArray{T,1}) where {T<:Union{Missing, <:Number}}
     end
     ix = .!ismissing.(data)
     # likely much larger matrix, using lsqr
-    println(typeof(X[ix,:]))
-    println(typeof(data[ix,:]))
-    println(eltype(data[ix,:]))
-    println(typeof(ix))
-    println(eltype(X[ix,:]))
-    #println(X[ix,:])
-    #println(data[ix])
     beta,history = lsqr(X[ix,:],data[ix],log=true)
 
     return(beta,history)

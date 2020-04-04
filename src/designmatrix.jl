@@ -64,7 +64,7 @@ function generateDesignmatrix(type,f,tbl,basisfunction;contrasts= Dict{Symbol,An
                         form = FormulaTerm(form.lhs, TimeExpandedTerm.(form.rhs,Ref(basisfunction),get(kwargs,:eventfields,nothing)))
                 else
                         @debug("not mixed model, $type")
-                        println(keys(kwargs))
+
                         form = FormulaTerm(form.lhs, TimeExpandedTerm(form.rhs,basisfunction,get(kwargs,:eventfields,nothing)))
                 end
         end
@@ -259,12 +259,12 @@ function time_expand(X,term,tbl)
 
         if typeof(term.eventfields) <:Array && length(term.eventfields) == 1
                 bases = term.basisfunction.kernel.(tbl[term.eventfields[1]])
-                println("XXX easy")
         else
+
                 bases = term.basisfunction.kernel.(eachrow(tbl[term.eventfields]))
-                println("XXX rowwise")
+
         end
-        println(dump(bases))
+
         # generate rowindices
         rows =  copy(rowvals.(bases))
 
@@ -295,6 +295,7 @@ function time_expand(X,term,tbl)
         for Xcol in 1:ncolsX
                 push!(vals,vcat(nonzeros.(bases).*X[:,Xcol]...))
         end
+
         vals = vcat(vals...)
         ix = rows.>0
         #@timeit to "generate"

@@ -25,7 +25,7 @@ firbasis(τ,sfreq)            = firbasis(τ,sfreq,"")
 function firbasis(τ,sfreq,name::String)
 
     times =range(τ[1],stop=τ[2]+ 1 ./sfreq,step=1 ./sfreq)
-    kernel=e->firkernel(e,times)
+    kernel=e->firkernel(e,times[1:end-1])
     type = "firkernel"
 
     shiftOnset = Int64(τ[1] * sfreq)
@@ -44,7 +44,7 @@ function firkernel(e,times)
     e[isapprox.(e,0,atol = 1e-15)] .= 0
     ksize=length(times) # kernelsize
 
-    kernel = spdiagm(ksize+1,ksize,0 => repeat([e[:,1]],ksize), -1 => repeat([e[:,2]],ksize))
+    kernel = spdiagm(ksize+1,ksize,0 => repeat([e[1]],ksize), -1 => repeat([e[2]],ksize))
 
     return(kernel)
 
@@ -64,17 +64,43 @@ function hrfbasis(TR::Float64;parameters= [6. 16. 1. 1. 6. 0. 32.],name::String=
     #        p(7) - length of kernel {seconds}                    32
     kernel=e->hrfkernel(e,TR,parameters)
     type = "hrfkernel"
-    return BasisFunction(kernel,["hrf"],range(0,(length(kernel(0))-1)*TR,step=TR),type,name,0)
+    return BasisFunction(kernel,["hrf"],range(0,(length(kernel([0, 1]))-1)*TR,step=TR),type,name,0)
 end
 
 function hrfkernel(e,TR,p)
+    @assert ndims(e) <= 1 #either single onset or a row vector where we will take the first one :)
+
     # code adapted from SPM12b
-    u   = 1-(e%TR) .+ range(0,stop = ceil(p[7]),step=TR) .- p[6];
-    g1  = Gamma(p[1] ./ p[3],1 ./ p[3])
-    g2  = Gamma(p[2] ./ p[4],1 ./ p[4]);
+    mt = 32
+    dt  = TR/mt;
+    firstElem = Int(round((1-(e[1]%1)).*mt))
+
+    if size(e,1) == 2 && e[2]>0.
+        duration = e[2]
+    else
+        duration = 1. /mt
+    end
+    duration_mt = Int(ceil(duration .* mt))
+    box_mt = [zeros(firstElem)' ones(duration_mt)']'
+    #box_mt = box_mt ./ (sum(box_mt))
+    # u   = [0:ceil(p(7)/dt)] - p(6)/dt;
+    u   = range(0,stop = ceil((p[7]+duration)/dt)) .- p[6]/dt;
+
+    #hrf = spm_Gpdf(u,p(1)/p(3),dt/p(3))
+    # Note the inverted scale parameter compared to SPM12.
+    g1  = Gamma(p[1] ./ p[3],p[3] ./ dt)
+     #spm_Gpdf(u,p(2)/p(4),dt/p(4))
+    g2  = Gamma(p[2] ./ p[4],p[4] ./ dt);
+    # g1 - g2/p(5);
     hrf = pdf.(g1,u) .- pdf.(g2,u) ./ p[5]
-    hrf = hrf[range(1,stop=Int(1+floor(p[7] ./ TR )))];
+
+    # hrf = hrf([0:floor(p(7)/RT)]*fMRI_T + 1);
     hrf = hrf ./ sum(hrf);
+    hrf = conv(box_mt,hrf)'
+    #println(box_mt)
+    hrf = hrf[((range(0,stop=Int(floor(p[7] ./ TR + duration)))*mt)) .+ 1];
+
+
 
     return(SparseMatrixCSC(sparse(hrf)))
 
