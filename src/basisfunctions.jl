@@ -28,7 +28,7 @@ function firbasis(τ,sfreq,name::String)
     kernel=e->firkernel(e,times[1:end-1])
     type = "firkernel"
 
-    shiftOnset = Int64(τ[1] * sfreq)
+    shiftOnset = Int64(round(τ[1] * sfreq))
 
     return BasisFunction(kernel,times[1:end-1],times,type,name,shiftOnset)
 end
