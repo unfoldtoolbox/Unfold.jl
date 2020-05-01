@@ -241,7 +241,7 @@ end
 function time_expand(X,term,tbl)
 
         #to = TimerOutput()
-        nColsBasis = size(term.basisfunction.kernel(0),2)
+        ncolsBasis = size(term.basisfunction.kernel(0),2)
 
 
 
@@ -252,7 +252,7 @@ function time_expand(X,term,tbl)
 
         ncolsX = size(X)[2]
         nrowsX = size(X)[1]
-        ncolsXdc = nColsBasis*ncolsX
+        ncolsXdc = ncolsBasis*ncolsX
 
         onsets = tbl[term.eventfields[1]]
 
@@ -282,8 +282,8 @@ function time_expand(X,term,tbl)
 
         for Xcol in 1:ncolsX
                 for b in 1:length(bases)
-                        for c in 1:nColsBasis
-                                push!(cols,repeat([c+(Xcol-1)*nColsBasis],length(nzrange(bases[b],c))))
+                        for c in 1:ncolsBasis
+                                push!(cols,repeat([c+(Xcol-1)*ncolsBasis],length(nzrange(bases[b],c))))
                         end
                 end
         end
