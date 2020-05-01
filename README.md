@@ -28,7 +28,6 @@ With **formula** e.g. `@formula 0~1+condA`, **evts** a `DataFrame` with events, 
 Still being written. Tutorials see `doc/lmm_tutorial.html` & `doc/lm_tutorial.html`
 
 
-
 ## Acknowledgements
 Thanks to **Dave Kleinschmidt** for discussing the formula interface and thanks to him & **Phillip Alday** who answered all my naive Julia questions.
 This work was supported by the Center for Interdisciplinary Research, Bielefeld (ZiF) Cooperation Group "Statistical models for psychological and linguistic data".
