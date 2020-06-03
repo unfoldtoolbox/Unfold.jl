@@ -73,7 +73,7 @@ basisfunction4 = unfold.firbasis(τ=(-1,1),sfreq=1000,name="A")
 data,evts = loadtestdata("testCase3") #
 append!(data,zeros(1000))
 data = reshape(data,1,:)
-#data = vcat(data,data)
+data = vcat(data,data)
 data = data.+ 1*randn(size(data)) # we have to add minimal noise, else mixed models crashes.
 data_missing = Array{Union{Missing,Number}}(undef,size(data))
 data_missing .= data
@@ -102,10 +102,10 @@ basisfunction = unfold.firbasis(τ=(-0.2,0.3),sfreq=10)
 
 
 
+##------
 
-
-import Logging
-Logging.global_logger(Logging.SimpleLogger(stdout, Logging.Debug))
+#import Logging
+#Logging.global_logger(Logging.SimpleLogger(stdout, Logging.Debug))
 
 basisfunction = unfold.firbasis(τ=(-0.1,.3),sfreq=10)
 
@@ -117,7 +117,7 @@ basisfunction = unfold.firbasis(τ=(-0.1,.3),sfreq=10)
 Xs = unfold.unfoldDesignmatrix(unfold.UnfoldLinearModel,f,evts,basisfunction)
 basisfunction = unfold.firbasis(τ=(-0.1,.5),sfreq=10)
 Xs2 = unfold.unfoldDesignmatrix(unfold.UnfoldLinearModel,f,evts,basisfunction)
-#Xs = Xs+Xs2
+Xs = Xs+Xs2
 
 ufModel_B = unfold.unfoldFit(unfold.UnfoldLinearModel,Xs,data)
 
@@ -138,9 +138,9 @@ ufB = unfold.condense_long(ufModel_B)
 ufC = unfold.condense_long(ufModel_C,times)
 ufD = unfold.condense_long(ufModel_D)
 
-plot(ufB.colnames_basis,ufB.estimate)
-plot(ufB.colnames_basis,ufB.estimate)
+plot(ufA.colnames_basis,ufA.estimate)
 plot(ufC.colnames_basis,ufC.estimate)
+plot(ufB.colnames_basis,ufB.estimate)
 plot(ufD.colnames_basis,ufD.estimate)
 
 ##########
