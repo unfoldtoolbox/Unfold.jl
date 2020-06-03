@@ -68,8 +68,6 @@ end
 df = unfold.unfoldFit(unfold.UnfoldLinearModel,Xdc,rand(1,size(Xdc.Xs,1)))
 @test size(df.beta,2) == 17
 
-ufresult = unfold.condense(df,tbl)
-
 ## Speedtest
 if 1==0
     x = collect(range(10,stop=10000,step=10))

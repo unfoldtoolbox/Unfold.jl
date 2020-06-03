@@ -104,46 +104,8 @@ basisfunction = unfold.firbasis(τ=(-0.2,0.3),sfreq=10)
 
 ##------
 
-#import Logging
-#Logging.global_logger(Logging.SimpleLogger(stdout, Logging.Debug))
-
-basisfunction = unfold.firbasis(τ=(-0.1,.3),sfreq=10)
-
-f  = @formula 0~1+condA+condB # 1
-Xs = unfold.unfoldDesignmatrix(unfold.UnfoldLinearModel,f,evts_e)
-ufModel_A = unfold.unfoldFit(unfold.UnfoldLinearModel,Xs,data_e)
-
-basisfunction = unfold.firbasis(τ=(-0.1,.3),sfreq=10)
-Xs = unfold.unfoldDesignmatrix(unfold.UnfoldLinearModel,f,evts,basisfunction)
-basisfunction = unfold.firbasis(τ=(-0.1,.5),sfreq=10)
-Xs2 = unfold.unfoldDesignmatrix(unfold.UnfoldLinearModel,f,evts,basisfunction)
-Xs = Xs+Xs2
-
-ufModel_B = unfold.unfoldFit(unfold.UnfoldLinearModel,Xs,data)
 
 
-f  = @formula 0~1+condA+condB + (1+condA|subject)
-Xs = unfold.unfoldDesignmatrix(unfold.UnfoldLinearMixedModel,f,evts_e)
-
-ufModel_C = unfold.unfoldFit(unfold.UnfoldLinearMixedModel,Xs,data_e)
-
-basisfunction = unfold.firbasis(τ=(-0.1,.3),sfreq=10)
-Xs = unfold.unfoldDesignmatrix(unfold.UnfoldLinearMixedModel,f,evts,basisfunction)
-
-ufModel_D = unfold.unfoldFit(unfold.UnfoldLinearMixedModel,Xs,data)
-
-
-ufA = unfold.condense_long(ufModel_A,times)
-ufB = unfold.condense_long(ufModel_B)
-ufC = unfold.condense_long(ufModel_C,times)
-ufD = unfold.condense_long(ufModel_D)
-
-plot(ufA.colnames_basis,ufA.estimate)
-plot(ufC.colnames_basis,ufC.estimate)
-plot(ufB.colnames_basis,ufB.estimate)
-plot(ufD.colnames_basis,ufD.estimate)
-
-##########
 if 1 == 0
     # Fit mass-univariate 1st level for all subjects
     basisfunction = unfold.firbasis(τ=(-.1,.4),sfreq=10,name="A")
