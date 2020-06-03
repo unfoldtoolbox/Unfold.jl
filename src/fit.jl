@@ -103,9 +103,18 @@ function unfoldFit(::Type{UnfoldLinearMixedModel},Xobj::UnfoldDesignmatrix,data)
     )
 
     beta = [x.β for x in MixedModels.tidyβ(modelinfo)]
-    beta = reshape(beta,:,nchan)'
+
     sigma = [x.σ for x in MixedModels.tidyσs(modelinfo)]
-    sigma = reshape(sigma,:,nchan)'
+
+    if ndims(data)==3
+        beta = permutedims(reshape(beta,:,ntime,nchan),[3 2 1])
+        sigma = permutedims(reshape(sigma,:,ntime,nchan),[3 2 1])
+    else
+        beta = reshape(beta,:,nchan)'
+        sigma = reshape(sigma,:,nchan)'
+    end
+
+
 
     return UnfoldLinearMixedModel(beta,sigma,modelinfo,Xobj)
 end

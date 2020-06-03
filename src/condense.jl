@@ -1,15 +1,9 @@
 
 function extract_term_info(terms,ix)
     # 1 = basisname, 2 = coefname, 3 = colname
-        return [c[ix] for c in split.(terms," :")]
+        return [c[ix] for c in split.(terms," : ")]
 end
 
-function get_nUniqueterms(m::UnfoldLinearModel)
-    return length(unique(extract_term_info(get_terms(m),[1,2])))
-end
-function get_nUniqueterms(m::UnfoldLinearMixedModel)
-    return sum(length.(unique.(extract_term_info.(coefnames.(m.X.formulas.rhs),Ref([1,2])))))
-end
 function get_terms(m)
     terms = coefnames(m.X.formulas)
     terms = vcat(terms...) # gets rid of an empty Any() XXX not sure where it comes from, only in MixedModel Timexpanded case
@@ -17,21 +11,22 @@ end
 
 
 function condense_long(m)
-    terms = get_terms(m)
-    terms = extract_term_info(terms,2)
-    colnames_basis = get_colnames_basis(m.X.formulas)#get_colnames_basis(m.X.formulas,times)
+    termsRaw = get_terms(m)
+    terms = extract_term_info(termsRaw,2)
+    colnames_basis_raw = get_colnames_basis(m.X.formulas)# this is unconverted basisfunction basis,
+    colnames_basis = extract_term_info(termsRaw,3) # this is converted to strings! But it has exact same size as terms
     @debug terms
     @debug colnames_basis
 
     nchan = size(m.beta,1)
-    nUniqueterms = get_nUniqueterms(m)
-    @debug nUniqueterms
+
     terms_rep = permutedims(repeat(terms,1,nchan),[2,1])
 
     if length(colnames_basis)==1
         colnames_basis = [colnames_basis]
     end
-    colnames_basis_rep = permutedims(repeat(colnames_basis,nUniqueterms,nchan),[2,1])
+
+    colnames_basis_rep = permutedims(repeat(colnames_basis_raw,Int(length(colnames_basis)/length(colnames_basis_raw)),nchan),[2,1])
 
     chan_rep = repeat(1:nchan,1,size(colnames_basis_rep,2))
 
@@ -82,10 +77,15 @@ end
 # returns as a ch x beta, or ch x time x beta (for mass univariate)
 function make_estimate(m::UnfoldLinearMixedModel)
     estimate = cat(m.beta,m.sigma,dims=ndims(m.beta))
-    group_f = repeat(["fixef"],1,size(m.beta,ndims(m.beta)))
-    group_s = repeat(["ranef"],1,size(m.sigma,ndims(m.beta)))
-
-    group = hcat(repeat(group_f,size(m.beta,1)),repeat(group_s,size(m.beta,1)))
+    if ndims(m.beta) == 3
+        group_f = repeat(["fixef"],size(m.beta,1),size(m.beta,2),size(m.beta,ndims(m.beta)))
+        group_s = repeat(["ranef"],size(m.beta,1),size(m.beta,2),size(m.sigma,ndims(m.beta)))
+    else
+        group_f = repeat(["fixef"],size(m.beta,1),size(m.beta,ndims(m.beta)))
+        group_s = repeat(["ranef"],size(m.beta,1),size(m.sigma,ndims(m.beta)))
+    end
+    print(size(group_f))
+    group = cat(group_f,group_s,dims=ndims(m.beta))
     return estimate,group
 end
 function make_estimate(m::UnfoldLinearModel)
