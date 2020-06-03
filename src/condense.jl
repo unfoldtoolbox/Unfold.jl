@@ -1,132 +1,121 @@
-function condense(m,tbl,colnames_basis)
-    # no random effects no Timeexpansion
-    cnames = coefnames(m.formula.rhs)
-    if typeof(cnames)<:String
-        cnames = [cnames]
-    end
 
-    cnames_rep = repeat(cnames,length(colnames_basis))
-
-    colnames_basis_rep = repeat(colnames_basis,1,length(cnames))
-    colnames_basis_rep = dropdims(reshape(colnames_basis_rep',:,1),dims=2)
-
-
-    betas = dropdims(reshape(m.beta,:,1),dims=2)
-
-    results = DataFrame(term=cnames_rep,estimate=betas,stderror=Missing,group="mass univariate",colnames_basis=colnames_basis_rep)
-    return UnfoldModel(m,m.formula,tbl,results)
-
+function extract_term_info(terms,ix)
+    # 1 = basisname, 2 = coefname, 3 = colname
+        return [c[ix] for c in split.(terms," :")]
 end
 
-function condense(mm_array::Array{LinearMixedModel,1},tbl,colnames_basis)
-    # with random effects, no timeexpansion
-
-    results = condense_fixef.(mm_array,colnames_basis)
-
-    results = vcat(results,condense_ranef.(mm_array,colnames_basis))
-    # XXX TODO Return an Array of Models, not only the first one!
-    return UnfoldModel(mm_array[1],mm_array[1].formula,tbl,vcat(results...))
-
+function get_nUniqueterms(m::UnfoldLinearModel)
+    return length(unique(extract_term_info(get_terms(m),[1,2])))
+end
+function get_nUniqueterms(m::UnfoldLinearMixedModel)
+    return sum(length.(unique.(extract_term_info.(coefnames.(m.X.formulas.rhs),Ref([1,2])))))
+end
+function get_terms(m)
+    terms = coefnames(m.X.formulas)
+    terms = vcat(terms...) # gets rid of an empty Any() XXX not sure where it comes from, only in MixedModel Timexpanded case
 end
 
 
+function condense_long(m)
+    terms = get_terms(m)
+    terms = extract_term_info(terms,2)
+    colnames_basis = get_colnames_basis(m.X.formulas)#get_colnames_basis(m.X.formulas,times)
+    @debug terms
+    @debug colnames_basis
 
-function condense(mm::UnfoldLinearModel,tbl)
-    # no random effects, timeexpansion
+    nchan = size(m.beta,1)
+    nUniqueterms = get_nUniqueterms(m)
+    @debug nUniqueterms
+    terms_rep = permutedims(repeat(terms,1,nchan),[2,1])
 
-    if typeof(mm.formula)<: Array
-        # build new UnfoldLinearModel for each formula
-
-        colnames_basis = [formula.rhs.basisfunction.colnames for formula in mm.formula]
-        fromTo = [0 cumsum(length.(colnames_basis),dims=2)]
-
-        results = DataFrame()
-        for k = 1:length(mm.formula)
-            mm_tmp = UnfoldLinearModel(mm.beta[fromTo[k]+1:fromTo[k+1]],mm.optim,mm.formula[k],mm.X[:,fromTo[k]+1:fromTo[k+1]])
-            res = condense_fixef(mm_tmp,colnames_basis[k])
-            results = vcat(results,res)
-        end
-
-
-
-    else
-        colnames_basis = mm.formula.rhs.basisfunction.colnames
-
-        results = condense_fixef(mm,colnames_basis)
-    end
-
-    return UnfoldModel(mm,mm.formula,tbl,results)
-end
-
-
-function condense(mm::LinearMixedModel,tbl)
-    # with random effects, timeexpansion
-    # TODO loop over al timeexpanded basisfunctions, in case there are multiple ones in case of multiple events
-    # TODO random correlations => new function in MixedModels
-    # TODO somehow get rid of the split of the coefficient names. What if there is a ":" in a coefficient name?
-    colnames_basis = mm.formula.rhs[1].basisfunction.colnames
-    results = condense_fixef(mm,colnames_basis)
-
-    # ranefs more complex
-    results = vcat(results,condense_ranef(mm,colnames_basis))
-
-    #return
-    return UnfoldModel(mm,mm.formula,tbl,results)
-end
-
-
-function condense_fixef(mm,colnames_basis)
-    if typeof(mm.formula.rhs) <: Tuple
-        fixefPart = mm.formula.rhs[1]
-    else
-        fixefPart = mm.formula.rhs
-    end
-
-    cnames = [c[1] for c in split.(coefnames(fixefPart)," :")]
-
-
-    if length(colnames_basis)==1
-
-        colnames_basis = [colnames_basis]
-
-    end
-
-    colnames_basis =  repeat(colnames_basis,length(unique(cnames)))
-    
-
-    return DataFrame(term=cnames,estimate=MixedModels.fixef(mm),stderror=MixedModels.stderror(mm),group="fixed",colnames_basis=colnames_basis)
-end
-
-function MixedModels.fixef(m::UnfoldLinearModel)
-    # condense helper for the linear model which just returns a vector of fixef
-     return m.beta
-end
-function MixedModels.stderror(m::UnfoldLinearModel)
-    # for now we don't have an efficient way to calculate SEs for single subjects
-    return fill(NaN,size(m.beta))
-end
-function condense_ranef(mm,colnames_basis)
-    vc = VarCorr(mm)
-    σρ = vc.σρ
-
-    cnames = string.(foldl(vcat, [keys(sig)...] for sig in getproperty.(values(σρ), :σ)))
-    cnames = [c[1] for c in split.(cnames," :")]
-
-    σvec = vcat(collect.(values.(getproperty.(values(σρ), :σ)))...)
-
-
-    nmvec = string.([keys(σρ)...])
-    nvec = length.(keys.(getproperty.(values(σρ),:σ)))
-    group = []
-    for n in zip(nmvec,nvec)
-
-        append!(group,repeat([n[1]],n[2]))
-    end
     if length(colnames_basis)==1
         colnames_basis = [colnames_basis]
     end
-    colnames_basis =  repeat(colnames_basis,length(unique(cnames)))
-    # combine
-    return DataFrame(term=cnames,estimate=σvec,stderror=NaN,group=group,colnames_basis=colnames_basis)
+    colnames_basis_rep = permutedims(repeat(colnames_basis,nUniqueterms,nchan),[2,1])
 
+    chan_rep = repeat(1:nchan,1,size(colnames_basis_rep,2))
+
+    return make_long_df(m,terms_rep,chan_rep,colnames_basis_rep) #DataFrame(term=linearize(terms_rep),estimate=linearize(m.beta),stderror=linearize(MixedModels.stderror(m)),channel=linearize(chan_rep),group="fixed",colnames_basis=linearize(colnames_rep))
+end
+
+
+function condense_long(m,times::AbstractArray)
+    # Mass Univariate Case
+    terms = coefnames(m.X.formulas)
+    terms = vcat(terms...)
+    colnames_basis = times#get_colnames_basis(m.X.formulas,times)
+
+    @debug "terms: $(size(terms)),colnames_basis:$(size(colnames_basis)))"
+    @debug "terms: $terms,colnames_basis:$colnames_basis"
+    nchan = size(m.beta,1)
+    ncols = length(colnames_basis)
+    nterms = length(terms)
+
+    # replicate
+    terms_rep = permutedims(repeat(terms,outer=[1,nchan,ncols]),[2,3,1])
+    colnames_basis_rep = permutedims(repeat(colnames_basis,1,nchan,nterms),[2 1 3])
+    chan_rep = repeat(1:nchan,1,ncols,nterms)
+
+    #
+    results = make_long_df(m,terms_rep,chan_rep,colnames_basis_rep)
+
+    return results
+end
+#---
+# Returns a long df given the already matched
+function make_long_df(m,terms,chans,colnames)
+    @assert all(size(terms) .== size(chans)) "terms, chans and colnames need to have the same size at this point, $(size(terms)),$(size(chans)),$(size(colnames)), should be $(size(m.beta)))"
+    @assert all(size(terms) .== size(colnames)) "terms, chans and colnames need to have the same size at this point"
+
+    estimate,group = make_estimate(m)
+    results = DataFrame(term=linearize(terms),
+        channel = linearize(chans),
+        colnames_basis=linearize(colnames),
+        estimate=linearize(estimate),
+        stderror=Missing,
+        group = linearize(group),
+        )
+end
+#---------
+
+# extracts betas (and sigma's for mixed models) with string grouping indicator
+# returns as a ch x beta, or ch x time x beta (for mass univariate)
+function make_estimate(m::UnfoldLinearMixedModel)
+    estimate = cat(m.beta,m.sigma,dims=ndims(m.beta))
+    group_f = repeat(["fixef"],1,size(m.beta,ndims(m.beta)))
+    group_s = repeat(["ranef"],1,size(m.sigma,ndims(m.beta)))
+
+    group = hcat(repeat(group_f,size(m.beta,1)),repeat(group_s,size(m.beta,1)))
+    return estimate,group
+end
+function make_estimate(m::UnfoldLinearModel)
+    return m.beta,"mass univariate"
+end
+
+# Return the column names of the basis functions.
+function get_colnames_basis(formula::FormulaTerm)
+    return get_colnames_basis(formula.rhs)
+end
+
+function get_colnames_basis(rhs::Tuple)
+    return rhs[1].basisfunction.colnames
+end
+
+function get_colnames_basis(rhs::AbstractTerm)
+    return rhs.basisfunction.colnames
+end
+
+function get_basis_name(rhs::AbstractTerm)
+    return rhs.basisfunction.name
+end
+
+function get_colnames_basis(formulas::AbstractArray{<:FormulaTerm})
+    # In case of multiple basisfunction we can have an array of formulas.
+    # in that case we have to add an unique identifier
+    colnames_all = []
+    for formula in formulas
+        append!(colnames_all, get_colnames_basis(formula.rhs))
+    end
+#get_colnames_basis_name(formula.rhs) .*
+    return colnames_all
 end

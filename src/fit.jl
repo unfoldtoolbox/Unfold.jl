@@ -7,113 +7,174 @@ function fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::Fo
     @timeit to "unfoldDesignmatrix" Xs = unfoldDesignmatrix(type,f,tbl;kwargs...)
 
     # Fit the model
-    @timeit to "fit" df = unfoldFit(type,Xs,dropdims(data,dims=1))
-    
-    @timeit to "condense" c = condense(df,tbl,times)
+    @timeit to "fit" ufModel = unfoldFit(type,Xs,data)
+
+    @timeit to "condense" c = condense_long(ufModel,times)
     # Condense output and return
     @debug(to)
-    return c
+    return ufModel,c
 end
 
 
 # Timeexpanded Model
 function fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::FormulaTerm, tbl::DataFrame, data::Array{T,2}, basisfunction::BasisFunction; kwargs...) where {T}
-    global to = TimerOutput()
+    to = TimerOutput()
 
     # Generate the designmatrices
     @timeit to "unfoldDesignmat" Xs = unfoldDesignmatrix(type,f,tbl,basisfunction;kwargs...)
 
     # Fit the model
+    @timeit to "unfoldFit" ufModel = unfoldFit(type,Xs,data)
 
-    @timeit to "unfoldFit" m = unfoldFit(type,Xs,dropdims(data,dims=2))
-
-    @timeit to "unfoldCondense" c = condense(m,tbl)
+    @timeit to "unfoldCondense" c = condense_long(ufModel)
     @debug(to)
-    return c
+    return ufModel,c
 end
 
 # helper function for 1 channel data
 function fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::FormulaTerm, tbl::DataFrame, data::Array{T,1}, basisfunction::BasisFunction; kwargs...) where {T}
     @debug("data array is size (X,), reshaping to (1,X)")
-    data = reshape(data,:,1)
+    data = reshape(data,1,:)
     fit(type,f,tbl,data,basisfunction;kwargs...)
 end
 
 
 ## UnfoldFit functions
 # Mass Univariate Linear MOdel
-function unfoldFit(::Type{UnfoldLinearModel},X::UnfoldDesignmatrix,data)
-    beta,optim = fit_lm(X.Xs, data)
-    m = UnfoldLinearModel(beta,optim,X.formulas,X.Xs)
-    return m
-end
 
+# Massive Univariate / Timexpanded Mixed Model
+function unfoldFit(::Type{UnfoldLinearMixedModel},Xobj::UnfoldDesignmatrix,data)#AbstractArray{T,3} where {T<:Union{Missing, <:Number}}
+    # function content partially taken from MixedModels.jl bootstrap.jl
+    df = Array{NamedTuple,1}()
+    dataDim = length(size(data)) # surely there is a nicer way to get this but I dont know it
 
-# Massive Univariate Mixed Model
-function unfoldFit(::Type{UnfoldLinearMixedModel},X::UnfoldDesignmatrix,data::AbstractArray{T,2}) where {T<:Union{Missing, <:Number}}
-    df = Array{LinearMixedModel,1}()
-    for t in range(1,stop=size(data,1))
-        #println("calculating t $t from $(size(data,1))")
-        mm = LinearMixedModel_wrapper(X.formulas,data[t,:],X.Xs)
-        fit!(mm)
-        push!(df,mm)
+    # If we have3 dimension, we have a massive univariate linear mixed model for each timepoint
+    if dataDim == 3
+        firstData = data[1,1,:]
+        ntime = size(data,2)
+    else
+        # with only 2 dimension, we run a single time-expanded linear mixed model per channel/voxel
+        firstData = data[1,:]
+        ntime = 1
     end
-    return df
-end
-# Timeexpanded Mixed Model
-function unfoldFit(::Type{UnfoldLinearMixedModel},X::UnfoldDesignmatrix,data::Array{T,1}) where{T}
-    mm = LinearMixedModel_wrapper(X.formulas,data,X.Xs)
-    fit!(mm)
-    return mm
+    nchan = size(data,1)
+
+    _,data = zeropad(Xobj.Xs[1],data)
+    print(size(data))
+    print(size(Xobj.Xs[1]))
+    # get a un-fitted mixed model object
+    mm = LinearMixedModel_wrapper(Xobj.formulas,firstData,Xobj.Xs)
+
+    # prepare some variables to be used
+    βsc, θsc= similar(coef(mm)), similar(mm.θ) # pre allocate
+    p,k = length(βsc), length(θsc)
+    β_names = (Symbol.(fixefnames(mm))..., )
+
+    # for each channel
+    for ch in range(1,stop=nchan)
+        # for each time
+        for t in range(1,stop=ntime)
+
+            @debug print("ch:$ch/$nchan, t:$t/$ntime")
+            if ndims(data) == 3
+                refit!(mm,data[ch,t,:])
+            else
+                refit!(mm,data[ch,:])
+            end
+
+            out = (
+            objective = mm.objective,
+            σ = mm.σ,
+            β = NamedTuple{β_names}(MixedModels.fixef!(βsc, mm)),
+            se = SVector{p,Float64}(MixedModels.stderror!(βsc, mm)), #SVector not necessary afaik, took over from MixedModels.jl
+            θ = SVector{k,Float64}(MixedModels.getθ!(θsc, mm)),
+            channel = ch,
+            timeIX = ifelse(dataDim==2,NaN,t)
+            )
+            push!(df,out)
+        end
+    end
+    modelinfo = MixedModelBootstrap(
+        df,
+        deepcopy(mm.λ),
+        getfield.(mm.reterms, :inds),
+        copy(mm.optsum.lowerbd),
+        NamedTuple{Symbol.(fnames(mm))}(map(t -> (t.cnames...,), mm.reterms)),
+    )
+
+    beta = [x.β for x in MixedModels.tidyβ(modelinfo)]
+    beta = reshape(beta,:,nchan)'
+    sigma = [x.σ for x in MixedModels.tidyσs(modelinfo)]
+    sigma = reshape(sigma,:,nchan)'
+
+    return UnfoldLinearMixedModel(beta,sigma,modelinfo,Xobj)
 end
 
-function fit_lm(X,data::AbstractArray{T,2}) where {T<:Union{Missing, <:Number}}
-    # msas univariate, data = times x epochs
+ function unfoldFit(::Type{UnfoldLinearModel},Xobj::UnfoldDesignmatrix,data::AbstractArray{T,3};optimizer=undef) where {T<:Union{Missing, <:Number}}
+     X = Xobj.Xs
+    # mass univariate, data = ch x times x epochs
+    X,data = zeropad(X,data)
+
+    print(size(data))
+    # mass univariate
+    beta = Array{Union{Missing,Number}}(undef,size(data,1),size(data,2),size(X,2))
+    for ch in 1:size(data,1)
+        @debug("$(dims(data,)),$t,$ch")
+        for t in 1:size(data,2)
+            ix = .!ismissing.(data[ch,t,:])
+            beta[ch,t,:] = X[ix,:] \ data[ch,t,ix]
+        end
+    end
+
+    modelinfo = [undef] # no history implemented (yet?)
+
+    return UnfoldLinearModel(beta,modelinfo,Xobj)
+
+end
+
+function zeropad(X,data::AbstractArray{T,2})where {T<:Union{Missing, <:Number}}
+    @debug("2d zeropad")
     if size(X,1) > size(data,2)
         X = X[1:size(data,2),:]
-        #data[end+1:size(Xs[1],1)] .= 0
     else
         data =data[:,1:size(X,1)]
     end
-    # mass univariate
-    beta = Array{Union{Missing,Number}}(undef,size(X,2),size(data,1))
-
-    for t in 1:size(data,1)
-        #println("$t,$(sum()")
-        ix = .!ismissing.(data[t,:])
-        beta[:,t] = X[ix,:] \ data[t,ix]
-    end
-
-    #beta = X \ data'
-
-    #println(dump(beta))
-    history = [] # no history implemented (yet?)
-    #beta = dropdims(beta,dims=1) #
-    return(beta,[history])
-
+    return X,data
 end
-function fit_lm(X,data::AbstractArray{T,1}) where {T<:Union{Missing, <:Number}}
-    # timeexpanded, data = vector
+function zeropad(X,data::AbstractArray{T,3})where {T<:Union{Missing, <:Number}}
+    @debug("3d zeropad")
+    if size(X,1) > size(data,3)
+        X = X[1:size(data,3),:]
+    else
+        data =data[:,:,1:size(X,1)]
+    end
+    return X,data
+end
+function unfoldFit(::Type{UnfoldLinearModel},Xobj::UnfoldDesignmatrix,data::AbstractArray{T,2};optimizer=undef) where {T<:Union{Missing, <:Number}}
+    # timeexpanded, data = ch x time
     # X is epochs x predictor
 
-
+    X = Xobj.Xs # extract designmatrix
     # Cut X or y depending on which is larger
-    if size(X,1) > size(data,1)
-        X = X[1:size(data,1),:]
-        #data[end+1:size(Xs[1],1)] .= 0
-    else
-        data =data[1:size(X,1)]
-    end
-    ix = .!ismissing.(data)
-    # likely much larger matrix, using lsqr
-    beta,history = lsqr(X[ix,:],data[ix],log=true)
+    X,data = zeropad(X,data)
 
-    return(beta,history)
+
+    # likely much larger matrix, using lsqr
+    modelinfo = []
+    beta = Array{Float64}(undef,size(data,1),size(X,2))
+
+    for ch in 1:size(data,1)
+        ix = .!ismissing.(data[ch,:])
+        beta[ch,:],h = lsqr(X[ix,:],data[ch,ix],log=true)
+        push!(modelinfo,h)
+    end
+
+    return UnfoldLinearModel(beta,modelinfo,Xobj)
 end
 
 
 function LinearMixedModel_wrapper(form,data::Array{<:Union{TData},1},Xs;wts = []) where {TData<:Number}
-#    function LinearMixedModel_wrapper(form,data::Array{<:Union{Missing,TData},1},Xs;wts = []) where {TData<:Number}
+    #    function LinearMixedModel_wrapper(form,data::Array{<:Union{Missing,TData},1},Xs;wts = []) where {TData<:Number}
 
 
     # Make sure X & y are the same size
@@ -165,6 +226,6 @@ end
 
 ## Piracy it is!
 function MixedModels.FeMat(X::SparseMatrixCSC, cnms)
-        #println("Pirated Sparse FeMat")
-        FeMat{eltype(X),typeof(X)}(X, X, range(1,stop=size(X,2)), minimum(size(X)), cnms)
+    #println("Pirated Sparse FeMat")
+    FeMat{eltype(X),typeof(X)}(X, X, range(1,stop=size(X,2)), minimum(size(X)), cnms)
 end

@@ -1,32 +1,34 @@
+abstract type UnfoldModel end
+
 struct UnfoldLinearModel
-    beta::AbstractArray
-    optim
-    formula
-    X::AbstractArray
+    beta::AbstractArray # chan x predictor or chan x time x predictor
+    modelinfo # optional info on the modelfit
+    X::UnfoldDesignmatrix
 end
 
 struct UnfoldLinearMixedModel
-
+    beta::AbstractArray # chan x predictor or chan x time x predictor
+    sigma::AbstractArray # chan x ranef or chan x time x ranef
+    modelinfo # optional info on the modelfit
+    X::UnfoldDesignmatrix
 end
 
-
-struct UnfoldModel{M<:Union{AbstractArray{Union{LinearMixedModel,UnfoldLinearModel,UnfoldLinearMixedModel},1}, UnfoldLinearModel,LinearMixedModel,UnfoldLinearMixedModel}}
-    model::M
-    formula
-    tbl::DataFrame
-    results::DataFrame
+struct UnfoldResult
+    model
+    results
 end
+
 
 function Base.show(io::IO, obj::UnfoldModel)
         println(io, "LinearModelTimeExpanded object")
-        println(io, "formula: $(obj.formula)")
+        println(io, "formula: $(obj.Xs.formula)")
 
 end
 
-function Base.show(io::IO, obj::UnfoldModel)
+function Base.show(io::IO, obj::UnfoldResult)
     println(io, "UnfoldModel")
     # TODO Save the original formula without time expansion
     println(io, "Unique Terms: $(unique(obj.results.term))")
     println(io, "Basis Function Columns: $(obj.results.colnames_basis[1]) : $(obj.results.colnames_basis[end]))")
-    println(io, "Fields: .model, .formula, .tbl, .results")
+    println(io, "Fields: .model ('UnfoldModel' with felds .modelinfo, .beta, .formula, .Xs) \n .results (tidy result table)")
 end

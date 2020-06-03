@@ -16,11 +16,13 @@ import MixedModels.FeMat
 using TimerOutputs
 using DSP
 using StatsModels
+using StaticArrays
 import Base.(+)
 using Distributions: Gamma, pdf # TODO replace this with direct implementation (used in basisfunction.jl)
-include("linearmodels.jl")
+
 include("basisfunctions.jl")
 include("designmatrix.jl")
+include("linearmodels.jl")
 include("fit.jl")
 include("utilities.jl")
 include("condense.jl")

@@ -65,8 +65,8 @@ end
 
 
 # XXX concatenating of UnfoldLinearMixedModel designmatrices! Especially FeMat going to be more interesting....
-df = unfold.unfoldFit(unfold.UnfoldLinearModel,Xdc,rand(size(Xdc.Xs,1)))
-@test size(df.beta,1) == 17
+df = unfold.unfoldFit(unfold.UnfoldLinearModel,Xdc,rand(1,size(Xdc.Xs,1)))
+@test size(df.beta,2) == 17
 
 ufresult = unfold.condense(df,tbl)
 

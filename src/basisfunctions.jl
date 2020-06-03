@@ -19,7 +19,7 @@ function Base.show(io::IO, obj::BasisFunction)
 end
 
 firbasis(;τ,sfreq)           = firbasis(τ,sfreq,"")
-firbasis(;τ,sfreq,name="") = firbasis(τ,sfreq,name)
+firbasis(;τ,sfreq,name="basis_"*string(rand(1:10000))) = firbasis(τ,sfreq,name)
 firbasis(τ,sfreq)            = firbasis(τ,sfreq,"")
 
 function firbasis(τ,sfreq,name::String)
@@ -50,7 +50,7 @@ function firkernel(e,times)
 
 end
 
-function hrfbasis(TR::Float64;parameters= [6. 16. 1. 1. 6. 0. 32.],name::String="")
+function hrfbasis(TR::Float64;parameters= [6. 16. 1. 1. 6. 0. 32.],name::String="basis_"*string(rand(1:10000)))
     # Haemodynamic response function adapted from SPM12b "spm_hrf.m"
     # Parameters:
     #                                                           defaults
