@@ -1,13 +1,29 @@
 # implement different basisfunctions e.g.
+using DocStringExtensions
 
-
+"""
+Defines a basisfunction which can be called for each event, defining the time-expanded basis kernel
+$(TYPEDEF)
+$(TYPEDSIGNATURES)
+$(FIELDS)
+# Examples
+```julia-repl
+julia>  b = BasisFunction(kernelfunction,["hrf"],range(0,(length(kernelfunction([0, 1]))-1)*TR,step=TR),"hrf_kernel","basis_A",0)
+```
+"""
 struct BasisFunction
-    kernel::Function # function that given an event onset, results in a kernel used to timeexpand
-    colnames::AbstractVector # vector of names along columns of kernel-output
-    times::AbstractVector # vector of times along rows of kernel-output (in seconds)
-    type::String # type of basisfunction (bookkeeping)
-    name::String # name of the event, XXX used for naming coefficients
-    shiftOnset::Integer # by how many samples do we need to shift the event onsets?
+    "a design-matrix kernel function used to timeexpand, given a timepoint in 'sample' timeunits"
+    kernel::Function
+    "vector of names along columns of kernel-output"
+    colnames::AbstractVector
+    " vector of times along rows of kernel-output (in seconds)"
+    times::AbstractVector
+    "type of basisfunction (only for bookkeeping)"
+    type::String
+    "name of the event, random 1:1000 if unspecified"
+    name::String
+    "by how many samples do we need to shift the event onsets? This number is determined by how many 'negative' timepoints the basisfunction defines"
+    shiftOnset::Integer
 end
 
 
@@ -18,10 +34,27 @@ function Base.show(io::IO, obj::BasisFunction)
     println(io, "kernel: $(obj.type)")
 end
 
+
+
 firbasis(;τ,sfreq)           = firbasis(τ,sfreq,"")
 firbasis(;τ,sfreq,name="basis_"*string(rand(1:10000))) = firbasis(τ,sfreq,name)
 firbasis(τ,sfreq)            = firbasis(τ,sfreq,"")
 
+"""
+$(SIGNATURES)
+Generate a FIR basis around the *τ* timevector at sampling rate *sfreq*.
+The
+# Examples
+Generate a FIR basis function from -0.1s to 0.3s at 100Hz
+```julia-repl
+julia>  f = firbasis([-0.1,0.3],100)
+```
+Evaluate at an event occuring at sample 103.3
+```julia-repl
+julia>  f(103.3)
+```
+
+"""
 function firbasis(τ,sfreq,name::String)
 
     times =range(τ[1],stop=τ[2]+ 1 ./sfreq,step=1 ./sfreq)
@@ -33,7 +66,15 @@ function firbasis(τ,sfreq,name::String)
     return BasisFunction(kernel,times[1:end-1],times,type,name,shiftOnset)
 end
 
+"""
+$(SIGNATURES)
+Defines the kernel-function for the firbasis
+# Examples
 
+```julia-repl
+julia>  f = firkernel(103.3,range(-0.1,step=0.01,stop=0.31))
+```
+"""
 function firkernel(e,times)
     @assert ndims(e) <= 1 #either single onset or a row vector where we will take the first one :)
     if size(e,1) > 1
@@ -50,6 +91,22 @@ function firkernel(e,times)
 
 end
 
+
+"""
+$(SIGNATURES)
+Generate a Hemodynamic-Response-Functio (HRF) basis with inverse-samplingrate "TR" (=1/FS)
+The
+# Examples
+Generate a FIR basis function from -0.1s to 0.3s at 100Hz
+```julia-repl
+julia>  f = firbasis([-0.1,0.3],100)
+```
+Evaluate at an event occuring at sample 103.3
+```julia-repl
+julia>  f(103.3)
+```
+
+"""
 function hrfbasis(TR::Float64;parameters= [6. 16. 1. 1. 6. 0. 32.],name::String="basis_"*string(rand(1:10000)))
     # Haemodynamic response function adapted from SPM12b "spm_hrf.m"
     # Parameters:
