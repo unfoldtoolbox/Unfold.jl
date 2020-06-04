@@ -12,6 +12,7 @@ end
 struct UnfoldDesignmatrix
         formulas
         Xs
+        events
 end
 
 function combineDesignmatrices(X1::UnfoldDesignmatrix,X2::UnfoldDesignmatrix)
@@ -34,52 +35,70 @@ function combineDesignmatrices(X1::UnfoldDesignmatrix,X2::UnfoldDesignmatrix)
         else
 
         end
-        if X1.formulas.rhs.basisfunction.times.step != X2.formulas.rhs.basisfunction.times.step
+        if !(Float64(X1.formulas.rhs.basisfunction.times.step) ≈ Float64(X2.formulas.rhs.basisfunction.times.step))
                 @warn("Concatenating formulas with different sampling rates. Be sure that this is what you want.")
         end
-        UnfoldDesignmatrix([X1.formulas X2.formulas],Xcomb)
+        UnfoldDesignmatrix([X1.formulas X2.formulas],Xcomb,[X1.events, X2.events])
 end
 
 Base.:+(X1::UnfoldDesignmatrix, X2::UnfoldDesignmatrix) = combineDesignmatrices(X1,X2)
+
+
+
 # with basis expansion
 function unfoldDesignmatrix(type,f,tbl,basisfunction;kwargs...)
         Xs,form = generateDesignmatrix(type,f,tbl,basisfunction; kwargs...)
-        UnfoldDesignmatrix(form,Xs)
+        UnfoldDesignmatrix(form,Xs,tbl)
 end
 
 #without basis expansion
 function unfoldDesignmatrix(type,f,tbl;kwargs...)
         Xs,form = generateDesignmatrix(type,f,tbl,nothing; kwargs...)
-        UnfoldDesignmatrix(form,Xs)
+        UnfoldDesignmatrix(form,Xs,tbl)
 
 end
+
 function generateDesignmatrix(type,f,tbl,basisfunction;contrasts= Dict{Symbol,Any}(), kwargs...)
-        form = apply_schema(f, schema(f, tbl, contrasts), LinearMixedModel)
         @debug("generateDesignmatrix")
-        if !isnothing(basisfunction)
+        form = apply_schema(f, schema(f, tbl, contrasts), LinearMixedModel)
+        form = apply_basisfunction(type,form,basisfunction,kwargs...)
 
-
-                if type <: UnfoldLinearMixedModel
-                        @debug("Mixed Model")
-                        form = FormulaTerm(form.lhs, TimeExpandedTerm.(form.rhs,Ref(basisfunction),get(kwargs,:eventfields,nothing)))
-                else
-                        @debug("not mixed model, $type")
-
-                        form = FormulaTerm(form.lhs, TimeExpandedTerm(form.rhs,basisfunction,get(kwargs,:eventfields,nothing)))
-                end
+        if (!isnothing(basisfunction)) & (type<:UnfoldLinearMixedModel)
+                X = modelcols.(form.rhs, Ref(tbl))
+        else
+                X = modelcols(form.rhs, tbl)
         end
-        X = modelcols(form.rhs, tbl)
         return X,form
 end
 
+# in case of no basisfunctin, do nothing
+function apply_basisfunction(type,form,basisfunction;eventfields=nothing)
+        return form
+end
+
+
+function apply_basisfunction(type,form,basisfunction::unfold.BasisFunction;eventfields=nothing)
+        @debug("apply_basisfunction other")
+        return FormulaTerm(form.lhs, TimeExpandedTerm(form.rhs,basisfunction,eventfields))
+end
+
+
+function TimeExpandedTerm(term::NTuple{N,Union{<:AbstractTerm,<:MixedModels.RandomEffectsTerm}},basisfunction,eventfields::Array{Symbol,1}) where {N}
+        # for mixed models, apply it to each Term
+        TimeExpandedTerm.(term,Ref(basisfunction),Ref(eventfields))
+end
 function TimeExpandedTerm(term,basisfunction,eventfields::Nothing)
+        # if the eventfield is nothing, call default
         TimeExpandedTerm(term, basisfunction)
 end
+
 function TimeExpandedTerm(term,basisfunction,eventfields::Symbol)
+        # call with symbol, convert to array of symbol
         TimeExpandedTerm(term, basisfunction,[eventfields])
 end
 
-function TimeExpandedTerm(term,basisfunction;eventfields=:latency)
+function TimeExpandedTerm(term,basisfunction;eventfields=[:latency])
+        # default call, use latency
         TimeExpandedTerm(term, basisfunction,eventfields)
 end
 
@@ -129,8 +148,8 @@ function StatsModels.modelcols(term::TimeExpandedTerm{<:RandomEffectsTerm},tbl)
 
         end
 
-        group = tbl[rhs.sym]
-        time = tbl[term.eventfields[1]]
+        group = tbl[!,rhs.sym]
+        time = tbl[!,term.eventfields[1]]
 
         # get the from-to onsets of the grouping varibales
         onsets = time_expand_getRandomGrouping(group,time,term.basisfunction)
@@ -254,14 +273,14 @@ function time_expand(X,term,tbl)
         nrowsX = size(X)[1]
         ncolsXdc = ncolsBasis*ncolsX
 
-        onsets = tbl[term.eventfields[1]]
+        onsets = tbl[!,term.eventfields[1]]
 
 
         if typeof(term.eventfields) <:Array && length(term.eventfields) == 1
-                bases = term.basisfunction.kernel.(tbl[term.eventfields[1]])
+                bases = term.basisfunction.kernel.(tbl[!,term.eventfields[1]])
         else
 
-                bases = term.basisfunction.kernel.(eachrow(tbl[term.eventfields]))
+                bases = term.basisfunction.kernel.(eachrow(tbl[!,term.eventfields]))
 
         end
 
@@ -305,14 +324,18 @@ function time_expand(X,term,tbl)
 end
 ## Coefnames
 function StatsModels.coefnames(term::TimeExpandedTerm)
-        names = coefnames(term.term)
+        terms = coefnames(term.term)
         colnames = term.basisfunction.colnames
-        if typeof(names) == String
-                names = [names]
+        name = term.basisfunction.name
+        if typeof(terms) == String
+                terms = [terms]
         end
-        return kron(names.*" : ",string.(colnames))
+        return name.*" : ".*kron(terms.*" : ",string.(colnames))
 end
 
+function StatsModels.coefnames(terms::AbstractArray{<:FormulaTerm})
+        return coefnames.(Base.getproperty.(terms,:rhs))
+end
 function StatsModels.coefnames(term::MixedModels.ZeroCorr)
         coefnames(term.term)
 end

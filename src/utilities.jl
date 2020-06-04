@@ -42,6 +42,16 @@ end
 
 
 function dropMissingEpochs(X,y)
-    goodIx = dropdims(.!any(ismissing.(y),dims=2),dims=(1,2))
+    missingIx = .!any(ismissing.(y),dims=(1,2))
+    print(size(missingIx))
+    goodIx = dropdims(missingIx,dims=(1,2))
     return X[goodIx,:],Array{Float64}(y[:,:,goodIx])
+end
+
+function linearize(x::AbstractArray)
+    # used in condense to generate the long format
+    return dropdims(reshape(x,:,1),dims=2)
+end
+function linearize(x::String)
+    return x
 end

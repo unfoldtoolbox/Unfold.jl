@@ -37,7 +37,7 @@ end
 
 
 firbasis(;τ,sfreq)           = firbasis(τ,sfreq,"")
-firbasis(;τ,sfreq,name="") = firbasis(τ,sfreq,name)
+firbasis(;τ,sfreq,name="basis_"*string(rand(1:10000))) = firbasis(τ,sfreq,name)
 firbasis(τ,sfreq)            = firbasis(τ,sfreq,"")
 
 """
@@ -91,6 +91,7 @@ function firkernel(e,times)
 
 end
 
+
 """
 $(SIGNATURES)
 Generate a Hemodynamic-Response-Functio (HRF) basis with inverse-samplingrate "TR" (=1/FS)
@@ -106,7 +107,7 @@ julia>  f(103.3)
 ```
 
 """
-function hrfbasis(TR::Float64;parameters= [6. 16. 1. 1. 6. 0. 32.],name::String="")
+function hrfbasis(TR::Float64;parameters= [6. 16. 1. 1. 6. 0. 32.],name::String="basis_"*string(rand(1:10000)))
     # Haemodynamic response function adapted from SPM12b "spm_hrf.m"
     # Parameters:
     #                                                           defaults
