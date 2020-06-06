@@ -1,20 +1,97 @@
+"""
+Object with a *term* and an applicable *BasisFunction* and a eventfield that are later passed to the basisfunction.
+
+$(TYPEDEF)
+$(TYPEDSIGNATURES)
+$(FIELDS)
+# Examples
+```julia-repl
+julia>  b = TimeExpandedTerm(term,kernel,[:latencyTR,:durationTR])
+```
+"""
 struct TimeExpandedTerm{T<:AbstractTerm} <: AbstractTerm
+        "Term that the basis function is applied to. This is regularly called in other functions to get e.g. term-coefnames and timeexpand those"
         term::T
+        "Kernel that determines what should happen to the designmatrix of the term"
         basisfunction::BasisFunction
+        "Which fields of the event-table should be passed to the basisfunction"
         eventfields::Array{Symbol}
 end
 
 
+function TimeExpandedTerm(term::NTuple{N,Union{<:AbstractTerm,<:MixedModels.RandomEffectsTerm}},basisfunction,eventfields::Array{Symbol,1}) where {N}
+        # for mixed models, apply it to each Term
+        TimeExpandedTerm.(term,Ref(basisfunction),Ref(eventfields))
+end
+function TimeExpandedTerm(term,basisfunction,eventfields::Nothing)
+        # if the eventfield is nothing, call default
+        TimeExpandedTerm(term, basisfunction)
+end
+
+function TimeExpandedTerm(term,basisfunction,eventfields::Symbol)
+        # call with symbol, convert to array of symbol
+        TimeExpandedTerm(term, basisfunction,[eventfields])
+end
+
+function TimeExpandedTerm(term,basisfunction;eventfields=[:latency])
+        # default call, use latency
+        TimeExpandedTerm(term, basisfunction,eventfields)
+end
+
+function Base.show(io::IO, p::TimeExpandedTerm)
+        #print(io, "timeexpand($(p.term), $(p.basisfunction.type),$(p.basisfunction.times))")
+        println(io,"$(coefnames(p))")
+end
+
+
+
+"""
+To be explored abstractTerm structure to automatically detect randomeffects. Not in use
+"""
 struct ZeroCorr2{T<:RandomEffectsTerm} <: AbstractTerm
     term::T
 end
 
+"""
+Object with a *term* and an applicable *BasisFunction* and a eventfield that are later passed to the basisfunction.
+
+$(TYPEDEF)
+$(TYPEDSIGNATURES)
+$(FIELDS)
+# Examples
+```julia-repl
+julia>  b = TimeExpandedTerm(term,kernel,[:latencyTR,:durationTR])
+```
+"""
 struct UnfoldDesignmatrix
+        "Array of formulas"
         formulas
+        "A concatenated designmatric. In case of Mixed Models an array, where the first one is a FeMat, later ones ReMats. "
         Xs
+        "Event table with all events"
         events
 end
 
+
+
+"""
+$(SIGNATURES)
+Combine two UnfoldDesignmatrices. This allows combination of multiple events.
+
+This also allows to define events with different lengths.
+
+Not supported for models without timebasis, as it is not needed there (one can simply run multiple models)
+# Examples
+```julia-repl
+julia>  basisfunction1 = firbasis(τ=(0,1),sfreq = 10,name="basis1")
+julia>  basisfunction2 = firbasis(τ=(0,0.5),sfreq = 10,name="basis2")
+julia>  Xdc1          = unfoldDesignmatrix(unfold.UnfoldLinearModel,@formula 0~1,tbl_1,basisfunction1)
+julia>  Xdc2          = unfoldDesignmatrix(unfold.UnfoldLinearModel,@formula 0~1,tbl_2,basisfunction2)
+julia>  combineDesignmatrices(Xdc1,Xdc2)
+julia>  Xdc = Xdc1+Xdc2 # equivalently
+```
+
+"""
 function combineDesignmatrices(X1::UnfoldDesignmatrix,X2::UnfoldDesignmatrix)
         Xs1 = X1.Xs
         Xs2 = X2.Xs
@@ -45,8 +122,25 @@ Base.:+(X1::UnfoldDesignmatrix, X2::UnfoldDesignmatrix) = combineDesignmatrices(
 
 
 
-# with basis expansion
-function unfoldDesignmatrix(type,f,tbl,basisfunction;kwargs...)
+"""
+$(SIGNATURES)
+unfoldDesignmatrix(type, f, tbl; kwargs...)
+Return a *UnfoldDesignmatrix* used to fit the models.
+# Arguments
+- type::Union{UnfoldLinearMixedModel,UnfoldLinearModel}
+- f::FormulaTerm: Formula to be used in this designmatrix
+- tbl: Events (usually a data frame) to be modelled
+- basisfunction::BasisFunction: basisfunction to be used in modeling (if specified)
+- contrasts::Dict: (optional) contrast to be applied to formula
+- eventfields::Array: (optional) Array of symbols which are passed to basisfunction event-wise. Default is :latency
+
+# Examples
+```julia-repl
+julia>  unfold.unfoldDesignmatrix(unfold.UnfoldLinearModel,f,tbl,basisfunction1)
+```
+
+"""
+function unfoldDesignmatrix(type,f,tbl,basisfunction::BasisFunction;kwargs...)
         Xs,form = generateDesignmatrix(type,f,tbl,basisfunction; kwargs...)
         UnfoldDesignmatrix(form,Xs,tbl)
 end
@@ -57,6 +151,7 @@ function unfoldDesignmatrix(type,f,tbl;kwargs...)
         UnfoldDesignmatrix(form,Xs,tbl)
 
 end
+
 
 function generateDesignmatrix(type,f,tbl,basisfunction;contrasts= Dict{Symbol,Any}(), kwargs...)
         @debug("generateDesignmatrix")
@@ -80,31 +175,6 @@ end
 function apply_basisfunction(type,form,basisfunction::unfold.BasisFunction;eventfields=nothing)
         @debug("apply_basisfunction other")
         return FormulaTerm(form.lhs, TimeExpandedTerm(form.rhs,basisfunction,eventfields))
-end
-
-
-function TimeExpandedTerm(term::NTuple{N,Union{<:AbstractTerm,<:MixedModels.RandomEffectsTerm}},basisfunction,eventfields::Array{Symbol,1}) where {N}
-        # for mixed models, apply it to each Term
-        TimeExpandedTerm.(term,Ref(basisfunction),Ref(eventfields))
-end
-function TimeExpandedTerm(term,basisfunction,eventfields::Nothing)
-        # if the eventfield is nothing, call default
-        TimeExpandedTerm(term, basisfunction)
-end
-
-function TimeExpandedTerm(term,basisfunction,eventfields::Symbol)
-        # call with symbol, convert to array of symbol
-        TimeExpandedTerm(term, basisfunction,[eventfields])
-end
-
-function TimeExpandedTerm(term,basisfunction;eventfields=[:latency])
-        # default call, use latency
-        TimeExpandedTerm(term, basisfunction,eventfields)
-end
-
-function Base.show(io::IO, p::TimeExpandedTerm)
-        #print(io, "timeexpand($(p.term), $(p.basisfunction.type),$(p.basisfunction.times))")
-        println(io,"$(coefnames(p))")
 end
 
 
