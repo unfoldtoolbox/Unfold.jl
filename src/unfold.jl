@@ -17,6 +17,7 @@ using TimerOutputs
 using DSP
 using StatsModels
 using StaticArrays
+using DocStringExtensions
 import Base.(+)
 using Distributions: Gamma, pdf # TODO replace this with direct implementation (used in basisfunction.jl)
 

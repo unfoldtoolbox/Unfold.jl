@@ -1,5 +1,5 @@
 # implement different basisfunctions e.g.
-using DocStringExtensions
+
 
 """
 Defines a basisfunction which can be called for each event, defining the time-expanded basis kernel
@@ -68,7 +68,7 @@ end
 
 """
 $(SIGNATURES)
-Defines the kernel-function for the firbasis
+Calculate a firbasis
 # Examples
 
 ```julia-repl
@@ -97,13 +97,23 @@ $(SIGNATURES)
 Generate a Hemodynamic-Response-Functio (HRF) basis with inverse-samplingrate "TR" (=1/FS)
 The
 # Examples
-Generate a FIR basis function from -0.1s to 0.3s at 100Hz
+Generate a HRF basis function object with Sampling rate 1/TR.
 ```julia-repl
-julia>  f = firbasis([-0.1,0.3],100)
+julia>  f = hrfbasis(2.3)
 ```
-Evaluate at an event occuring at sample 103.3
+Evaluate at an event occuring at TR 103.3 with duration of 4.1 TRs
+Optional Parameters p:
+                                                           defaults
+#                                                          {seconds}
+#        p(1) - delay of response (relative to onset)          6
+#        p(2) - delay of undershoot (relative to onset)       16
+#        p(3) - dispersion of response                         1
+#        p(4) - dispersion of undershoot                       1
+#        p(5) - ratio of response to undershoot                6
+#        p(6) - onset {seconds}                                0
+#        p(7) - length of kernel {seconds}                    32
 ```julia-repl
-julia>  f(103.3)
+julia>  f(103.3,4.1)
 ```
 
 """
@@ -124,6 +134,16 @@ function hrfbasis(TR::Float64;parameters= [6. 16. 1. 1. 6. 0. 32.],name::String=
     return BasisFunction(kernel,["hrf"],range(0,(length(kernel([0, 1]))-1)*TR,step=TR),type,name,0)
 end
 
+
+"""
+$(SIGNATURES)
+Calculate a HRF kernel. Input e can be [onset duration]
+# Examples
+
+```julia-repl
+julia>  f = hrfkernel(103.3,2.3,[6. 16. 1. 1. 6. 0. 32.])
+```
+"""
 function hrfkernel(e,TR,p)
     @assert ndims(e) <= 1 #either single onset or a row vector where we will take the first one :)
 
