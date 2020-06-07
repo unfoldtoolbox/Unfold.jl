@@ -3,7 +3,7 @@
 
 This tool combines mass-univariate linear (mixed) models with overlap correction.
 
-This kind of overlap correction is also known as encoding modeling, linear deconvolution, Temporal Response Functions (TRFs) and probably under other names.
+This kind of overlap correction is also known as encoding modeling, linear deconvolution, Temporal Response Functions (TRFs) and probably under other names. Typical fMRI models with HRF-basis functions are also supported.
 
 
 ## Install
@@ -11,7 +11,6 @@ This kind of overlap correction is also known as encoding modeling, linear decon
 Pkd.add("https://github.com/unfoldtoolbox/unfold.jl")
 using unfold
 ```
-Currently nothing is exported, thus all function calls need to be: `ùnfold.functioncall`
 
 ## Usage
 For a quickstart:
@@ -29,5 +28,5 @@ Still being written. Tutorials see `doc/lmm_tutorial.html` & `doc/lm_tutorial.ht
 
 
 ## Acknowledgements
-Thanks to **Dave Kleinschmidt** for discussing the formula interface and thanks to him & **Phillip Alday** who answered all my naive Julia questions.
+Thanks to **Dave Kleinschmidt** for discussing the formula interface and thanks to him & **Phillip Alday** who answered all my (potentially naive) Julia questions.
 This work was supported by the Center for Interdisciplinary Research, Bielefeld (ZiF) Cooperation Group "Statistical models for psychological and linguistic data".
