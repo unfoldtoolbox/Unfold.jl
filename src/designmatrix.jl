@@ -219,7 +219,7 @@ function StatsModels.modelcols(term::TimeExpandedTerm{<:RandomEffectsTerm},tbl)
                 rhs = term.term.term.rhs
         else
 
-                printn("term.term: $(dump(term.term))")
+                println("term.term: $(dump(term.term))")
                 error("unknown RE structure, has no field .rhs:$(typeof(term.term))")
 
         end

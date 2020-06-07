@@ -126,8 +126,8 @@ end
     # mass univariate
     beta = Array{Union{Missing,Number}}(undef,size(data,1),size(data,2),size(X,2))
     for ch in 1:size(data,1)
-        @debug("$(dims(data,)),$t,$ch")
         for t in 1:size(data,2)
+            @debug("$(ndims(data,)),$t,$ch")
             ix = .!ismissing.(data[ch,t,:])
             beta[ch,t,:] = X[ix,:] \ data[ch,t,ix]
         end
@@ -222,7 +222,7 @@ function LinearMixedModel_wrapper(form,data::Array{<:Union{TData},1},Xs;wts = []
 
     # detect and combine RE terms with the same grouping var
     if length(reterms) > 1
-        reterms = amalgamate(reterms)
+        reterms = MixedModels.amalgamate(reterms)
     end
 
     sort!(reterms, by = MixedModels.nranef, rev = true)
