@@ -1,5 +1,5 @@
 # unfold.jl
-**Alpha** Toolbox to perform linear regression on biological signals.
+**Beta** Toolbox to perform linear regression on biological signals.
 
 This tool combines mass-univariate linear (mixed) models with overlap correction.
 
