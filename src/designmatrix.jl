@@ -154,6 +154,10 @@ function designmatrix(type,f,tbl,basisfunction;contrasts= Dict{Symbol,Any}(), kw
         end
         return DesignMatrix(form,X,tbl)
 end
+function designmatrix(type,f,tbl;kwargs...)
+        return designmatrix(type,f,tbl,nothing;kwargs...)
+end
+
 
 
 """

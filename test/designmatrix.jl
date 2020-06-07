@@ -1,6 +1,6 @@
 ##
 using Test,DataFrames,StatsModels
-using unfold
+import unfold
 using MixedModels
 tbl = DataFrame([1 4]',[:latency])
 X = ones(size(tbl))
@@ -18,14 +18,14 @@ shouldBePos[4,:] = [0,0,1,0]
 
 ## test negative
 basisfunction = unfold.firbasis(τ=(-3,0),sfreq = 1)
-term =  unfold.TimeExpandedTerm(FormulaTerm(Term,Term),basisfunction,:latency );
-Xdc = unfold.time_expand(X,term,tbl)
+timeexpandterm =  unfold.TimeExpandedTerm(FormulaTerm(Term,Term),basisfunction,:latency );
+Xdc = unfold.time_expand(X,timeexpandterm,tbl)
 @test all(isapprox.(Matrix(Xdc)[1:4,1:4], shouldBeNeg,atol=1e-15))
 
 ## Test Positive only
 basisfunction = unfold.firbasis(τ=(1,4),sfreq = 1)
-term =  unfold.TimeExpandedTerm(FormulaTerm(Term,Term),basisfunction,:latency );
-Xdc = unfold.time_expand(X,term,tbl)
+timeexpandterm =  unfold.TimeExpandedTerm(FormulaTerm(Term,Term),basisfunction,:latency );
+Xdc = unfold.time_expand(X,timeexpandterm,tbl)
 println(Matrix(Xdc))
 
 @test all(isapprox.(Matrix(Xdc)[1:4,1:4], shouldBePos,atol=1e-15))
