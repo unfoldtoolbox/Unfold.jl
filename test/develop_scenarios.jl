@@ -33,25 +33,25 @@ evts_e,data_e = unfold.dropMissingEpochs(evts,data_e)
 basisfunction = unfold.firbasis(τ=(-0.1,.3),sfreq=10)
 
 f  = @formula 0~1+condA+condB # 1
-Xs = unfold.unfoldDesignmatrix(unfold.UnfoldLinearModel,f,evts_e)
+Xs = unfold.designmatrix(unfold.UnfoldLinearModel,f,evts_e)
 ufModel_A = unfold.unfoldFit(unfold.UnfoldLinearModel,Xs,data_e)
 
 basisfunction = unfold.firbasis(τ=(-0.1,.3),sfreq=10)
-Xs = unfold.unfoldDesignmatrix(unfold.UnfoldLinearModel,f,evts,basisfunction)
+Xs = unfold.designmatrix(unfold.UnfoldLinearModel,f,evts,basisfunction)
 basisfunction = unfold.firbasis(τ=(-0.1,.5),sfreq=10)
-Xs2 = unfold.unfoldDesignmatrix(unfold.UnfoldLinearModel,f,evts,basisfunction)
+Xs2 = unfold.designmatrix(unfold.UnfoldLinearModel,f,evts,basisfunction)
 Xs = Xs+Xs2
 
 ufModel_B = unfold.unfoldFit(unfold.UnfoldLinearModel,Xs,data)
 
 
 f  = @formula 0~1+condA+condB + (1+condA|subject)
-Xs = unfold.unfoldDesignmatrix(unfold.UnfoldLinearMixedModel,f,evts_e)
+Xs = unfold.designmatrix(unfold.UnfoldLinearMixedModel,f,evts_e)
 
 ufModel_C = unfold.unfoldFit(unfold.UnfoldLinearMixedModel,Xs,data_e)
 
 basisfunction = unfold.firbasis(τ=(-0.1,.3),sfreq=10)
-Xs = unfold.unfoldDesignmatrix(unfold.UnfoldLinearMixedModel,f,evts,basisfunction)
+Xs = unfold.designmatrix(unfold.UnfoldLinearMixedModel,f,evts,basisfunction)
 
 ufModel_D = unfold.unfoldFit(unfold.UnfoldLinearMixedModel,Xs,data)
 

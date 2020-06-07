@@ -126,7 +126,7 @@ Plots.plot(results.time,results.estimate,
 
 ## What is happening under the hood?
 ```julia
-Xdc = unfold.unfoldDesignmatrix(unfold.UnfoldLinearMixedModel,f,evts,basisfunction)
+Xdc = unfold.designmatrix(unfold.UnfoldLinearMixedModel,f,evts,basisfunction)
 ```
 
 Formula-Terms are wrapped with a `TimeExpandedTerm`, which upon calling `modelcols` will timeexpand the designmatrix.

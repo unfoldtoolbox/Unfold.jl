@@ -46,7 +46,7 @@ for k in 1:3
         f  = @formula 0~1+continuousB
     end
     println("Testing Runtime $k with Formula:$f")
-    Xs = unfold.unfoldDesignmatrix(unfold.UnfoldLinearModel,f,evts,basisfunction)
+    Xs = unfold.designmatrix(unfold.UnfoldLinearModel,f,evts,basisfunction)
 
     # Fit the model
     df = unfold.unfoldFit(unfold.UnfoldLinearModel,Xs,data_e)
@@ -64,7 +64,7 @@ data4 = vcat(data4,data4)
 f4  = @formula 0~1+conditionA+conditionB # 4
 basisfunction4 = unfold.firbasis(τ=(-1,1),sfreq=1000,name="A")
 
-@time unfold.generateDesignmatrix(unfold.UnfoldLinearModel,f4,evts4,basisfunction4)
+@time unfold.designmatrix(unfold.UnfoldLinearModel,f4,evts4,basisfunction4)
 # new version 7s-10s, dataset4, sfreq=1000, 1200stim,
 
 ###############################

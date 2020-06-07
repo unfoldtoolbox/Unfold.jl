@@ -37,8 +37,8 @@ X = ones(size(tbl))
 basisfunction1 = unfold.firbasis(τ=(0,1),sfreq = 10,name="basis1")
 basisfunction2 = unfold.firbasis(τ=(0,0.5),sfreq = 10,name="basis2")
 f = @formula 0~1
-Xdc1          = unfold.unfoldDesignmatrix(unfold.UnfoldLinearModel,f,tbl,basisfunction1)
-Xdc2          = unfold.unfoldDesignmatrix(unfold.UnfoldLinearModel,f,tbl.+1,basisfunction2)
+Xdc1          = unfold.designmatrix(unfold.UnfoldLinearModel,f,tbl,basisfunction1)
+Xdc2          = unfold.designmatrix(unfold.UnfoldLinearModel,f,tbl.+1,basisfunction2)
 
 Xdc = Xdc1+Xdc2
 @test size(Xdc.Xs,2) == size(Xdc1.Xs,2) + size(Xdc2.Xs,2)
@@ -47,8 +47,8 @@ if 1 == 0
     # not implemented yet
 f3 = @formula 0~1+(1|subject)
 f4 = @formula 0~1+(1|item)
-Xdc3          = unfold.unfoldDesignmatrix(unfold.UnfoldLinearMixedModel,f3,tbl,basisfunction1)
-Xdc4          = unfold.unfoldDesignmatrix(unfold.UnfoldLinearMixedModel,f4,tbl.+1,basisfunction2)
+Xdc3          = unfold.designmatrix(unfold.UnfoldLinearMixedModel,f3,tbl,basisfunction1)
+Xdc4          = unfold.designmatrix(unfold.UnfoldLinearMixedModel,f4,tbl.+1,basisfunction2)
 
 Xdc = Xdc3+Xdc4
 @test typeof(Xdc.Xs[1]) == MixedModels.FeMat
@@ -56,8 +56,8 @@ Xdc = Xdc3+Xdc4
 @test size(Xdc.Xs) == 3 # one FeMat + 2 ReMats
 
 # test the algamate feature, combining same random effect groupings if specified separately
-Xdx5          = unfold.unfoldDesignmatrix(unfold.UnfoldLinearMixedModel,f3,tbl,basisfunction1)
-Xdc6          = unfold.unfoldDesignmatrix(unfold.UnfoldLinearMixedModel,f3,tbl.+1,basisfunction2)
+Xdx5          = unfold.designmatrix(unfold.UnfoldLinearMixedModel,f3,tbl,basisfunction1)
+Xdc6          = unfold.designmatrix(unfold.UnfoldLinearMixedModel,f3,tbl.+1,basisfunction2)
 
 Xdc = Xdc5+Xdc6
 @test size(Xdc.Xs) == 2

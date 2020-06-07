@@ -3,14 +3,14 @@ abstract type UnfoldModel end
 struct UnfoldLinearModel
     beta::AbstractArray # chan x predictor or chan x time x predictor
     modelinfo # optional info on the modelfit
-    X::UnfoldDesignmatrix
+    X::DesignMatrix
 end
 
 struct UnfoldLinearMixedModel
     beta::AbstractArray # chan x predictor or chan x time x predictor
     sigma::AbstractArray # chan x ranef or chan x time x ranef
     modelinfo # optional info on the modelfit
-    X::UnfoldDesignmatrix
+    X::DesignMatrix
 end
 
 struct UnfoldResult

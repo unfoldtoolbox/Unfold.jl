@@ -63,7 +63,7 @@ $(FIELDS)
 julia>  b = TimeExpandedTerm(term,kernel,[:latencyTR,:durationTR])
 ```
 """
-struct UnfoldDesignmatrix
+struct DesignMatrix
         "Array of formulas"
         formulas
         "A concatenated designmatric. In case of Mixed Models an array, where the first one is a FeMat, later ones ReMats. "
@@ -85,14 +85,14 @@ Not supported for models without timebasis, as it is not needed there (one can s
 ```julia-repl
 julia>  basisfunction1 = firbasis(τ=(0,1),sfreq = 10,name="basis1")
 julia>  basisfunction2 = firbasis(τ=(0,0.5),sfreq = 10,name="basis2")
-julia>  Xdc1          = unfoldDesignmatrix(unfold.UnfoldLinearModel,@formula 0~1,tbl_1,basisfunction1)
-julia>  Xdc2          = unfoldDesignmatrix(unfold.UnfoldLinearModel,@formula 0~1,tbl_2,basisfunction2)
+julia>  Xdc1          = designmatrix(unfold.UnfoldLinearModel,@formula 0~1,tbl_1,basisfunction1)
+julia>  Xdc2          = designmatrix(unfold.UnfoldLinearModel,@formula 0~1,tbl_2,basisfunction2)
 julia>  combineDesignmatrices(Xdc1,Xdc2)
 julia>  Xdc = Xdc1+Xdc2 # equivalently
 ```
 
 """
-function combineDesignmatrices(X1::UnfoldDesignmatrix,X2::UnfoldDesignmatrix)
+function combineDesignmatrices(X1::DesignMatrix,X2::DesignMatrix)
         Xs1 = X1.Xs
         Xs2 = X2.Xs
         if typeof(X1.Xs) <: SparseMatrixCSC
@@ -115,17 +115,17 @@ function combineDesignmatrices(X1::UnfoldDesignmatrix,X2::UnfoldDesignmatrix)
         if !(Float64(X1.formulas.rhs.basisfunction.times.step) ≈ Float64(X2.formulas.rhs.basisfunction.times.step))
                 @warn("Concatenating formulas with different sampling rates. Be sure that this is what you want.")
         end
-        UnfoldDesignmatrix([X1.formulas X2.formulas],Xcomb,[X1.events, X2.events])
+        DesignMatrix([X1.formulas X2.formulas],Xcomb,[X1.events, X2.events])
 end
 
-Base.:+(X1::UnfoldDesignmatrix, X2::UnfoldDesignmatrix) = combineDesignmatrices(X1,X2)
+Base.:+(X1::DesignMatrix, X2::DesignMatrix) = combineDesignmatrices(X1,X2)
 
 
 
 """
 $(SIGNATURES)
-unfoldDesignmatrix(type, f, tbl; kwargs...)
-Return a *UnfoldDesignmatrix* used to fit the models.
+designmatrix(type, f, tbl; kwargs...)
+Return a *DesignMatrix* used to fit the models.
 # Arguments
 - type::Union{UnfoldLinearMixedModel,UnfoldLinearModel}
 - f::FormulaTerm: Formula to be used in this designmatrix
@@ -136,25 +136,12 @@ Return a *UnfoldDesignmatrix* used to fit the models.
 
 # Examples
 ```julia-repl
-julia>  unfold.unfoldDesignmatrix(unfold.UnfoldLinearModel,f,tbl,basisfunction1)
+julia>  unfold.designmatrix(unfold.UnfoldLinearModel,f,tbl,basisfunction1)
 ```
 
 """
-function unfoldDesignmatrix(type,f,tbl,basisfunction::BasisFunction;kwargs...)
-        Xs,form = generateDesignmatrix(type,f,tbl,basisfunction; kwargs...)
-        UnfoldDesignmatrix(form,Xs,tbl)
-end
-
-#without basis expansion
-function unfoldDesignmatrix(type,f,tbl;kwargs...)
-        Xs,form = generateDesignmatrix(type,f,tbl,nothing; kwargs...)
-        UnfoldDesignmatrix(form,Xs,tbl)
-
-end
-
-
-function generateDesignmatrix(type,f,tbl,basisfunction;contrasts= Dict{Symbol,Any}(), kwargs...)
-        @debug("generateDesignmatrix")
+function designmatrix(type,f,tbl,basisfunction;contrasts= Dict{Symbol,Any}(), kwargs...)
+        @debug("designmatrix")
         form = apply_schema(f, schema(f, tbl, contrasts), LinearMixedModel)
         form = apply_basisfunction(type,form,basisfunction,kwargs...)
 
@@ -163,7 +150,7 @@ function generateDesignmatrix(type,f,tbl,basisfunction;contrasts= Dict{Symbol,An
         else
                 X = modelcols(form.rhs, tbl)
         end
-        return X,form
+        return DesignMatrix(form,X,tbl)
 end
 
 # in case of no basisfunctin, do nothing
