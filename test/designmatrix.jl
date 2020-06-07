@@ -65,7 +65,7 @@ end
 
 
 # XXX concatenating of UnfoldLinearMixedModel designmatrices! Especially FeMat going to be more interesting....
-df = unfold.unfoldFit(unfold.UnfoldLinearModel,Xdc,rand(1,size(Xdc.Xs,1)))
+df = unfold.fit!(unfold.UnfoldLinearModel,Xdc,rand(1,size(Xdc.Xs,1)))
 @test size(df.beta,2) == 17
 
 ## Speedtest

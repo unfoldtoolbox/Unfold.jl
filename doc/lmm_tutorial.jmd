@@ -151,7 +151,7 @@ Plots.heatmap(Matrix(Xdc.Xs[2][1:2000,1:500]))
 
 And finally, generate the linear mixed model manually & fit it.
 ```julia;eval=false
-mf = unfold.unfoldFit(unfold.UnfoldLinearMixedModel,Xs,data)
+mf = unfold.fit!(unfold.UnfoldLinearMixedModel,Xs,data)
 mm = unfold.condense(mf,evts)
 mm
 ```

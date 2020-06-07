@@ -14,7 +14,7 @@ struct TimeExpandedTerm{T<:AbstractTerm} <: AbstractTerm
         term::T
         "Kernel that determines what should happen to the designmatrix of the term"
         basisfunction::BasisFunction
-        "Which fields of the event-table should be passed to the basisfunction"
+        "Which fields of the event-table should be passed to the basisfunction.Important: The first entry has to be the event-latency in samples!"
         eventfields::Array{Symbol}
 end
 
@@ -132,7 +132,8 @@ Return a *DesignMatrix* used to fit the models.
 - tbl: Events (usually a data frame) to be modelled
 - basisfunction::BasisFunction: basisfunction to be used in modeling (if specified)
 - contrasts::Dict: (optional) contrast to be applied to formula
-- eventfields::Array: (optional) Array of symbols which are passed to basisfunction event-wise. Default is :latency
+- eventfields::Array: (optional) Array of symbols which are passed to basisfunction event-wise. 
+First field of array always defines eventonset in samples. Default is [:latency]
 
 # Examples
 ```julia-repl
@@ -141,10 +142,11 @@ julia>  unfold.designmatrix(unfold.UnfoldLinearModel,f,tbl,basisfunction1)
 
 """
 function designmatrix(type,f,tbl,basisfunction;contrasts= Dict{Symbol,Any}(), kwargs...)
-        @debug("designmatrix")
+        @debug("generating DesignMatrix")
         form = apply_schema(f, schema(f, tbl, contrasts), LinearMixedModel)
-        form = apply_basisfunction(type,form,basisfunction,kwargs...)
+        form = apply_basisfunction(form,basisfunction,kwargs...)
 
+        # Evaluate the designmatrix
         if (!isnothing(basisfunction)) & (type<:UnfoldLinearMixedModel)
                 X = modelcols.(form.rhs, Ref(tbl))
         else
@@ -153,20 +155,33 @@ function designmatrix(type,f,tbl,basisfunction;contrasts= Dict{Symbol,Any}(), kw
         return DesignMatrix(form,X,tbl)
 end
 
-# in case of no basisfunctin, do nothing
-function apply_basisfunction(type,form,basisfunction;eventfields=nothing)
+
+"""
+$(SIGNATURES)
+timeexpand the rhs-term of the formula with the basisfunction
+
+"""
+
+function apply_basisfunction(form,basisfunction::unfold.BasisFunction;eventfields=nothing)
+        @debug("apply_basisfunction")
+        return FormulaTerm(form.lhs, TimeExpandedTerm(form.rhs,basisfunction,eventfields))
+end
+
+function apply_basisfunction(form,basisfunction::Nothing;eventfields=nothing)
+        # in case of no basisfunctin, do nothing
         return form
 end
 
 
-function apply_basisfunction(type,form,basisfunction::unfold.BasisFunction;eventfields=nothing)
-        @debug("apply_basisfunction other")
-        return FormulaTerm(form.lhs, TimeExpandedTerm(form.rhs,basisfunction,eventfields))
-end
 
 
 
 
+
+"""
+$(SIGNATURES)
+calculates the actual designmatrix for a timeexpandedterm. Multiple dispatch on StatsModels.modelcols
+"""
 # Timeexpand the fixed effect part
 function StatsModels.modelcols(term::TimeExpandedTerm,tbl)
 
@@ -296,7 +311,10 @@ function StatsModels.modelcols(term::TimeExpandedTerm{<:RandomEffectsTerm},tbl)
         scratch)
 end
 
-# Get the timeranges where the random grouping variable was applied
+"""
+$(SIGNATURES)
+Get the timeranges where the random grouping variable was applied
+"""
 function time_expand_getRandomGrouping(tblGroup,tblLatencies,basisfunction)
         ranges = time_expand_getTimeRange.(tblLatencies,Ref(basisfunction))
 end
@@ -314,37 +332,37 @@ function time_expand_getTimeRange(onset,basisfunction)
         range(fromRowIx,stop=toRowIx)
 end
 
+
+"""
+$(SIGNATURES)
+performs the actual time-expansion in a sparse way.
+
+ - Get the non-timeexpanded designmatrix X from StatsModels.
+ - evaluate the basisfunction kernel at each event
+ - calculate the necessary rows, cols and values for the sparse matrix
+ Returns SparseMatrixCSC 
+"""
 function time_expand(X,term,tbl)
-
-        #to = TimerOutput()
         ncolsBasis = size(term.basisfunction.kernel(0),2)
-
-
-
-        # We need the
-
-
         X = reshape(X,size(X,1),:)
 
         ncolsX = size(X)[2]
         nrowsX = size(X)[1]
         ncolsXdc = ncolsBasis*ncolsX
 
+        # this is the predefined eventfield, usually "latency"
         onsets = tbl[!,term.eventfields[1]]
-
 
         if typeof(term.eventfields) <:Array && length(term.eventfields) == 1
                 bases = term.basisfunction.kernel.(tbl[!,term.eventfields[1]])
         else
-
                 bases = term.basisfunction.kernel.(eachrow(tbl[!,term.eventfields]))
-
         end
 
         # generate rowindices
         rows =  copy(rowvals.(bases))
-
-
+        # this shift is necessary as some basisfunction time-points can be negative. But a matrix is always from 1:τ. Thus we have to shift it backwards in time.
+        # The onsets are onsets-1 XXX not sure why.
         for r in 1:length(rows)
                 rows[r] .+= floor(onsets[r]-1)+term.basisfunction.shiftOnset
         end
@@ -354,8 +372,6 @@ function time_expand(X,term,tbl)
 
         # generate column indices
         cols = []
-        #@timeit to "Col"
-
         for Xcol in 1:ncolsX
                 for b in 1:length(bases)
                         for c in 1:ncolsBasis
@@ -363,7 +379,6 @@ function time_expand(X,term,tbl)
                         end
                 end
         end
-
         cols = vcat(cols...)
 
         # generate values
@@ -374,12 +389,20 @@ function time_expand(X,term,tbl)
 
         vals = vcat(vals...)
         ix = rows.>0
-        #@timeit to "generate"
         A = sparse(rows[ix],cols[ix],vals[ix])
-        #println(to)
+
         return A
 end
-## Coefnames
+
+"""
+$(SIGNATURES)
+coefnames of a TimeExpandedTerm concatenates the basis-function name with the kronecker product of the term name and the basis-function colnames. Separator is ' : '
+Some examples for a firbasis:
+        basis_313 : (Intercept) : 0.1
+        basis_313 : (Intercept) : 0.2
+        basis_313 : (Intercept) : 0.3
+        ...
+"""
 function StatsModels.coefnames(term::TimeExpandedTerm)
         terms = coefnames(term.term)
         colnames = term.basisfunction.colnames
