@@ -1,4 +1,28 @@
-# Mass Univariate Model
+
+"""
+fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::FormulaTerm,tbl::DataFrame,data::Array{T,3},times)
+fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::FormulaTerm,tbl::DataFrame,data::Array{T,2},basisfunction::BasisFunction)
+
+Generates Designmatrix & fits model, either mass-univariate (one model per epoched-timepoint) or time-expanded (modeling linear overlap).
+
+
+# Examples
+Mass Univariate Linear
+```julia-repl
+julia> data,evts = loadtestdata("testCase1") 
+julia> data_r = reshape(data,(1,:))
+julia> data_e,times = unfold.epoch(data=data_r,tbl=evts,τ=(-1.,1.9),sfreq=10) # cut the data into epochs. data_e is now ch x times x epoch
+
+julia> f  = @formula 0~1+continuousA+continuousB # 1
+julia> model,results_long = fit(UnfoldLinearModel,f,evts,data_e,times)
+```
+Timexpanded Univariate Linear
+```julia-repl
+julia> basisfunction = firbasis(τ=(-1,1),sfreq=10,name="A")
+julia> model,results_long = fit(UnfoldLinearModel,f,evts,data_r,basisfunction)
+```
+
+"""
 function fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::FormulaTerm,tbl::DataFrame,data::Array{T,3},times;kwargs...) where {T}
     @assert size(data,2) == length(times)
 
@@ -39,9 +63,24 @@ function fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::Fo
 end
 
 
-## actual fitting functions
 
-function unfoldfit(::Type{UnfoldLinearMixedModel},Xobj::DesignMatrix,data)#AbstractArray{T,3} where {T<:Union{Missing, <:Number}}
+"""
+unfoldfit(::Type{UnfoldLinearMixedModel},Xobj::DesignMatrix,data::Union{<:AbstractArray{T,2},<:AbstractArray{T,3}}) where {T<:Union{Missing, <:Number}}
+unfoldfit(::Type{UnfoldLinearModel},Xobj::DesignMatrix,data::Union{<:AbstractArray{T,2},<:AbstractArray{T,3}}) where {T<:Union{Missing, <:Number}}
+
+Fit a DesignMatrix against a 2D/3D Array data along its last dimension
+Data is typically interpreted as channel x time (with basisfunctions) or channel x time x epoch (for mass univariate)
+
+Returns an UnfoldModel object with fields .beta, .sigma (in case of mixed model) and .modelinfo with a summary of the modelfit
+
+Note: Might be renamed/refactored to fit! at a later point
+
+# Examples
+```julia-repl
+```
+
+"""
+function unfoldfit(::Type{UnfoldLinearMixedModel},Xobj::DesignMatrix,data::Union{<:AbstractArray{T,2},<:AbstractArray{T,3}}) where {T<:Union{Missing, <:Number}}
     # function content partially taken from MixedModels.jl bootstrap.jl
     df = Array{NamedTuple,1}()
     dataDim = length(size(data)) # surely there is a nicer way to get this but I dont know it
@@ -139,30 +178,6 @@ end
 
 end
 
-"""
-$(SIGNATURES)
-Equates the length of data and designmatrix by cutting the shorter one
-
-The reason we need this is because when generating the designmatrix, we do not know how long the data actually are. We only assume that event-latencies are synchronized with the data
-"""
-function zeropad(X,data::AbstractArray{T,2})where {T<:Union{Missing, <:Number}}
-    @debug("2d zeropad")
-    if size(X,1) > size(data,2)
-        X = X[1:size(data,2),:]
-    else
-        data =data[:,1:size(X,1)]
-    end
-    return X,data
-end
-function zeropad(X,data::AbstractArray{T,3})where {T<:Union{Missing, <:Number}}
-    @debug("3d zeropad")
-    if size(X,1) > size(data,3)
-        X = X[1:size(data,3),:]
-    else
-        data =data[:,:,1:size(X,1)]
-    end
-    return X,data
-end
 function unfoldfit(::Type{UnfoldLinearModel},Xobj::DesignMatrix,data::AbstractArray{T,2};optimizer=undef) where {T<:Union{Missing, <:Number}}
     # timeexpanded, data = ch x time
     # X is epochs x predictor
@@ -185,11 +200,17 @@ function unfoldfit(::Type{UnfoldLinearModel},Xobj::DesignMatrix,data::AbstractAr
     return UnfoldLinearModel(beta,modelinfo,Xobj)
 end
 
+"""
+$(SIGNATURES)
 
+Wrapper to generate a LinearMixedModel. Code taken from MixedModels.jl and slightly adapted.
+
+"""
 function LinearMixedModel_wrapper(form,data::Array{<:Union{TData},1},Xs;wts = []) where {TData<:Number}
     #    function LinearMixedModel_wrapper(form,data::Array{<:Union{Missing,TData},1},Xs;wts = []) where {TData<:Number}
 
 
+    # XXX Push this to utilities zeropad
     # Make sure X & y are the same size
     if size(Xs[1],1) > size(data,1)
         @warn("Timeexpanded designmat longer than data, adding zeros to data. Future versions will fix this")
@@ -237,6 +258,14 @@ function LinearMixedModel_wrapper(form,data::Array{<:Union{TData},1},Xs;wts = []
 end
 
 
+
+"""
+$(SIGNATURES)
+
+Type Piracy. can be removed once MixedModels fully supports sparse FeMats
+https://github.com/JuliaStats/MixedModels.jl/pull/309
+
+"""
 ## Piracy it is!
 function MixedModels.FeMat(X::SparseMatrixCSC, cnms)
     #println("Pirated Sparse FeMat")

@@ -16,12 +16,12 @@ Currently nothing is exported, thus all function calls need to be: `ùnfold.func
 ## Usage
 For a quickstart:
 
-1. Timeexpansion **No**, Mixed **No**  : `unfold.fit(unfold.UnfoldLinearModel,f,evts,data_epoch,times)`
-1. Timeexpansion **Yes**, Mixed **No** : `unfold.fit(unfold.UnfoldLinearModel,f,evts,data,basisfunction)`
-1. Timeexpansion **No**, Mixed **Yes** : `unfold.fit(unfold.UnfoldLinearMixedModel,f,evts,data_epoch,times)`
-1. Timeexpansion **Yes**, Mixed **Yes**: `unfold.fit(unfold.UnfoldLinearMixedModel,f,evts,data,basisfunction)`
+1. Timeexpansion **No**, Mixed **No**  : `fit(UnfoldLinearModel,f,evts,data_epoch,times)`
+1. Timeexpansion **Yes**, Mixed **No** : `fit(UnfoldLinearModel,f,evts,data,basisfunction)`
+1. Timeexpansion **No**, Mixed **Yes** : `fit(UnfoldLinearMixedModel,f,evts,data_epoch,times)`
+1. Timeexpansion **Yes**, Mixed **Yes**: `fit(UnfoldLinearMixedModel,f,evts,data,basisfunction)`
 
-With **formula** e.g. `@formula 0~1+condA`, **evts** a `DataFrame` with events, **data** an `Array{Number,}` and  **basisfunction**: `unfold.firbasis(τ=[-0.1,0.5],srate=50)` or **times** `range(-0.1,0.5,step=1/50)`
+With **formula** e.g. `@formula 0~1+condA`, **evts** a `DataFrame` with events, **data** an `Array{Number,}` and  **basisfunction**: `firbasis(τ=[-0.1,0.5],srate=50)` or **times** `range(-0.1,0.5,step=1/50)`
 
 
 ## Documentation

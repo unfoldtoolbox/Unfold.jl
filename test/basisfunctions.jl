@@ -1,10 +1,10 @@
 using Test
 import unfold
 
-firbase = unfold.firbasis(τ=(-1,1),sfreq=10)
+firbase = firbasis(τ=(-1,1),sfreq=10)
 
 # test optional call
-@test firbase.kernel == unfold.firbasis((-1,1),10).kernel
+@test firbase.kernel == firbasis((-1,1),10).kernel
 
 @test typeof(firbase.name) <: String
 # test basics of basisfunction
@@ -15,7 +15,7 @@ firbase = unfold.firbasis(τ=(-1,1),sfreq=10)
 @test firbase.kernel(0.5)[1:3,1:3] == [0.5 0.0 0.0; 0.5 0.5 0.0; 0.0 0.5 0.5]
 
 
-boldbase = unfold.hrfbasis(2.,name="test")
+boldbase = hrfbasis(2.,name="test")
 
 @test boldbase.name == "test"
 @test boldbase.kernel(0) == boldbase.kernel(1)

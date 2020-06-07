@@ -55,7 +55,7 @@ evts,data_epochs = unfold.dropMissingEpochs(evts,data_epochs)
 
 We can now run the LinearMixedModel on each time point
 ```julia
-m = unfold.fit(unfold.UnfoldLinearMixedModel,f,evts,data_epochs,times)
+m = fit(UnfoldLinearMixedModel,f,evts,data_epochs,times)
 ```
 
 ### Fixed Effects
@@ -82,7 +82,7 @@ The random effects are very high in areas where we simulated overlap. (i.e. <-0.
 For overlap correction, we have to use a basis function once again.
 
 ```julia
-basisfunction = unfold.firbasis(τ=(-0.05,.4),sfreq=40)
+basisfunction = firbasis(τ=(-0.05,.4),sfreq=40)
 f  = @formula 0~1+condA*condB+(1+condA*condB|subject);
 ```
 
@@ -94,7 +94,7 @@ We can now run the mixed model.
 
 Easy syntax: Specify formula, events, EEG-data & the basis function
 ```julia
-@time mm = unfold.fit(unfold.UnfoldLinearMixedModel,f,evts,data,basisfunction)
+@time mm = fit(UnfoldLinearMixedModel,f,evts,data,basisfunction)
 ```
 We receive an object containing the (very large) mixed model:
 ```julia
@@ -126,7 +126,7 @@ Plots.plot(results.time,results.estimate,
 
 ## What is happening under the hood?
 ```julia
-Xdc = unfold.designmatrix(unfold.UnfoldLinearMixedModel,f,evts,basisfunction)
+Xdc = designmatrix(UnfoldLinearMixedModel,f,evts,basisfunction)
 ```
 
 Formula-Terms are wrapped with a `TimeExpandedTerm`, which upon calling `modelcols` will timeexpand the designmatrix.
@@ -151,18 +151,18 @@ Plots.heatmap(Matrix(Xdc.Xs[2][1:2000,1:500]))
 
 And finally, generate the linear mixed model manually & fit it.
 ```julia;eval=false
-mf = unfold.unfoldfit(unfold.UnfoldLinearMixedModel,Xs,data)
-mm = unfold.condense(mf,evts)
+mf = unfoldfit(unfold.UnfoldLinearMixedModel,Xs,data)
+mm = condense_long(mf)
 mm
 ```
 
 ## Summary
 There are four different model types currently "fitable"
 
-1. Timeexpansion **No**, Mixed **No**  : `unfold.fit(unfold.UnfoldLinearModel,f,evts,data_epoch,times)`
-1. Timeexpansion **Yes**, Mixed **No** : `unfold.fit(unfold.UnfoldLinearModel,f,evts,data,basisfunction)`
-1. Timeexpansion **No**, Mixed **Yes** : `unfold.fit(unfold.UnfoldLinearMixedModel,f,evts,data_epoch,times)`
-1. Timeexpansion **Yes**, Mixed **Yes**: `unfold.fit(unfold.UnfoldLinearMixedModel,f,evts,data,basisfunction)`
+1. Timeexpansion **No**, Mixed **No**  : `fit(UnfoldLinearModel,f,evts,data_epoch,times)`
+1. Timeexpansion **Yes**, Mixed **No** : `fit(UnfoldLinearModel,f,evts,data,basisfunction)`
+1. Timeexpansion **No**, Mixed **Yes** : `fit(UnfoldLinearMixedModel,f,evts,data_epoch,times)`
+1. Timeexpansion **Yes**, Mixed **Yes**: `fit(UnfoldLinearMixedModel,f,evts,data,basisfunction)`
 
 
 ```julia;eval=false;echo=false

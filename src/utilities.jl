@@ -48,10 +48,42 @@ function dropMissingEpochs(X,y)
     return X[goodIx,:],Array{Float64}(y[:,:,goodIx])
 end
 
+
+"""
+$(SIGNATURES)
+Flatten a 1D array from of a 2D/3D array. Also drops the empty dimension
+"""
 function linearize(x::AbstractArray)
-    # used in condense to generate the long format
+    # used in condense_long to generate the long format
     return dropdims(reshape(x,:,1),dims=2)
 end
 function linearize(x::String)
     return x
+end
+
+
+
+"""
+$(SIGNATURES)
+Equates the length of data and designmatrix by cutting the shorter one
+
+The reason we need this is because when generating the designmatrix, we do not know how long the data actually are. We only assume that event-latencies are synchronized with the data
+"""
+function zeropad(X,data::AbstractArray{T,2})where {T<:Union{Missing, <:Number}}
+    @debug("2d zeropad")
+    if size(X,1) > size(data,2)
+        X = X[1:size(data,2),:]
+    else
+        data =data[:,1:size(X,1)]
+    end
+    return X,data
+end
+function zeropad(X,data::AbstractArray{T,3})where {T<:Union{Missing, <:Number}}
+    @debug("3d zeropad")
+    if size(X,1) > size(data,3)
+        X = X[1:size(data,3),:]
+    else
+        data =data[:,:,1:size(X,1)]
+    end
+    return X,data
 end

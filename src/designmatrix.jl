@@ -85,8 +85,8 @@ Not supported for models without timebasis, as it is not needed there (one can s
 ```julia-repl
 julia>  basisfunction1 = firbasis(τ=(0,1),sfreq = 10,name="basis1")
 julia>  basisfunction2 = firbasis(τ=(0,0.5),sfreq = 10,name="basis2")
-julia>  Xdc1          = designmatrix(unfold.UnfoldLinearModel,@formula 0~1,tbl_1,basisfunction1)
-julia>  Xdc2          = designmatrix(unfold.UnfoldLinearModel,@formula 0~1,tbl_2,basisfunction2)
+julia>  Xdc1          = designmatrix(UnfoldLinearModel,@formula 0~1,tbl_1,basisfunction1)
+julia>  Xdc2          = designmatrix(UnfoldLinearModel,@formula 0~1,tbl_2,basisfunction2)
 julia>  combineDesignmatrices(Xdc1,Xdc2)
 julia>  Xdc = Xdc1+Xdc2 # equivalently
 ```
@@ -137,7 +137,7 @@ First field of array always defines eventonset in samples. Default is [:latency]
 
 # Examples
 ```julia-repl
-julia>  unfold.designmatrix(unfold.UnfoldLinearModel,f,tbl,basisfunction1)
+julia>  designmatrix(UnfoldLinearModel,f,tbl,basisfunction1)
 ```
 
 """
@@ -166,7 +166,7 @@ timeexpand the rhs-term of the formula with the basisfunction
 
 """
 
-function apply_basisfunction(form,basisfunction::unfold.BasisFunction;eventfields=nothing)
+function apply_basisfunction(form,basisfunction::BasisFunction;eventfields=nothing)
         @debug("apply_basisfunction")
         return FormulaTerm(form.lhs, TimeExpandedTerm(form.rhs,basisfunction,eventfields))
 end

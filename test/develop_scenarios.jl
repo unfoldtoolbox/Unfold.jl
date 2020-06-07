@@ -30,36 +30,36 @@ evts_e,data_e = unfold.dropMissingEpochs(evts,data_e)
 
 
 
-basisfunction = unfold.firbasis(τ=(-0.1,.3),sfreq=10)
+basisfunction = firbasis(τ=(-0.1,.3),sfreq=10)
 
 f  = @formula 0~1+condA+condB # 1
-Xs = unfold.designmatrix(unfold.UnfoldLinearModel,f,evts_e)
-ufModel_A = unfold.unfoldfit(unfold.UnfoldLinearModel,Xs,data_e)
+Xs = designmatrix(UnfoldLinearModel,f,evts_e)
+ufModel_A = unfoldfit(UnfoldLinearModel,Xs,data_e)
 
-basisfunction = unfold.firbasis(τ=(-0.1,.3),sfreq=10)
-Xs = unfold.designmatrix(unfold.UnfoldLinearModel,f,evts,basisfunction)
-basisfunction = unfold.firbasis(τ=(-0.1,.5),sfreq=10)
-Xs2 = unfold.designmatrix(unfold.UnfoldLinearModel,f,evts,basisfunction)
+basisfunction = firbasis(τ=(-0.1,.3),sfreq=10)
+Xs = designmatrix(UnfoldLinearModel,f,evts,basisfunction)
+basisfunction = firbasis(τ=(-0.1,.5),sfreq=10)
+Xs2 = designmatrix(UnfoldLinearModel,f,evts,basisfunction)
 Xs = Xs+Xs2
 
-ufModel_B = unfold.unfoldfit(unfold.UnfoldLinearModel,Xs,data)
+ufModel_B = unfoldfit(UnfoldLinearModel,Xs,data)
 
 
 f  = @formula 0~1+condA+condB + (1+condA|subject)
-Xs = unfold.designmatrix(unfold.UnfoldLinearMixedModel,f,evts_e)
+Xs = designmatrix(UnfoldLinearMixedModel,f,evts_e)
 
-ufModel_C = unfold.unfoldfit(unfold.UnfoldLinearMixedModel,Xs,data_e)
+ufModel_C = unfoldfit(UnfoldLinearMixedModel,Xs,data_e)
 
-basisfunction = unfold.firbasis(τ=(-0.1,.3),sfreq=10)
-Xs = unfold.designmatrix(unfold.UnfoldLinearMixedModel,f,evts,basisfunction)
+basisfunction = firbasis(τ=(-0.1,.3),sfreq=10)
+Xs = designmatrix(UnfoldLinearMixedModel,f,evts,basisfunction)
 
-ufModel_D = unfold.unfoldfit(unfold.UnfoldLinearMixedModel,Xs,data)
+ufModel_D = unfoldfit(UnfoldLinearMixedModel,Xs,data)
 
 
-ufA = unfold.condense_long(ufModel_A,times)
-ufB = unfold.condense_long(ufModel_B)
-ufC = unfold.condense_long(ufModel_C,times)
-ufD = unfold.condense_long(ufModel_D)
+ufA = condense_long(ufModel_A,times)
+ufB = condense_long(ufModel_B)
+ufC = condense_long(ufModel_C,times)
+ufD = condense_long(ufModel_D)
 
 plot(ufA.colnames_basis,ufA.estimate)
 plot(ufC.colnames_basis,ufC.estimate)

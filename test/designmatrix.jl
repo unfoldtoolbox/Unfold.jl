@@ -17,13 +17,13 @@ shouldBePos[3,:] = [0,1,0,0]
 shouldBePos[4,:] = [0,0,1,0]
 
 ## test negative
-basisfunction = unfold.firbasis(τ=(-3,0),sfreq = 1)
+basisfunction = firbasis(τ=(-3,0),sfreq = 1)
 timeexpandterm =  unfold.TimeExpandedTerm(FormulaTerm(Term,Term),basisfunction,:latency );
 Xdc = unfold.time_expand(X,timeexpandterm,tbl)
 @test all(isapprox.(Matrix(Xdc)[1:4,1:4], shouldBeNeg,atol=1e-15))
 
 ## Test Positive only
-basisfunction = unfold.firbasis(τ=(1,4),sfreq = 1)
+basisfunction = firbasis(τ=(1,4),sfreq = 1)
 timeexpandterm =  unfold.TimeExpandedTerm(FormulaTerm(Term,Term),basisfunction,:latency );
 Xdc = unfold.time_expand(X,timeexpandterm,tbl)
 println(Matrix(Xdc))
@@ -34,11 +34,11 @@ println(Matrix(Xdc))
 ## combining designmatrices
 tbl = DataFrame([1 4]',[:latency])
 X = ones(size(tbl))
-basisfunction1 = unfold.firbasis(τ=(0,1),sfreq = 10,name="basis1")
-basisfunction2 = unfold.firbasis(τ=(0,0.5),sfreq = 10,name="basis2")
+basisfunction1 = firbasis(τ=(0,1),sfreq = 10,name="basis1")
+basisfunction2 = firbasis(τ=(0,0.5),sfreq = 10,name="basis2")
 f = @formula 0~1
-Xdc1          = unfold.designmatrix(unfold.UnfoldLinearModel,f,tbl,basisfunction1)
-Xdc2          = unfold.designmatrix(unfold.UnfoldLinearModel,f,tbl.+1,basisfunction2)
+Xdc1          = designmatrix(UnfoldLinearModel,f,tbl,basisfunction1)
+Xdc2          = designmatrix(UnfoldLinearModel,f,tbl.+1,basisfunction2)
 
 Xdc = Xdc1+Xdc2
 @test size(Xdc.Xs,2) == size(Xdc1.Xs,2) + size(Xdc2.Xs,2)
@@ -47,8 +47,8 @@ if 1 == 0
     # not implemented yet
 f3 = @formula 0~1+(1|subject)
 f4 = @formula 0~1+(1|item)
-Xdc3          = unfold.designmatrix(unfold.UnfoldLinearMixedModel,f3,tbl,basisfunction1)
-Xdc4          = unfold.designmatrix(unfold.UnfoldLinearMixedModel,f4,tbl.+1,basisfunction2)
+Xdc3          = designmatrix(UnfoldLinearMixedModel,f3,tbl,basisfunction1)
+Xdc4          = designmatrix(UnfoldLinearMixedModel,f4,tbl.+1,basisfunction2)
 
 Xdc = Xdc3+Xdc4
 @test typeof(Xdc.Xs[1]) == MixedModels.FeMat
@@ -56,8 +56,8 @@ Xdc = Xdc3+Xdc4
 @test size(Xdc.Xs) == 3 # one FeMat + 2 ReMats
 
 # test the algamate feature, combining same random effect groupings if specified separately
-Xdx5          = unfold.designmatrix(unfold.UnfoldLinearMixedModel,f3,tbl,basisfunction1)
-Xdc6          = unfold.designmatrix(unfold.UnfoldLinearMixedModel,f3,tbl.+1,basisfunction2)
+Xdx5          = designmatrix(UnfoldLinearMixedModel,f3,tbl,basisfunction1)
+Xdc6          = designmatrix(UnfoldLinearMixedModel,f3,tbl.+1,basisfunction2)
 
 Xdc = Xdc5+Xdc6
 @test size(Xdc.Xs) == 2
@@ -65,7 +65,7 @@ end
 
 
 # XXX concatenating of UnfoldLinearMixedModel designmatrices! Especially FeMat going to be more interesting....
-df = unfold.unfoldfit(unfold.UnfoldLinearModel,Xdc,rand(1,size(Xdc.Xs,1)))
+df = unfoldfit(UnfoldLinearModel,Xdc,rand(1,size(Xdc.Xs,1)))
 @test size(df.beta,2) == 17
 
 ## Speedtest
@@ -75,7 +75,7 @@ if 1==0
     X = ones(size(tbl,1),3).*[1,2,3]'
 
 
-    basisfunction = unfold.firbasis(τ=(0,1),sfreq = 100,exact=true)
+    basisfunction = firbasis(τ=(0,1),sfreq = 100,exact=true)
     term =  unfold.TimeExpandedTerm(Term,basisfunction,:latency );
     @time Xdc = Matrix(unfold.time_expand(X,term,tbl))
     @time Xdc = Matrix(unfold.time_expand2(X,term,tbl))

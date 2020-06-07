@@ -22,20 +22,20 @@ data_missing[4500:4600] .= missing
 
 ## Mass Univariate Linear
 
-m_mul,m_mul_results = unfold.fit(unfold.UnfoldLinearModel,f,evts,data_e,times)
+m_mul,m_mul_results = fit(UnfoldLinearModel,f,evts,data_e,times)
 
 @test all(m_mul_results[(m_mul_results.channel.==1).&(m_mul_results.colnames_basis .==0.1),:estimate] .≈ [3.0 2.5 -1.5]')
 # Timexpanded Univariate Linear
-basisfunction = unfold.firbasis(τ=(-1,1),sfreq=10,name="A")
-m_tul,m_tul_results = unfold.fit(unfold.UnfoldLinearModel,f,evts,data_r,basisfunction)
+basisfunction = firbasis(τ=(-1,1),sfreq=10,name="A")
+m_tul,m_tul_results = fit(UnfoldLinearModel,f,evts,data_r,basisfunction)
 @test all(m_tul_results[(m_tul_results.channel.==1).&(m_tul_results.colnames_basis .==0.1),:estimate] .≈ [3.0 2.5 -1.5]')
 
 
 # Add Missing in Data
-m_mul_missing,m_mul_missing_results = unfold.fit(unfold.UnfoldLinearModel,f,evts,data_e_missing,times)
+m_mul_missing,m_mul_missing_results = fit(UnfoldLinearModel,f,evts,data_e_missing,times)
 @test m_mul_missing_results.estimate ≈ m_mul_results.estimate
 # Timexpanded Univariate Linear
-m_tul_missing,m_tul_missing_results = unfold.fit(unfold.UnfoldLinearModel,f,evts,data_missing,basisfunction)
+m_tul_missing,m_tul_missing_results = fit(UnfoldLinearModel,f,evts,data_missing,basisfunction)
 @test  isapprox(m_tul_missing_results.estimate , m_tul_results.estimate,atol=1e-5)  # higher tol because we remove stuff
 
 # runntime tests - does something explode?
@@ -48,13 +48,13 @@ for k in 1:3
         f  = @formula 0~1+continuousB
     end
     println("Testing Runtime $k with Formula:$f")
-    Xs = unfold.designmatrix(unfold.UnfoldLinearModel,f,evts,basisfunction)
+    Xs = designmatrix(UnfoldLinearModel,f,evts,basisfunction)
 
     # Fit the model
-    df = unfold.unfoldfit(unfold.UnfoldLinearModel,Xs,data_e)
-    c = unfold.condense_long(df,times)
-    unfold.fit(unfold.UnfoldLinearModel,f,evts,data_e,times)
-    unfold.fit(unfold.UnfoldLinearModel,f,evts,data,basisfunction)
+    df = unfoldfit(UnfoldLinearModel,Xs,data_e)
+    c = condense_long(df,times)
+    fit(UnfoldLinearModel,f,evts,data_e,times)
+    fit(UnfoldLinearModel,f,evts,data,basisfunction)
 end
 
 
@@ -64,9 +64,9 @@ data4 = reshape(data4,(1,:))
 
 data4 = vcat(data4,data4)
 f4  = @formula 0~1+conditionA+conditionB # 4
-basisfunction4 = unfold.firbasis(τ=(-1,1),sfreq=1000,name="A")
+basisfunction4 = firbasis(τ=(-1,1),sfreq=1000,name="A")
 
-@time unfold.designmatrix(unfold.UnfoldLinearModel,f4,evts4,basisfunction4)
+@time designmatrix(UnfoldLinearModel,f4,evts4,basisfunction4)
 # new version 7s-10s, dataset4, sfreq=1000, 1200stim,
 
 ###############################
@@ -94,13 +94,13 @@ evts_e,data_e = unfold.dropMissingEpochs(evts,data_e)
 
 ######################
 ##  Mass Univariate Mixed
-@time m_mum = unfold.fit(unfold.UnfoldLinearMixedModel,f,evts_e,data_e    ,times,contrasts=Dict(:condA => EffectsCoding(), :condB => EffectsCoding()))
+@time m_mum = fit(UnfoldLinearMixedModel,f,evts_e,data_e    ,times,contrasts=Dict(:condA => EffectsCoding(), :condB => EffectsCoding()))
 #@test all(m_mul_results[(m_mul_results.time.==0.1),:estimate] .≈ [3.0 2.5 -1.5]')
 #plot(m_mum)
 
 # Timexpanded Univariate Mixed
-basisfunction = unfold.firbasis(τ=(-0.2,0.3),sfreq=10)
-@time m_tum = unfold.fit(unfold.UnfoldLinearMixedModel,f,evts,data,basisfunction, contrasts=Dict(:condA => EffectsCoding(), :condB => EffectsCoding()) )
+basisfunction = firbasis(τ=(-0.2,0.3),sfreq=10)
+@time m_tum = fit(UnfoldLinearMixedModel,f,evts,data,basisfunction, contrasts=Dict(:condA => EffectsCoding(), :condB => EffectsCoding()) )
 
 
 
@@ -110,7 +110,7 @@ basisfunction = unfold.firbasis(τ=(-0.2,0.3),sfreq=10)
 
 if 1 == 0
     # Fit mass-univariate 1st level for all subjects
-    basisfunction = unfold.firbasis(τ=(-.1,.4),sfreq=10,name="A")
+    basisfunction = firbasis(τ=(-.1,.4),sfreq=10,name="A")
     resAll = DataFrame()
     f  = @formula 0~1+condA+condB
     for s in unique(evts.subject)
@@ -120,7 +120,7 @@ if 1 == 0
         to = min(to,size(data,1))
         evts_s = evts[evts.subject.==s,:]
         evts_s.latency .-= from
-        m = unfold.fit(unfold.UnfoldLinearModel,f,evts_s,data[from:to],basisfunction,contrasts=Dict(:condA => EffectsCoding(), :condB => EffectsCoding()))
+        m = fit(UnfoldLinearModel,f,evts_s,data[from:to],basisfunction,contrasts=Dict(:condA => EffectsCoding(), :condB => EffectsCoding()))
         m.results.subject = s
         append!(resAll,m.results)
     end
