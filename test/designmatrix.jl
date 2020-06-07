@@ -1,6 +1,6 @@
 ##
 using Test,DataFrames,StatsModels
-import unfold
+using unfold
 using MixedModels
 tbl = DataFrame([1 4]',[:latency])
 X = ones(size(tbl))

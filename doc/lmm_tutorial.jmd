@@ -7,7 +7,7 @@ date: 2020-02-17
 ```julia;label=packages;
 using StatsModels, MixedModels, DataFrames
 import Plots
-import unfold
+using unfold
 include("../test/test_utilities.jl") # to load the simulated data
 ```
 

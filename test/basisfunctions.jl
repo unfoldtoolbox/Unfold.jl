@@ -1,5 +1,5 @@
 using Test
-import unfold
+using unfold
 
 firbase = firbasis(τ=(-1,1),sfreq=10)
 

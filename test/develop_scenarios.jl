@@ -2,7 +2,7 @@
 using Test, StatsModels
 using DataFrames
 import Logging
-import unfold
+using unfold
 include("test_utilities.jl")
 
 Logging.global_logger(Logging.SimpleLogger(stdout, Logging.Debug))

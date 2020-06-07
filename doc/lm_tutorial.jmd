@@ -12,7 +12,7 @@ options:
 using StatsModels, MixedModels, DataFrames
 import DSP.conv
 import Plots
-import unfold
+using unfold
 include("../test/test_utilities.jl") # to load the simulated data
 ```
 

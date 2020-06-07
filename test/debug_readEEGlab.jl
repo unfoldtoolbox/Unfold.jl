@@ -1,4 +1,4 @@
-import unfold
+using unfold
 using MAT
 file = matopen("../data/sub-01_desc-MSDARKpreprocessed.set")
 EEG = read(file, "EEG") # note that this does NOT introduce a variable ``varname`` into scope
