@@ -51,7 +51,7 @@ for k in 1:3
     Xs = unfold.designmatrix(unfold.UnfoldLinearModel,f,evts,basisfunction)
 
     # Fit the model
-    df = unfold.fit!(unfold.UnfoldLinearModel,Xs,data_e)
+    df = unfold.unfoldfit(unfold.UnfoldLinearModel,Xs,data_e)
     c = unfold.condense_long(df,times)
     unfold.fit(unfold.UnfoldLinearModel,f,evts,data_e,times)
     unfold.fit(unfold.UnfoldLinearModel,f,evts,data,basisfunction)

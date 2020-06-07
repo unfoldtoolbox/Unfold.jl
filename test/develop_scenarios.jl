@@ -34,7 +34,7 @@ basisfunction = unfold.firbasis(τ=(-0.1,.3),sfreq=10)
 
 f  = @formula 0~1+condA+condB # 1
 Xs = unfold.designmatrix(unfold.UnfoldLinearModel,f,evts_e)
-ufModel_A = unfold.fit!(unfold.UnfoldLinearModel,Xs,data_e)
+ufModel_A = unfold.unfoldfit(unfold.UnfoldLinearModel,Xs,data_e)
 
 basisfunction = unfold.firbasis(τ=(-0.1,.3),sfreq=10)
 Xs = unfold.designmatrix(unfold.UnfoldLinearModel,f,evts,basisfunction)
@@ -42,18 +42,18 @@ basisfunction = unfold.firbasis(τ=(-0.1,.5),sfreq=10)
 Xs2 = unfold.designmatrix(unfold.UnfoldLinearModel,f,evts,basisfunction)
 Xs = Xs+Xs2
 
-ufModel_B = unfold.fit!(unfold.UnfoldLinearModel,Xs,data)
+ufModel_B = unfold.unfoldfit(unfold.UnfoldLinearModel,Xs,data)
 
 
 f  = @formula 0~1+condA+condB + (1+condA|subject)
 Xs = unfold.designmatrix(unfold.UnfoldLinearMixedModel,f,evts_e)
 
-ufModel_C = unfold.fit!(unfold.UnfoldLinearMixedModel,Xs,data_e)
+ufModel_C = unfold.unfoldfit(unfold.UnfoldLinearMixedModel,Xs,data_e)
 
 basisfunction = unfold.firbasis(τ=(-0.1,.3),sfreq=10)
 Xs = unfold.designmatrix(unfold.UnfoldLinearMixedModel,f,evts,basisfunction)
 
-ufModel_D = unfold.fit!(unfold.UnfoldLinearMixedModel,Xs,data)
+ufModel_D = unfold.unfoldfit(unfold.UnfoldLinearMixedModel,Xs,data)
 
 
 ufA = unfold.condense_long(ufModel_A,times)

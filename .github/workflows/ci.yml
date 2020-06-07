@@ -29,10 +29,10 @@ jobs:
         uses: julia-actions/julia-buildpkg@master
         #run: julia --project=test -e 'using Pkg; Pkg.instantiate()'
       - uses: julia-actions/julia-runtest@master
-      - name: Coveralls
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+     # - name: Coveralls
+     #   uses: coverallsapp/github-action@master
+     #   with:
+     #     github-token: ${{ secrets.GITHUB_TOKEN }}
      # - name: Build and deploy
      #   env:
      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

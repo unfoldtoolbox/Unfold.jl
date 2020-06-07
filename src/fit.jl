@@ -7,7 +7,7 @@ function fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::Fo
     @timeit to "designmatrix" Xs = designmatrix(type,f,tbl;kwargs...)
 
     # Fit the model
-    @timeit to "fit" ufModel = fit!(type,Xs,data)
+    @timeit to "fit" ufModel = unfoldfit(type,Xs,data)
 
     @timeit to "condense" c = condense_long(ufModel,times)
     # Condense output and return
@@ -24,7 +24,7 @@ function fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::Fo
     @timeit to "unfoldDesignmat" Xs = designmatrix(type,f,tbl,basisfunction;kwargs...)
 
     # Fit the model
-    @timeit to "fit!" ufModel = fit!(type,Xs,data)
+    @timeit to "unfoldfit" ufModel = unfoldfit(type,Xs,data)
 
     @timeit to "unfoldCondense" c = condense_long(ufModel)
     @debug(to)
@@ -41,7 +41,7 @@ end
 
 ## actual fitting functions
 
-function fit!(::Type{UnfoldLinearMixedModel},Xobj::DesignMatrix,data)#AbstractArray{T,3} where {T<:Union{Missing, <:Number}}
+function unfoldfit(::Type{UnfoldLinearMixedModel},Xobj::DesignMatrix,data)#AbstractArray{T,3} where {T<:Union{Missing, <:Number}}
     # function content partially taken from MixedModels.jl bootstrap.jl
     df = Array{NamedTuple,1}()
     dataDim = length(size(data)) # surely there is a nicer way to get this but I dont know it
@@ -117,7 +117,7 @@ function fit!(::Type{UnfoldLinearMixedModel},Xobj::DesignMatrix,data)#AbstractAr
     return UnfoldLinearMixedModel(beta,sigma,modelinfo,Xobj)
 end
 
- function fit!(::Type{UnfoldLinearModel},Xobj::DesignMatrix,data::AbstractArray{T,3};optimizer=undef) where {T<:Union{Missing, <:Number}}
+ function unfoldfit(::Type{UnfoldLinearModel},Xobj::DesignMatrix,data::AbstractArray{T,3};optimizer=undef) where {T<:Union{Missing, <:Number}}
      X = Xobj.Xs
     # mass univariate, data = ch x times x epochs
     X,data = zeropad(X,data)
@@ -163,7 +163,7 @@ function zeropad(X,data::AbstractArray{T,3})where {T<:Union{Missing, <:Number}}
     end
     return X,data
 end
-function fit!(::Type{UnfoldLinearModel},Xobj::DesignMatrix,data::AbstractArray{T,2};optimizer=undef) where {T<:Union{Missing, <:Number}}
+function unfoldfit(::Type{UnfoldLinearModel},Xobj::DesignMatrix,data::AbstractArray{T,2};optimizer=undef) where {T<:Union{Missing, <:Number}}
     # timeexpanded, data = ch x time
     # X is epochs x predictor
 
