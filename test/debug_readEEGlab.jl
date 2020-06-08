@@ -1,10 +1,31 @@
-using unfold
+#using unfold
 using MAT
-file = matopen("../data/sub-01_desc-MSDARKpreprocessed.set")
-EEG = read(file, "EEG") # note that this does NOT introduce a variable ``varname`` into scope
+using DataFrames
+using DelimitedFiles
 
-srate = EEG["srate"]
-data = EEG["data"]
-evtsMatlab = EEG["event"]
+function import_eeglab(filename)
 
-DataFrame(duration = evtsMatlab["duration"],latency = evtsMatlab["latency"])
+    file = MAT.matopen(filename)
+    # open file
+    EEG = read(file, "EEG")
+
+
+    function parse_struct(s::Dict)
+        return DataFrame(map(x->dropdims(x,dims=1),values(s)),collect(keys(s)))
+    end
+
+    evts_df = parse_struct(EEG["event"])
+    chanlocs_df = parse_struct(EEG["chanlocs"])
+#    epoch_df = parse_struct(EEG["epochs"])
+    
+    srate = EEG["srate"]
+    if typeof(EEG["data"]) == String
+        datapath = joinpath(splitdir(filename)[1],EEG["data"])
+        data = Array{Float32, 3}(undef,Int(EEG["nbchan"]),Int(EEG["pnts"]),Int(EEG["trials"]))
+        read!(datapath,data)
+    else
+        data = EEG["data"]
+    end
+    
+return data,srate,evts_df,chanlocs_df
+end
