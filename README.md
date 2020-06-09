@@ -8,8 +8,10 @@ This kind of overlap correction is also known as encoding modeling, linear decon
 
 ## Install
 ```
-Pkd.add("https://github.com/unfoldtoolbox/unfold.jl")
+Pkg.add("https://github.com/unfoldtoolbox/unfold.jl")
+Pkg.add("https://github.com/JuliaStats/MixedModels.jl") #to install latest mixed model 3.0.0 - will not be necessary once released
 using unfold
+
 ```
 
 ## Usage
