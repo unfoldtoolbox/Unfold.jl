@@ -31,7 +31,13 @@ function condense_long(m)
     #println(size(terms_rep))
     #println("$(length(colnames_basis_raw)),$(length(colnames_basis)),$nchan")
     #colnames_basis_rep = permutedims(repeat(colnames_basis_raw,Int(length(colnames_basis)/length(colnames_basis_raw)),nchan),[2,1])
+    # XXX HOTFIX for above lines
     colnames_basis_rep = permutedims(repeat(colnames_basis,1,nchan),[2,1])
+    try
+        colnames_basis_rep = parse.(Float64,colnames_basis_rep)
+    catch
+        #do nothing
+    end
     chan_rep = repeat(1:nchan,1,size(colnames_basis_rep,2))
 
     return make_long_df(m,terms_rep,chan_rep,colnames_basis_rep) #DataFrame(term=linearize(terms_rep),estimate=linearize(m.beta),stderror=linearize(MixedModels.stderror(m)),channel=linearize(chan_rep),group="fixed",colnames_basis=linearize(colnames_rep))
