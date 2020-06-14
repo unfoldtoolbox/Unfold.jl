@@ -59,7 +59,7 @@ function firbasis(τ,sfreq,name::String)
 
     return BasisFunction(kernel,times[1:end-1],times,type,name,shiftOnset)
 end
-firbasis(;τ,sfreq)           = firbasis(τ,sfreq,"")
+firbasis(;τ,sfreq)           = firbasis(τ,sfreq)
 firbasis(;τ,sfreq,name) = firbasis(τ,sfreq,name)
 firbasis(τ,sfreq)            = firbasis(τ,sfreq,"basis_"*string(rand(1:10000)))
 
