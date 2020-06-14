@@ -14,7 +14,8 @@ function condense_long(m)
     termsRaw = get_terms(m)
     terms = extract_term_info(termsRaw,2)
     colnames_basis_raw = get_colnames_basis(m.X.formulas)# this is unconverted basisfunction basis,
-    colnames_basis = extract_term_info(termsRaw,3) # this is converted to strings! But it has exact same size as terms
+    colnames_basis = extract_term_info(termsRaw,3) # this is converted to strings! 
+    basisnames = extract_term_info(termsRaw,1)
     @debug terms
     @debug colnames_basis
 
@@ -40,7 +41,8 @@ function condense_long(m)
     end
     chan_rep = repeat(1:nchan,1,size(colnames_basis_rep,2))
 
-    return make_long_df(m,terms_rep,chan_rep,colnames_basis_rep) #DataFrame(term=linearize(terms_rep),estimate=linearize(m.beta),stderror=linearize(MixedModels.stderror(m)),channel=linearize(chan_rep),group="fixed",colnames_basis=linearize(colnames_rep))
+    basisnames_rep = permutedims(repeat(basisnames,1,nchan),[2,1])
+    return make_long_df(m,terms_rep,chan_rep,colnames_basis_rep,basisnames_rep) #DataFrame(term=linearize(terms_rep),estimate=linearize(m.beta),stderror=linearize(MixedModels.stderror(m)),channel=linearize(chan_rep),group="fixed",colnames_basis=linearize(colnames_rep))
 end
 
 
@@ -60,22 +62,23 @@ function condense_long(m,times::AbstractArray)
     terms_rep = permutedims(repeat(terms,outer=[1,nchan,ncols]),[2,3,1])
     colnames_basis_rep = permutedims(repeat(colnames_basis,1,nchan,nterms),[2 1 3])
     chan_rep = repeat(1:nchan,1,ncols,nterms)
-
+    basisnames_rep = repeat("mass-univariate",nchan,ncols,nterms)
     #
-    results = make_long_df(m,terms_rep,chan_rep,colnames_basis_rep)
+    results = make_long_df(m,terms_rep,chan_rep,colnames_basis_rep,basisnames_rep)
 
     return results
 end
 #---
 # Returns a long df given the already matched
-function make_long_df(m,terms,chans,colnames)
+function make_long_df(m,terms,chans,colnames,basisnames)
     @assert all(size(terms) .== size(chans)) "terms, chans and colnames need to have the same size at this point, $(size(terms)),$(size(chans)),$(size(colnames)), should be $(size(m.beta)))"
     @assert all(size(terms) .== size(colnames)) "terms, chans and colnames need to have the same size at this point"
 
     estimate,group = make_estimate(m)
     results = DataFrame(term=linearize(terms),
         channel = linearize(chans),
-        colnames_basis=linearize(colnames),
+        basisname = linearize(basisnames),
+        colname_basis=linearize(colnames),
         estimate=linearize(estimate),
         stderror=Missing,
         group = linearize(group),
