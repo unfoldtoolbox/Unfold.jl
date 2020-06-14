@@ -112,10 +112,14 @@ function combineDesignmatrices(X1::DesignMatrix,X2::DesignMatrix)
         else
 
         end
-        if !(Float64(X1.formulas.rhs.basisfunction.times.step) ≈ Float64(X2.formulas.rhs.basisfunction.times.step))
-                @warn("Concatenating formulas with different sampling rates. Be sure that this is what you want.")
+        #if !(Float64(X1.formulas.rhs.basisfunction.times.step) ≈ Float64(X2.formulas.rhs.basisfunction.times.step))
+        #        @warn("Concatenating formulas with different sampling rates. Be sure that this is what you want.")
+        #end
+        if typeof(X1.formulas) <: FormulaTerm
+                DesignMatrix([X1.formulas X2.formulas],Xcomb,[X1.events, X2.events])
+        else
+                DesignMatrix([X1.formulas... X2.formulas],Xcomb,[X1.events, X2.events])
         end
-        DesignMatrix([X1.formulas X2.formulas],Xcomb,[X1.events, X2.events])
 end
 
 Base.:+(X1::DesignMatrix, X2::DesignMatrix) = combineDesignmatrices(X1,X2)
