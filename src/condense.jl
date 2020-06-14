@@ -62,7 +62,7 @@ function condense_long(m,times::AbstractArray)
     terms_rep = permutedims(repeat(terms,outer=[1,nchan,ncols]),[2,3,1])
     colnames_basis_rep = permutedims(repeat(colnames_basis,1,nchan,nterms),[2 1 3])
     chan_rep = repeat(1:nchan,1,ncols,nterms)
-    basisnames_rep = repeat("mass-univariate",nchan,ncols,nterms)
+    basisnames_rep = repeat(["mass-univariate"],nchan,ncols,nterms)
     #
     results = make_long_df(m,terms_rep,chan_rep,colnames_basis_rep,basisnames_rep)
 
