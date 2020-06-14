@@ -24,11 +24,11 @@ data_missing[4500:4600] .= missing
 
 m_mul,m_mul_results = fit(UnfoldLinearModel,f,evts,data_e,times)
 
-@test all(m_mul_results[(m_mul_results.channel.==1).&(m_mul_results.colnames_basis .==0.1),:estimate] .≈ [3.0 2.5 -1.5]')
+@test all(m_mul_results[(m_mul_results.channel.==1).&(m_mul_results.colname_basis .==0.1),:estimate] .≈ [3.0 2.5 -1.5]')
 # Timexpanded Univariate Linear
 basisfunction = firbasis(τ=(-1,1),sfreq=10,name="A")
 m_tul,m_tul_results = fit(UnfoldLinearModel,f,evts,data_r,basisfunction)
-@test all(m_tul_results[(m_tul_results.channel.==1).&(m_tul_results.colnames_basis .==0.1),:estimate] .≈ [3.0 2.5 -1.5]')
+@test all(m_tul_results[(m_tul_results.channel.==1).&(m_tul_results.colname_basis .==0.1),:estimate] .≈ [3.0 2.5 -1.5]')
 
 
 # Add Missing in Data
