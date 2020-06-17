@@ -55,14 +55,14 @@ evts,data_epochs = unfold.dropMissingEpochs(evts,data_epochs)
 
 We can now run the LinearMixedModel on each time point
 ```julia
-m = fit(UnfoldLinearMixedModel,f,evts,data_epochs,times)
+m,results = fit(UnfoldLinearMixedModel,f,evts,data_epochs,times)
 ```
 
 ### Fixed Effects
 ```julia
-results = m.results[m.results.group.=="fixed",:]
-Plots.plot(results.time,results.estimate,
-        group=results.term,
+res_fixef = results[results.group.=="fixed",:]
+Plots.plot(res_fixef.time,res_fixef.estimate,
+        group=res_fixef.term,
         layout=1,legend=:outerbottom)
 ```
 We see the condition effects and some residual overlap activity in the fixed effects
@@ -70,9 +70,9 @@ We see the condition effects and some residual overlap activity in the fixed eff
 ### Random Effects
 And the random effect results
 ```julia
-results = m.results[m.results.group.=="subject",:]
-Plots.plot(results.time,results.estimate,
-        group=results.term,
+res_ranef = results[results.group.=="subject",:]
+Plots.plot(res_ranef.time,res_ranef.estimate,
+        group=res_ranef.term,
         layout=1,legend=:outerbottom)
 
 ```
@@ -94,31 +94,31 @@ We can now run the mixed model.
 
 Easy syntax: Specify formula, events, EEG-data & the basis function
 ```julia
-@time mm = fit(UnfoldLinearMixedModel,f,evts,data,basisfunction)
+@time mm,results = fit(UnfoldLinearMixedModel,f,evts,data,basisfunction)
 ```
 We receive an object containing the (very large) mixed model:
 ```julia
-show(coeftable(mm.model))
+show(coeftable(mm.modelinfo))
 ```
 
 But again, we also get a *tidy*-dataframe with the results
 ```julia
-first(mm.results,6)
+first(results,6)
 ```
 
 and thus we can easily plot the fixed effect results.
 ```julia
-results = mm.results[mm.results.group.=="fixed",:]
-Plots.plot(results.time,results.estimate,
-        group=results.term,
+res_fixef = results[results.group.=="fixed",:]
+Plots.plot(res_fixef.time,res_fixef.estimate,
+        group=res_fixef.term,
         layout=1,legend=:outerbottom)
 ```
 
 And the random effect results.
 ```julia
-results = mm.results[mm.results.group.=="subject",:]
-Plots.plot(results.time,results.estimate,
-        group=results.term,
+res_ranef = results[results.group.=="subject",:]
+Plots.plot(res_ranef.time,res_ranef.estimate,
+        group=res_ranef.term,
         layout=1,legend=:outerbottom)
 
 ```
@@ -132,7 +132,6 @@ Xdc = designmatrix(UnfoldLinearMixedModel,f,evts,basisfunction)
 Formula-Terms are wrapped with a `TimeExpandedTerm`, which upon calling `modelcols` will timeexpand the designmatrix.
 There is one TimeExpandedTerm for the FixedEffects and one for each RandomEffectsTerm.
 
- **Limitation** Currently it is not possible to combine different formulas & different basis-functions, but that is planned
 ```julia
 typeof(Xdc.formulas.rhs)
 ```
@@ -152,8 +151,8 @@ Plots.heatmap(Matrix(Xdc.Xs[2][1:2000,1:500]))
 And finally, generate the linear mixed model manually & fit it.
 ```julia;eval=false
 mf = unfoldfit(unfold.UnfoldLinearMixedModel,Xs,data)
-mm = condense_long(mf)
-mm
+results = condense_long(mf)
+first(results,6)
 ```
 
 ## Summary

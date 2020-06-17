@@ -2,7 +2,7 @@
 ---
 title: "Overlap Correction with Linear Models (aka unfold.jl)"
 author: "Benedikt Ehinger, with help Dave Kleinschmidt"
-date: 2020-02-17
+date: 2020-06-07
 options:
     line_width: 92
 ---
@@ -16,7 +16,7 @@ using unfold
 include("../test/test_utilities.jl") # to load the simulated data
 ```
 
-In this notebook we will fit regression models to (simulated) EEG data. We will see that we need some type of overlap correction, as external events are so close to each other, that the respective brain responses overlap.
+In this notebook we will fit regression models to (simulated) EEG data. We will see that we need some type of overlap correction, as the events are close in time to each other, so that the respective brain responses overlap.
 If you want more detailed introduction to this topic check out my paper: https://peerj.com/articles/7838/
 ```julia
 data, evts = loadtestdata("testcase2","../test/")
@@ -47,24 +47,24 @@ We define a formula that we want to apply to each point in time
 f  = @formula 0~1+conditionA+conditionB # 0 as a dummy, we will combine wit data later
 ```
 
-We fit the special-type `UnfoldLinearModel` to the data
+We fit the `UnfoldLinearModel` to the data
 ```julia
-m = fit(UnfoldLinearModel,f,evts,data_epochs,times)
+m,results = fit(UnfoldLinearModel,f,evts,data_epochs,times)
 ```
 The object has the following fields
 ```julia
 println(typeof(m))
 println(fieldnames(typeof(m)))
 ```
-Which contain the model, the original formula, the original events and also a *tidy*-dataframe with the results
+Which contain the model, the original formula, the original events and returns extra a *tidy*-dataframe with the results
 ```julia
-first(m.results,6)
+first(results,6)
 ```
 
 We can also plot it:
 ```julia
-Plots.plot(m.results.time,m.results.estimate,
-        group=m.results.term,
+Plots.plot(results.time,results.estimate,
+        group=results.term,
         layout=1,legend=:outerbottom)
 # equivalent: plot(m)
 ```
@@ -120,12 +120,12 @@ For the left-handside we use "0" as the data is separated from the events. This 
 
 And fit a `UnfoldLinearModel`. Not that instead of `times` as in the mass-univariate case, we have a `BasisFunction` object now.
 ```julia
-m = fit(UnfoldLinearModel,f,evts,data,basisfunction)
+m,results = fit(UnfoldLinearModel,f,evts,data,basisfunction)
 ```
 
 ```julia
-Plots.plot(m.results.time,m.results.estimate,
-        group=m.results.term,
+Plots.plot(results.time,results.estimate,
+        group=results.term,
         layout=1,legend=:outerbottom)
 
 ```
@@ -137,10 +137,10 @@ Cool! All overlapping activity has been removed and we recovered the simulated u
 using Weave
 
 # convert to html
-weave("doc/lm_tutorial.jmd","doc/ipynb/html/lm_tutorial.ipynb")
+weave("lm_tutorial.jmd",out_path="html/lm_tutorial.html")
 
 # convert to a python notebook
-convert_doc("doc/lm_tutorial.jmd", "doc/ipynb/lm_tutorial.ipynb")
+convert_doc("lm_tutorial.jmd", "ipynb/lm_tutorial.ipynb")
 
 # convert to md for README
 #weave("doc\\lm_tutorial.jmd", doctype="pandoc", out_path = "README.md")
