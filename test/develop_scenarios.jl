@@ -28,7 +28,7 @@ f  = @formula 0~1+condA+condB + (1+condA+condB|subject)
 data_e,times = unfold.epoch(data=data,tbl=evts,τ=(-1.,1.9),sfreq=10)
 evts_e,data_e = unfold.dropMissingEpochs(evts,data_e)
 
-
+##
 
 basisfunction = firbasis(τ=(-0.1,.3),sfreq=10)
 
@@ -61,7 +61,7 @@ ufB = condense_long(ufModel_B)
 ufC = condense_long(ufModel_C,times)
 ufD = condense_long(ufModel_D)
 
-plot(ufA.colnames_basis,ufA.estimate)
-plot(ufC.colnames_basis,ufC.estimate)
-plot(ufB.colnames_basis,ufB.estimate)
-plot(ufD.colnames_basis,ufD.estimate)
+plot(ufA.colname_basis,ufA.estimate)
+plot(ufC.colname_basis,ufC.estimate)
+plot(ufB.colname_basis,ufB.estimate)
+plot(ufD.colname_basis,ufD.estimate)
