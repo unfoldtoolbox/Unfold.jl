@@ -108,7 +108,7 @@ function unfoldfit(::Type{UnfoldLinearMixedModel},Xobj::DesignMatrix,data::Union
     β_names = (Symbol.(fixefnames(mm))..., )
 
     # for each channel
-    for ch in range(1,stop=nchan)
+    @showprogress 1 for ch in range(1,stop=nchan)
         # for each time
         for t in range(1,stop=ntime)
 
@@ -164,7 +164,7 @@ end
     print(size(data))
     # mass univariate
     beta = Array{Union{Missing,Number}}(undef,size(data,1),size(data,2),size(X,2))
-    for ch in 1:size(data,1)
+    @showprogress 1 for ch in 1:size(data,1)
         for t in 1:size(data,2)
             @debug("$(ndims(data,)),$t,$ch")
             ix = .!ismissing.(data[ch,t,:])
@@ -191,10 +191,31 @@ function unfoldfit(::Type{UnfoldLinearModel},Xobj::DesignMatrix,data::AbstractAr
     modelinfo = []
     beta = Array{Float64}(undef,size(data,1),size(X,2))
 
-    for ch in 1:size(data,1)
+    @showprogress 1 for ch in 1:size(data,1)
         ix = .!ismissing.(data[ch,:])
-        beta[ch,:],h = lsqr(X[ix,:],data[ch,ix],log=true)
+        beta[ch,:],h = lsmr(X[ix,:],data[ch,ix],log=true)
         push!(modelinfo,h)
+
+        #beta = Array{Float64}(undef,size(data,1),size(X,2))
+        #beta .=0
+        #beta = fill(0.,size(data,1),size(X,2))
+    
+    
+        # "Fit ..."  for ch in 1:size(data,1)
+            
+        #    ix = .!ismissing.(data[ch,:])
+         #   @assert sum(ix)>0
+            #print(all(isfinite.(view(beta,ch,:))))
+            #beta[ch,:],h =  lsqr!(view(beta,ch,:),X[ix,:],view(data,ch,ix),log=true,maxiter=500)
+            #beta[ch,:],h =  lsqr(view(X,ix,:),view(data,ch,ix),log=true,maxiter=500)
+        #    beta[ch,:],h =  lsmr(X[ix,:],data[ch,ix],log=true,maxiter=500)
+            #print("done")
+        #    if ch != size(data,1)
+        #        beta[ch+1,:] = beta[ch,:] # initialize next beta 
+        #    end
+        #    push!(modelinfo,h)
+        #   end
+    
     end
 
     return UnfoldLinearModel(beta,modelinfo,Xobj)
