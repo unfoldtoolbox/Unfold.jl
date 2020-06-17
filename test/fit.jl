@@ -99,7 +99,7 @@ evts_e,data_e = unfold.dropMissingEpochs(evts,data_e)
 #plot(m_mum)
 
 # Timexpanded Univariate Mixed
-basisfunction = firbasis(τ=(-0.2,0.3),sfreq=10)
+basisfunction = firbasis(τ=(-0.2,0.3),sfreq=10,name="ABC")
 @time m_tum = fit(UnfoldLinearMixedModel,f,evts,data,basisfunction, contrasts=Dict(:condA => EffectsCoding(), :condB => EffectsCoding()) )
 
 
