@@ -17,7 +17,9 @@ using TimerOutputs
 using DSP
 using StatsModels
 using StaticArrays
+using ProgressMeter
 using DocStringExtensions
+#using IncompleteLU
 import Base.(+)
 using Distributions: Gamma, pdf # TODO replace this with direct implementation (used in basisfunction.jl)
 
