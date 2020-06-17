@@ -74,13 +74,13 @@ function make_long_df(m,terms,chans,colnames,basisnames)
     @assert all(size(terms) .== size(chans)) "terms, chans and colnames need to have the same size at this point, $(size(terms)),$(size(chans)),$(size(colnames)), should be $(size(m.beta)))"
     @assert all(size(terms) .== size(colnames)) "terms, chans and colnames need to have the same size at this point"
 
-    estimate,group = make_estimate(m)
+    estimate,stderror,group = make_estimate(m)
     results = DataFrame(term=linearize(terms),
         channel = linearize(chans),
         basisname = linearize(basisnames),
         colname_basis=linearize(colnames),
         estimate=linearize(estimate),
-        stderror=Missing,
+        stderror=linearize(stderror),
         group = linearize(group),
         )
 end
@@ -93,16 +93,20 @@ function make_estimate(m::UnfoldLinearMixedModel)
     if ndims(m.beta) == 3
         group_f = repeat(["fixef"],size(m.beta,1),size(m.beta,2),size(m.beta,ndims(m.beta)))
         group_s = repeat(["ranef"],size(m.beta,1),size(m.beta,2),size(m.sigma,ndims(m.beta)))
+        stderror_fixef = permutedims(reshape(vcat([[b.se...] for b in m.modelinfo.bstr]...),reverse(size(m.beta))),[3,2,1])
+        stderror_ranef = fill(Missing,size(m.sigma))
+        stderror = cat(stderror_fixef,stderror_ranef,dims=3)
     else
         group_f = repeat(["fixef"],size(m.beta,1),size(m.beta,ndims(m.beta)))
         group_s = repeat(["ranef"],size(m.beta,1),size(m.sigma,ndims(m.beta)))
+        stderror = fill(Missing,size(estimate))
     end
     print(size(group_f))
     group = cat(group_f,group_s,dims=ndims(m.beta))
-    return estimate,group
+    return estimate,stderror,group
 end
 function make_estimate(m::UnfoldLinearModel)
-    return m.beta,"mass univariate"
+    return m.beta,fill(Missing,size(m.beta)),"mass univariate"
 end
 
 # Return the column names of the basis functions.
