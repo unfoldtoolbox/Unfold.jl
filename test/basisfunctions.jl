@@ -1,7 +1,7 @@
 using Test
 using unfold
 
-firbase = firbasis(τ=(-1,1),sfreq=10)
+firbase = firbasis((-1,1),10)
 
 # test optional call
 @test firbase.kernel == firbasis((-1,1),10).kernel
