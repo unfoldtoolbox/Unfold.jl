@@ -17,13 +17,13 @@ shouldBePos[3,:] = [0,1,0,0]
 shouldBePos[4,:] = [0,0,1,0]
 
 ## test negative
-basisfunction = firbasis(τ=(-3,0),sfreq = 1)
+basisfunction = firbasis(τ=(-3,0),sfreq = 1,name="testing")
 timeexpandterm =  unfold.TimeExpandedTerm(FormulaTerm(Term,Term),basisfunction,:latency );
 Xdc = unfold.time_expand(X,timeexpandterm,tbl)
 @test all(isapprox.(Matrix(Xdc)[1:4,1:4], shouldBeNeg,atol=1e-15))
 
 ## Test Positive only
-basisfunction = firbasis(τ=(1,4),sfreq = 1)
+basisfunction = firbasis(τ=(1,4),sfreq = 1,name="testing")
 timeexpandterm =  unfold.TimeExpandedTerm(FormulaTerm(Term,Term),basisfunction,:latency );
 Xdc = unfold.time_expand(X,timeexpandterm,tbl)
 println(Matrix(Xdc))
@@ -75,8 +75,8 @@ if 1==0
     X = ones(size(tbl,1),3).*[1,2,3]'
 
 
-    basisfunction = firbasis(τ=(0,1),sfreq = 100,exact=true)
+    basisfunction = firbasis(τ=(0,1),sfreq = 100,name="test")
     term =  unfold.TimeExpandedTerm(Term,basisfunction,:latency );
     @time Xdc = Matrix(unfold.time_expand(X,term,tbl))
-    @time Xdc = Matrix(unfold.time_expand2(X,term,tbl))
+    
 end
