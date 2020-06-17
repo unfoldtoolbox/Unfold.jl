@@ -61,7 +61,7 @@ function firbasis(τ,sfreq,name::String)
 end
 # cant multiple dispatch on optional arguments
 #firbasis(;τ,sfreq)           = firbasis(τ,sfreq)
-firbasis(;τ,sfreq,name) = firbasis(τ,sfreq,name)
+firbasis(;τ,sfreq,name)      = firbasis(τ,sfreq,name)
 firbasis(τ,sfreq)            = firbasis(τ,sfreq,"basis_"*string(rand(1:10000)))
 
 """

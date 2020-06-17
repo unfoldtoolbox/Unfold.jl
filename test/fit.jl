@@ -36,7 +36,7 @@ m_mul_missing,m_mul_missing_results = fit(UnfoldLinearModel,f,evts,data_e_missin
 @test m_mul_missing_results.estimate ≈ m_mul_results.estimate
 # Timexpanded Univariate Linear
 m_tul_missing,m_tul_missing_results = fit(UnfoldLinearModel,f,evts,data_missing,basisfunction)
-@test  isapprox(m_tul_missing_results.estimate , m_tul_results.estimate,atol=1e-5)  # higher tol because we remove stuff
+@test  isapprox(m_tul_missing_results.estimate , m_tul_results.estimate,atol=1e-2)  # higher tol because we remove stuff
 
 # runntime tests - does something explode?
 for k in 1:3
