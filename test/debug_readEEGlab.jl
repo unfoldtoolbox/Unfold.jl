@@ -27,7 +27,7 @@ function import_eeglab(filename)
         data = EEG["data"]
     end
     
-    if size(data,3) == 1
+    if (ndims(data)==3) & (size(data,3) == 1)
         data = dropdims(data,dims=3)
     end
 return data,srate,evts_df,chanlocs_df
