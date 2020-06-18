@@ -161,7 +161,7 @@ end
     # mass univariate, data = ch x times x epochs
     X,data = zeropad(X,data)
 
-    print(size(data))
+    @debug "UnfoldLinearModel, datasize: $(size(data))"
     # mass univariate
     beta = Array{Union{Missing,Number}}(undef,size(data,1),size(data,2),size(X,2))
     @showprogress 1 for ch in 1:size(data,1)

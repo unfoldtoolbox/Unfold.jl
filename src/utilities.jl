@@ -16,7 +16,7 @@ function epoch(data::Array{T,2},tbl::DataFrame,τ::Tuple{Number,Number},sfreq;ev
 
 
     # User feedback
-    println("Creating epochs: $numChans x $lenEpochs x $numEpochs")
+    @debug "Creating epochs: $numChans x $lenEpochs x $numEpochs"
 
     for si = 1:size(tbl,1)
         #eventonset = tbl[si,eventtime] # in samples

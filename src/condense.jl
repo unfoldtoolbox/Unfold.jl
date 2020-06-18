@@ -106,7 +106,7 @@ function make_estimate(m::UnfoldLinearMixedModel)
     return estimate,stderror,group
 end
 function make_estimate(m::UnfoldLinearModel)
-    return m.beta,fill(Missing,size(m.beta)),"mass univariate"
+    return m.beta,fill(Missing,size(m.beta)),"fixef"
 end
 
 # Return the column names of the basis functions.
