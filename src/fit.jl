@@ -108,7 +108,7 @@ function unfoldfit(::Type{UnfoldLinearMixedModel},Xobj::DesignMatrix,data::Union
     β_names = (Symbol.(fixefnames(mm))..., )
 
     # for each channel
-    @showprogress 1 for ch in range(1,stop=nchan)
+    @showprogress .1 for ch in range(1,stop=nchan)
         # for each time
         for t in range(1,stop=ntime)
 
@@ -164,7 +164,7 @@ end
     @debug "UnfoldLinearModel, datasize: $(size(data))"
     # mass univariate
     beta = Array{Union{Missing,Number}}(undef,size(data,1),size(data,2),size(X,2))
-    @showprogress 1 for ch in 1:size(data,1)
+    @showprogress .1 for ch in 1:size(data,1)
         for t in 1:size(data,2)
             @debug("$(ndims(data,)),$t,$ch")
             ix = .!ismissing.(data[ch,t,:])
@@ -191,7 +191,7 @@ function unfoldfit(::Type{UnfoldLinearModel},Xobj::DesignMatrix,data::AbstractAr
     modelinfo = []
     beta = Array{Float64}(undef,size(data,1),size(X,2))
 
-    @showprogress 1 for ch in 1:size(data,1)
+    @showprogress .1 for ch in 1:size(data,1)
         ix = .!ismissing.(data[ch,:])
         beta[ch,:],h = lsmr(X[ix,:],data[ch,ix],log=true)
         push!(modelinfo,h)
