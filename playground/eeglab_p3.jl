@@ -4,7 +4,7 @@ using Plots,StatsPlots
 using Statistics
 using DataFramesMeta
 
-
+plotlyjs()
 include("../test/debug_readEEGlab.jl")
 include("dataset-CORE_helper.jl")
 ##
@@ -52,7 +52,11 @@ res.times = res.colname_basis
 
 resAll = DataFrame()
 
-for sub in 1:40
+
+for sub in 1:5
+    if sub == 17
+        continue
+    end
     println("subject $sub")
 
     # load data
@@ -60,28 +64,27 @@ for sub in 1:40
     data,srate,evts_df,chanlocs_df = import_eeglab(filename)
     
     evts= parse_trigger_p3(evts_df)
-
+    evts = @where(evts, .!:invalidresponse)
     # Mass Univariate
-    f_stim = @formula 0~0+stimtype
-    f_butt = @formula 0~0+correct
-
+    f_stim = @formula 0~1+trialtype
+    f_butt = @formula 0~1+trialtype+answer
+    contrast = Dict(:trialtype => DummyCoding(base="distractor"),:answer=>DummyCoding(base="distractor"))
     evts_stim = filter(x->x.eventtype=="stimulus",evts)
-    data_e,times = unfold.epoch(data=data,tbl=evts_stim,τ=(-0.5,1.3),sfreq=srate)
-    um,res = fit(UnfoldLinearModel,f_stim, evts_stim,data_e,times)
+    data_e,times = unfold.epoch(data=data,tbl=evts_stim,τ=(-0.8,1.3),sfreq=srate)
+    um,res = fit(UnfoldLinearModel,f_stim, evts_stim,data_e,times,contrasts=contrast)
     res.basisname .= "stimulus"
-
-    f = @formula 0~0+stimtype
-    evts_butt = filter(x->x.eventtype=="button",evts)
+    
+    evts_butt = @where(evts,:eventtype.=="button",.!isnan.(:correct))
     data_e,times = unfold.epoch(data=data,tbl=evts_butt,τ=(-0.5,0.4),sfreq=srate)
-    um,res_tmp = fit(UnfoldLinearModel,f_butt, evts_butt,data_e,times)
+    um,res_tmp = fit(UnfoldLinearModel,f_butt, evts_butt,data_e,times,contrasts=contrast)
     res_tmp.basisname .= "button"
 
     append!(res,res_tmp)
     res.group .="no-dc"
 
     # Deconv
-    Xstim = designmatrix(UnfoldLinearModel,f_stim,filter(x->(x.eventtype=="stimulus"),evts),firbasis((-0.5,1.3),srate,"stimulus"))
-    Xbutt = designmatrix(UnfoldLinearModel,f_butt, filter(x->(x.eventtype=="button")&(typeof(x.target)==String),evts),firbasis((-0.5,0.4),srate,"button"))
+    Xstim = designmatrix(UnfoldLinearModel,f_stim,filter(x->(x.eventtype=="stimulus"),evts),firbasis((-0.8,1.3),srate,"stimulus"),contrasts=contrast)
+    Xbutt = designmatrix(UnfoldLinearModel,f_butt, filter(x->(x.eventtype=="button")&(typeof(x.target)==String),evts),firbasis((-0.5,0.4),srate,"button"),contrasts=contrast)
 
     m = unfoldfit(UnfoldLinearModel,Xstim+Xbutt,data)
     res_dc = condense_long(m)
@@ -89,7 +92,6 @@ for sub in 1:40
     append!(res,res_dc)
     res[:,:subject] .= sub
     append!(resAll,res)
-
 end
 
 ##
@@ -99,10 +101,15 @@ end
 ## Plotting
 
 x = @linq resAll |>
-    where(:basisname .!="button", :term .!="correct: NaN", :channel .==findfirst(chanlocs_df.labels.=="Cz"))|>
-    groupby([:term,:colname_basis,:channel,:basisname]) |>
+    where(:basisname.=="stimulus", :channel .==findfirst(chanlocs_df.labels.=="Cz"))|>
+    groupby([:term,:group,:colname_basis,:channel,:basisname]) |>
     based_on(estimate = mean(:estimate),sd = std(:estimate))
 
-    @df x plot(:colname_basis,:estimate,group=(:basisname,:term))
+
+    @df x plot(:colname_basis,:estimate,linecolor=[:red :red :blue :blue],linestyle=[:solid :dot :solid :dot],group=(:group,:term),legend=:topleft)
     #,yerror=:sd)
+    #@df x plot(:colname_basis,:estimate,linecolor=:auto,group=(:term,:group),legend=:outerbottom)
+
+    #,yerror=:sd)
+
 
