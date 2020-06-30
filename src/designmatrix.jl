@@ -148,7 +148,7 @@ julia>  designmatrix(UnfoldLinearModel,f,tbl,basisfunction1)
 function designmatrix(type,f,tbl,basisfunction;contrasts= Dict{Symbol,Any}(), kwargs...)
         @debug("generating DesignMatrix")
         form = apply_schema(f, schema(f, tbl, contrasts), LinearMixedModel)
-        form = apply_basisfunction(form,basisfunction,kwargs...)
+        form = apply_basisfunction(form,basisfunction,get(Dict(kwargs),"eventfields",nothing))
 
         # Evaluate the designmatrix
         if (!isnothing(basisfunction)) & (type<:UnfoldLinearMixedModel)
@@ -170,12 +170,12 @@ timeexpand the rhs-term of the formula with the basisfunction
 
 """
 
-function apply_basisfunction(form,basisfunction::BasisFunction;eventfields=nothing)
+function apply_basisfunction(form,basisfunction::BasisFunction,eventfields)
         @debug("apply_basisfunction")
         return FormulaTerm(form.lhs, TimeExpandedTerm(form.rhs,basisfunction,eventfields))
 end
 
-function apply_basisfunction(form,basisfunction::Nothing;eventfields=nothing)
+function apply_basisfunction(form,basisfunction::Nothing,eventfields)
         # in case of no basisfunctin, do nothing
         return form
 end
