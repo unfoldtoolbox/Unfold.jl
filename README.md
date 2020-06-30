@@ -1,10 +1,12 @@
 # unfold.jl
+
 **Beta** Toolbox to perform linear regression on biological signals.
 
 This tool combines mass-univariate linear (mixed) models with overlap correction.
 
 This kind of overlap correction is also known as encoding modeling, linear deconvolution, Temporal Response Functions (TRFs) and probably under other names. Typical fMRI models with HRF-basis functions are also supported.
 
+![](https://github.com/unfoldtoolbox/unfold.jl/workflows/CI/badge.svg)
 
 ## Install
 ```
