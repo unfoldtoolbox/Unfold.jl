@@ -3,7 +3,7 @@ function epoch(;data,tbl,τ,sfreq,kwargs...)
     epoch(data,tbl,τ,sfreq;kwargs...)
 end
 
-function epoch(data::Array{T,2},tbl::DataFrame,τ::Tuple{Number,Number},sfreq;eventtime::Symbol=:latency) where T <:Number
+function epoch(data::Array{T,2},tbl::DataFrame,τ::Tuple{Number,Number},sfreq;eventtime::Symbol=:latency) where T <:Union{Missing,Number}
 # data: channels x times
 
 # partial taken from EEG.jl
@@ -86,4 +86,12 @@ function zeropad(X,data::AbstractArray{T,3})where {T<:Union{Missing, <:Number}}
         data =data[:,:,1:size(X,1)]
     end
     return X,data
+end
+
+function clean_data(data::AbstractArray{T,2},winrej::AbstractArray{<:Number,2}) where T <:Union{Float64,Missing}
+    data = Array{Union{Float64,Missing}}(data)
+    for row in 1:size(winrej,1)
+        data[:,Int.(winrej[row,1]:winrej[row,2])] .= missing
+    end
+    return data
 end
