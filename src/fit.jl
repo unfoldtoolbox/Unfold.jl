@@ -31,7 +31,7 @@ function fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::Fo
     @timeit to "designmatrix" Xs = designmatrix(type,f,tbl;kwargs...)
 
     # Fit the model
-    @timeit to "fit" ufModel = unfoldfit(type,Xs,data)
+    @timeit to "fit" ufModel = unfoldfit(type,Xs,data;kwargs...)
 
     @timeit to "condense" c = condense_long(ufModel,times)
     # Condense output and return
@@ -80,7 +80,7 @@ Note: Might be renamed/refactored to fit! at a later point
 ```
 
 """
-function unfoldfit(::Type{UnfoldLinearMixedModel},Xobj::DesignMatrix,data::Union{<:AbstractArray{T,2},<:AbstractArray{T,3}}) where {T<:Union{Missing, <:Number}}
+function unfoldfit(::Type{UnfoldLinearMixedModel},Xobj::DesignMatrix,data::Union{<:AbstractArray{T,2},<:AbstractArray{T,3}};kwargs...) where {T<:Union{Missing, <:Number}}
     # function content partially taken from MixedModels.jl bootstrap.jl
     df = Array{NamedTuple,1}()
     dataDim = length(size(data)) # surely there is a nicer way to get this but I dont know it
@@ -156,70 +156,20 @@ function unfoldfit(::Type{UnfoldLinearMixedModel},Xobj::DesignMatrix,data::Union
     return UnfoldLinearMixedModel(beta,sigma,modelinfo,Xobj)
 end
 
- function unfoldfit(::Type{UnfoldLinearModel},Xobj::DesignMatrix,data::AbstractArray{T,3};optimizer=undef) where {T<:Union{Missing, <:Number}}
+ function unfoldfit(::Type{UnfoldLinearModel},Xobj::DesignMatrix,data;solver=(x,y)->solver_default(x,y))
      X = Xobj.Xs
     # mass univariate, data = ch x times x epochs
     X,data = zeropad(X,data)
 
     @debug "UnfoldLinearModel, datasize: $(size(data))"
     # mass univariate
-    beta = Array{Union{Missing,Number}}(undef,size(data,1),size(data,2),size(X,2))
-    @showprogress .1 for ch in 1:size(data,1)
-        for t in 1:size(data,2)
-            @debug("$(ndims(data,)),$t,$ch")
-            ix = .!ismissing.(data[ch,t,:])
-            beta[ch,t,:] = X[ix,:] \ data[ch,t,ix]
-        end
-    end
-
-    modelinfo = [undef] # no history implemented (yet?)
+    beta,modelinfo = solver(X,data)
 
     return UnfoldLinearModel(beta,modelinfo,Xobj)
 
 end
 
-function unfoldfit(::Type{UnfoldLinearModel},Xobj::DesignMatrix,data::AbstractArray{T,2};optimizer=undef) where {T<:Union{Missing, <:Number}}
-    # timeexpanded, data = ch x time
-    # X is epochs x predictor
 
-    X = Xobj.Xs # extract designmatrix
-    # Cut X or y depending on which is larger
-    X,data = zeropad(X,data)
-
-
-    # likely much larger matrix, using lsqr
-    modelinfo = []
-    beta = Array{Float64}(undef,size(data,1),size(X,2))
-
-    @showprogress .1 for ch in 1:size(data,1)
-        ix = .!ismissing.(data[ch,:])
-        beta[ch,:],h = lsmr(X[ix,:],data[ch,ix],log=true)
-        push!(modelinfo,h)
-
-        #beta = Array{Float64}(undef,size(data,1),size(X,2))
-        #beta .=0
-        #beta = fill(0.,size(data,1),size(X,2))
-    
-    
-        # "Fit ..."  for ch in 1:size(data,1)
-            
-        #    ix = .!ismissing.(data[ch,:])
-         #   @assert sum(ix)>0
-            #print(all(isfinite.(view(beta,ch,:))))
-            #beta[ch,:],h =  lsqr!(view(beta,ch,:),X[ix,:],view(data,ch,ix),log=true,maxiter=500)
-            #beta[ch,:],h =  lsqr(view(X,ix,:),view(data,ch,ix),log=true,maxiter=500)
-        #    beta[ch,:],h =  lsmr(X[ix,:],data[ch,ix],log=true,maxiter=500)
-            #print("done")
-        #    if ch != size(data,1)
-        #        beta[ch+1,:] = beta[ch,:] # initialize next beta 
-        #    end
-        #    push!(modelinfo,h)
-        #   end
-    
-    end
-
-    return UnfoldLinearModel(beta,modelinfo,Xobj)
-end
 
 """
 $(SIGNATURES)
