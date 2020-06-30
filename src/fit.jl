@@ -225,7 +225,7 @@ function LinearMixedModel_wrapper(form,data::Array{<:Union{TData},1},Xs;wts = []
     θ = foldl(vcat, MixedModels.getθ(c) for c in reterms)
     optsum = OptSummary(θ, lbd, :LN_BOBYQA, ftol_rel = T(1.0e-12), ftol_abs = T(1.0e-8))
     fill!(optsum.xtol_abs, 1.0e-10)
-    LinearMixedModel(form, allterms, sqrt.(convert(Vector{T}, wts)), A, L, optsum)
+    LinearMixedModel(form, allterms, sqrt.(convert(Vector{T}, wts)), MixedModels.mkparmap(reterms), A, L, optsum)
 end
 
 
