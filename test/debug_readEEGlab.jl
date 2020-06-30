@@ -16,6 +16,7 @@ function import_eeglab(filename)
 
     evts_df = parse_struct(EEG["event"])
     chanlocs_df = parse_struct(EEG["chanlocs"])
+    
 #    epoch_df = parse_struct(EEG["epochs"])
     
     srate = EEG["srate"]
@@ -30,5 +31,5 @@ function import_eeglab(filename)
     if (ndims(data)==3) & (size(data,3) == 1)
         data = dropdims(data,dims=3)
     end
-return data,srate,evts_df,chanlocs_df
+return data,srate,evts_df,chanlocs_df,EEG
 end
