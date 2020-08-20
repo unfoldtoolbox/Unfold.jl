@@ -18,6 +18,7 @@ The julia toolbox is a type of playground and aspires to combine unfold & unmixe
 | non-linear splines      | x      | x       |           |
 | plotting tools          | x      |         |           |
 | sanity checks           | x      |         |           |
+| tutorials               | x      |         |           |
 | speed                   | x      |         | x         |
 | unittests               | x      |         | x         |
 | HRF (fMRI) basis        |        |         | x         |
