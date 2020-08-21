@@ -28,16 +28,9 @@ end
 
 function solver_b2b(X,data::AbstractArray{T,3},cross_val_reps = 10) where {T<:Union{Missing, <:Number}}
     
-    #
-    bad_ix = []
-    for tr in 1:size(data,3)
-        if any(ismissing.(data[:,:,tr]))
-            append!(bad_ix,tr)
-        end
-    end
-    good_ix = setdiff(1:size(data,3),bad_ix)
-    data = Array{Float64}(data[:,:,good_ix]);
-    X=X[good_ix,:]
+    X,data = dropMissingEpochs(X,data)
+
+
     E = zeros(size(data,2),size(X,2),size(X,2))
     W = Array{Float64}(undef,size(data,2),size(X,2),size(data,1))
     println("n = samples = $(size(X,1)) = $(size(data,3))")
@@ -48,18 +41,11 @@ function solver_b2b(X,data::AbstractArray{T,3},cross_val_reps = 10) where {T<:Un
             Y2 = data[:,t,k_ix[2]]
             X1 = X[k_ix[1],:]
             X2 = X[k_ix[2],:]
-            #println("X1 $(size(X1))")
-            #println("Y1 $(size(Y1))")
-            #println("Calc G")
+          
 
-            G = (Y1' \ X1)
+            G = (Y1' \ X1)  
+            H = X2 \ (Y2'*G)
             
-            
-            #println("G: $(size(G))")
-            #println("Y2'*G: $(size(Y2'*G))")
-            
-            H= X2 \ (Y2'*G)
-            #println("H: $(size(H))")
             E[t,:,:] = E[t,:,:]+Diagonal(H[diagind(H)])
 
         end
@@ -75,3 +61,4 @@ function solver_b2b(X,data::AbstractArray{T,3},cross_val_reps = 10) where {T<:Un
     modelinfo = Dict("W"=>W,"E"=>E,"cross_val_reps"=>cross_val_reps) # no history implemented (yet?)
     return beta, modelinfo
 end
+

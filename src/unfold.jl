@@ -21,6 +21,7 @@ using StaticArrays # for MixedModels extraction of parametrs (inherited from Mix
 using ProgressMeter
 using DocStringExtensions # for Docu
 using MLBase # for crossVal
+
 #using IncompleteLU
 import Base.(+) # overwrite for DesignMatrices
 using Distributions: Gamma, pdf # TODO replace this with direct implementation (used in basisfunction.jl)
@@ -32,6 +33,7 @@ include("fit.jl")
 include("utilities.jl")
 include("condense.jl")
 include("solver.jl")
+include("predict.jl")
 #include("plot.jl") # don't include for now
 export fit, designmatrix, firbasis,hrfbasis,condense_long,UnfoldLinearModel,UnfoldLinearMixedModel
 export unfoldfit # might be renamend to fit! in the future

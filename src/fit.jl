@@ -156,7 +156,7 @@ function unfoldfit(::Type{UnfoldLinearMixedModel},Xobj::DesignMatrix,data::Union
     return UnfoldLinearMixedModel(beta,sigma,modelinfo,Xobj)
 end
 
- function unfoldfit(::Type{UnfoldLinearModel},Xobj::DesignMatrix,data;solver=(x,y)->solver_default(x,y))
+ function unfoldfit(::Type{UnfoldLinearModel},Xobj::DesignMatrix,data;solver=(x,y)->solver_default(x,y),kwargs...)
      X = Xobj.Xs
     # mass univariate, data = ch x times x epochs
     X,data = zeropad(X,data)

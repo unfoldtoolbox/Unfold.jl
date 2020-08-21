@@ -29,6 +29,8 @@ function Base.show(io::IO, obj::BasisFunction)
     println(io, "name: $(obj.name)")
     println(io, "colnames: $(obj.colnames)")
     println(io, "kernel: $(obj.type)")
+    println(io, "times: $(obj.times)")
+    println(io, "shiftOnset: $(obj.shiftOnset)")
 end
 
 
