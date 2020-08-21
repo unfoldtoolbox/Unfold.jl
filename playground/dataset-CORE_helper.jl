@@ -1,6 +1,6 @@
 
 
-function parse_trigger_p3(evts)
+function parse_trigger_p3(evts,srate)
     ##
     evts[:,:eventtype] .= ""
     evts[:,:stimulus]  .= ""

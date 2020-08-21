@@ -14,7 +14,8 @@ srate = 1000
 #x_pos = slider(LinRange(0, nsamp, 1000), raw = true, camera = campixel!, start = 0)
 
 ##
-scene, layout = layoutscene(outer_padding, resolution = (1800, 1200));
+
+scene, layout = layoutscene(30, resolution = (1800, 1200));
 
 
 
