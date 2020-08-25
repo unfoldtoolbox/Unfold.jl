@@ -21,6 +21,7 @@ using StaticArrays # for MixedModels extraction of parametrs (inherited from Mix
 using ProgressMeter
 using DocStringExtensions # for Docu
 using MLBase # for crossVal
+using Splines2 # for spline predictors
 
 #using IncompleteLU
 import Base.(+) # overwrite for DesignMatrices
@@ -34,7 +35,9 @@ include("utilities.jl")
 include("condense.jl")
 include("solver.jl")
 include("predict.jl")
+include("splinepredictors.jl")
 #include("plot.jl") # don't include for now
 export fit, designmatrix, firbasis,hrfbasis,condense_long,UnfoldLinearModel,UnfoldLinearMixedModel
 export unfoldfit # might be renamend to fit! in the future
+export predict,spl
 end # module
