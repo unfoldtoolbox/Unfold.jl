@@ -15,8 +15,8 @@ end
 
 
 function Base.show(io::IO, obj::UnfoldModel)
-        println(io, "LinearModelTimeExpanded object")
+        println(io, "Unfold object")
         println(io, "formula: $(obj.X.formulas)")
-        println(io, "Fields: .model ('UnfoldModel' with felds .modelinfo, .beta, .formula, .Xs) \n .results (tidy result table)")
+        println(io, "Fields:\t.modelinfo (potentially contains info on fitting procedure) \n\t.beta extracted parameters \n\t.X designmatrix (with fields .X.Xs, .X.events .X.formulas")
 
 end
