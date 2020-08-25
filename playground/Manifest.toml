@@ -48,6 +48,12 @@ git-tree-sha1 = "951c3fc1ff93497c88fb1dfa893f4de55d0b38e3"
 uuid = "4c555306-a7a7-4459-81d9-ec55ddd5c99a"
 version = "0.3.8"
 
+[[Arrow]]
+deps = ["CategoricalArrays", "Dates"]
+git-tree-sha1 = "c86df6ed41b3bd192d663e5e0e7cac0d11fd4375"
+uuid = "69666777-d1a9-59fb-9406-91d4454c9d45"
+version = "0.2.4"
+
 [[AssetRegistry]]
 deps = ["Distributed", "JSON", "Pidfile", "SHA", "Test"]
 git-tree-sha1 = "b25e88db7944f98789130d7b503276bc34bc098e"
@@ -310,12 +316,6 @@ uuid = "ade2ca70-3891-5945-98fb-dc099432e06a"
 deps = ["Mmap"]
 uuid = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 
-[[Dictionaries]]
-deps = ["Indexing", "Random"]
-git-tree-sha1 = "0e3fd3b20e7ad88bf912cea6a2693bfc6253e221"
-uuid = "85a47980-9c8c-11e8-2b9f-f7ca1fa99fb4"
-version = "0.3.2"
-
 [[Dierckx]]
 deps = ["BinaryProvider", "Libdl", "Random", "Test"]
 git-tree-sha1 = "956bfe5c4f9b794545f6527424fc0294cc5decbe"
@@ -413,6 +413,12 @@ git-tree-sha1 = "224175e213fd4fe112db3eea05d66b308dc2bf6b"
 uuid = "fa42c844-2597-5d31-933b-ebd51ab2693f"
 version = "0.2.0"
 
+[[Feather]]
+deps = ["Arrow", "CategoricalArrays", "DataFrames", "Dates", "FlatBuffers", "Mmap", "Tables"]
+git-tree-sha1 = "846701282ceaf20440394a36e00ff9d1b9aa195e"
+uuid = "becb17da-46f6-5d3c-ad1b-1c5fe96bc73c"
+version = "0.5.6"
+
 [[FileIO]]
 deps = ["Pkg"]
 git-tree-sha1 = "1e7e88a949b52e6f7f589041bd60928322414997"
@@ -445,6 +451,12 @@ deps = ["Statistics"]
 git-tree-sha1 = "335bfdceacc84c5cdf16aadc768aa5ddfc5383cc"
 uuid = "53c48c17-4a7d-5ca2-90c5-79b7896eea93"
 version = "0.8.4"
+
+[[FlatBuffers]]
+deps = ["Parameters", "Test"]
+git-tree-sha1 = "8582924ac52011d08da9cf1e67f13a71dbbc2594"
+uuid = "53afe959-3a16-52fa-a8da-cf864710bae9"
+version = "0.5.4"
 
 [[Formatting]]
 deps = ["Printf"]
@@ -640,12 +652,6 @@ deps = ["LinearAlgebra", "Profile", "Random", "SparseArrays", "Test"]
 git-tree-sha1 = "9d269f1afce521912701bde539209b0d73bb9b94"
 uuid = "40713840-3770-5561-ab4c-a76e7d0d7895"
 version = "0.1.1"
-
-[[Indexing]]
-deps = ["Test"]
-git-tree-sha1 = "0cf3ac621cd74b1d03af0cc4275f680b2070a5cc"
-uuid = "313cdc1a-70c2-5d6a-ae34-0150d3930a38"
-version = "1.1.0"
 
 [[IndirectArrays]]
 git-tree-sha1 = "c2a145a145dc03a7620af1444e0264ef907bd44f"
@@ -1023,10 +1029,12 @@ uuid = "e1d29d7a-bbdc-5cf2-9ac0-f12de2c33e28"
 version = "0.4.3"
 
 [[MixedModels]]
-deps = ["BlockArrays", "BlockDiagonals", "Distributions", "GLM", "LinearAlgebra", "NLopt", "NamedArrays", "Printf", "ProgressMeter", "Random", "Showoff", "SparseArrays", "StaticArrays", "Statistics", "StatsBase", "StatsFuns", "StatsModels", "Tables", "TypedTables"]
-git-tree-sha1 = "2bb6b6ee552646484d3f9816619a85c1d1cd6a74"
+deps = ["BlockArrays", "BlockDiagonals", "Distributions", "Feather", "GLM", "LinearAlgebra", "NLopt", "NamedArrays", "Pkg", "PooledArrays", "ProgressMeter", "Random", "Showoff", "SparseArrays", "StaticArrays", "Statistics", "StatsBase", "StatsFuns", "StatsModels", "Tables"]
+git-tree-sha1 = "0000520934eca435e35f41781bfef5e7a62a2a80"
+repo-rev = "master"
+repo-url = "https://github.com/JuliaStats/MixedModels.jl.git"
 uuid = "ff71e718-51f3-5ec2-a782-8ffcbfa3c316"
-version = "2.3.1"
+version = "3.0.0-DEV"
 
 [[Mmap]]
 uuid = "a63ad114-7e13-5084-954f-fe012c677804"
@@ -1475,12 +1483,6 @@ repo-url = "https://github.com/mclements/Splines2.jl"
 uuid = "5a560754-308a-11ea-3701-ef72685e98d6"
 version = "0.1.0"
 
-[[SplitApplyCombine]]
-deps = ["Dictionaries", "Indexing"]
-git-tree-sha1 = "c7043ad99364154783a8fcf2f1e4e17fe8568108"
-uuid = "03a91e81-4c3e-53e1-a0a4-9c0c8f19dd66"
-version = "1.1.3"
-
 [[StableRNGs]]
 deps = ["Random", "Test"]
 git-tree-sha1 = "705f8782b1d532c6db75e0a986fb848a629f971a"
@@ -1599,12 +1601,6 @@ deps = ["Random", "Test"]
 git-tree-sha1 = "7c53c35547de1c5b9d46a4797cf6d8253807108c"
 uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
 version = "0.9.5"
-
-[[TypedTables]]
-deps = ["SplitApplyCombine", "Tables", "Unicode"]
-git-tree-sha1 = "519533acaccc7d84e214426f69820489e1f46617"
-uuid = "9d95f2ec-7b3d-5a63-8d20-e2491e220bb9"
-version = "1.2.0"
 
 [[URIParser]]
 deps = ["Unicode"]

@@ -151,9 +151,9 @@ version = "1.1.0"
 
 [[FFTW]]
 deps = ["AbstractFFTs", "FFTW_jll", "IntelOpenMP_jll", "Libdl", "LinearAlgebra", "MKL_jll", "Reexport"]
-git-tree-sha1 = "14536c95939aadcee44014728a459d2fe3ca9acf"
+git-tree-sha1 = "8b7c16b56936047ca41bf25effa137ae0b381ae8"
 uuid = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
-version = "1.2.2"
+version = "1.2.4"
 
 [[FFTW_jll]]
 deps = ["Libdl", "Pkg"]
@@ -448,9 +448,9 @@ uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
 
 [[SentinelArrays]]
 deps = ["Dates", "Random"]
-git-tree-sha1 = "7be68c77ae9e608762d00a74da3fc86938a08963"
+git-tree-sha1 = "fa2d975d61cf5369e04ab83b96b0d169561df298"
 uuid = "91c51154-3ec4-41a3-a24f-3f23e20d615c"
-version = "1.2.11"
+version = "1.2.13"
 
 [[Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
@@ -488,6 +488,14 @@ deps = ["OpenSpecFun_jll"]
 git-tree-sha1 = "d8d8b8a9f4119829410ecd706da4cc8594a1e020"
 uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
 version = "0.10.3"
+
+[[Splines2]]
+deps = ["LinearAlgebra", "OffsetArrays", "Statistics"]
+git-tree-sha1 = "21567742cb5877afd2de22bf668cc55e92c3cfc4"
+repo-rev = "master"
+repo-url = "https://github.com/mclements/Splines2.jl"
+uuid = "5a560754-308a-11ea-3701-ef72685e98d6"
+version = "0.1.0"
 
 [[StaticArrays]]
 deps = ["LinearAlgebra", "Random", "Statistics"]

@@ -37,8 +37,8 @@ lines(Data(@where(res,:channel.==findfirst(chanlocs_df.labels.=="Cz"))),Group(co
 
 ##
 
-Xstim_rt = designmatrix(UnfoldLinearModel,@formula(0~0+trialtype+bs2(rt,5)),filter(x->(x.eventtype=="stimulus"),evts),firbasis((-0.3,1),srate,"stimulus"))
-Xbutt_rt = designmatrix(UnfoldLinearModel,@formula(0~1+trialtype+bs2(rt,5)),filter(x->(x.eventtype=="button")&(typeof(x.target)==String),evts),firbasis((-0.5,0.4),srate,"button"))
+Xstim_rt = designmatrix(UnfoldLinearModel,@formula(0~0+trialtype+bs2(rt,8)),filter(x->(x.eventtype=="stimulus"),evts),firbasis((-0.3,1),srate,"stimulus"))
+Xbutt_rt = designmatrix(UnfoldLinearModel,@formula(0~1+trialtype+bs2(rt,8)),filter(x->(x.eventtype=="button")&(typeof(x.target)==String),evts),firbasis((-0.5,0.4),srate,"button"))
 
 Xstim = designmatrix(UnfoldLinearModel,@formula(0~0+trialtype),filter(x->(x.eventtype=="stimulus"),evts),firbasis((-0.3,1),srate,"stimulus"))
 Xbutt = designmatrix(UnfoldLinearModel,@formula(0~1+trialtype),filter(x->(x.eventtype=="button")&(typeof(x.target)==String),evts),firbasis((-0.5,0.4),srate,"button"))
