@@ -4,11 +4,11 @@ author: "Benedikt Ehinger with help from Dave Kleinschmidt"
 date: 2020-02-17
 ---
 
-```julia;label=packages;
+```julia;
 using StatsModels, MixedModels, DataFrames
 import Plots
 using unfold
-include("../test/test_utilities.jl") # to load the simulated data
+include("../test/test_utilities.jl"); # to load the simulated data
 ```
 
 This notebook is similar to the `lm_tutorial`, but fits mass-univariate *mixed* models and time-expanded/overlap-corrected *mixed* models.
@@ -55,13 +55,13 @@ evts,data_epochs = unfold.dropMissingEpochs(evts,data_epochs)
 
 We can now run the LinearMixedModel on each time point
 ```julia
-m,results = fit(UnfoldLinearMixedModel,f,evts,data_epochs,times)
+m,results = unfold.fit(UnfoldLinearMixedModel,f,evts,data_epochs,times) # just "fit" without unfold should also work, but didnt in the Notebook 
 ```
 
 ### Fixed Effects
 ```julia
-res_fixef = results[results.group.=="fixed",:]
-Plots.plot(res_fixef.time,res_fixef.estimate,
+res_fixef = results[results.group.=="fixef",:]
+Plots.plot(res_fixef.colname_basis,res_fixef.estimate,
         group=res_fixef.term,
         layout=1,legend=:outerbottom)
 ```
@@ -70,8 +70,8 @@ We see the condition effects and some residual overlap activity in the fixed eff
 ### Random Effects
 And the random effect results
 ```julia
-res_ranef = results[results.group.=="subject",:]
-Plots.plot(res_ranef.time,res_ranef.estimate,
+res_ranef = results[results.group.=="ranef",:]
+Plots.plot(res_ranef.colname_basis,res_ranef.estimate,
         group=res_ranef.term,
         layout=1,legend=:outerbottom)
 
@@ -82,7 +82,7 @@ The random effects are very high in areas where we simulated overlap. (i.e. <-0.
 For overlap correction, we have to use a basis function once again.
 
 ```julia
-basisfunction = firbasis(τ=(-0.05,.4),sfreq=40)
+basisfunction = firbasis(τ=(-0.05,.4),sfreq=40,name="basisA")
 f  = @formula 0~1+condA*condB+(1+condA*condB|subject);
 ```
 
@@ -94,30 +94,27 @@ We can now run the mixed model.
 
 Easy syntax: Specify formula, events, EEG-data & the basis function
 ```julia
-@time mm,results = fit(UnfoldLinearMixedModel,f,evts,data,basisfunction)
-```
-We receive an object containing the (very large) mixed model:
-```julia
-show(coeftable(mm.modelinfo))
+@time mm,results = unfold.fit(UnfoldLinearMixedModel,f,evts,data,basisfunction) # just "fit" without unfold should also work, but didnt in the Notebook 
 ```
 
-But again, we also get a *tidy*-dataframe with the results
+We get a *tidy*-dataframe with the results
 ```julia
 first(results,6)
 ```
 
 and thus we can easily plot the fixed effect results.
 ```julia
-res_fixef = results[results.group.=="fixed",:]
-Plots.plot(res_fixef.time,res_fixef.estimate,
+
+res_fixef = results[results.group.=="fixef",:]
+Plots.plot(res_fixef.colname_basis,res_fixef.estimate,
         group=res_fixef.term,
         layout=1,legend=:outerbottom)
 ```
 
 And the random effect results.
 ```julia
-res_ranef = results[results.group.=="subject",:]
-Plots.plot(res_ranef.time,res_ranef.estimate,
+res_ranef = results[results.group.=="ranef",:]
+Plots.plot(res_ranef.colname_basis,res_ranef.estimate,
         group=res_ranef.term,
         layout=1,legend=:outerbottom)
 
@@ -126,7 +123,7 @@ Plots.plot(res_ranef.time,res_ranef.estimate,
 
 ## What is happening under the hood?
 ```julia
-Xdc = designmatrix(UnfoldLinearMixedModel,f,evts,basisfunction)
+Xdc = designmatrix(UnfoldLinearMixedModel,f,evts,basisfunction);
 ```
 
 Formula-Terms are wrapped with a `TimeExpandedTerm`, which upon calling `modelcols` will timeexpand the designmatrix.
@@ -150,7 +147,7 @@ Plots.heatmap(Matrix(Xdc.Xs[2][1:2000,1:500]))
 
 And finally, generate the linear mixed model manually & fit it.
 ```julia;eval=false
-mf = unfoldfit(unfold.UnfoldLinearMixedModel,Xs,data)
+mf = unfoldfit(unfold.UnfoldLinearMixedModel,Xdc,data')
 results = condense_long(mf)
 first(results,6)
 ```
@@ -168,11 +165,11 @@ There are four different model types currently "fitable"
 using Weave
 
 # convert to html
-weave("doc/lmm_tutorial.jmd","doc/html/lmm_tutorial.html")
+#weave("doc/lmm_tutorial.jmd","doc/html/lmm_tutorial.html")
 
 # convert to a python notebook
-convert_doc("doc/lmm_tutorial.jmd", "doc/ipynb/lmm_tutorial.ipynb")
+#convert_doc("doc/lmm_tutorial.jmd", "doc/ipynb/lmm_tutorial.ipynb")
 
 # convert to md for README
-#weave("doc\\lm_tutorial.jmd", doctype="pandoc", out_path = "README.md")
+weave("lm_tutorial.jmd", doctype="pandoc", out_path = "src")
 ```
