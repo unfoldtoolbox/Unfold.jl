@@ -103,10 +103,10 @@ function make_estimate(m::UnfoldLinearMixedModel)
     end
     print(size(group_f))
     group = cat(group_f,group_s,dims=ndims(m.beta))
-    return estimate,stderror,group
+    return Float64.(estimate),stderror,group
 end
 function make_estimate(m::UnfoldLinearModel)
-    return m.beta,fill(Missing,size(m.beta)),"fixef"
+    return Float64.(m.beta),fill(Missing,size(m.beta)),"fixef"
 end
 
 # Return the column names of the basis functions.
