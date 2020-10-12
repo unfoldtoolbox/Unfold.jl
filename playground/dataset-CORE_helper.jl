@@ -69,3 +69,21 @@ function parse_trigger_p3(evts,srate)
     return evts
 end
 
+##
+
+function expandgrid(D)
+
+    tupleX = collect(Iterators.product(values(D)...))
+    tupleX = reshape(tupleX,1,:)
+    println(tupleX)
+    d = DataFrame()
+    colnames = keys(D)
+    for (i,c) = enumerate(colnames)
+        data = [t[i] for t in tupleX]
+        println(data)
+        d = hcat(d,vec(data),makeunique=true)
+    end
+    names!(d,collect(colnames))
+end
+
+

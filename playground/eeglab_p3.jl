@@ -54,8 +54,9 @@ for sub in 1:40
     evts = @where(evts, .!:invalidresponse)
 
     # Mass Univariate
-    f_stim = @formula 0~0+trialtype
+    f_stim = @formula 0~0+trialtype +spl(rt,5)
     f_butt = @formula 0~0+trialtype#+answer
+
     contrast = Dict(:trialtype => DummyCoding(base="distractor"),:answer=>DummyCoding(base="distractor"))
     evts_stim = filter(x->x.eventtype=="stimulus",evts)
     data_e,times = unfold.epoch(data=data,tbl=evts_stim,τ=(-0.8,1.3),sfreq=srate)

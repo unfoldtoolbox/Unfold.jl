@@ -25,16 +25,33 @@ data_e,times = unfold.epoch(data=data,tbl=evts_stim,τ=(-0.3,1),sfreq=srate)
 
 ##
 
-using Splines2
-include("unfold_splines2.jl")
-f = @formula 0~0+trialtype+bs2(rt,5)
+
+f_rt = @formula 0~0+trialtype+spl(rt,5)
+f = @formula 0~0+trialtype
 um,res = fit(UnfoldLinearModel,f, evts_stim,data_e,times)
-res.estimate = Float64.(res.estimate)
+um_rt,res_rt = fit(UnfoldLinearModel,f_rt, evts_stim,data_e,times)
+yhat_rt = unfold.predict(um_rt,x)
 
 # plot it in makie
-lines(Data(@where(res,:channel.==findfirst(chanlocs_df.labels.=="Cz"))),Group(color=:term),:colname_basis,:estimate)
+#lines(Data(@where(res,:channel.==findfirst(chanlocs_df.labels.=="Cz"))),Group(color=:term),:colname_basis,:estimate)
 
+# Predictions
+import StatsBase
 
+x = expandgrid(Dict(:trialtype=>["target","distractor"],:rt=>StatsBase.percentile(um_rt.X.events.rt,[25. 35. 50 65 75])))
+yhat_rt = unfold.predict(um_rt,x)
+sc = Scene()
+a = lines!(sc,Data(@where(yhat_rt,:channel.==findfirst(chanlocs_df.labels.=="Cz"))),Group(color=:rt,linestyle=:trialtype),:times,:yhat)
+lgd = legend(a.plots[2].plots,unique(kron(string.(x.rt) .*" x ", x.trialtype)))
+p_rt = vbox(a,lgd)
+
+yhat_rt = unfold.predict(um,x)
+sc = Scene()
+a = lines!(sc,Data(@where(yhat_rt,:channel.==findfirst(chanlocs_df.labels.=="Cz"))),Group(color=:rt,linestyle=:trialtype),:times,:yhat)
+lgd = legend(a.plots[2].plots,unique(kron(string.(x.rt) .*" x ", x.trialtype)))
+p = vbox(a,lgd)
+
+hbox(p_rt,p)
 ##
 
 Xstim_rt = designmatrix(UnfoldLinearModel,@formula(0~0+trialtype+bs2(rt,8)),filter(x->(x.eventtype=="stimulus"),evts),firbasis((-0.3,1),srate,"stimulus"))
@@ -46,8 +63,6 @@ Xbutt = designmatrix(UnfoldLinearModel,@formula(0~1+trialtype),filter(x->(x.even
 
 @time m_rt = unfoldfit(UnfoldLinearModel,Xstim_rt+Xbutt_rt,data)
 @time m = unfoldfit(UnfoldLinearModel,Xstim+Xbutt,data)
-
-##
 
 
 ##

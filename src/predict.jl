@@ -108,7 +108,7 @@ function predict(model::UnfoldLinearModel, newdata)
     end
 
 
-    out = DataFrame([:yhat => vec(reshape(yhat, :, 1))])
+    out = DataFrame([:yhat => vec(reshape(Float64.(yhat), :, 1))])
     nchannel = size(yhat, 2)
 
     out.channel = repeat(1:nchannel, inner=size(yhat, 1))

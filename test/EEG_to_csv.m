@@ -1,9 +1,17 @@
-for k = 2;[1 2 3 15]
+% Fuction to simulate test cases and export them
+% you need to have the matlab-unfold toolbox in your path & initialized
+% Testcase 3 is multiSubject
+% Testcase 4 is long without overlap (srate = 1000)
+% Testcase 5 is long with overlap (srate = 1000)
+% Testacse 1 is without overlap
+% testcase 2 should have overlap
+% Tastcase 15 is complex
+for k = 5;[1 2 3 4 5 15]
     
     rng(1);
     
     switch k
-        
+            
         case 1
             %%
             
@@ -161,6 +169,54 @@ for k = 2;[1 2 3 15]
                 toc
                 tic
                 EEG = uf_glmfit(EEG);
+                EEG = uf_epoch(EEG,'timelimits',[-1,1])
+                EEG = uf_glmfit_nodc(EEG)
+                uf_plotParam(uf_condense(EEG))
+                toc
+            end
+        case 5
+             % long example
+            %%
+            % Basis functions
+            intercept = struct();
+            intercept.eventname = 'stimulus2';
+            intercept.type = 'intercept';
+            intercept.predictorName = 'intercept';
+            intercept.overlap = 0.5; % note that 0, means that the AVERAGE overlap is exactly one signal-length (i.e. 1s in our simulations). That means if we do not want ANY overlap, we specify -1 here!
+            intercept.effectsize = 3;
+            
+            cat= struct();
+            cat.eventname = 'stimulusA';
+            cat.type = '1x2';
+            cat.overlap = 0.5;
+            cat.predictorName = 'conditionA';
+            cat.effectsize = 1;
+            cat.range = [0,100];
+            
+            signals{1} = intercept;
+            signals{1}.range = nan;
+            signals{1}.overlap = 0.5;
+            signals{1}(2) = cat;
+            signals{1}(2).overlap = 0.5;
+            signals{1}(2).effectsize= 2.5;
+            signals{1}(3) = cat;
+            signals{1}(3).predictorName = 'conditionB';
+            signals{1}(3).overlap = 0.1;
+            signals{1}(3).effectsize= -1.5;
+            
+            EEGsim = simulate_data(signals,'noise',0.5,'basis','posneg','srate',1000,'datalength',50*60);% 50min
+            
+            if 1 == 0
+                %%
+                EEG = uf_designmat(EEGsim,'formula','y~1+conditionA+conditionB','eventtypes','stimulus2');
+                tic
+                EEG = uf_timeexpandDesignmat(EEG,'timelimits',[-1,1]);
+                toc
+                tic
+                EEG = uf_glmfit(EEG);
+                EEG = uf_epoch(EEG,'timelimits',[-1,1])
+                EEG = uf_glmfit_nodc(EEG)
+                uf_plotParam(uf_condense(EEG))
                 toc
             end
         case 15
