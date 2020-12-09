@@ -196,17 +196,3 @@ function LinearMixedModel_wrapper(form,data::Array{<:Union{TData},1},Xs;wts = []
 
     LinearMixedModel(y, Xs, form, wts)
  end
-
-
-"""
-$(SIGNATURES)
-
-Type Piracy. can be removed once MixedModels fully supports sparse FeMats
-https://github.com/JuliaStats/MixedModels.jl/pull/309
-
-"""
-## Piracy it is!
-function MixedModels.FeMat(X::SparseMatrixCSC, cnms)
-    #println("Pirated Sparse FeMat")
-    FeMat{eltype(X),typeof(X)}(X, X, range(1,stop=size(X,2)), minimum(size(X)), cnms)
-end
