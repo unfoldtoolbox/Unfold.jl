@@ -38,6 +38,8 @@ jobs:
         #run: julia --project=test -e 'using Pkg; Pkg.instantiate()'
       - name: Run tests
         uses: julia-actions/julia-runtest@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
      # - name: Coveralls
      #   uses: coverallsapp/github-action@master
      #   with:
