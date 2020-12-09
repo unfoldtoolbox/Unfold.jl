@@ -39,14 +39,12 @@ m_tul_missing,m_tul_missing_results = fit(UnfoldLinearModel,f,evts,data_missing,
 @test  isapprox(m_tul_missing_results.estimate , m_tul_results.estimate,atol=1e-2)  # higher tol because we remove stuff
 
 # runntime tests - does something explode?
-for k in 1:3
-    if k == 1
-        f  = @formula 0~1
-    elseif k == 2
-        f  = @formula 0~1+continuousA
-    elseif k == 3
-        f  = @formula 0~1+continuousB
-    end
+
+forms  = [@formula(0 ~ 1),
+          @formula(0 ~ 1 + continuousA),
+          @formula(0 ~ 1 + continuousB)]
+
+for (k, f) in enumerate(forms)
     println("Testing Runtime $k with Formula:$f")
     Xs = designmatrix(UnfoldLinearModel,f,evts,basisfunction)
 
@@ -81,11 +79,9 @@ data_missing = Array{Union{Missing,Number}}(undef,size(data))
 data_missing .= data
 data_missing[4500:4600] .= missing
 
-categorical!(evts,:subject)
+transform!(evts, :subject => categorical, renamecols=false)
 f  = @formula 0~1+condA+condB + (1+condA+condB|subject)
 #f  = @formula 0~1 + (1|subject)
-
-
 
 # cut the data into epochs
 # TODO This ignores subject bounds
