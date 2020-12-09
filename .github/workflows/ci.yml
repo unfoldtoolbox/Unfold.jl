@@ -25,19 +25,19 @@ jobs:
         julia-arch: [x64]
         os: [ubuntu-18.04]
     steps:
-      - uses: actions/checkout@v1.0.0
+      - uses: actions/checkout@v2
       - run: pwd
       - name: Setup julia
-        uses: julia-actions/setup-julia@v1.1
+        uses: julia-actions/setup-julia@v1
         with:
           version:  ${{ matrix.julia-version }}
       - name: Install unregistered dependencies
         # install an unregistered package first
         run: julia --project=. -e 'using Pkg; Pkg.add(PackageSpec(url = "https://github.com/mclements/Splines2.jl"))'
       - name: Install registered dependencies
-        uses: julia-actions/julia-buildpkg@master
+        uses: julia-actions/julia-buildpkg@v1
       - name: Run tests
-        uses: julia-actions/julia-runtest@master
+        uses: julia-actions/julia-runtest@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
      # - name: Coveralls
