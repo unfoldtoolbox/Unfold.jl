@@ -29,10 +29,9 @@ The julia toolbox is a type of playground and aspires to combine unfold & unmixe
 
 ## Install
 ```
+using Pkg;
+Pkg.add(https://github.com/mclements/Splines2.jl")
 Pkg.add("https://github.com/unfoldtoolbox/unfold.jl")
-Pkg.add("https://github.com/JuliaStats/MixedModels.jl") #to install latest mixed model 3.0.0 - will not be necessary once released
-using unfold
-
 ```
 
 ## Usage
