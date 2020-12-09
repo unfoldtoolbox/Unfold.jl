@@ -31,11 +31,11 @@ jobs:
         uses: julia-actions/setup-julia@v1.1
         with:
           version:  ${{ matrix.julia-version }}
-      - name: Install dependencies
+      - name: Install unregistered dependencies
         # install an unregistered package first
         run: julia --project=. -e 'using Pkg; Pkg.add(PackageSpec(url = "https://github.com/mclements/Splines2.jl"))'
+      - name: Install registered dependencies
         uses: julia-actions/julia-buildpkg@master
-        #run: julia --project=test -e 'using Pkg; Pkg.instantiate()'
       - name: Run tests
         uses: julia-actions/julia-runtest@master
         env:
