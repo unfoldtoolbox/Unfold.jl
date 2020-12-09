@@ -23,7 +23,7 @@ julia> model,results_long = fit(UnfoldLinearModel,f,evts,data_r,basisfunction)
 ```
 
 """
-function fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::FormulaTerm,tbl::DataFrame,data::Array{T,3},times;kwargs...) where {T}
+function StatsBase.fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::FormulaTerm,tbl::DataFrame,data::Array{T,3},times;kwargs...) where {T}
     @assert size(data,2) == length(times)
 
     to = TimerOutput()
@@ -41,7 +41,7 @@ end
 
 
 # Timeexpanded Model
-function fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::FormulaTerm, tbl::DataFrame, data::Array{T,2}, basisfunction::BasisFunction; kwargs...) where {T}
+function StatsBase.fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::FormulaTerm, tbl::DataFrame, data::Array{T,2}, basisfunction::BasisFunction; kwargs...) where {T}
     to = TimerOutput()
 
     # Generate the designmatrices
@@ -56,7 +56,7 @@ function fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::Fo
 end
 
 # helper function for 1 channel data
-function fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::FormulaTerm, tbl::DataFrame, data::Array{T,1}, basisfunction::BasisFunction; kwargs...) where {T}
+function StatsBase.fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::FormulaTerm, tbl::DataFrame, data::Array{T,1}, basisfunction::BasisFunction; kwargs...) where {T}
     @debug("data array is size (X,), reshaping to (1,X)")
     data = reshape(data,1,:)
     return fit(type,f,tbl,data,basisfunction;kwargs...)
