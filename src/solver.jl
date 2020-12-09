@@ -1,6 +1,5 @@
 function solver_default(X,data::AbstractArray{T,2}) where {T<:Union{Missing, <:Number}}
     # likely much larger matrix, using lsqr
-    @info lsmr
     modelinfo = []
     sizehint!(modelinfo, size(data,1))
     beta = Array{Float64}(undef,size(data,1),size(X,2))
@@ -8,6 +7,8 @@ function solver_default(X,data::AbstractArray{T,2}) where {T<:Union{Missing, <:N
     @showprogress .1 for ch in 1:size(data,1)
         dd = view(data, ch, :)
         ix = @. !ismissing(dd)
+        # use the previous channel as a starting point
+        ch == 1 || copyto!(view(beta, ch, :), view(beta, ch-1, :))
         beta[ch,:],h = lsmr!(view(beta, ch, :), view(X, ix, :), view(data, ch, ix),log=true)
         push!(modelinfo,h)
     end
@@ -16,19 +17,20 @@ function solver_default(X,data::AbstractArray{T,2}) where {T<:Union{Missing, <:N
 end
 
 function solver_default(X,data::AbstractArray{T,3}) where {T<:Union{Missing, <:Number}}
-       beta = Array{Union{Missing,Number}}(undef,size(data,1),size(data,2),size(X,2))
-       @showprogress .1 for ch in 1:size(data,1)
-           for t in 1:size(data,2)
-               @debug("$(ndims(data,)),$t,$ch")
-               dd = view(data, ch, t,:)
-               ix = @. !ismissing(dd)
-               # sparse qr! isn't implemented, so views don't save us allocations
-               beta[ch,t,:] = X[ix, :] \ data[ch,t,ix]
-           end
-       end
+    @info 3
+    beta = Array{Union{Missing,Number}}(undef,size(data,1),size(data,2),size(X,2))
+    @showprogress .1 for ch in 1:size(data,1)
+        for t in 1:size(data,2)
+            @debug("$(ndims(data,)),$t,$ch")
+            dd = view(data, ch, t,:)
+            ix = @. !ismissing(dd)
+            # sparse qr! isn't implemented, so views don't save us allocations
+            beta[ch,t,:] = X[ix, :] \ data[ch,t,ix]
+        end
+    end
 
-       modelinfo = [undef] # no history implemented (yet?)
-       return beta, modelinfo
+    modelinfo = [undef] # no history implemented (yet?)
+    return beta, modelinfo
 end
 
 function solver_b2b(X,data::AbstractArray{T,3},cross_val_reps = 10) where {T<:Union{Missing, <:Number}}
