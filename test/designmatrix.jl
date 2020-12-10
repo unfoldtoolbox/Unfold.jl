@@ -30,6 +30,10 @@ println(Matrix(Xdc))
 
 @test all(isapprox.(Matrix(Xdc)[1:4,1:4], shouldBePos,atol=1e-15))
 
+# customized eventfields
+tbl2 = tbl = DataFrame([1 4]',[:onset])
+Xdc = unfold.time_expand(X,timeexpandterm,tbl,eventfields=[:onset])
+@test_throws ArgumentError unfold.time_expand(X,timeexpandterm,tbl)
 
 ## combining designmatrices
 tbl = DataFrame([1 4]',[:latency])

@@ -148,7 +148,9 @@ julia>  designmatrix(UnfoldLinearModel,f,tbl,basisfunction1)
 function designmatrix(type,f,tbl,basisfunction;contrasts= Dict{Symbol,Any}(), kwargs...)
         @debug("generating DesignMatrix")
         form = apply_schema(f, schema(f, tbl, contrasts), LinearMixedModel)
-        form = apply_basisfunction(form,basisfunction,get(Dict(kwargs),"eventfields",nothing))
+        print(Dict(kwargs))
+        print(get(Dict(kwargs),:eventfields,"1"))
+        form = apply_basisfunction(form,basisfunction,get(Dict(kwargs),:eventfields,nothing))
 
         # Evaluate the designmatrix
         if (!isnothing(basisfunction)) & (type<:UnfoldLinearMixedModel)
