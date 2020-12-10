@@ -1,13 +1,19 @@
 # This is a basic workflow to help you get started with Actions
 name: CI
-     
-# Controls when the action will run. Triggers the workflow on push or pull request 
+
+# Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
 on:
   push:
-    branches: [ master ]
+      paths-ignore:
+        - 'README.md'
+      branches:
+        - master
   pull_request:
-    branches: [ master ]
+      paths-ignore:
+        - 'README.md'
+      branches:
+        - master
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -15,20 +21,25 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        julia-version: [1.5]
+        julia-version: [1] # 1 without specifier uses the current release
         julia-arch: [x64]
         os: [ubuntu-18.04]
     steps:
-      - uses: actions/checkout@v1.0.0
+      - uses: actions/checkout@v2
       - run: pwd
-      - name: setup julia
-        uses: julia-actions/setup-julia@v1.1
+      - name: Setup julia
+        uses: julia-actions/setup-julia@v1
         with:
           version:  ${{ matrix.julia-version }}
-      - name: Install dependencies
-        uses: julia-actions/julia-buildpkg@master
-        #run: julia --project=test -e 'using Pkg; Pkg.instantiate()'
-      - uses: julia-actions/julia-runtest@master
+      - name: Install unregistered dependencies
+        # install an unregistered package first
+        run: julia --project=. -e 'using Pkg; Pkg.add(PackageSpec(url = "https://github.com/mclements/Splines2.jl"))'
+      - name: Install registered dependencies
+        uses: julia-actions/julia-buildpkg@v1
+      - name: Run tests
+        uses: julia-actions/julia-runtest@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
      # - name: Coveralls
      #   uses: coverallsapp/github-action@master
      #   with:

@@ -28,11 +28,19 @@ The julia toolbox is a type of playground and aspires to combine unfold & unmixe
 | item & subject effects  |        | x       |           |
 
 ## Install
-```
+```julia
+using Pkg;
+Pkg.add(https://github.com/mclements/Splines2.jl")
 Pkg.add("https://github.com/unfoldtoolbox/unfold.jl")
-Pkg.add("https://github.com/JuliaStats/MixedModels.jl") #to install latest mixed model 3.0.0 - will not be necessary once released
-using unfold
+```
 
+For some of the testing functionality in the `test/` path, you will also need
+
+```julia
+ Pkg.add("Makie") # use CairoMakie if in a headless environment
+ Pkg.add("StatsMakie")
+ Pkg.add("MAT")
+ Pkg.add("HDF5")
 ```
 
 ## Usage
