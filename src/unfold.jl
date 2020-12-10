@@ -1,5 +1,3 @@
-__precompile__(false)
-
 module unfold
 
 using SparseArrays
@@ -11,8 +9,8 @@ using MixedModels
 using Missings
 using StatsBase
 using LinearAlgebra
-using Tables # not sure we need it 
-using GLM # not sure we need it 
+using Tables # not sure we need it
+using GLM # not sure we need it
 import MixedModels.FeMat # extended for sparse femats, type piracy => issue on MixedModels.jl github
 using TimerOutputs # debugging fitting times etc. not strictly needed
 using DSP

@@ -9,7 +9,7 @@ Generates Designmatrix & fits model, either mass-univariate (one model per epoch
 # Examples
 Mass Univariate Linear
 ```julia-repl
-julia> data,evts = loadtestdata("testCase1") 
+julia> data,evts = loadtestdata("testCase1")
 julia> data_r = reshape(data,(1,:))
 julia> data_e,times = unfold.epoch(data=data_r,tbl=evts,τ=(-1.,1.9),sfreq=10) # cut the data into epochs. data_e is now ch x times x epoch
 
@@ -192,53 +192,7 @@ function LinearMixedModel_wrapper(form,data::Array{<:Union{TData},1},Xs;wts = []
         data = data[1:size(Xs[1],1)]
     end
 
-    # TODO what follows will be updated and potentially replaced when LinearMixedModel is refactored
-    # It is copied 0.98:1 from MixedModels.jl (the missing part is new)
+    y = (reshape(float(data), (:, 1)))
 
-    data= (reshape(float(data), (:, 1)))
-    T = eltype(TData)
-
-    reterms = ReMat{T}[]
-    feterms = FeMat{T}[]
-    for (i, x) in enumerate(Xs)
-
-        if isa(x, ReMat{T})
-            push!(reterms, x)
-        else
-            cnames = coefnames(form.rhs[i])
-            push!(feterms, MixedModels.FeMat(x, isa(cnames, String) ? [cnames] : collect(cnames)))
-        end
-    end
-
-    push!(feterms, MixedModels.FeMat(data, [""]))
-
-    # detect and combine RE terms with the same grouping var
-    if length(reterms) > 1
-        reterms = MixedModels.amalgamate(reterms)
-    end
-
-    sort!(reterms, by = MixedModels.nranef, rev = true)
-    allterms = convert(Vector{Union{ReMat{T},FeMat{T}}}, vcat(reterms, feterms))
-
-    A, L = MixedModels.createAL(allterms)
-    lbd = foldl(vcat, MixedModels.lowerbd(c) for c in reterms)
-    θ = foldl(vcat, MixedModels.getθ(c) for c in reterms)
-    optsum = OptSummary(θ, lbd, :LN_BOBYQA, ftol_rel = T(1.0e-12), ftol_abs = T(1.0e-8))
-    fill!(optsum.xtol_abs, 1.0e-10)
-    X = first(feterms)
-    LinearMixedModel(form, allterms, sqrt.(convert(Vector{T}, wts)), MixedModels.mkparmap(reterms),    (n = size(X, 1), p = size(X,2), nretrms = length(reterms)), A, L, optsum)
-end
-
-
-"""
-$(SIGNATURES)
-
-Type Piracy. can be removed once MixedModels fully supports sparse FeMats
-https://github.com/JuliaStats/MixedModels.jl/pull/309
-
-"""
-## Piracy it is!
-function MixedModels.FeMat(X::SparseMatrixCSC, cnms)
-    #println("Pirated Sparse FeMat")
-    FeMat{eltype(X),typeof(X)}(X, X, range(1,stop=size(X,2)), minimum(size(X)), cnms)
-end
+    LinearMixedModel(y, Xs, form, wts)
+ end
