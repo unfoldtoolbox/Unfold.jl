@@ -32,8 +32,11 @@ println(Matrix(Xdc))
 
 # customized eventfields
 tbl2 = tbl = DataFrame([1 4]',[:onset])
-Xdc = unfold.time_expand(X,timeexpandterm,tbl,eventfields=[:onset])
-@test_throws ArgumentError unfold.time_expand(X,timeexpandterm,tbl)
+
+timeexpandterm_latency =  unfold.TimeExpandedTerm(FormulaTerm(Term,Term),basisfunction);
+timeexpandterm_onset =  unfold.TimeExpandedTerm(FormulaTerm(Term,Term),basisfunction,eventfields=[:onset]);
+Xdc = unfold.time_expand(X,timeexpandterm_onset,tbl)
+@test_throws ArgumentError unfold.time_expand(X,timeexpandterm_latency,tbl)
 
 ## combining designmatrices
 tbl = DataFrame([1 4]',[:latency])
