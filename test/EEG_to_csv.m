@@ -6,7 +6,7 @@
 % Testacse 1 is without overlap
 % testcase 2 should have overlap
 % Tastcase 15 is complex
-for k = 5;[1 2 3 4 5 15]
+for k = 6;5;[1 2 3 4 5 15];
     
     rng(1);
     
@@ -222,6 +222,54 @@ for k = 5;[1 2 3 4 5 15]
         case 15
             
             EEGsim = simulate_test_case(15,'noise',0,'basis','posneg');
+            
+        case 6 %'lmm_sub-item_realistic'
+                        rng(1)
+            input = [];
+            for subj = 1:20
+                % small noise
+                input{subj} = simulate_data_lmm_v2('noise',0,'u_noise',0,'noise_components',0,...
+                    'srate',100,'n_events',20+2*subj,...
+                    'b_p1_2x2',[1,0.3,0,0],... % P1: Intercept, MainA, MainB, Inter - effect coded beta
+                    'u_p1_2x2',[1,0.1,0,0],... %   P1: Subject variability
+                    ...'b_p1_2x2',[10,5,10,0],... % P1: Intercept, MainA, MainB, Inter - effect coded beta
+                    ...'u_p1_2x2',[3 ,3,3,0],... %   P1: Subject variability
+                    ...
+                    'b_n1_2x2',[-0.2,1,0,0],...
+                    'u_n1_2x2',[1 ,1 ,0,0],...
+                    ...
+                    'b_p3_2x2',[3,0,0,0],...
+                    'u_p3_2x2',[2,2,0,0],...
+                    ...
+                    'u_p1_item',[2], ... % Item effect strength
+                    'u_n1_item',[3], ...
+                    'u_p3_item',[0], ...
+                    'n_items',[20], ...
+                    'simulationtype','ideal_hanning', ...
+                    'overlaptype','uniform',...
+                    'overlapparam',[1 0 0 0;2 0 0 0],...
+                    'overlapminimum',1,... # deactivating overlap!
+                    'randomItem',1 ...
+                    );
+            end
+            cfgDesign = struct();
+            cfgDesign.inputGroupingName='subject';
+            cfgDesign.eventtypes= 'sim';
+            %             cfgDesign.formula = 'y~1+cat(condA)+cat(condB)+(1+condA+condB|subject)';%+(1|stimulus)';
+            cfgDesign.formula = 'y~1+cat(condA)+(1+condA|subject)+(1+condA|stimulus)';
+            cfgDesign.codingschema = 'effects';
+            
+            [EEG,EEG_fixef] = um_designmat(input,cfgDesign);
+            
+%             EEG= um_timeexpandDesignmat(EEG,'timelimits',[-.15,0.4]);
+%             EEG = um_mmfit(EEG,input)
+%             x = um_condense(EEG)
+            %
+            EEGsim.data = cellfun(@(x)squeeze(x.data(1,:,:)),input,'UniformOutput',0);
+            
+            y = cat(2,EEGsim.data{:});
+            EEGsim.event = EEG_fixef.event;
+            
     end
     dlmwrite(sprintf('../test/data/testCase%i_data.csv',k),EEGsim.data,'precision','%.10f')
     writetable(struct2table(EEGsim.event),sprintf('../test/data/testCase%i_events.csv',k))
