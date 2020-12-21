@@ -153,18 +153,18 @@ function combineDesignmatrices(X1::DesignMatrix,X2::DesignMatrix)
 end
 
 function changeMatSize!(m,fe,remats)
-        changeReMatSize!.(remats,Ref(m+1))
+        changeReMatSize!.(remats,Ref(m))
         fe = SparseMatrixCSC(m, fe.n, fe.colptr,fe.rowval, fe.nzval)
         return (fe,remats...,)
 end
-function changeReMatSize!(remat::MixedModels.ReMat,m ::Integer)
+function changeReMatSize!(remat::MixedModels.AbstractReMat,m ::Integer)
         
         n = m-length(remat.refs) # missing elements
         if n<0
-                deleteat!(remat.refs,range(m,stop=length(remat.refs)))
-                remat.adjA = remat.adjA[:,1:m]
-                remat.wtz = remat.wtz[:,1:m]
-                remat.z = remat.z[:,1:m]
+                deleteat!(remat.refs,range(m+1,stop=length(remat.refs)))
+                remat.adjA = remat.adjA[:,1:(m+1)]
+                remat.wtz = remat.wtz[:,1:(m+1)]
+                remat.z = remat.z[:,1:(m+1)]
         elseif n>0
                 append!(remat.refs,repeat([remat.refs[end]],n))
                 remat.adjA = [remat.adjA sparse(repeat([0],size(remat.adjA)[1],n))]
@@ -223,8 +223,6 @@ julia>  designmatrix(UnfoldLinearModel,f,tbl,basisfunction1)
 function designmatrix(type,f,tbl,basisfunction;contrasts= Dict{Symbol,Any}(), kwargs...)
         @debug("generating DesignMatrix")
         form = apply_schema(f, schema(f, tbl, contrasts), MixedModels.LinearMixedModel)
-        print(Dict(kwargs))
-        print(get(Dict(kwargs),:eventfields,"1"))
         form = apply_basisfunction(form,basisfunction,get(Dict(kwargs),:eventfields,nothing))
 
         # Evaluate the designmatrix
@@ -274,6 +272,19 @@ function StatsModels.modelcols(term::TimeExpandedTerm,tbl)
         time_expand(X,term,tbl)
 end
 
+
+mutable struct SparseReMat{T,S} <: MixedModels.AbstractReMat{T,S}
+        trm
+        refs::Vector{Int32}
+        levels
+        cnames::Vector{String}
+        z::SparseMatrixCSC{T}
+        wtz::SparseMatrixCSC{T}
+        λ::LowerTriangular{T,Matrix{T}}
+        inds::Vector{Int}
+        adjA::SparseMatrixCSC{T,Int32}
+        scratch::Matrix{T}
+    end
 # This function timeexpands the random effects and generates a ReMat object
 function StatsModels.modelcols(term::TimeExpandedTerm{<:RandomEffectsTerm},tbl)
 #function StatsModels.modelcols(term::TimeExpandedTerm{<:Union{<:RandomEffectsTerm,<:AbstractTerm{<:RandomEffectsTerm}}},tbl)
@@ -384,6 +395,7 @@ function StatsModels.modelcols(term::TimeExpandedTerm{<:RandomEffectsTerm},tbl)
         adjA = MixedModels.adjA(refs, z)
         scratch = Matrix{T}(undef, (S, length(uGroup)))
 
+        # Once MixedModels.jl supports it, can be replaced with: SparseReMat
         ReMat{T,S}(rhs,
         refs,
         levels,
