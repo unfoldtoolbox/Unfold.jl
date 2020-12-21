@@ -96,7 +96,7 @@ function unfoldfit(::Type{UnfoldLinearMixedModel},Xobj::DesignMatrix,data::Union
     end
     nchan = size(data,1)
 
-    _,data = zeropad(Xobj.Xs[1],data)
+    #_,data = zeropad(Xobj.Xs[1],data)
     # get a un-fitted mixed model object
     mm = LinearMixedModel_wrapper(Xobj.formulas,firstData,Xobj.Xs)
 

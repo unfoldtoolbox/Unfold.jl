@@ -2,6 +2,7 @@
 using Test,DataFrames,StatsModels
 using unfold
 using MixedModels
+using MixedModels
 using SparseArrays
 tbl = DataFrame([1 4]',[:latency])
 X = ones(size(tbl))
@@ -95,3 +96,64 @@ if 1==0
     @time Xdc = Matrix(unfold.time_expand(X,term,tbl))
     
 end
+
+
+## Test equalizeReMatLengths
+bf1 = firbasis(τ=(0,1),sfreq = 10,name="basis1")
+bf2 = firbasis(τ=(0,0.5),sfreq = 10,name="basis2")
+
+tbl1 = DataFrame([1 4 10 15 20 22 31 37; 1 1 1 2 2 2 3 3; 1 2 3 1 2 3 1 2]',[:latency,:subject,:item])
+tbl2 = DataFrame([2 3 12 18 19 25 40 43; 1 1 1 2 2 2 3 3; 1 2 3 1 2 3 1 2]',[:latency,:subject,:itemB])
+
+categorical!(tbl1,:subject)
+categorical!(tbl1,:item)
+categorical!(tbl2,:itemB)
+
+#tbl.itemB = tbl.item
+f1 = @formula 0~1+(1|subject) + (1|item)
+f2 = @formula 0~1+(1|itemB)
+
+form = apply_schema(f1, schema(f1, tbl1), MixedModels.LinearMixedModel)
+form = unfold.apply_basisfunction(form,bf1,nothing)
+X1 = modelcols.(form.rhs, Ref(tbl1))
+
+form = apply_schema(f2, schema(f2, tbl2), MixedModels.LinearMixedModel)
+form = unfold.apply_basisfunction(form,bf2,nothing)
+X2 = modelcols.(form.rhs, Ref(tbl2))
+
+# no missmatch, shouldnt change anything then
+X = deepcopy(X1[2:end])
+unfold.equalizeReMatLengths!(X)
+@test all([x[1] for x in size.(X)].==48)
+
+X = (deepcopy(X1[2:end])..., deepcopy(X2[2:end])...)
+@test !all([x[1] for x in size.(X)].==48) # not alllenghts the same
+unfold.equalizeReMatLengths!(X)
+@test all([x[1] for x in size.(X)].==49) # now all lengths the same :-)
+
+# Test  changeReMatSize & changeMatSize
+
+X = deepcopy(X2[2])
+@test size(X)[1] == 49
+unfold.changeReMatSize!(X,52)
+@test size(X)[1] == 52
+
+X = deepcopy(X2[2])
+@test size(X)[1] == 49
+unfold.changeReMatSize!(X,40)
+@test size(X)[1] == 40
+
+
+X = (deepcopy(X1)..., deepcopy(X2[2:end])...)
+@test size(X[1])[1] == 48
+@test size(X[2])[1] == 48
+@test size(X[3])[1] == 48
+@test size(X[4])[1] == 49
+XA,XB = unfold.changeMatSize!(52,X[1],X[2:end])
+@test size(XA)[1] == 52
+@test size(XB)[1] == 52
+
+XA,XB = unfold.changeMatSize!(40,X[1],X[2:end])
+@test size(XA)[1] == 40
+@test size(XB)[1] == 40
+
