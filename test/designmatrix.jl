@@ -2,6 +2,7 @@
 using Test,DataFrames,StatsModels
 using unfold
 using MixedModels
+using SparseArrays
 tbl = DataFrame([1 4]',[:latency])
 X = ones(size(tbl))
 shouldBeNeg = zeros(4,4)
@@ -52,22 +53,29 @@ Xdc = Xdc1+Xdc2
 
 if 1 == 0
     # not implemented yet
-f3 = @formula 0~1+(1|subject)
-f4 = @formula 0~1+(1|item)
-Xdc3          = designmatrix(UnfoldLinearMixedModel,f3,tbl,basisfunction1)
-Xdc4          = designmatrix(UnfoldLinearMixedModel,f4,tbl.+1,basisfunction2)
+    basisfunction1 = firbasis(τ=(0,1),sfreq = 10,name="basis1")
+    basisfunction2 = firbasis(τ=(0,0.5),sfreq = 10,name="basis2")
 
-Xdc = Xdc3+Xdc4
-@test typeof(Xdc.Xs[1]) == MixedModels.FeMat
-@test size(Xdc.Xs[1],2) == size(Xdc3.Xs[1],2) + size(Xdc4.Xs[1],2)
-@test size(Xdc.Xs) == 3 # one FeMat + 2 ReMats
+    tbl = DataFrame([1 4 10 15 20 22 31 37; 1 1 1 2 2 2 3 3; 1 2 3 1 2 3 1 2]',[:latency,:subject,:item])
+    tbl2 = DataFrame([2 3 12 18 19 25 40 43; 1 1 1 2 2 2 3 3; 1 2 3 1 2 3 1 2]',[:latency,:subject,:itemB])
+    y = Float64.([collect(range(1,stop=100))...])'
+    categorical!(tbl,:subject)
+    categorical!(tbl2,:itemB)
+    categorical!(tbl,:item)
+    #tbl.itemB = tbl.item
+    f3 = @formula 0~1+(1|subject) + (1|item)
+    f4 = @formula 0~1+(1|itemB)
+    f4_wrong = @formula 0~1+(1|item)
+    Xdc3          = designmatrix(UnfoldLinearMixedModel,f3,tbl,basisfunction1)
+    Xdc4          = designmatrix(UnfoldLinearMixedModel,f4,tbl2,basisfunction2)
+    Xdc4_wrong    = designmatrix(UnfoldLinearMixedModel,f4_wrong,tbl,basisfunction2)
 
-# test the algamate feature, combining same random effect groupings if specified separately
-Xdx5          = designmatrix(UnfoldLinearMixedModel,f3,tbl,basisfunction1)
-Xdc6          = designmatrix(UnfoldLinearMixedModel,f3,tbl.+1,basisfunction2)
-
-Xdc = Xdc5+Xdc6
-@test size(Xdc.Xs) == 2
+    Xdc = Xdc3+Xdc4;
+    @test typeof(Xdc.Xs[1]) <: SparseArrays.SparseMatrixCSC
+    @test size(Xdc.Xs[1],2) == size(Xdc3.Xs[1],2) + size(Xdc4.Xs[1],2)
+    @test length(Xdc.Xs) == 4 # one FeMat  + 3 ReMat
+    @test_throws String Xdc3+Xdc4_wrong
+    m = unfold.unfoldfit(UnfoldLinearMixedModel,Xdc,y);
 end
 
 

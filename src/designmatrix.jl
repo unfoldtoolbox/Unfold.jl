@@ -93,28 +93,58 @@ julia>  Xdc = Xdc1+Xdc2 # equivalently
 
 """
 function combineDesignmatrices(X1::DesignMatrix,X2::DesignMatrix)
-        Xs1 = X1.Xs
-        Xs2 = X2.Xs
-        if typeof(X1.Xs) <: SparseMatrixCSC
-                # easy case
+        X1 = deepcopy(X1)
+        X2 = deepcopy(X2)
+        Xs1 = get_Xs(X1.Xs)
+        Xs2 = get_Xs(X2.Xs)
 
-                sX1 = size(Xs1,1)
-                sX2 = size(Xs2,1)
+        sX1 = size(Xs1,1)
+        sX2 = size(Xs2,1)
 
-                # append 0 to the shorter designmat
-                if sX1 < sX2
-                        Xs1 = SparseMatrixCSC(sX2, Xs1.n, Xs1.colptr, Xs1.rowval, Xs1.nzval)
-                elseif sX2 < sX1
-                        Xs2 = SparseMatrixCSC(sX1, Xs2.n, Xs2.colptr, Xs2.rowval, Xs2.nzval)
-
-                end
-                Xcomb = hcat(Xs1,Xs2)
-        else
-
+        # append 0 to the shorter designmat
+        if sX1 < sX2
+                Xs1 = SparseMatrixCSC(sX2, Xs1.n, Xs1.colptr, Xs1.rowval, Xs1.nzval)
+        elseif sX2 < sX1
+                Xs2 = SparseMatrixCSC(sX1, Xs2.n, Xs2.colptr, Xs2.rowval, Xs2.nzval)
         end
+        Xcomb = hcat(Xs1,Xs2)
+     
         #if !(Float64(X1.formulas.rhs.basisfunction.times.step) ≈ Float64(X2.formulas.rhs.basisfunction.times.step))
         #        @warn("Concatenating formulas with different sampling rates. Be sure that this is what you want.")
         #end
+        if typeof(X1.Xs) <: Tuple
+                # we have random effects                
+                # combine REMats in single-eventtpe formulas ala y ~ (1|x) + (a|x)
+                Xs1 = MixedModels._amalgamate([X1.Xs[2:end]...],Float64)
+                Xs2 = MixedModels._amalgamate([X2.Xs[2:end]...],Float64)
+                
+                Xcomb = (Xcomb,Xs1...,Xs2...)
+
+                # Next we make the ranefs all equal size
+                equalizeReMatLengths!(Xcomb[2:end])
+
+                # check if ranefs can be amalgamated. If this fails, then MixedModels tried to amalgamate over different eventtypes and we should throw the warning
+                # if it success, we have to check if the size before and after is identical. If it is not, it tried to amalgamize over different eventtypes which were of the same length
+                
+                try
+                reterms = MixedModels._amalgamate([Xcomb[2:end]...],Float64)
+                if length(reterms) != length(Xcomb[2:end])
+                        throw("IncompatibleRandomGroupings")
+                end
+                catch e
+                        @error "Error, you seem to have two different eventtypes with the same random-effect grouping variable. \n
+                        This is not allowed, you have to rename one. Example:\n
+                        eventA: y~1+(1|item) \n
+                        eventB: y~1+(1|item)  \n
+                        This leads to this error. Rename the later one\n
+                        eventB: y~1+(1|itemB) "
+                        throw("IncompatibleRandomGroupings")
+                end
+                
+
+
+        end
+
         if typeof(X1.formulas) <: FormulaTerm
                 DesignMatrix([X1.formulas X2.formulas],Xcomb,[X1.events, X2.events])
         else
@@ -122,9 +152,54 @@ function combineDesignmatrices(X1::DesignMatrix,X2::DesignMatrix)
         end
 end
 
+function changeMatSize!(m,fe,remats)
+        changeReMatSize!.(remats,Ref(m+1))
+        fe = SparseMatrixCSC(m, fe.n, fe.colptr,fe.rowval, fe.nzval)
+        return (fe,remats...,)
+end
+function changeReMatSize!(remat::MixedModels.ReMat,m ::Integer)
+        
+        n = m-length(remat.refs) # missing elements
+        if n<0
+                deleteat!(remat.refs,range(m,stop=length(remat.refs)))
+                remat.adjA = remat.adjA[:,1:m]
+                remat.wtz = remat.wtz[:,1:m]
+                remat.z = remat.z[:,1:m]
+        elseif n>0
+                append!(remat.refs,repeat([remat.refs[end]],n))
+                remat.adjA = [remat.adjA sparse(repeat([0],size(remat.adjA)[1],n))]
+                remat.wtz = [remat.wtz zeros((size(remat.wtz)[1],n))]
+                remat.z = [remat.z zeros((size(remat.z)[1],n))]
+        end
+        
+        #ReMat{T,S}(remat.trm, refs, levels, cnames, z, wtz, λ, inds, adjA, scratch)
+end
+function equalizeReMatLengths!(remats::NTuple{A,MixedModels.AbstractReMat}) where {A}
+        # find max length
+        m = maximum([x[1] for x in size.(remats)])
+        print("combining lengths: $m")
+        # for each reMat
+        for k = range(1,length=length(remats))
+                remat = remats[k]
+                if size(remat)[1] == m
+                        continue
+                end
+                print("hi!")
+                # prolong if necessary
+                changeReMatSize!(remat,m)
+                
+        end
+end
+
+
 Base.:+(X1::DesignMatrix, X2::DesignMatrix) = combineDesignmatrices(X1,X2)
 
-
+function get_Xs(Xs::Tuple)
+        return Xs[1]
+end
+function get_Xs(Xs::SparseMatrixCSC)
+        return Xs
+end
 
 """
 $(SIGNATURES)
@@ -147,7 +222,7 @@ julia>  designmatrix(UnfoldLinearModel,f,tbl,basisfunction1)
 """
 function designmatrix(type,f,tbl,basisfunction;contrasts= Dict{Symbol,Any}(), kwargs...)
         @debug("generating DesignMatrix")
-        form = apply_schema(f, schema(f, tbl, contrasts), LinearMixedModel)
+        form = apply_schema(f, schema(f, tbl, contrasts), MixedModels.LinearMixedModel)
         print(Dict(kwargs))
         print(get(Dict(kwargs),:eventfields,"1"))
         form = apply_basisfunction(form,basisfunction,get(Dict(kwargs),:eventfields,nothing))
