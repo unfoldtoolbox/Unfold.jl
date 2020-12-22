@@ -273,7 +273,7 @@ function StatsModels.modelcols(term::TimeExpandedTerm,tbl)
 end
 
 
-mutable struct SparseReMat{T,S} <: MixedModels.AbstractReMat{T,S}
+mutable struct SparseReMat{T,S} <: MixedModels.AbstractReMat{T}
         trm
         refs::Vector{Int32}
         levels
