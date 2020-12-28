@@ -15,7 +15,7 @@ The julia toolbox is a type of playground and aspires to combine unfold & unmixe
 | Feature                 | unfold | unmixed | unfold.jl |
 |-------------------------|--------|---------|-----------|
 | overlap correction      | x      | x       | x         |
-| non-linear splines      | x      | x       |           |
+| non-linear splines      | x      | x       | x         |
 | plotting tools          | x      |         |           |
 | sanity checks           | x      |         |           |
 | tutorials               | x      |         |           |
@@ -25,7 +25,7 @@ The julia toolbox is a type of playground and aspires to combine unfold & unmixe
 | mix different basisfunctions      |        |         | x         |
 | different timewindows per event   |        |         | x         |
 | mixed models            |        | x       | x         |
-| item & subject effects  |        | x       |           |
+| item & subject effects  |        | x       | (x)         |
 
 ## Install
 ```julia
@@ -58,6 +58,10 @@ With **formula** e.g. `@formula 0~1+condA`, **evts** a `DataFrame` with events, 
 Still being written. Tutorials see `doc/lmm_tutorial.html` & `doc/lm_tutorial.html`
 
 
+## Contributors (alphabetically)
+**Phillip Alday**
+**Benedikt Ehinger**
+**Dave Kleinschmidt**
+
 ## Acknowledgements
-Thanks to **Dave Kleinschmidt** for discussing the formula interface and thanks to him & **Phillip Alday** who answered all my (potentially naive) Julia questions.
 This work was supported by the Center for Interdisciplinary Research, Bielefeld (ZiF) Cooperation Group "Statistical models for psychological and linguistic data".
