@@ -80,7 +80,6 @@ if 1 == 0
 end
 
 
-# XXX concatenating of UnfoldLinearMixedModel designmatrices! Especially FeMat going to be more interesting....
 df = unfoldfit(UnfoldLinearModel,Xdc,rand(1,size(Xdc.Xs,1)))
 @test size(df.beta,2) == 17
 
