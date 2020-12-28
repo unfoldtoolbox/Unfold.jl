@@ -45,7 +45,8 @@ X2   = designmatrix(UnfoldLinearModel,f2,evts2,ba2)
 
 
 SUITE = BenchmarkGroup()
-SUITE["nodc"] = BenchmarkGroup(["nodc"])
+SUITE["nodc"] = BenchmarkGroup(
+    ["nodc"])
 SUITE["dc"] = BenchmarkGroup(["dc"])
 # designmatrix generation
 SUITE["dc"]["X_gen_lin"] = @benchmarkable designmatrix(UnfoldLinearModel,$f1,$evts1,$ba1)
