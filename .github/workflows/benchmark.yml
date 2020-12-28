@@ -13,7 +13,7 @@ jobs:
           version: 1
       - name: Install unregistered dependencies
         # install an unregistered package first
-        run: julia --project ./benchmark/ -e 'using Pkg; Pkg.add(PackageSpec(url = "https://github.com/mclements/Splines2.jl"))'
+        run: julia  -e 'using Pkg; Pkg.add(PackageSpec(url = "https://github.com/mclements/Splines2.jl"))'
       - name: Install registered dependencies
         uses: julia-actions/julia-buildpkg@latest
       - name: Install dependencies
