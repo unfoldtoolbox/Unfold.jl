@@ -96,28 +96,32 @@ function unfoldfit(::Type{UnfoldLinearMixedModel},Xobj::DesignMatrix,data::Union
     end
     nchan = size(data,1)
 
-    _,data = zeropad(Xobj.Xs[1],data)
-    print(size(data))
-    print(size(Xobj.Xs[1]))
+    #_,data = zeropad(Xobj.Xs[1],data)
     # get a un-fitted mixed model object
     mm = LinearMixedModel_wrapper(Xobj.formulas,firstData,Xobj.Xs)
 
     # prepare some variables to be used
     βsc, θsc= similar(coef(mm)), similar(mm.θ) # pre allocate
     p,k = length(βsc), length(θsc)
-    β_names = (Symbol.(fixefnames(mm))..., )
-
+    #β_names = (Symbol.(fixefnames(mm))..., )
+    β_names = (Symbol.(vcat(coefnames(Xobj.formulas)...))...,)
+    β_names = (unique(β_names)...,)
+    @debug println("beta_names $β_names")
+    @debug println("uniquelength: $(length(unique(β_names))) / $(length(β_names))")
     # for each channel
     @showprogress .1 for ch in range(1,stop=nchan)
         # for each time
         for t in range(1,stop=ntime)
 
-            @debug print("ch:$ch/$nchan, t:$t/$ntime")
+            @debug println("ch:$ch/$nchan, t:$t/$ntime")
+            @debug println("data-size: $(size(data))")
+            #@debug println("mixedModel: $(mm.feterms)")
             if ndims(data) == 3
                 refit!(mm,data[ch,t,:])
             else
                 refit!(mm,data[ch,:])
             end
+            β = NamedTuple{β_names}(MixedModels.fixef!(βsc, mm))
 
             out = (
             objective = mm.objective,
@@ -183,16 +187,24 @@ function LinearMixedModel_wrapper(form,data::Array{<:Union{TData},1},Xs;wts = []
 
     # XXX Push this to utilities zeropad
     # Make sure X & y are the same size
-    if size(Xs[1],1) > size(data,1)
-        @warn("Timeexpanded designmat longer than data, adding zeros to data. Future versions will fix this")
-        target = size(Xs[1],1)-size(data,1)
-        push!(data,zeros(target)...)
-        #data[end+1:size(Xs[1],1)] .= 0
-    else
-        data = data[1:size(Xs[1],1)]
+    m = size(Xs[1])[1]
+
+
+    if m != size(data)[1]
+        Xs = changeMatSize!(size(data)[1],Xs[1],Xs[2:end])
     end
+    println(size(Xs[1]))
+    println(size(Xs[2]))
+    println(size(data))
 
     y = (reshape(float(data), (:, 1)))
 
-    LinearMixedModel(y, Xs, form, wts)
+    MixedModels.LinearMixedModel(y, Xs, form, wts)
+ end
+
+ function MixedModels.LinearMixedModel(y, Xs, form::Array, wts)
+    @warn("Multiple Formulas, removing them from the mixed models. Hopefully this doesnt break something")
+    #form_concat = StatsModels.FormulaTerm(form[1].lhs, getfield.(form,:rhs))
+    #MixedModels.LinearMixedModel(y, Xs, StatsModels.FormulaTerm(form...), wts)
+    MixedModels.LinearMixedModel(y, Xs, form[1], wts)
  end

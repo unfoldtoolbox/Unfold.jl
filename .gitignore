@@ -28,3 +28,7 @@ Manifest.toml
 
 .vscode/
 *.*~
+
+# benchmark
+.benchmarkci
+benchmark/*.json
