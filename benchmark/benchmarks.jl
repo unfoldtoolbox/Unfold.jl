@@ -1,17 +1,17 @@
 using BenchmarkTools
 using unfold,StatsModels,MixedModels,DataFrames
-using Random: randn
+using Random: randn,seed!
 
 
 const SUITE = BenchmarkGroup()
-Random.seed!(3)
+seed!(3)
 
 
 
 
 
 # Preparatory code
-include("dev/unfold/test/test_utilities.jl"); # to load the simulated data
+include("../test/test_utilities.jl"); # to load the simulated data
 
 data, evts = loadtestdata("testcase6","dev/unfold/test/")
 categorical!(evts,:subject);

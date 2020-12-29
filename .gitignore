@@ -30,5 +30,5 @@ Manifest.toml
 *.*~
 
 # benchmark
-/.benchmarkci
-/benchmark/*.json
+.benchmarkci
+benchmark/*.json
