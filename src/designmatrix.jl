@@ -177,14 +177,13 @@ end
 function equalizeReMatLengths!(remats::NTuple{A,MixedModels.AbstractReMat}) where {A}
         # find max length
         m = maximum([x[1] for x in size.(remats)])
-        print("combining lengths: $m")
+        @debug print("combining lengths: $m")
         # for each reMat
         for k = range(1,length=length(remats))
                 remat = remats[k]
                 if size(remat)[1] == m
                         continue
                 end
-                print("hi!")
                 # prolong if necessary
                 changeReMatSize!(remat,m)
                 

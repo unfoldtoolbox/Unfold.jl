@@ -13,7 +13,7 @@ seed!(3)
 # Preparatory code
 include("../test/test_utilities.jl"); # to load the simulated data
 
-data, evts = loadtestdata("testcase6","dev/unfold/test/")
+data, evts = loadtestdata("testcase6","test/")
 categorical!(evts,:subject);
 categorical!(evts,:stimulus);
 evts.subjectB = evts.subject;
