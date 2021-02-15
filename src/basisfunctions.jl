@@ -52,14 +52,14 @@ julia>  f(103.3)
 
 """
 function firbasis(τ,sfreq,name::String)
-
-    times =range(τ[1],stop=τ[2]+ 1 ./sfreq,step=1 ./sfreq)
-    kernel=e->firkernel(e,times[1:end-1])
+    times =range(τ[1],stop=τ[2],step=1 ./sfreq)
+    #times =range(τ[1],stop=τ[2]+ 1 ./sfreq,step=1 ./sfreq)
+    kernel=e->firkernel(e,times)
     type = "firkernel"
 
     shiftOnset = Int64(round(τ[1] * sfreq))
 
-    return BasisFunction(kernel,times[1:end-1],times,type,name,shiftOnset)
+    return BasisFunction(kernel,times,times,type,name,shiftOnset)
 end
 # cant multiple dispatch on optional arguments
 #firbasis(;τ,sfreq)           = firbasis(τ,sfreq)
