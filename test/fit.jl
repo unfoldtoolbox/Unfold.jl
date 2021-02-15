@@ -24,7 +24,7 @@ m_mul,m_mul_results = fit(UnfoldLinearModel,f,evts,data_e,times)
 
 data_e_noreshape,times = unfold.epoch(data=data,tbl=evts,τ=(-1.,1.9),sfreq=20) # cut the data into epochs
 m_mul_noreshape,m_mul_results_noreshape = fit(UnfoldLinearModel,f,evts,data_e_noreshape,times)
-@test m_mul_results[(m_mul_results.channel.==1).&(m_mul_results_noreshape.colname_basis .==0.1),:estimate] ≈ [2,3,4]
+@test m_mul_results_noreshape[(m_mul_results_noreshape.channel.==1).&(m_mul_results_noreshape.colname_basis .==0.1),:estimate] ≈ [2,3,4]
 @test size(m_mul_results_noreshape)[1] ==size(m_mul_results)[1]/2
 
 # Add Missing in Data
