@@ -8,6 +8,9 @@ function epoch(data::Array{T,1},tbl::DataFrame,τ::Tuple{Number,Number},sfreq;kw
     epoch(data_r,tbl,τ,sfreq;kwargs... )
 end
 
+epoch(data::Matrix, tbl::DataFrame, τ::Vector,sfreq; eventtime) = epoch(data, tbl, Tuple(τ...), sfreq; eventtime=eventtime)
+epoch(data::Matrix, tbl::DataFrame, τ::Tuple{Number,Number},sfreq; eventtime::String="latency") = epoch(data, tbl, τ, sfreq; eventtime=Symbol(eventtime))
+
 function epoch(data::Array{T,2},tbl::DataFrame,τ::Tuple{Number,Number},sfreq;eventtime::Symbol=:latency) where T <:Union{Missing,Number}
 # data: channels x times
 
