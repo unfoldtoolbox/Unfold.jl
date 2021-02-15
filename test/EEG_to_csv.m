@@ -44,6 +44,20 @@ for k = 6;5;[1 2 3 4 5 15];
             signals{1}(3).effectsize= -1.5;
             
             EEGsim = simulate_data(signals,'noise',0);
+            
+            %' Formula: y ~ 1  + continuousA + continuousB'
+            %' Overlap: y ~ -1 +  -1         + -1 => no overlap
+            %' EffectS: y ~ 3  +  2.5        + -1.5   
+            %' Shape: 'box', noise: 0
+            
+            %' Overlap: y ~ 0.5 +  0        + 0 => overlap
+            %' 
+            % stim: y~1
+            % button: y~1
+            
+            % event: y~1 + cat(is_button)
+            % event (stim) => y~stimERP
+            % event (button) => y~stimERP + (stimERP-buttonEffect)
         case 2
             %%
             % Basis functions
@@ -74,6 +88,11 @@ for k = 6;5;[1 2 3 4 5 15];
             signals{1}(3).effectsize= -1.5;
             
             EEGsim = simulate_data(signals,'noise',0.5,'basis','posneg');
+            
+            %' Formula: y ~ 1  + conditionA + conditionB'
+            %' Overlap: y ~ 0  +  0         + 0.1
+            %' EffectS: y ~ 3  +  2.5       + -1.5  
+            %' Shape: 'posneg', noise: 0.5
         case 3
             %%
             %%
@@ -161,6 +180,11 @@ for k = 6;5;[1 2 3 4 5 15];
             
             EEGsim = simulate_data(signals,'noise',0.5,'basis','posneg','srate',1000,'datalength',50*60);% 50min
             
+            %' Formula: y ~ 1  + conditionA + conditionB'
+            %' Overlap: y ~ -1 +  0.5       + 0.1 
+            %' EffectS: y ~ 3  +  2.5       + -1.5 
+            %' Shape: 'posneg', noise: 0.5
+            
             if 1 == 0
                 %%
                 EEG = uf_designmat(EEGsim,'formula','y~1+conditionA+conditionB','eventtypes','stimulus2');
@@ -206,6 +230,11 @@ for k = 6;5;[1 2 3 4 5 15];
             
             EEGsim = simulate_data(signals,'noise',0.5,'basis','posneg','srate',1000,'datalength',50*60);% 50min
             
+            %' Formula: y ~ 1  + conditionA + conditionB'
+            %' Overlap: y ~ 0.5 +  0.5       + 0.1 
+            %' EffectS: y ~ 3  +  2.5       + -1.5 
+            %' Shape: 'posneg', noise: 0.5
+            
             if 1 == 0
                 %%
                 EEG = uf_designmat(EEGsim,'formula','y~1+conditionA+conditionB','eventtypes','stimulus2');
@@ -222,6 +251,9 @@ for k = 6;5;[1 2 3 4 5 15];
         case 15
             
             EEGsim = simulate_test_case(15,'noise',0,'basis','posneg');
+            % Stim1 : y~1
+            % stim2 : y~1+cat+cont
+            % stim3 : y~1+splA+splB
             
         case 6 %'lmm_sub-item_realistic'
                         rng(1)
