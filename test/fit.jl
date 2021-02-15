@@ -54,6 +54,7 @@ m_tul_missing,m_tul_missing_results = fit(UnfoldLinearModel,f,evts,data_missing,
 
 # runntime tests - does something explode?
 for k in 1:4
+    local f
     if k == 1
         f  = @formula 0~1
     elseif k == 2
@@ -96,7 +97,7 @@ basisfunction_long = firbasis(τ=(-1,1),sfreq=1000,name="basisA")
 ###############################
 ##  Mixed Model tests
 ###############################
-data,evts = loadtestdata("testCase3") #
+data,evts = loadtestdata("testCase3",dataPath=(@__DIR__)*"/data") #
 append!(data,zeros(1000))
 data = reshape(data,1,:)
 data = vcat(data,data)

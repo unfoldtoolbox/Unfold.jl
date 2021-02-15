@@ -1,11 +1,11 @@
 using CSV
 using DelimitedFiles
 
-function loadtestdata(testCase::String, dataPath::String=@__DIR__)
+function loadtestdata(testCase::String, dataPath::String=(@__DIR__)*"/data_new_testcases")
     #println(pwd()) # to debug github action
-    data = readdlm(joinpath(dataPath, "data_new_testcases/$(testCase)_data.csv"), ',', Float64, '\n')
+    data = readdlm(joinpath(dataPath, "$(testCase)_data.csv"), ',', Float64, '\n')
     data = dropdims(data,dims=1) # convert to vector
-    evts = CSV.read(joinpath(dataPath, "data_new_testcases/$(testCase)_events.csv"), DataFrame)
+    evts = CSV.read(joinpath(dataPath, "$(testCase)_events.csv"), DataFrame)
     return data, evts
 end
 
