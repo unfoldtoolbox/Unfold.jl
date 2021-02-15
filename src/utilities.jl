@@ -3,6 +3,11 @@ function epoch(;data,tbl,τ,sfreq,kwargs...)
     epoch(data,tbl,τ,sfreq;kwargs...)
 end
 
+function epoch(data::Array{T,1},tbl::DataFrame,τ::Tuple{Number,Number},sfreq;kwargs...) where T <:Union{Missing,Number}
+    data_r = reshape(data,(1,:))
+    epoch(data_r,tbl,τ,sfreq;kwargs... )
+end
+
 function epoch(data::Array{T,2},tbl::DataFrame,τ::Tuple{Number,Number},sfreq;eventtime::Symbol=:latency) where T <:Union{Missing,Number}
 # data: channels x times
 

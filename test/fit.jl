@@ -7,45 +7,61 @@ using DataFrames
 using unfold
 include("test_utilities.jl")
 
-data,evts = loadtestdata("testCase1") #
-f  = @formula 0~1+continuousA+continuousB # 1
+data,evts = loadtestdata("test_case_3a") #
+f  = @formula 0~1+conditionA+continuousA # 1
 
 # prepare data
 data_r = reshape(data,(1,:))
 data_r = vcat(data_r,data_r)#add second channel
-data_e,times = unfold.epoch(data=data_r,tbl=evts,τ=(-1.,1.9),sfreq=10) # cut the data into epochs
+
+#--------------------------#
+## Mass Univariate Linear ##
+#--------------------------#
+data_e,times = unfold.epoch(data=data_r,tbl=evts,τ=(-1.,1.9),sfreq=20) # cut the data into epochs
+m_mul,m_mul_results = fit(UnfoldLinearModel,f,evts,data_e,times)
+@test m_mul_results[(m_mul_results.channel.==1).&(m_mul_results.colname_basis .==0.1),:estimate] ≈ [2,3,4]
+
+
+data_e_noreshape,times = unfold.epoch(data=data,tbl=evts,τ=(-1.,1.9),sfreq=20) # cut the data into epochs
+m_mul_noreshape,m_mul_results_noreshape = fit(UnfoldLinearModel,f,evts,data_e_noreshape,times)
+@test m_mul_results[(m_mul_results.channel.==1).&(m_mul_results_noreshape.colname_basis .==0.1),:estimate] ≈ [2,3,4]
+@test size(m_mul_results_noreshape)[1] ==size(m_mul_results)[1]/2
+
+# Add Missing in Data
 data_e_missing = data_e
 data_e_missing[1,25,end-5:end] .= missing
+m_mul_missing,m_mul_missing_results = fit(UnfoldLinearModel,f,evts,data_e_missing,times)
+@test m_mul_missing_results.estimate ≈ m_mul_results.estimate
+
+#---------------------------------#
+## Timexpanded Univariate Linear ##
+#---------------------------------#
+basisfunction = firbasis(τ=(-1,1),sfreq=20,name="basisA")
+m_tul,m_tul_results = fit(UnfoldLinearModel,f,evts,data_r,basisfunction)
+@test isapprox(m_tul_results[(m_tul_results.channel.==1).&(m_tul_results.colname_basis .==0.1),:estimate],[2,3,4],atol=0.0001)
+
+# test without reshape, i.e. 1 channel vector e.g. size(data) = (1200,)
+m_tul_noreshape,m_tul_results_noreshape = fit(UnfoldLinearModel,f,evts,data,basisfunction);
+@test size(m_tul_results_noreshape)[1] ==size(m_tul_results)[1]/2
+
+# Test under missing data
 data_missing = Array{Union{Missing,Number}}(undef,size(data_r))
 data_missing .= data_r
 data_missing[4500:4600] .= missing
 
-## Mass Univariate Linear
-
-m_mul,m_mul_results = fit(UnfoldLinearModel,f,evts,data_e,times)
-
-@test all(m_mul_results[(m_mul_results.channel.==1).&(m_mul_results.colname_basis .==0.1),:estimate] .≈ [3.0 2.5 -1.5]')
-# Timexpanded Univariate Linear
-basisfunction = firbasis(τ=(-1,1),sfreq=10,name="A")
-m_tul,m_tul_results = fit(UnfoldLinearModel,f,evts,data_r,basisfunction)
-@test all(m_tul_results[(m_tul_results.channel.==1).&(m_tul_results.colname_basis .==0.1),:estimate] .≈ [3.0 2.5 -1.5]')
-
-
-# Add Missing in Data
-m_mul_missing,m_mul_missing_results = fit(UnfoldLinearModel,f,evts,data_e_missing,times)
-@test m_mul_missing_results.estimate ≈ m_mul_results.estimate
-# Timexpanded Univariate Linear
 m_tul_missing,m_tul_missing_results = fit(UnfoldLinearModel,f,evts,data_missing,basisfunction)
-@test  isapprox(m_tul_missing_results.estimate , m_tul_results.estimate,atol=1e-2)  # higher tol because we remove stuff
+@test  isapprox(m_tul_missing_results.estimate , m_tul_results.estimate,atol=1e-4)  # higher tol because we remove stuff
 
 # runntime tests - does something explode?
-for k in 1:3
+for k in 1:4
     if k == 1
         f  = @formula 0~1
     elseif k == 2
-        f  = @formula 0~1+continuousA
+        f  = @formula 0~1+conditionA
     elseif k == 3
-        f  = @formula 0~1+continuousB
+        f  = @formula 0~0+conditionA
+    elseif k == 4
+        f  = @formula 0~1+continuousA
     end
     println("Testing Runtime $k with Formula:$f")
     Xs = designmatrix(UnfoldLinearModel,f,evts,basisfunction)
@@ -59,15 +75,23 @@ end
 
 
 ##
-data4,evts4 = loadtestdata("testCase4") #
-data4 = reshape(data4,(1,:))
+data_long,evts_long = loadtestdata("test_case_1c") #
+data_long = reshape(data_long,(1,:))
 
-data4 = vcat(data4,data4)
-f4  = @formula 0~1+conditionA+conditionB # 4
-basisfunction4 = firbasis(τ=(-1,1),sfreq=1000,name="A")
+data_long = vcat(data_long,data_long)
+f_long  = @formula 0~1
+basisfunction_long = firbasis(τ=(-1,1),sfreq=1000,name="basisA")
 
-@time designmatrix(UnfoldLinearModel,f4,evts4,basisfunction4)
+@time designmatrix(UnfoldLinearModel,f_long,evts_long,basisfunction_long)
+@time a,m_tul_long = fit(UnfoldLinearModel,f_long,evts_long,data_long,basisfunction_long);
+
+@test isapprox(m_tul_long[(m_tul_long.channel.==1).&(m_tul_long.colname_basis .==0.1),:estimate],[2],atol=0.0001)
+# ~21s, test_case_1c, sfreq = 1000, 6000 events
+#
+## Older numbers for "designmatrix" only. But see "benchmark/benchmarkjl" for better benchmarks
 # new version 7s-10s, dataset4, sfreq=1000, 1200stim,
+# ~13s, test_case_1c, sfreq = 1000, 6000 events
+
 
 ###############################
 ##  Mixed Model tests

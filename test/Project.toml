@@ -5,6 +5,7 @@ DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 MixedModels = "ff71e718-51f3-5ec2-a782-8ffcbfa3c316"
 Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 StatsModels = "3eaba693-59b7-5ba5-a881-562e759f1c8d"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 

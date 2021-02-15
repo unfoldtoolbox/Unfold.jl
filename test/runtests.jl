@@ -1,3 +1,5 @@
 include("basisfunctions.jl")
 include("fit.jl")
 include("designmatrix.jl")
+include("splines.jl")
+include("predict.jl")
