@@ -14,6 +14,8 @@ function epoch(data::Array{T,2},tbl::DataFrame,τ::Tuple{Number,Number},sfreq;ev
 # partial taken from EEG.jl
 
     numEpochs = size(tbl,1)
+    τ = round_times(τ,sfreq)
+
     times = range(τ[1],stop=τ[2],step=1 ./sfreq)
     lenEpochs = length(times)
     numChans = size(data,1)
@@ -26,8 +28,8 @@ function epoch(data::Array{T,2},tbl::DataFrame,τ::Tuple{Number,Number},sfreq;ev
     for si = 1:size(tbl,1)
         #eventonset = tbl[si,eventtime] # in samples
         #d_start = eventonset
-        d_start = Int(ceil(tbl[si,eventtime] - sum(times.<0)))
-        d_end =  Int(ceil(tbl[si,eventtime]+lenEpochs-1 - sum(times.<0)))
+        d_start = Int(round(tbl[si,eventtime] - sum(times.<0)))
+        d_end =  Int(round(tbl[si,eventtime]+lenEpochs-1 - sum(times.<0)))
         e_start = 1
         e_end = lenEpochs
             #println("d: $(size(data)),e: $(size(epochs)) | $d_start,$d_end,$e_start,$e_end | $(tbl[si,eventtime])")
@@ -45,7 +47,12 @@ function epoch(data::Array{T,2},tbl::DataFrame,τ::Tuple{Number,Number},sfreq;ev
     return(epochs,times)
 end
 
-
+function round_times(τ,sfreq)
+    # function to round τ to sfreq samples. This specifies the epoch length.
+    # its a function to be the same for epoch & timeexpanded analyses
+    return round.(τ .* sfreq) ./ sfreq
+    
+end
 function dropMissingEpochs(X,y)
     missingIx = .!any(ismissing.(y),dims=(1,2))
     print(size(missingIx))

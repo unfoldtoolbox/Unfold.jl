@@ -52,12 +52,13 @@ julia>  f(103.3)
 
 """
 function firbasis(τ,sfreq,name::String)
+    τ = round_times(τ,sfreq)
     times =range(τ[1],stop=τ[2],step=1 ./sfreq)
-    #times =range(τ[1],stop=τ[2]+ 1 ./sfreq,step=1 ./sfreq)
+
     kernel=e->firkernel(e,times)
     type = "firkernel"
 
-    shiftOnset = Int64(round(τ[1] * sfreq))
+    shiftOnset = Int64(floor(τ[1] * sfreq))
 
     return BasisFunction(kernel,times,times,type,name,shiftOnset)
 end
