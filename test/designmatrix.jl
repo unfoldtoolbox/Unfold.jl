@@ -2,7 +2,6 @@
 using Test,DataFrames,StatsModels
 using unfold
 using MixedModels
-using MixedModels
 using SparseArrays
 tbl = DataFrame([1 4]',[:latency])
 X = ones(size(tbl))
@@ -156,3 +155,17 @@ XA,XB = unfold.changeMatSize!(40,X[1],X[2:end])
 @test size(XA)[1] == 40
 @test size(XB)[1] == 40
 
+
+#----- Some LinearMixedModel tests
+
+data,evts = loadtestdata("testCase3",dataPath=(@__DIR__)*"/data") #
+evts.subject = categorical(evts.subject)
+
+f_zc  = @formula 0~1+condA+condB + zerocorr(1+condA+condB|subject)
+basisfunction = firbasis(τ=(-0.1,0.1),sfreq=10,name="ABC")
+Xdc_zc          = designmatrix(UnfoldLinearMixedModel,f_zc,evts,basisfunction)
+
+@test length(Xdc_zc.Xs[2].inds) == 9
+f  = @formula 0~1+condA+condB + (1+condA+condB|subject)
+Xdc          = designmatrix(UnfoldLinearMixedModel,f,evts,basisfunction)
+@test length(Xdc.Xs[2].inds) == (9*9+9)/2
