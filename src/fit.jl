@@ -104,7 +104,7 @@ function unfoldfit(::Type{UnfoldLinearMixedModel},Xobj::DesignMatrix,data::Union
     βsc, θsc= similar(coef(mm)), similar(mm.θ) # pre allocate
     p,k = length(βsc), length(θsc)
     #β_names = (Symbol.(fixefnames(mm))..., )
-    #@debug println((fixef(mm)))
+    
     β_names = (Symbol.(vcat(fixefnames(mm)...))...,)
     β_names = (unique(β_names)...,)
     @debug println("beta_names $β_names")
@@ -209,8 +209,12 @@ function LinearMixedModel_wrapper(form,data::Array{<:Union{TData},1},Xs;wts = []
  end
 
  function MixedModels.LinearMixedModel(y, Xs, form::Array, wts)
-    @warn("Multiple Formulas, removing them from the mixed models. Hopefully this doesnt break something")
-    #form_concat = StatsModels.FormulaTerm(form[1].lhs, getfield.(form,:rhs))
-    #MixedModels.LinearMixedModel(y, Xs, StatsModels.FormulaTerm(form...), wts)
-    MixedModels.LinearMixedModel(y, Xs, form[1], wts)
+    
+
+    form_combined = form[1]
+    for f =form[2:end]
+        
+        form_combined = form_combined.lhs ~ MatrixTerm(form_combined.rhs[1] + f.rhs[1]) + form_combined.rhs[2:end] + f.rhs[2:end]
+    end
+    MixedModels.LinearMixedModel(y, Xs, form_combined, wts)
  end
