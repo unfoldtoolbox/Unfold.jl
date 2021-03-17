@@ -1,5 +1,6 @@
 module unfold
 
+using PyMNE
 using SparseArrays
 using StatsModels
 using StatsBase
@@ -20,7 +21,7 @@ using ProgressMeter
 using DocStringExtensions # for Docu
 using MLBase # for crossVal
 using Splines2 # for spline predictors
-using PyMNE
+
 
 #using IncompleteLU
 import Base.(+) # overwrite for DesignMatrices
