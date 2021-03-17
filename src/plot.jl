@@ -1,15 +1,36 @@
 # These functions are not included yet because I am not yet sure which plotting library to put my bets on.
 # Makie&StatsMakie could be supercool, but I ran into some issues
-import Plots
-using SparseArrays
-Plots.plot(m::unfold.UnfoldModel)  = plot_results(m.results)
 
-function plot_results(results::DataFrame)
-    Plots.plot(results.time,results.estimate,
-            group=(results.term,results.group),
-            legend=:outerbottom)
+using AlgebraOfGraphics
 
+#---
+#Plots.plot(m::unfold.UnfoldModel)  = plot_results(m.results)
+
+function plot_results(results::DataFrame,y=:estimate,color=:term;layout_x=:group,se=false,pvalue = DataFrame(:from=>[],:to=>[],:pval=>[]))
+    m = mapping(:colname_basis,y,color=color,layout_x=layout_x)
+
+    basic = AlgebraOfGraphics.data(results) * visual(Lines) * m
+
+    if se
+        res_se = copy(results)
+        res_se = res_se[.!isnothing.(res_se.stderror),:]
+        res_se[!,:se_low] = res_se[:,y].-res_se.stderror
+        res_se[!,:se_high] = res_se[:,y].+res_se.stderror
+        basic =  AlgebraOfGraphics.data(res_se)*visual(Band,alpha=0.5)*mapping(:colname_basis,:se_low,:se_high,color=:term) + basic
+    end
+    
+    d = basic |> draw
+
+    # add the pvalues
+    if !isempty(pvalue)
+        x = [Point(x,0.)=>Point(y,0.) for (x,y) in zip(pvalue.from,pvalue.to)]
+        linesegments!(d.children[1],x,linewidth=2) # assumes first one is where we want to plot. Limitation!
+
+    end
+    return d
+    
 end
 
 
-Plots.heatmap(X::SparseMatrixCSC) = heatmap(Matrix(X))
+#using SparseArrays
+#Plots.heatmap(X::SparseMatrixCSC) = heatmap(Matrix(X))
