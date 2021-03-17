@@ -285,8 +285,8 @@ mutable struct SparseReMat{T,S} <: MixedModels.AbstractReMat{T}
         scratch::Matrix{T}
     end
 # This function timeexpands the random effects and generates a ReMat object
-function StatsModels.modelcols(term::TimeExpandedTerm{<:RandomEffectsTerm},tbl)
-#function StatsModels.modelcols(term::TimeExpandedTerm{<:Union{<:RandomEffectsTerm,<:AbstractTerm{<:RandomEffectsTerm}}},tbl)
+#function StatsModels.modelcols(term::TimeExpandedTerm{<:RandomEffectsTerm},tbl)
+function StatsModels.modelcols(term::TimeExpandedTerm{<:Union{<:RandomEffectsTerm,<:MixedModels.AbstractReTerm}},tbl)
 # exchange this to get ZeroCorr to work
 
 
@@ -371,14 +371,14 @@ function StatsModels.modelcols(term::TimeExpandedTerm{<:RandomEffectsTerm},tbl)
         T = eltype(z)
         λ  = LowerTriangular(Matrix{T}(I, S, S))
 
-        inds = MixedModels.sizehint!(Int[], (S * (S + 1)) >> 1)
+        inds = MixedModels.sizehint!(Int[], (S * (S + 1)) >> 1) # double trouble? can this line go?
         m = reshape(1:abs2(S), (S, S))
-        inds = sizehint!(Int[], (S * (S + 1)) >> 1)
+        inds = sizehint!(Int[], (S * (S + 1)) >> 1) 
         for j in 1:S
                 for i in j:S
                         # We currently restrict to diagonal entries
                         # Once mixedmodels#293 is pushed, we can relax this and use zerocorr()
-                        if i == j # for diagonal
+                        if !(typeof(term.term)<:MixedModels.ZeroCorr) || (i == j) # for diagonal
                                 push!(inds, m[i, j])
                         end
                 end
