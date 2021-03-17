@@ -76,6 +76,7 @@ function make_long_df(m,terms,chans,colnames,basisnames)
     estimate,stderror,group = make_estimate(m)
     
     
+    
     results = DataFrame(term=String.(linearize(terms)),
         channel = linearize(chans),
         basisname = linearize(basisnames),
@@ -117,7 +118,7 @@ function make_estimate(m::UnfoldLinearMixedModel)
     return Float64.(estimate),stderror,group
 end
 function make_estimate(m::UnfoldLinearModel)
-    return Float64.(m.beta),fill(Missing,size(m.beta)),nothing
+    return Float64.(m.beta),fill(nothing,size(m.beta)),fill(nothing,size(m.beta))
 end
 
 # Return the column names of the basis functions.
