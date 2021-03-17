@@ -73,9 +73,10 @@ end
 function make_long_df(m,terms,chans,colnames,basisnames)
     @assert all(size(terms) .== size(chans)) "terms, chans and colnames need to have the same size at this point, $(size(terms)),$(size(chans)),$(size(colnames)), should be $(size(m.beta)))"
     @assert all(size(terms) .== size(colnames)) "terms, chans and colnames need to have the same size at this point"
-
     estimate,stderror,group = make_estimate(m)
-    results = DataFrame(term=linearize(terms),
+    
+    
+    results = DataFrame(term=String.(linearize(terms)),
         channel = linearize(chans),
         basisname = linearize(basisnames),
         colname_basis=linearize(colnames),
@@ -91,22 +92,32 @@ end
 function make_estimate(m::UnfoldLinearMixedModel)
     estimate = cat(m.beta,m.sigma,dims=ndims(m.beta))
     if ndims(m.beta) == 3
-        group_f = repeat(["fixef"],size(m.beta,1),size(m.beta,2),size(m.beta,ndims(m.beta)))
-        group_s = repeat(["ranef"],size(m.beta,1),size(m.beta,2),size(m.sigma,ndims(m.beta)))
+        group_f = repeat([nothing],size(m.beta,1),size(m.beta,2),size(m.beta,ndims(m.beta)))
+
+        ranef_group = [x.group for x in MixedModels.tidyσs(m.modelinfo)]
+
+            # reshape to pred x time x chan and then invert to chan x time x pred
+        ranef_group = permutedims(reshape(ranef_group,:,size(m.beta,2),size(m.beta,1)),[3 2 1])
+            
+        
+        #    beta = reshape(beta,:,nchan)'
+        #    sigma = reshape(sigma,:,nchan)'
+        
+        #group_s = repeat(["ranef"],size(m.beta,1),size(m.beta,2),size(m.sigma,ndims(m.beta)))
+        group_s = ranef_group
         stderror_fixef = permutedims(reshape(vcat([[b.se...] for b in m.modelinfo.bstr]...),reverse(size(m.beta))),[3,2,1])
-        stderror_ranef = fill(Missing,size(m.sigma))
+        stderror_ranef = fill(nothing,size(m.sigma))
         stderror = cat(stderror_fixef,stderror_ranef,dims=3)
     else
-        group_f = repeat(["fixef"],size(m.beta,1),size(m.beta,ndims(m.beta)))
+        group_f = repeat([nothing],size(m.beta,1),size(m.beta,ndims(m.beta)))
         group_s = repeat(["ranef"],size(m.beta,1),size(m.sigma,ndims(m.beta)))
-        stderror = fill(Missing,size(estimate))
+        stderror = fill(nothing,size(estimate))
     end
-    print(size(group_f))
     group = cat(group_f,group_s,dims=ndims(m.beta))
     return Float64.(estimate),stderror,group
 end
 function make_estimate(m::UnfoldLinearModel)
-    return Float64.(m.beta),fill(Missing,size(m.beta)),"fixef"
+    return Float64.(m.beta),fill(Missing,size(m.beta)),nothing
 end
 
 # Return the column names of the basis functions.
