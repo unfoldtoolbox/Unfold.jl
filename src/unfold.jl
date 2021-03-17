@@ -20,6 +20,7 @@ using ProgressMeter
 using DocStringExtensions # for Docu
 using MLBase # for crossVal
 using Splines2 # for spline predictors
+using PyMNE
 
 #using IncompleteLU
 import Base.(+) # overwrite for DesignMatrices
@@ -34,8 +35,10 @@ include("condense.jl")
 include("solver.jl")
 include("predict.jl")
 include("splinepredictors.jl")
+include("clusterpermutation.jl")
 #include("plot.jl") # don't include for now
 export fit, designmatrix, firbasis,hrfbasis,condense_long,UnfoldLinearModel,UnfoldLinearMixedModel
 export unfoldfit # might be renamend to fit! in the future
 export predict,spl
+export cluster_permutation_test 
 end # module
