@@ -104,23 +104,27 @@ function unfoldfit(::Type{UnfoldLinearMixedModel},Xobj::DesignMatrix,data::Union
     βsc, θsc= similar(coef(mm)), similar(mm.θ) # pre allocate
     p,k = length(βsc), length(θsc)
     #β_names = (Symbol.(fixefnames(mm))..., )
-    β_names = (Symbol.(vcat(coefnames(Xobj.formulas)...))...,)
+    #@debug println((fixef(mm)))
+    β_names = (Symbol.(vcat(fixefnames(mm)...))...,)
     β_names = (unique(β_names)...,)
     @debug println("beta_names $β_names")
     @debug println("uniquelength: $(length(unique(β_names))) / $(length(β_names))")
     # for each channel
-    @showprogress .1 for ch in range(1,stop=nchan)
+    prog = Progress(nchan*ntime,.1)
+    #@showprogress .1 
+    for ch in range(1,stop=nchan)
         # for each time
         for t in range(1,stop=ntime)
 
-            @debug println("ch:$ch/$nchan, t:$t/$ntime")
-            @debug println("data-size: $(size(data))")
+            #@debug "ch:$ch/$nchan, t:$t/$ntime"
+            @debug "data-size: $(size(data))"
             #@debug println("mixedModel: $(mm.feterms)")
             if ndims(data) == 3
                 refit!(mm,data[ch,t,:])
             else
                 refit!(mm,data[ch,:])
             end
+            #@debug println(MixedModels.fixef!(βsc,mm))
             β = NamedTuple{β_names}(MixedModels.fixef!(βsc, mm))
 
             out = (
@@ -133,8 +137,10 @@ function unfoldfit(::Type{UnfoldLinearMixedModel},Xobj::DesignMatrix,data::Union
             timeIX = ifelse(dataDim==2,NaN,t)
             )
             push!(df,out)
+            ProgressMeter.next!(prog; showvalues = [(:channel,ch), (:time,t)])
         end
     end
+    
     modelinfo = MixedModelBootstrap(
         df,
         deepcopy(mm.λ),
