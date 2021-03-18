@@ -509,6 +509,26 @@ function StatsModels.coefnames(term::TimeExpandedTerm)
         return name.*" : ".*kron(terms.*" : ",string.(colnames))
 end
 
+function termnames(term::TimeExpandedTerm)
+        terms = coefnames(term.term)
+        colnames = term.basisfunction.colnames
+        if typeof(terms) == String
+                terms = [terms]
+        end
+        return vcat(repeat.([[t] for t in terms],length(colnames))...)
+end
+
+
+function colname_basis(term::TimeExpandedTerm)
+        terms = coefnames(term.term)
+        colnames = term.basisfunction.colnames
+        if typeof(terms) == String
+                terms = [terms]
+        end
+        return repeat(colnames,length(terms))
+end
+
+
 function StatsModels.coefnames(terms::AbstractArray{<:FormulaTerm})
         return coefnames.(Base.getproperty.(terms,:rhs))
 end
