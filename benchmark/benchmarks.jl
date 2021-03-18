@@ -13,7 +13,8 @@ seed!(3)
 # Preparatory code
 include("../test/test_utilities.jl"); # to load the simulated data
 
-data, evts = loadtestdata("testcase6","test/")
+data,evts = loadtestdata("testCase6",dataPath=(@__DIR__)*"/../test/data") #
+
 categorical!(evts,:subject);
 categorical!(evts,:stimulus);
 evts.subjectB = evts.subject;
