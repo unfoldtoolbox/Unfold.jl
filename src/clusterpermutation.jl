@@ -45,7 +45,7 @@ fs = 1 ./Float64(times.step)
 # get p-values, we have to shift by the test_times[1] though
 p_df = DataFrame(:from=>[o[1].start ./ fs - test_times[1] for o in obs_cluster[1]],:to=>[o[1].stop ./fs - test_times[1] for o in obs_cluster[1]],:pval=>p_vals)
 
-p_df[!,:coefname] .= coefnames(mres)[coeffOfInterest]
+p_df[!,:coefname] .= coefnames(mres.X.formulas)[2][coeffOfInterest] # yeah this might break :S
 return p_df
 #println(p_vals)
 #h = hist(perm_H0,bins=100)
