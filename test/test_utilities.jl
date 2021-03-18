@@ -18,8 +18,8 @@ rename!(evts_grid,["conditionA","continuousA"])
 return evts_grid
 end
 
-
-function simulate_lmm(τ = 1.5,fs = 12)
+simulate_lmm(args...; kwargs...) = simulate_lmm(Random.GLOBAL_RNG, args...; kwargs...)
+function simulate_lmm(rng::AbstractRNG, τ = 1.5,fs = 12; β=[0.,-1.],σs=[1,1,1])
 
     subj_btwn = item_btwn = both_win = nothing
 #subj_btwn = Dict("age" => ["O", "Y"])
@@ -37,14 +37,26 @@ evt = DataFrame(simdat_crossed(20, 30,
                     both_win = both_win))
 
 #    f1 = @formula dv ~ 1 + age * condition  + (1+condition|item) + (1+condition|subj);
-f1 = @formula dv ~ 1 + stimType  + (1|item) + (1+stimType|subj);
+f1 = @formula dv ~ 1 + stimType  + (1+stimType|subj) + (1|item);
 m = MixedModels.fit(MixedModel, f1, evt)
 
 # set the random effects
 
+#gen_han(τ,fs,1)
+basis = gen_han(τ,fs,2)
 
-# XXX Todo: set sigma somehow
+epoch_dat = zeros(Int(τ*fs),size(evt,1))
+for t = 1:size(epoch_dat,1)
+    b = basis[t]
+    MixedModelsSim.update!(m,create_re(b .* σs[1],b .*σs[2]),create_re( b.* σs[3]))
+    simulate!(rng,m,β = [b .* β[1] ,b .* β[2]], σ = 1.)
+    epoch_dat[t,:] = m.y
+end
 
+epoch_dat = reshape(epoch_dat,(1,size(epoch_dat)...))
+
+return evt,epoch_dat
+end
 
 
 function gen_han(τ,fs,peak)
@@ -55,19 +67,3 @@ function gen_han(τ,fs,peak)
     return sig
 end
 
-
-#gen_han(τ,fs,1)
-basis = gen_han(τ,fs,2)
-
-epoch_dat = zeros(Int(τ*fs),size(evt,1))
-for t = 1:size(epoch_dat,1)
-    b = basis[t]
-    MixedModelsSim.update!(m,create_re(b .* 0.,b .*0),create_re( b.* 1.))
-    simulate!(MersenneTwister(t),m,β = [b .* 0.,b .* -1.], σ = 1.)
-    epoch_dat[t,:] = m.y
-end
-
-epoch_dat = reshape(epoch_dat,(1,size(epoch_dat)...))
-
-return evt,epoch_dat
-end

@@ -2,6 +2,8 @@
 using Random
 using ProgressMeter
 using PyMNE # not in Unfold.jl currently
+using MixedModelsPermutations
+
 function cluster_permutation_test(mres::UnfoldLinearMixedModel,
                     dat::Array,
                     times::StepRangeLen,
@@ -43,7 +45,7 @@ fs = 1 ./Float64(times.step)
 # get p-values, we have to shift by the test_times[1] though
 p_df = DataFrame(:from=>[o[1].start ./ fs - test_times[1] for o in obs_cluster[1]],:to=>[o[1].stop ./fs - test_times[1] for o in obs_cluster[1]],:pval=>p_vals)
 
-p_df[!,:coefname] .= coefnames(mm)[coeffOfInterest]
+p_df[!,:coefname] .= coefnames(mres)[coeffOfInterest]
 return p_df
 #println(p_vals)
 #h = hist(perm_H0,bins=100)
@@ -59,7 +61,7 @@ function cluster_permutation(mres,dat,tRange,coeffOfInterest,nPerm)
     mm = unfold.LinearMixedModel_wrapper(mres.X.formulas,dat[1,1,:],mres.X.Xs)
     
     chIx = 1 # for now we only support 1 channel anyway
-    @showprogress "Permuting over Time" for tIx =1:length(tRange)
+    @showprogress "Processing Timepoints" for tIx =1:length(tRange)
         println(tIx)
         # splice in the correct data for residual calculation
         mm.y .= dat[chIx,tRange[tIx],:]
