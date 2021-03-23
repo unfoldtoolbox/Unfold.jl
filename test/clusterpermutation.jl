@@ -5,7 +5,12 @@ using DSP
 include("test_utilities.jl")
 τ = 1.5
 fs = 18
-evt,epoch_dat = simulate_lmm(τ,fs);
+evt,epoch_dat = simulate_lmm(MersenneTwister(1), τ,fs,  β=[0.,-1.],
+    σs=[1,1,1],
+    σ=1,
+    n_sub = 20,
+    n_item = 30,
+    noise_type="AR-exponential");
 
 #mres,res = unfold.fit(UnfoldLinearMixedModel,f,evt,dat[chIx:chIx,:,:].*1e6 ,times,contrasts=Dict(:category => EffectsCoding(), :condition => EffectsCoding()));
 
@@ -16,7 +21,7 @@ mres,res = unfold.fit(UnfoldLinearMixedModel,f2,evt,epoch_dat,times)
 
 p_df = cluster_permutation_test(mres,epoch_dat,times,2)
 
-@test p_df[1,:pval] == 0.014
+@test p_df[1,:pval] == 0.036
 
 #--- Testing cluster_permutation call
 tRange = 1:length(times)
