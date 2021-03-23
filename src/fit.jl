@@ -199,10 +199,7 @@ function LinearMixedModel_wrapper(form,data::Array{<:Union{TData},1},Xs;wts = []
     if m != size(data)[1]
         Xs = changeMatSize!(size(data)[1],Xs[1],Xs[2:end])
     end
-    println(size(Xs[1]))
-    println(size(Xs[2]))
-    println(size(data))
-
+    
     y = (reshape(float(data), (:, 1)))
 
     MixedModels.LinearMixedModel(y, Xs, form, wts)
