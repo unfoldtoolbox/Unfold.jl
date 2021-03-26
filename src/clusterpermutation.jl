@@ -70,16 +70,19 @@ end
 
 
 
+cluster_permutation(args...;kwargs...) = cluster_permutation(MersenneTwister(1),args...;kwargs...)
 
-function cluster_permutation(mres,dat,tRange,coeffOfInterest,nPerm)
+function cluster_permutation(rng::AbstractRNG,mres,dat,tRange,coeffOfInterest,nPerm)
     permDat = Matrix{Float64}(undef,length(tRange),nPerm)
     mm_outer = unfold.LinearMixedModel_wrapper(mres.X.formulas,dat[1,1,:],mres.X.Xs)
     
     chIx = 1 # for now we only support 1 channel anyway
     #
-    #Threads.@threads
-    @showprogress "Processing Timepoints" for tIx =1:length(tRange)
-        println(tIx)
+    #p = Progress(length(tRange))
+    #Threads.@threads for tIx =1:length(tRange)
+    #@showprogress "Processing Timepoints" 
+    for tIx =1:length(tRange)
+        #println(tIx)
         # splice in the correct data for residual calculation
         mm = deepcopy(mm_outer)
         mm.y .= dat[chIx,tRange[tIx],:]
@@ -93,13 +96,14 @@ function cluster_permutation(mres,dat,tRange,coeffOfInterest,nPerm)
         H0[coeffOfInterest] = 0
         # run the permutation
         # important here is to set the same seed to keep flip all time-points the same
-        perm = permutation(MersenneTwister(1),nPerm,mm;β=H0,blup_method=olsranef,use_threads=false); # constant rng to keep autocorr & olsranef for singular models
+        perm = permutation(deepcopy(rng),nPerm,mm;β=H0,blup_method=olsranef,use_threads=false); # constant rng to keep autocorr & olsranef for singular models
         
         # extract the z-value
         perm_z = [m.z for m in perm.coefpvalues if String(m.coefname)==coefnames(mm)[coeffOfInterest]]
     
         # save it
         permDat[tIx,:] = perm_z
+        #next!(p)
     end
     return permDat
     end
