@@ -1,37 +1,37 @@
 using StatsBase: var
-function solver_default(X,data::AbstractArray{T,2}) where {T<:Union{Missing, <:Number}}
+function solver_default(X,data::AbstractArray{T,2};stderror=false) where {T<:Union{Missing, <:Number}}
     # likely much larger matrix, using lsqr
-    modelinfo = []
+    minfo = []
     beta = Array{Float64}(undef,size(data,1),size(X,2))
    
     @showprogress .1 for ch in 1:size(data,1)
         ix = .!ismissing.(data[ch,:])
         beta[ch,:],h = lsmr(X[ix,:],data[ch,ix],log=true)
-        push!(modelinfo,h)   
+        push!(minfo,h)   
     end
-   
-    return beta, modelinfo
+
+    if stderror
+        stderror = calculate_stderror(X,data,beta)
+        minfo = modelinfo(modelinfo,stderror)
+    end
+    return beta, minfo
 end
-struct lsmr_modelinfo
+struct modelinfo
     history
     stderror
 end
-function solver_lsmr_se(X,data::AbstractArray{T,2}) where {T<:Union{Missing, <:Number}}
-    # likely much larger matrix, using lsqr
-    modelinfo = []
-    beta = Array{Float64}(undef,size(data,1),size(X,2))
-   
-    @showprogress .1 for ch in 1:size(data,1)
-        ix = .!ismissing.(data[ch,:])
-        beta[ch,:],h = lsmr(X[ix,:],data[ch,ix],log=true)
-        push!(modelinfo,h)   
-    end
+
+function calculate_stderror(Xdc,data::Matrix{T},beta) where {T<:Union{Missing, <:Number}}  
+
+    # remove missings
     ix = any(.!ismissing.(data),dims=1)[1,:]
-    stderror = calculate_stderror(X[ix,:],data[:,ix],beta)
-    return beta, lsmr_modelinfo(modelinfo,stderror)
-end
-function calculate_stderror(Xdc,data,beta)    
-    # Hat matrix
+    if length(ix)!=size(data,2)
+        @warn("Limitation: Missing data are calculated over all channels for standard error")
+    end
+    data = data[:,ix]
+    Xdc = Xdc[ix,:]
+    
+    # Hat matrix only once
     hat_prime = inv(Matrix( Xdc'*Xdc))
     # Calculate residual variance
     @warn("Autocorrelation was NOT taken into account. Therefore SE are UNRELIABLE. Use at your own discretion")
@@ -44,12 +44,30 @@ function calculate_stderror(Xdc,data,beta)
         #se = sqrt(diag(cfg.contrast(:,:)*hat*cfg.contrast(:,:)'));
         se[ch,:] = diag(hat)
     end
-    
     return se
-    
-    
 end
-function solver_default(X,data::AbstractArray{T,3}) where {T<:Union{Missing, <:Number}}
+function calculate_stderror(X,  data::AbstractArray{T,3},beta) where {T<:Union{Missing, <:Number}}  
+#function calculate_stderror(Xdc,data::AbstractArray{T,2},beta) where {T<:Union{Missing, <:Number}}  
+
+    # Hat matrix
+    hat_prime = inv(Matrix( X'*X))
+    # Calculate residual variance
+    @warn("Autocorrelation was NOT taken into account. Therefore SE are UNRELIABLE. Use at your own discretion")
+
+    se = Array{Float64}(undef,size(data,1),size(data,2),size(X,2))
+    for ch = 1:size(data,1)
+        for t = 1:size(data,2)
+            ix = .!ismissing.(data[ch,t,:])
+            residualVar = var(data[ch,t,ix] .- X[ix,:]*beta[ch,t,:]);
+            @assert(!isnan(residualVar),"residual Variance was NaN")
+            hat = hat_prime .* residualVar
+            #se = sqrt(diag(cfg.contrast(:,:)*hat*cfg.contrast(:,:)'));
+            se[ch,t,:] = diag(hat)
+        end
+    end
+    return se
+end
+function solver_default(X,data::AbstractArray{T,3};stderror=false) where {T<:Union{Missing, <:Number}}
        beta = Array{Union{Missing,Number}}(undef,size(data,1),size(data,2),size(X,2))
        @showprogress .1 for ch in 1:size(data,1)
            for t in 1:size(data,2)
@@ -59,8 +77,12 @@ function solver_default(X,data::AbstractArray{T,3}) where {T<:Union{Missing, <:N
            end
        end
    
-       modelinfo = [undef] # no history implemented (yet?)
-       return beta, modelinfo
+       minfo = [undef] # no history implemented (yet?)
+       if stderror
+            stderror = calculate_stderror(X,data,beta)
+            minfo = modelinfo(minfo,stderror)
+        end
+       return beta, minfo
 end
 
 function solver_b2b(X,data::AbstractArray{T,3},cross_val_reps = 10) where {T<:Union{Missing, <:Number}}

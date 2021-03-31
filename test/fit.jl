@@ -75,11 +75,11 @@ for k in 1:4
 end
 
 # Special solver solver_lsmr_se with Standard Error
-
-m_tul_se,m_tul_results_se = fit(UnfoldLinearModel,f,evts,data_r,basisfunction,solver=unfold.solver_lsmr_se)
+se_solver = solver=(x,y)->unfold.solver_default(x,y,stderror=true)
+m_tul_se,m_tul_results_se = fit(UnfoldLinearModel,f,evts,data_r,basisfunction,solver=se_solver)
 @test all(m_tul_results_se.estimate .== m_tul_results.estimate)
 
-m_tul_se,m_tul_results_se = fit(UnfoldLinearModel,f,evts,data_r.+randn(size(data_r)).*2,basisfunction,solver=unfold.solver_lsmr_se)
+m_tul_se,m_tul_results_se = fit(UnfoldLinearModel,f,evts,data_r.+randn(size(data_r)).*2,basisfunction,solver=se_solver)
 @test !all(isnothing.(m_tul_results_se.stderror ))
 
 ##
