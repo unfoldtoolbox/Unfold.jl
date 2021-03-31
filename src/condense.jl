@@ -118,7 +118,12 @@ function make_estimate(m::UnfoldLinearMixedModel)
     return Float64.(estimate),stderror,group
 end
 function make_estimate(m::UnfoldLinearModel)
-    return Float64.(m.beta),fill(nothing,size(m.beta)),fill(nothing,size(m.beta))
+    if hasfield(typeof(m.modelinfo),:stderror)
+        stderror = Float64.(m.modelinfo.stderror)
+    else
+        stderror = fill(nothing,size(m.beta))
+    end
+    return Float64.(m.beta),stderror,fill(nothing,size(m.beta))
 end
 
 # Return the column names of the basis functions.

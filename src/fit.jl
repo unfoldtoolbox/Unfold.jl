@@ -48,7 +48,7 @@ function fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::Fo
     @timeit to "unfoldDesignmat" Xs = designmatrix(type,f,tbl,basisfunction;kwargs...)
 
     # Fit the model
-    @timeit to "unfoldfit" ufModel = unfoldfit(type,Xs,data)
+    @timeit to "unfoldfit" ufModel = unfoldfit(type,Xs,data;kwargs...)
 
     @timeit to "unfoldCondense" c = condense_long(ufModel)
     @debug(to)

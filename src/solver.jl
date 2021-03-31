@@ -1,3 +1,4 @@
+using StatsBase: var
 function solver_default(X,data::AbstractArray{T,2}) where {T<:Union{Missing, <:Number}}
     # likely much larger matrix, using lsqr
     modelinfo = []
@@ -11,7 +12,43 @@ function solver_default(X,data::AbstractArray{T,2}) where {T<:Union{Missing, <:N
    
     return beta, modelinfo
 end
+struct lsmr_modelinfo
+    history
+    stderror
+end
+function solver_lsmr_se(X,data::AbstractArray{T,2}) where {T<:Union{Missing, <:Number}}
+    # likely much larger matrix, using lsqr
+    modelinfo = []
+    beta = Array{Float64}(undef,size(data,1),size(X,2))
    
+    @showprogress .1 for ch in 1:size(data,1)
+        ix = .!ismissing.(data[ch,:])
+        beta[ch,:],h = lsmr(X[ix,:],data[ch,ix],log=true)
+        push!(modelinfo,h)   
+    end
+    ix = any(.!ismissing.(data),dims=1)[1,:]
+    stderror = calculate_stderror(X[ix,:],data[:,ix],beta)
+    return beta, lsmr_modelinfo(modelinfo,stderror)
+end
+function calculate_stderror(Xdc,data,beta)    
+    # Hat matrix
+    hat_prime = inv(Matrix( Xdc'*Xdc))
+    # Calculate residual variance
+    @warn("Autocorrelation was NOT taken into account. Therefore SE are UNRELIABLE. Use at your own discretion")
+    
+    se = Array{Float64}(undef,size(data,1),size(Xdc,2))
+    for ch = 1:size(data,1)
+        residualVar = var(data[ch,:] .- Xdc*beta[ch,:]);
+        @assert(!isnan(residualVar),"residual Variance was NaN")
+        hat = hat_prime .* residualVar
+        #se = sqrt(diag(cfg.contrast(:,:)*hat*cfg.contrast(:,:)'));
+        se[ch,:] = diag(hat)
+    end
+    
+    return se
+    
+    
+end
 function solver_default(X,data::AbstractArray{T,3}) where {T<:Union{Missing, <:Number}}
        beta = Array{Union{Missing,Number}}(undef,size(data,1),size(data,2),size(X,2))
        @showprogress .1 for ch in 1:size(data,1)
