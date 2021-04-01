@@ -33,6 +33,13 @@ data_e_missing[1,25,end-5:end] .= missing
 m_mul_missing,m_mul_missing_results = fit(UnfoldLinearModel,f,evts,data_e_missing,times)
 @test m_mul_missing_results.estimate ≈ m_mul_results.estimate
 
+# Special solver solver_lsmr_se with Standard Error
+se_solver = solver=(x,y)->unfold.solver_default(x,y,stderror=true)
+m_mul_se,m_mul_results_se = fit(UnfoldLinearModel,f,evts,data_e,times,solver=se_solver)
+@test all(m_mul_results_se.estimate .== m_mul_results.estimate)
+@test !all(isnothing.(m_tul_results_se.stderror ))
+
+
 #---------------------------------#
 ## Timexpanded Univariate Linear ##
 #---------------------------------#
@@ -78,9 +85,12 @@ end
 se_solver = solver=(x,y)->unfold.solver_default(x,y,stderror=true)
 m_tul_se,m_tul_results_se = fit(UnfoldLinearModel,f,evts,data_r,basisfunction,solver=se_solver)
 @test all(m_tul_results_se.estimate .== m_tul_results.estimate)
-
-m_tul_se,m_tul_results_se = fit(UnfoldLinearModel,f,evts,data_r.+randn(size(data_r)).*2,basisfunction,solver=se_solver)
 @test !all(isnothing.(m_tul_results_se.stderror ))
+
+#m_mul_se,m_mul_results_se = fit(UnfoldLinearModel,f,evts,data_e.+randn(size(data_e)).*5,times,solver=se_solver)
+#plot_results(m_mul_results_se[m_mul_results_se.channel.==1,:],se=true)
+#m_tul_se,m_tul_results_se = fit(UnfoldLinearModel,f,evts,data_r.+randn(size(data_r)).*5,basisfunction,solver=se_solver)
+#plot_results(m_tul_results_se[m_tul_results_se.channel.==1,:],se=true)
 
 ##
 data_long,evts_long = loadtestdata("test_case_1c") #
