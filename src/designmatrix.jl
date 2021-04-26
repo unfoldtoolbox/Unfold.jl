@@ -315,8 +315,8 @@ function StatsModels.modelcols(term::TimeExpandedTerm{<:Union{<:RandomEffectsTer
 
         end
 
-        group = tbl[!,rhs.sym]
-        time = tbl[!,term.eventfields[1]]
+        group = tbl[rhs.sym]
+        time = tbl[term.eventfields[1]]
 
         # get the from-to onsets of the grouping varibales
         onsets = time_expand_getRandomGrouping(group,time,term.basisfunction)
@@ -447,12 +447,15 @@ function time_expand(X,term,tbl)
         ncolsXdc = ncolsBasis*ncolsX
 
         # this is the predefined eventfield, usually "latency"
-        onsets = tbl[!,term.eventfields[1]]
+        #println(term.eventfields)
+        #println(tbl[term.eventfields[1]][1:10])
+        #@show tbl
+        onsets = tbl[term.eventfields[1]]
 
         if typeof(term.eventfields) <:Array && length(term.eventfields) == 1
-                bases = term.basisfunction.kernel.(tbl[!,term.eventfields[1]])
+                bases = term.basisfunction.kernel.(tbl[term.eventfields[1]])
         else
-                bases = term.basisfunction.kernel.(eachrow(tbl[!,term.eventfields]))
+                bases = term.basisfunction.kernel.(eachrow(tbl[term.eventfields]))
         end
 
         # generate rowindices
