@@ -25,7 +25,7 @@ The julia toolbox is a type of playground and aspires to combine unfold & unmixe
 | mix different basisfunctions      |        |         | x         |
 | different timewindows per event   |        |         | x         |
 | mixed models            |        | x       | x         |
-| item & subject effects  |        | x       | (x)         |
+| item & subject effects  |        | x       | x         |
 
 ## Install
 ```julia
