@@ -3,6 +3,8 @@ using Random
 using ProgressMeter
 using PyMNE # not in Unfold.jl currently
 using MixedModelsPermutations
+#using BlockDiagonals # for olsranef
+using StatsModels  # for olsranef
 
 function cluster_permutation_test(mres::UnfoldLinearMixedModel,
                     dat::Array,
@@ -62,7 +64,7 @@ p_df = DataFrame(:from=>fromList,:to=>toList,:pval=>p_vals)
 
 p_df[!,:coefname] .= coefnames(mres.X.formulas)[2][coeffOfInterest] # yeah this might break :S
 return p_df
-#println(p_vals)
+#println(p_vals) 
 #h = hist(perm_H0,bins=100)
 #vlines!(h.axis,abs.(obs_cluster[2]),color="red")
 
@@ -82,7 +84,7 @@ function cluster_permutation(rng::AbstractRNG,mres,dat,tRange,coeffOfInterest,nP
     #Threads.@threads for tIx =1:length(tRange)
     #@showprogress "Processing Timepoints" 
     for tIx =1:length(tRange)
-        #println(tIx)
+        println(string(tIx))
         # splice in the correct data for residual calculation
         mm = deepcopy(mm_outer)
         mm.y .= dat[chIx,tRange[tIx],:]
@@ -116,3 +118,46 @@ function cluster_permutation(rng::AbstractRNG,mres,dat,tRange,coeffOfInterest,nP
     end
     
     pymne_cluster(data,clusterFormingThreshold::String;kwargs...) = pymne_cluster(data,Dict(:start=>0,:step=>0.2);kwargs...)
+
+
+
+function olsranefjf(model::LinearMixedModel{T}) where {T}
+    
+    l = size(model.reterms)[1]
+
+    mat = Array{Any}(undef, l);
+    code = Array{Any}(undef, l);
+    ### I get the contrasts 
+    for i in 1:l
+        trm = model.reterms[i];
+        dim = size(trm.z)[1];
+        cd = StatsModels.ContrastsMatrix(EffectsCoding(), trm.levels).matrix;
+        cd = kron(cd,I(dim));
+        code[i] = cd;
+        mat[i] = trm*cd;
+    end
+    mat
+    X = hcat(mat...)
+    X1 = hcat(ones(size(X)[1]), X)  
+    fixef_res = response(model) - model.X*model.β;
+    flatblups = X1'X1 \ X1'fixef_res;
+    flatblups = deleteat!(flatblups,1)
+    
+    code_all = BlockDiagonal([x for x in code])
+    
+    flatblups = code_all*flatblups
+
+    blups = Vector{Matrix{T}}()
+
+    offset = 1
+    for trm in model.reterms
+        chunksize = size(trm, 2)
+        ngrps = length(trm.levels)
+        npreds = length(trm.cnames)
+        re = Matrix{T}(reshape(view(flatblups, offset:(offset+chunksize-1)),
+                               npreds, ngrps))
+        offset += chunksize
+        push!(blups, re)
+    end
+    return blups,dummy_scalings(model.reterms)
+end
