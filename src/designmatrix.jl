@@ -268,6 +268,7 @@ calculates the actual designmatrix for a timeexpandedterm. Multiple dispatch on 
 function StatsModels.modelcols(term::TimeExpandedTerm,tbl)
 
         X = modelcols(term.term,tbl)
+
         time_expand(X,term,tbl)
 end
 
@@ -290,7 +291,7 @@ function StatsModels.modelcols(term::TimeExpandedTerm{<:Union{<:RandomEffectsTer
 # exchange this to get ZeroCorr to work
 
 
-
+        tbl = DataFrame(tbl)
         # get the non-timeexpanded reMat
         reMat = modelcols(term.term,tbl)
 
@@ -360,7 +361,7 @@ function StatsModels.modelcols(term::TimeExpandedTerm{<:Union{<:RandomEffectsTer
 
 
                 #println("$g,$time_start,$time_stop")
-                refs[Int64(time_start):Int64(time_stop)] .= g
+                refs[Int64(time_start):Int64(time_stop)] .= i
         end
 
         # Other variables with implementaions taken from the LinerMixedModel function
@@ -449,7 +450,7 @@ function time_expand(X,term,tbl)
         # this is the predefined eventfield, usually "latency"
         #println(term.eventfields)
         #println(tbl[term.eventfields[1]][1:10])
-        #@show tbl
+        tbl = DataFrame(tbl)
         onsets = tbl[!,term.eventfields[1]]
 
         if typeof(term.eventfields) <:Array && length(term.eventfields) == 1
