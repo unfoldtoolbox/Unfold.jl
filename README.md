@@ -30,7 +30,6 @@ The julia toolbox is a type of playground and aspires to combine unfold & unmixe
 ## Install
 ```julia
 using Pkg;
-Pkg.add(url = "https://github.com/mclements/Splines2.jl")
 Pkg.add(url = "https://github.com/unfoldtoolbox/unfold.jl")
 ```
 
