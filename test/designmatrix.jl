@@ -173,6 +173,6 @@ Xdc          = designmatrix(UnfoldLinearMixedModel,f,evts,basisfunction)
 # test bug with not sequential subjects
 evts_nonseq = copy(evts)
 evts_nonseq = evts_nonseq[.!(evts_nonseq.subject .== 2),:]
-Xdc_zc          = designmatrix(UnfoldLinearMixedModel,f_zc,evts_nonseq,basisfunction)
+Xdc_nonseq          = designmatrix(UnfoldLinearMixedModel,f_zc,evts_nonseq,basisfunction)
 # This used to lead to problems here:
-unfoldfit(UnfoldLinearMixedModel,Xdc_zc,data');
+unfoldfit(UnfoldLinearMixedModel,Xdc_nonseq,data');
