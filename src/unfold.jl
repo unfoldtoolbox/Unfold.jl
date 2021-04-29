@@ -20,7 +20,7 @@ using StaticArrays # for MixedModels extraction of parametrs (inherited from Mix
 using ProgressMeter
 using DocStringExtensions # for Docu
 using MLBase # for crossVal
-using Splines2 # for spline predictors
+using BSplines # for spline predictors
 
 
 #using IncompleteLU
