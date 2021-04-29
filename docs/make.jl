@@ -3,6 +3,7 @@ using unfold
 using DocStringExtensions
 using Plots
 gr()
+#unicodeplots()
 
 makedocs(sitename="Unfold.jl",
         root = joinpath(dirname(pathof(unfold)), "..", "docs"),
