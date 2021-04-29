@@ -4,6 +4,10 @@ title: "Overlap Correction with Linear Models (aka unfold.jl)"
 date: 2021-04-28
 ---
 
+```@setup index
+using Plots; gr()
+Plots.reset_defaults()
+```
 
 First we have to install some packages. in julia you would do this either by putting a "]" in the REPL ("julia-commandline").
 This should result in
