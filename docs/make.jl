@@ -1,6 +1,9 @@
 using Documenter
 using unfold
 using DocStringExtensions
+using Plots
+gr()
+
 makedocs(sitename="Unfold.jl",
         root = joinpath(dirname(pathof(unfold)), "..", "docs"),
         prettyurls = get(ENV, "CI", nothing) == "true",
