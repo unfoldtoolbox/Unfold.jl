@@ -11,7 +11,7 @@ makedocs(sitename="Unfold.jl",
         pages = [
             "index.md",
             "LM Tutorial" =>"lm_tutorial.md",
-           # "LMM Tutorial" =>"lmm_tutorial.md",
+            "LMM Tutorial" =>"lmm_tutorial.md",
         ])
 
 deploydocs(; repo = "github.com/unfoldtoolbox/unfold.jl", push_preview = true)

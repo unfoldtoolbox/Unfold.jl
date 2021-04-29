@@ -72,7 +72,7 @@ This is a "traditional mass-univariate analysis".
 # we have multi channel support
 data_r = reshape(data,(1,:))
 # cut the data into epochs
-data_epochs,times = unfold.epoch(data=data_r,tbl=evts,τ=(-0.4,0.8),sfreq=50)
+data_epochs,times = unfold.epoch(data=data_r,tbl=evts,τ=(-0.4,0.8),sfreq=50);
 ```
 
 
@@ -90,7 +90,7 @@ f  = @formula 0~1+conditionA+conditionB # 0 as a dummy, we will combine wit data
 
 We fit the `UnfoldLinearModel` to the data
 ```@example Main
-m,results = unfold.fit(UnfoldLinearModel,f,evts,data_epochs,times)
+m,results = unfold.fit(UnfoldLinearModel,f,evts,data_epochs,times);
 ```
 
 
@@ -114,12 +114,9 @@ first(results,6)
 
 We can also plot it:
 ```@example Main
-
-
 Plots.plot(results.colname_basis,results.estimate,
         group=results.term,
         layout=1,legend=:outerbottom)
-# equivalent: plot(m)
 ```
 
 
