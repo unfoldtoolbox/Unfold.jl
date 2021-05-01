@@ -4,12 +4,12 @@
 
 This tool combines mass-univariate linear (mixed) models with overlap correction.
 
-This kind of overlap correction is also known as encoding modeling, linear deconvolution, Temporal Response Functions (TRFs) and probably under other names. Typical fMRI models with HRF-basis functions are also supported.
+This kind of overlap correction is also known as encoding modeling, linear deconvolution, Temporal Response Functions (TRFs) and probably under other names. fMRI models with HRF-basis functions are also supported.
 
 ## Relation to Unfold (matlab)
 The matlab toolbox is recommended for research work. It is richer in features, better documented and tested.
 
-The julia toolbox is a type of playground and aspires to combine Unfold & unmixed in a single toolbox.
+The julia toolbox is a type of research-playground, but offers LinearMixedModel support.
 
 
 | Feature                 | Unfold | unmixed | Unfold.jl |
@@ -45,22 +45,33 @@ For some of the testing functionality in the `test/` path, you will also need
 ## Usage
 For a quickstart:
 
-1. Timeexpansion **No**, Mixed **No**  : `fit(UnfoldLinearModel,f,evts,data_epoch,times)`
-1. Timeexpansion **Yes**, Mixed **No** : `fit(UnfoldLinearModel,f,evts,data,basisfunction)`
-1. Timeexpansion **No**, Mixed **Yes** : `fit(UnfoldLinearMixedModel,f,evts,data_epoch,times)`
-1. Timeexpansion **Yes**, Mixed **Yes**: `fit(UnfoldLinearMixedModel,f,evts,data,basisfunction)`
+```julia
+f = @formula 0~1+condA
+events::DataFrame
+data::Array{Float64,2}
+epochs::Array{Float64,3} # channel x time x epochs (n-epochs == nrows(events))
+times = range(0,length=size(epochs,3),step=1/sampling_rate)
 
-With **formula** e.g. `@formula 0~1+condA`, **evts** a `DataFrame` with events, **data** an `Array{Number,}` and  **basisfunction**: `firbasis(τ=[-0.1,0.5],srate=50)` or **times** `range(-0.1,0.5,step=1/50)`
+basisfunction::Unfold.BasisFunction
+basis = firbasis(τ=(-0.3,0.5),srate=250)
+```
+
+1. Timeexpansion **No**, Mixed **No**  : `fit(UnfoldLinearModel,formula,events,epochs,times)`
+1. Timeexpansion **No**, Mixed **Yes** : `fit(UnfoldLinearMixedModel,formula,events,epochs,times)`
+1. Timeexpansion **Yes**, Mixed **No** : `fit(UnfoldLinearModel,Dict("eventname"=>(formula,basisfunction)),events,data)`
+1. Timeexpansion **Yes**, Mixed **Yes**: `fit(UnfoldLinearMixedModel,Dict("eventname"=>(formula,basisfunction),"event2"=>(formula2,basis2)),events,data)`
 
 
 ## Documentation
-Still being written. Tutorials see `doc/lmm_tutorial.html` & `doc/lm_tutorial.html`
+Most functions have documentation, e.g. `?Unfold.fit`
+
+Tutorials see `doc/lmm_tutorial.html` & `doc/lm_tutorial.html` - more to come. Contributions very welcome!
 
 
 ## Contributors (alphabetically)
-**Phillip Alday**
-**Benedikt Ehinger**
-**Dave Kleinschmidt**
+- **Phillip Alday**
+- **Benedikt Ehinger**
+- **Dave Kleinschmidt**
 
 ## Acknowledgements
 This work was supported by the Center for Interdisciplinary Research, Bielefeld (ZiF) Cooperation Group "Statistical models for psychological and linguistic data".
