@@ -10,7 +10,7 @@ date: 2021-04-29
 using StatsModels, MixedModels, DataFrames
 import Plots
 using Unfold
-include("../test/test_utilities.jl"); # function to load the simulated data
+include("../../test/test_utilities.jl"); # function to load the simulated data
 ```
 
 
