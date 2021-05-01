@@ -1,4 +1,4 @@
-module unfold
+module Unfold
 
 using PyMNE
 using SparseArrays
