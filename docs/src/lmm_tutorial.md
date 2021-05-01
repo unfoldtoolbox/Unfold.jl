@@ -27,7 +27,7 @@ That is, the `(1|item)` cannot be modelled at the moment.
 
 ```@example Main
 
-data, evts = loadtestdata("testcase3","../test/")
+data, evts = loadtestdata("testcase3",dataPath = "../../test/")
 data = data.+ 0.1*randn(size(data)) # we have to add minimal noise, else mixed models crashes.
 
 categorical!(evts,:subject);

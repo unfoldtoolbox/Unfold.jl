@@ -8,6 +8,7 @@ gr()
 makedocs(sitename="Unfold.jl",
         root = joinpath(dirname(pathof(Unfold)), "..", "docs"),
         prettyurls = get(ENV, "CI", nothing) == "true",
+        devbranch = "main",
         pages = [
             "index.md",
             "LM Tutorial" =>"lm_tutorial.md",
