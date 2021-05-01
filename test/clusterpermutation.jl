@@ -12,12 +12,12 @@ evt,epoch_dat = simulate_lmm(MersenneTwister(1), τ,fs,  β=[0.,-1.],
     n_item = 30,
     noise_type="AR-exponential");
 
-#mres,res = unfold.fit(UnfoldLinearMixedModel,f,evt,dat[chIx:chIx,:,:].*1e6 ,times,contrasts=Dict(:category => EffectsCoding(), :condition => EffectsCoding()));
+#mres,res = fit(UnfoldLinearMixedModel,f,evt,dat[chIx:chIx,:,:].*1e6 ,times,contrasts=Dict(:category => EffectsCoding(), :condition => EffectsCoding()));
 
 times = range(0,stop=τ-1/fs,step=1/fs)
 
 f2 = @formula 0 ~ 1 + stimType + (1+stimType|subj) + (1|item)
-mres,res = unfold.fit(UnfoldLinearMixedModel,f2,evt,epoch_dat,times)
+mres,res = fit(UnfoldLinearMixedModel,f2,evt,epoch_dat,times)
 
 p_df = cluster_permutation_test(mres,epoch_dat,times,2)
 

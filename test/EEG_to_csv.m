@@ -1,5 +1,5 @@
 % Fuction to simulate test cases and export them
-% you need to have the matlab-unfold toolbox in your path & initialized
+% you need to have the matlab-Unfold toolbox in your path & initialized
 % Testcase 3 is multiSubject
 % Testcase 4 is long without overlap (srate = 1000)
 % Testcase 5 is long with overlap (srate = 1000)

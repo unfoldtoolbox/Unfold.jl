@@ -1,18 +1,18 @@
-# unfold.jl
+# Unfold.jl
 
-**Beta** Toolbox to perform linear regression on biological signals. ![](https://github.com/unfoldtoolbox/unfold.jl/workflows/CI/badge.svg)
+**Beta** Toolbox to perform linear regression on biological signals. ![](https://github.com/unfoldtoolbox/Unfold.jl/workflows/CI/badge.svg)
 
 This tool combines mass-univariate linear (mixed) models with overlap correction.
 
 This kind of overlap correction is also known as encoding modeling, linear deconvolution, Temporal Response Functions (TRFs) and probably under other names. Typical fMRI models with HRF-basis functions are also supported.
 
-## Relation to unfold (matlab)
+## Relation to Unfold (matlab)
 The matlab toolbox is recommended for research work. It is richer in features, better documented and tested.
 
-The julia toolbox is a type of playground and aspires to combine unfold & unmixed in a single toolbox.
+The julia toolbox is a type of playground and aspires to combine Unfold & unmixed in a single toolbox.
 
 
-| Feature                 | unfold | unmixed | unfold.jl |
+| Feature                 | Unfold | unmixed | Unfold.jl |
 |-------------------------|--------|---------|-----------|
 | overlap correction      | x      | x       | x         |
 | non-linear splines      | x      | x       | x         |
@@ -30,7 +30,7 @@ The julia toolbox is a type of playground and aspires to combine unfold & unmixe
 ## Install
 ```julia
 using Pkg;
-Pkg.add(url = "https://github.com/unfoldtoolbox/unfold.jl")
+Pkg.add(url = "https://github.com/unfoldtoolbox/Unfold.jl")
 ```
 
 For some of the testing functionality in the `test/` path, you will also need

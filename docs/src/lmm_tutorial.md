@@ -9,7 +9,7 @@ date: 2021-04-29
 
 using StatsModels, MixedModels, DataFrames
 import Plots
-using unfold
+using Unfold
 include("../test/test_utilities.jl"); # function to load the simulated data
 ```
 
@@ -73,9 +73,9 @@ epoch the data for the mass-univariate mixed model case
 ```@example Main
 data_r = reshape(data,(1,:))
 # cut the data into epochs
-data_epochs,times = unfold.epoch(data=data_r,tbl=evts,τ=(-0.4,0.8),sfreq=50);
+data_epochs,times = Unfold.epoch(data=data_r,tbl=evts,τ=(-0.4,0.8),sfreq=50);
 # missing or partially missing epochs are currenlty _only_ supported for non-mixed models!
-evts,data_epochs = unfold.dropMissingEpochs(evts,data_epochs)
+evts,data_epochs = Unfold.dropMissingEpochs(evts,data_epochs)
 ```
 
 
@@ -83,7 +83,7 @@ evts,data_epochs = unfold.dropMissingEpochs(evts,data_epochs)
 
 We can now run the LinearMixedModel on each time point
 ```@example Main
-m,results = unfold.fit(UnfoldLinearMixedModel,f,evts,data_epochs,times) # just "fit" without unfold should also work, but didnt in the Notebook
+m,results = fit(UnfoldLinearMixedModel,f,evts,data_epochs,times) 
 ```
 
 
@@ -130,7 +130,7 @@ We can now run the mixed model.
 
 Easy syntax: Specify formula, events, EEG-data & the basis function
 ```@example Main
-@time mm,results = unfold.fit(UnfoldLinearMixedModel,f,evts,data,basisfunction) # just "fit" without unfold should also work, but didnt in the Notebook
+@time mm,results = fit(UnfoldLinearMixedModel,f,evts,data,basisfunction) 
 ```
 
 
@@ -220,7 +220,7 @@ Plots.heatmap(Matrix(Xdc.Xs[2][1:2000,1:500]))
 
 And finally, generate the linear mixed model manually & fit it.
 ```@example Main
-mf = unfoldfit(unfold.UnfoldLinearMixedModel,Xs,data)
+mf = unfoldfit(Unfold.UnfoldLinearMixedModel,Xs,data)
 results = condense_long(mf)
 first(results,6)
 ```

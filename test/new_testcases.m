@@ -1,4 +1,4 @@
-%% Script to implement new test cases for the unfold.jl toolbox
+%% Script to implement new test cases for the Unfold.jl toolbox
 
 % Parameters for the simulation:
 

@@ -2,14 +2,14 @@ using Test, StatsModels
 using DataFrames
 using StatsBase
 
-using unfold
+using Unfold
 include("test_utilities.jl")
 
 
 data,evts = loadtestdata("test_case_3a") #
 data_r = reshape(data,(1,:))
 
-data_e,times = unfold.epoch(data=data_r,tbl=evts,τ=(0.,1),sfreq=20) # cut the data into epochs
+data_e,times = Unfold.epoch(data=data_r,tbl=evts,τ=(0.,1),sfreq=20) # cut the data into epochs
 basisfunction = firbasis(τ=(0.,1),sfreq=20,name="basisA")
 
 # f  = @formula 0~ 1 * beta_0 + contA*beta_1

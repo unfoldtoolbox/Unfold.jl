@@ -15,7 +15,7 @@ function predict(model::UnfoldLinearModel, newdata,times=nothing)
     # add those as latencies [xxx change to basisfunction field] to newdata
     ##
 
-    if !(typeof(formulas[1].rhs) <: unfold.TimeExpandedTerm)
+    if !(typeof(formulas[1].rhs) <: Unfold.TimeExpandedTerm)
         # mass univariate model. Not sure how I can multiple dispatch correctly :| Maybe I need 4 types after all
 
         # just a single designmat, same for all timepoints
@@ -96,7 +96,7 @@ function predict(model::UnfoldLinearModel, newdata,times=nothing)
         metaData[:,c] .= newdata[1,c] # assign first element in order to have same column type
     end
    
-    if !(typeof(formulas[1].rhs) <: unfold.TimeExpandedTerm)
+    if !(typeof(formulas[1].rhs) <: Unfold.TimeExpandedTerm)
         # for mass univariate we can make use of the knowledge that all events have the same length :)
         ntimes = size(model.beta,2)
         for c  = names(newdata)

@@ -1,6 +1,6 @@
 ---
 author: "Benedikt Ehinger, with help Dave Kleinschmidt"
-title: "Overlap Correction with Linear Models (aka unfold.jl)"
+title: "Overlap Correction with Linear Models (aka Unfold.jl)"
 date: 2021-04-28
 ---
 
@@ -11,20 +11,20 @@ Plots.reset_defaults()
 
 First we have to install some packages. in julia you would do this either by putting a "]" in the REPL ("julia-commandline").
 This should result in
-`(unfold) pkg> ` - but if you see `(@v1.6) pkg> `  instead, you still have to activate your environment (using `cd("/path/to/your/project")` and `]activate .` or `]activate /path/to/your/project/`)
+`(Unfold) pkg> ` - but if you see `(@v1.6) pkg> `  instead, you still have to activate your environment (using `cd("/path/to/your/project")` and `]activate .` or `]activate /path/to/your/project/`)
 
-Note that you should have done this already to install unfold in the first place. have a look at the Readme.md - there we use the Pkg.add("") syntax, which is equivalent to the `]` package manager.
+Note that you should have done this already to install Unfold in the first place. have a look at the Readme.md - there we use the Pkg.add("") syntax, which is equivalent to the `]` package manager.
 Now we are ready to add packages:
 `add StatsModels,MixedModels,DataFrames,DSP.conv,Plots`
 
-Next we have to make sure to be in the `unfold/docs` folder, else the tutorial will not be able to find the data. Thus `cd("./docs")` in case you cd'ed already to the unfold project.
+Next we have to make sure to be in the `Unfold/docs` folder, else the tutorial will not be able to find the data. Thus `cd("./docs")` in case you cd'ed already to the Unfold project.
 
 ```@example Main
 
 using StatsModels, MixedModels, DataFrames
 import DSP.conv
 import Plots
-using unfold
+using Unfold
 include("../../test/test_utilities.jl"); # to load the simulated data
 ```
 
@@ -72,7 +72,7 @@ This is a "traditional mass-univariate analysis".
 # we have multi channel support
 data_r = reshape(data,(1,:))
 # cut the data into epochs
-data_epochs,times = unfold.epoch(data=data_r,tbl=evts,τ=(-0.4,0.8),sfreq=50);
+data_epochs,times = Unfold.epoch(data=data_r,tbl=evts,τ=(-0.4,0.8),sfreq=50);
 ```
 
 
@@ -90,7 +90,7 @@ f  = @formula 0~1+conditionA+conditionB # 0 as a dummy, we will combine wit data
 
 We fit the `UnfoldLinearModel` to the data
 ```@example Main
-m,results = unfold.fit(UnfoldLinearModel,f,evts,data_epochs,times);
+m,results = Unfold.fit(UnfoldLinearModel,f,evts,data_epochs,times);
 ```
 
 
@@ -154,7 +154,7 @@ Plots.plot(y_conv)
 
 Which one would use as a regressor against the recorded BOLD timecourse.
 
-Note that events could fall inbetween TR (the sampling rate). Some packages subsample the time signal, but in `unfold` we can directly call the `bold.kernel` function at a given event-time, which allows for non-TR-multiples to be used.
+Note that events could fall inbetween TR (the sampling rate). Some packages subsample the time signal, but in `Unfold` we can directly call the `bold.kernel` function at a given event-time, which allows for non-TR-multiples to be used.
 
 ### FIR Basis Function
 
@@ -201,7 +201,7 @@ And fit a `UnfoldLinearModel`. Not that instead of `times` as in the mass-univar
 ```@example Main
 
 
-m,results = unfold.fit(UnfoldLinearModel,f,evts,data,basisfunction)
+m,results = Unfold.fit(UnfoldLinearModel,f,evts,data,basisfunction)
 ```
 
 

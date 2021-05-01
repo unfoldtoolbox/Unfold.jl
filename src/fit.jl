@@ -11,7 +11,7 @@ Mass Univariate Linear
 ```julia-repl
 julia> data,evts = loadtestdata("testCase1")
 julia> data_r = reshape(data,(1,:))
-julia> data_e,times = unfold.epoch(data=data_r,tbl=evts,τ=(-1.,1.9),sfreq=10) # cut the data into epochs. data_e is now ch x times x epoch
+julia> data_e,times = Unfold.epoch(data=data_r,tbl=evts,τ=(-1.,1.9),sfreq=10) # cut the data into epochs. data_e is now ch x times x epoch
 
 julia> f  = @formula 0~1+continuousA+continuousB # 1
 julia> model,results_long = fit(UnfoldLinearModel,f,evts,data_e,times)

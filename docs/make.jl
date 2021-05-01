@@ -1,12 +1,12 @@
 using Documenter
-using unfold
+using Unfold
 using DocStringExtensions
 using Plots
 gr()
 #unicodeplots()
 
 makedocs(sitename="Unfold.jl",
-        root = joinpath(dirname(pathof(unfold)), "..", "docs"),
+        root = joinpath(dirname(pathof(Unfold)), "..", "docs"),
         prettyurls = get(ENV, "CI", nothing) == "true",
         pages = [
             "index.md",
@@ -14,4 +14,4 @@ makedocs(sitename="Unfold.jl",
             "LMM Tutorial" =>"lmm_tutorial.md",
         ])
 
-deploydocs(; repo = "github.com/unfoldtoolbox/unfold.jl", push_preview = true)
+deploydocs(; repo = "github.com/unfoldtoolbox/Unfold.jl", push_preview = true)

@@ -4,7 +4,7 @@
 using AlgebraOfGraphics
 
 #---
-#Plots.plot(m::unfold.UnfoldModel)  = plot_results(m.results)
+#Plots.plot(m::Unfold.UnfoldModel)  = plot_results(m.results)
 
 function plot_results(results::DataFrame;y=:estimate,color=:term,layout_x=:group,stderror=false,pvalue = DataFrame(:from=>[],:to=>[],:pval=>[]))
     m = mapping(:colname_basis,y,color=color,layout_x=layout_x)

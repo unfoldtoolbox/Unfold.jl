@@ -1,6 +1,6 @@
 ##
 using Test,DataFrames,StatsModels
-using unfold
+using Unfold
 using MixedModels
 using SparseArrays
 tbl = DataFrame([1 4]',[:latency])
@@ -19,14 +19,14 @@ shouldBePos[4,:] = [0,0,1,0]
 
 ## test negative
 basisfunction = firbasis(τ=(-3,0),sfreq = 1,name="testing")
-timeexpandterm =  unfold.TimeExpandedTerm(FormulaTerm(Term,Term),basisfunction,:latency );
-Xdc = unfold.time_expand(X,timeexpandterm,tbl)
+timeexpandterm =  Unfold.TimeExpandedTerm(FormulaTerm(Term,Term),basisfunction,:latency );
+Xdc = Unfold.time_expand(X,timeexpandterm,tbl)
 @test all(isapprox.(Matrix(Xdc)[1:4,1:4], shouldBeNeg,atol=1e-15))
 
 ## Test Positive only
 basisfunction = firbasis(τ=(1,4),sfreq = 1,name="testing")
-timeexpandterm =  unfold.TimeExpandedTerm(FormulaTerm(Term,Term),basisfunction,:latency );
-Xdc = unfold.time_expand(X,timeexpandterm,tbl)
+timeexpandterm =  Unfold.TimeExpandedTerm(FormulaTerm(Term,Term),basisfunction,:latency );
+Xdc = Unfold.time_expand(X,timeexpandterm,tbl)
 println(Matrix(Xdc))
 
 @test all(isapprox.(Matrix(Xdc)[1:4,1:4], shouldBePos,atol=1e-15))
@@ -34,10 +34,10 @@ println(Matrix(Xdc))
 # customized eventfields
 tbl2 = tbl = DataFrame([1 4]',[:onset])
 
-timeexpandterm_latency =  unfold.TimeExpandedTerm(FormulaTerm(Term,Term),basisfunction);
-timeexpandterm_onset =  unfold.TimeExpandedTerm(FormulaTerm(Term,Term),basisfunction,eventfields=[:onset]);
-Xdc = unfold.time_expand(X,timeexpandterm_onset,tbl)
-@test_throws ArgumentError unfold.time_expand(X,timeexpandterm_latency,tbl)
+timeexpandterm_latency =  Unfold.TimeExpandedTerm(FormulaTerm(Term,Term),basisfunction);
+timeexpandterm_onset =  Unfold.TimeExpandedTerm(FormulaTerm(Term,Term),basisfunction,eventfields=[:onset]);
+Xdc = Unfold.time_expand(X,timeexpandterm_onset,tbl)
+@test_throws ArgumentError Unfold.time_expand(X,timeexpandterm_latency,tbl)
 
 ## combining designmatrices
 tbl = DataFrame([1 4]',[:latency])
@@ -77,7 +77,7 @@ if 1 == 0
     @test size(Xdc.Xs[1],2) == size(Xdc3.Xs[1],2) + size(Xdc4.Xs[1],2)
     @test length(Xdc.Xs) == 4 # one FeMat  + 3 ReMat
     @test_throws String Xdc3+Xdc4_wrong
-    m = unfold.unfoldfit(UnfoldLinearMixedModel,Xdc,y);
+    m = Unfold.unfoldfit(UnfoldLinearMixedModel,Xdc,y);
 end
 
 
@@ -92,8 +92,8 @@ if 1==0
 
 
     basisfunction = firbasis(τ=(0,1),sfreq = 100,name="test")
-    term =  unfold.TimeExpandedTerm(Term,basisfunction,:latency );
-    @time Xdc = Matrix(unfold.time_expand(X,term,tbl))
+    term =  Unfold.TimeExpandedTerm(Term,basisfunction,:latency );
+    @time Xdc = Matrix(Unfold.time_expand(X,term,tbl))
     
 end
 
@@ -114,33 +114,33 @@ f1 = @formula 0~1+(1|subject) + (1|item)
 f2 = @formula 0~1+(1|itemB)
 
 form = apply_schema(f1, schema(f1, tbl1), MixedModels.LinearMixedModel)
-form = unfold.apply_basisfunction(form,bf1,nothing)
+form = Unfold.apply_basisfunction(form,bf1,nothing)
 X1 = modelcols.(form.rhs, Ref(tbl1))
 
 form = apply_schema(f2, schema(f2, tbl2), MixedModels.LinearMixedModel)
-form = unfold.apply_basisfunction(form,bf2,nothing)
+form = Unfold.apply_basisfunction(form,bf2,nothing)
 X2 = modelcols.(form.rhs, Ref(tbl2))
 
 # no missmatch, shouldnt change anything then
 X = deepcopy(X1[2:end])
-unfold.equalizeReMatLengths!(X)
+Unfold.equalizeReMatLengths!(X)
 @test all([x[1] for x in size.(X)].==48)
 
 X = (deepcopy(X1[2:end])..., deepcopy(X2[2:end])...)
 @test !all([x[1] for x in size.(X)].==48) # not alllenghts the same
-unfold.equalizeReMatLengths!(X)
+Unfold.equalizeReMatLengths!(X)
 @test all([x[1] for x in size.(X)].==49) # now all lengths the same :-)
 
 # Test  changeReMatSize & changeMatSize
 
 X = deepcopy(X2[2])
 @test size(X)[1] == 49
-unfold.changeReMatSize!(X,52)
+Unfold.changeReMatSize!(X,52)
 @test size(X)[1] == 52
 
 X = deepcopy(X2[2])
 @test size(X)[1] == 49
-unfold.changeReMatSize!(X,40)
+Unfold.changeReMatSize!(X,40)
 @test size(X)[1] == 40
 
 
@@ -149,11 +149,11 @@ X = (deepcopy(X1)..., deepcopy(X2[2:end])...)
 @test size(X[2])[1] == 48
 @test size(X[3])[1] == 48
 @test size(X[4])[1] == 49
-XA,XB = unfold.changeMatSize!(52,X[1],X[2:end])
+XA,XB = Unfold.changeMatSize!(52,X[1],X[2:end])
 @test size(XA)[1] == 52
 @test size(XB)[1] == 52
 
-XA,XB = unfold.changeMatSize!(40,X[1],X[2:end])
+XA,XB = Unfold.changeMatSize!(40,X[1],X[2:end])
 @test size(XA)[1] == 40
 @test size(XB)[1] == 40
 

@@ -4,7 +4,7 @@
 using Test, StatsModels
 using DataFrames
 
-using unfold
+using Unfold
 include("test_utilities.jl")
 
 data,evts = loadtestdata("test_case_3a") #
@@ -17,25 +17,25 @@ data_r = vcat(data_r,data_r)#add second channel
 #--------------------------#
 ## Mass Univariate Linear ##
 #--------------------------#
-data_e,times = unfold.epoch(data=data_r,tbl=evts,τ=(-1.,1.9),sfreq=20) # cut the data into epochs
-m_mul,m_mul_results = unfold.fit(UnfoldLinearModel,f,evts,data_e,times)
+data_e,times = Unfold.epoch(data=data_r,tbl=evts,τ=(-1.,1.9),sfreq=20) # cut the data into epochs
+m_mul,m_mul_results = fit(UnfoldLinearModel,f,evts,data_e,times)
 @test m_mul_results[(m_mul_results.channel.==1).&(m_mul_results.colname_basis .==0.1),:estimate] ≈ [2,3,4]
 
 
-data_e_noreshape,times = unfold.epoch(data=data,tbl=evts,τ=(-1.,1.9),sfreq=20) # cut the data into epochs
-m_mul_noreshape,m_mul_results_noreshape = unfold.fit(UnfoldLinearModel,f,evts,data_e_noreshape,times)
+data_e_noreshape,times = Unfold.epoch(data=data,tbl=evts,τ=(-1.,1.9),sfreq=20) # cut the data into epochs
+m_mul_noreshape,m_mul_results_noreshape = fit(UnfoldLinearModel,f,evts,data_e_noreshape,times)
 @test m_mul_results_noreshape[(m_mul_results_noreshape.channel.==1).&(m_mul_results_noreshape.colname_basis .==0.1),:estimate] ≈ [2,3,4]
 @test size(m_mul_results_noreshape)[1] ==size(m_mul_results)[1]/2
 
 # Add Missing in Data
 data_e_missing = data_e
 data_e_missing[1,25,end-5:end] .= missing
-m_mul_missing,m_mul_missing_results = unfold.fit(UnfoldLinearModel,f,evts,data_e_missing,times)
+m_mul_missing,m_mul_missing_results = Unfold.fit(UnfoldLinearModel,f,evts,data_e_missing,times)
 @test m_mul_missing_results.estimate ≈ m_mul_results.estimate
 
 # Special solver solver_lsmr_se with Standard Error
-se_solver = solver=(x,y)->unfold.solver_default(x,y,stderror=true)
-m_mul_se,m_mul_results_se = unfold.fit(UnfoldLinearModel,f,evts,data_e,times,solver=se_solver)
+se_solver = solver=(x,y)->Unfold.solver_default(x,y,stderror=true)
+m_mul_se,m_mul_results_se = Unfold.fit(UnfoldLinearModel,f,evts,data_e,times,solver=se_solver)
 @test all(m_mul_results_se.estimate .≈ m_mul_results.estimate)
 @test !all(isnothing.(m_mul_results_se.stderror ))
 
@@ -68,7 +68,7 @@ f1  = @formula 0~1+continuousA # 1
 f2  = @formula 0~1+continuousA # 1
 
 # Fast-lane new implementation
-m,res = unfold.fit(UnfoldLinearModel,Dict(0=>(f1,b1),1=>(f1,b1)),evts,data,eventcolumn="conditionA")
+m,res = fit(UnfoldLinearModel,Dict(0=>(f1,b1),1=>(f1,b1)),evts,data,eventcolumn="conditionA")
 
 # slow manual
 X1 = designmatrix(UnfoldLinearModel,f1,filter(x->(x.conditionA==0),evts),b1)
@@ -105,7 +105,7 @@ for k in 1:4
 end
 
 # Special solver solver_lsmr_se with Standard Error
-se_solver = solver=(x,y)->unfold.solver_default(x,y,stderror=true)
+se_solver = solver=(x,y)->Unfold.solver_default(x,y,stderror=true)
 m_tul_se,m_tul_results_se = fit(UnfoldLinearModel,f,evts,data_r,basisfunction,solver=se_solver)
 @test all(m_tul_results_se.estimate .== m_tul_results.estimate)
 @test !all(isnothing.(m_tul_results_se.stderror ))
@@ -154,10 +154,10 @@ f  = @formula 0~1+condA+condB + (1+condA+condB|subject)
 
 # cut the data into epochs
 # TODO This ignores subject bounds
-data_e,times = unfold.epoch(data=data,tbl=evts,τ=(-1.,1.9),sfreq=10)
-data_missing_e,times = unfold.epoch(data=data_missing,tbl=evts,τ=(-1.,1.9),sfreq=10)
-evts_e,data_e = unfold.dropMissingEpochs(copy(evts),data_e)
-evts_missing_e,data_missing_e = unfold.dropMissingEpochs(copy(evts),data_missing_e)
+data_e,times = Unfold.epoch(data=data,tbl=evts,τ=(-1.,1.9),sfreq=10)
+data_missing_e,times = Unfold.epoch(data=data_missing,tbl=evts,τ=(-1.,1.9),sfreq=10)
+evts_e,data_e = Unfold.dropMissingEpochs(copy(evts),data_e)
+evts_missing_e,data_missing_e = Unfold.dropMissingEpochs(copy(evts),data_missing_e)
 
 ######################
 ##  Mass Univariate Mixed
@@ -199,13 +199,13 @@ b2 = firbasis(τ=(-0.1,0.3),sfreq=10,name="B")
 X1_lmm  = designmatrix(UnfoldLinearMixedModel,f1_lmm,evts1,b1)
 X2_lmm  = designmatrix(UnfoldLinearMixedModel,f2_lmm,evts2,b2)
 
-r = unfold.unfoldfit(UnfoldLinearMixedModel,X1_lmm+X2_lmm,data);
+r = Unfold.unfoldfit(UnfoldLinearMixedModel,X1_lmm+X2_lmm,data);
 df = condense_long(r)
 
 @test isapprox(df[(df.channel .== 1).&(df.term.=="condB").&(df.colname_basis.==0.0),:estimate],[18.18,10.4],rtol=0.1)
 
 # Fast-lane new implementation
-m,res = unfold.fit(UnfoldLinearMixedModel,Dict(0=>(f1_lmm,b1),1=>(f2_lmm,b2)),evts,data,eventcolumn="condA")
+m,res = fit(UnfoldLinearMixedModel,Dict(0=>(f1_lmm,b1),1=>(f2_lmm,b2)),evts,data,eventcolumn="condA")
 
 
 if 1 == 0

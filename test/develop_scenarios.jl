@@ -2,7 +2,7 @@
 using Test, StatsModels
 using DataFrames
 import Logging
-using unfold
+using Unfold
 include("test_utilities.jl")
 
 Logging.global_logger(Logging.SimpleLogger(stdout, Logging.Debug))
@@ -25,8 +25,8 @@ f  = @formula 0~1+condA+condB + (1+condA+condB|subject)
 
 # cut the data into epochs
 # TODO This ignores subject bounds
-data_e,times = unfold.epoch(data=data,tbl=evts,τ=(-1.,1.9),sfreq=10)
-evts_e,data_e = unfold.dropMissingEpochs(evts,data_e)
+data_e,times = Unfold.epoch(data=data,tbl=evts,τ=(-1.,1.9),sfreq=10)
+evts_e,data_e = Unfold.dropMissingEpochs(evts,data_e)
 
 ##
 

@@ -76,7 +76,7 @@ cluster_permutation(args...;kwargs...) = cluster_permutation(MersenneTwister(1),
 
 function cluster_permutation(rng::AbstractRNG,mres,dat,tRange,coeffOfInterest,nPerm)
     permDat = Matrix{Float64}(undef,length(tRange),nPerm)
-    mm_outer = unfold.LinearMixedModel_wrapper(mres.X.formulas,dat[1,1,:],mres.X.Xs)
+    mm_outer = Unfold.LinearMixedModel_wrapper(mres.X.formulas,dat[1,1,:],mres.X.Xs)
     
     chIx = 1 # for now we only support 1 channel anyway
     #
