@@ -6,7 +6,7 @@ using AlgebraOfGraphics
 #---
 #Plots.plot(m::unfold.UnfoldModel)  = plot_results(m.results)
 
-function plot_results(results::DataFrame,y=:estimate,color=:term;layout_x=:group,stderror=false,pvalue = DataFrame(:from=>[],:to=>[],:pval=>[]))
+function plot_results(results::DataFrame;y=:estimate,color=:term,layout_x=:group,stderror=false,pvalue = DataFrame(:from=>[],:to=>[],:pval=>[]))
     m = mapping(:colname_basis,y,color=color,layout_x=layout_x)
 
     basic = AlgebraOfGraphics.data(results) * visual(Lines) * m
@@ -16,7 +16,7 @@ function plot_results(results::DataFrame,y=:estimate,color=:term;layout_x=:group
         res_se = res_se[.!isnothing.(res_se.stderror),:]
         res_se[!,:se_low] = res_se[:,y].-res_se.stderror
         res_se[!,:se_high] = res_se[:,y].+res_se.stderror
-        basic =  AlgebraOfGraphics.data(res_se)*visual(Band,alpha=0.5)*mapping(:colname_basis,:se_low,:se_high,color=:term) + basic
+        basic =  AlgebraOfGraphics.data(res_se)*visual(Band,alpha=0.5)*mapping(:colname_basis,:se_low,:se_high,color=:term,layout_x=layout_x) + basic
     end
     
     d = basic |> draw
