@@ -1,7 +1,7 @@
 name = "unfold"
 uuid = "181c99d8-e21b-4ff3-b70b-c233eddec679"
 authors = ["Benedikt Ehinger <science@benediktehinger.de>"]
-version = "0.1.0"
+version = "0.2.0"
 
 [deps]
 BSplines = "488c2830-172b-11e9-1591-253b8a7df96d"
@@ -32,6 +32,6 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 TimerOutputs = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
 
 [compat]
-MixedModels = "3.1.6"
+MixedModels = "3.6.0"
 Tables = "1"
 julia = "1.6"
