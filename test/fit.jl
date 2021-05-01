@@ -59,6 +59,29 @@ data_missing[4500:4600] .= missing
 m_tul_missing,m_tul_missing_results = fit(UnfoldLinearModel,f,evts,data_missing,basisfunction)
 @test  isapprox(m_tul_missing_results.estimate , m_tul_results.estimate,atol=1e-4)  # higher tol because we remove stuff
 
+
+## Test multiple basisfunctions
+b1 = firbasis(τ=(-1,1),sfreq=20,name="basisA")
+b2 = firbasis(τ=(-1,1),sfreq=20,name="basisB")
+
+f1  = @formula 0~1+continuousA # 1
+f2  = @formula 0~1+continuousA # 1
+
+# Fast-lane new implementation
+m,res = unfold.fit(UnfoldLinearModel,Dict(0=>(f1,b1),1=>(f1,b1)),evts,data,eventcolumn="conditionA")
+
+# slow manual
+X1 = designmatrix(UnfoldLinearModel,f1,filter(x->(x.conditionA==0),evts),b1)
+X2 = designmatrix(UnfoldLinearModel,f2,filter(x->(x.conditionA==1),evts),b2)
+
+@time m = unfoldfit(UnfoldLinearModel,X1+X2,data')
+tmp = condense_long(m)
+
+# test fast way & slow way to be identical
+@test all(tmp.estimate .== res.estimate)
+
+
+
 # runntime tests - does something explode?
 for k in 1:4
     local f
@@ -180,6 +203,9 @@ r = unfold.unfoldfit(UnfoldLinearMixedModel,X1_lmm+X2_lmm,data);
 df = condense_long(r)
 
 @test isapprox(df[(df.channel .== 1).&(df.term.=="condB").&(df.colname_basis.==0.0),:estimate],[18.18,10.4],rtol=0.1)
+
+# Fast-lane new implementation
+m,res = unfold.fit(UnfoldLinearMixedModel,Dict(0=>(f1_lmm,b1),1=>(f2_lmm,b2)),evts,data,eventcolumn="condA")
 
 
 if 1 == 0

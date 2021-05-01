@@ -40,12 +40,17 @@ function fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::Fo
 end
 
 
+function fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::FormulaTerm, tbl::DataFrame, data::Array{T,2},basisfunction::BasisFunction; kwargs...) where {T}
+# backward compatible call, typically these models are run with multiple events
+fit(type,Dict(Any=>(f,basisfunction)), tbl, data; kwargs...)
+end
+
 # Timeexpanded Model
-function fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::FormulaTerm, tbl::DataFrame, data::Array{T,2}, basisfunction::BasisFunction; kwargs...) where {T}
+function fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::Dict, tbl::DataFrame, data::Array{T,2}; kwargs...) where {T}
     to = TimerOutput()
 
     # Generate the designmatrices
-    @timeit to "unfoldDesignmat" Xs = designmatrix(type,f,tbl,basisfunction;kwargs...)
+    @timeit to "unfoldDesignmat" Xs = designmatrix(type,f,tbl;kwargs...)
 
     # Fit the model
     @timeit to "unfoldfit" ufModel = unfoldfit(type,Xs,data;kwargs...)
@@ -56,10 +61,10 @@ function fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::Fo
 end
 
 # helper function for 1 channel data
-function fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::FormulaTerm, tbl::DataFrame, data::Array{T,1}, basisfunction::BasisFunction; kwargs...) where {T}
+function fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f, tbl::DataFrame, data::Array{T,1}, args...; kwargs...) where {T}
     @debug("data array is size (X,), reshaping to (1,X)")
     data = reshape(data,1,:)
-    return fit(type,f,tbl,data,basisfunction;kwargs...)
+    return fit(type,f,tbl,data,args...;kwargs...)
 end
 
 
@@ -98,6 +103,8 @@ function unfoldfit(::Type{UnfoldLinearMixedModel},Xobj::DesignMatrix,data::Union
 
     #_,data = zeropad(Xobj.Xs[1],data)
     # get a un-fitted mixed model object
+    
+    
     mm = LinearMixedModel_wrapper(Xobj.formulas,firstData,Xobj.Xs)
 
     # prepare some variables to be used
@@ -107,6 +114,9 @@ function unfoldfit(::Type{UnfoldLinearMixedModel},Xobj::DesignMatrix,data::Union
     
     β_names = (Symbol.(vcat(fixefnames(mm)...))...,)
     β_names = (unique(β_names)...,)
+
+    @assert(length(β_names) == length(βsc),"Beta-Names & coefficient length do not match. Did you provide two identical basis functions?")
+
     @debug println("beta_names $β_names")
     @debug println("uniquelength: $(length(unique(β_names))) / $(length(β_names))")
     # for each channel
@@ -125,6 +135,7 @@ function unfoldfit(::Type{UnfoldLinearMixedModel},Xobj::DesignMatrix,data::Union
                 refit!(mm,data[ch,:])
             end
             #@debug println(MixedModels.fixef!(βsc,mm))
+            println(length(βsc))
             β = NamedTuple{β_names}(MixedModels.fixef!(βsc, mm))
 
             out = (
