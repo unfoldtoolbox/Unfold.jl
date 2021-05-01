@@ -51,6 +51,8 @@ Xdc2          = designmatrix(UnfoldLinearModel,f,tbl.+1,basisfunction2)
 Xdc = Xdc1+Xdc2
 @test size(Xdc.Xs,2) == size(Xdc1.Xs,2) + size(Xdc2.Xs,2)
 
+
+
 if 1 == 0
     # not implemented yet
     basisfunction1 = firbasis(τ=(0,1),sfreq = 10,name="basis1")

@@ -93,6 +93,7 @@ julia>  Xdc = Xdc1+Xdc2 # equivalently
 
 """
 function combineDesignmatrices(X1::DesignMatrix,X2::DesignMatrix)
+        
         X1 = deepcopy(X1)
         X2 = deepcopy(X2)
         Xs1 = get_Xs(X1.Xs)
@@ -193,6 +194,8 @@ end
 
 Base.:+(X1::DesignMatrix, X2::DesignMatrix) = combineDesignmatrices(X1,X2)
 
+Base.:+(X1::Nothing, X2::DesignMatrix) = X2
+
 function get_Xs(Xs::Tuple)
         return Xs[1]
 end
@@ -219,7 +222,7 @@ julia>  designmatrix(UnfoldLinearModel,f,tbl,basisfunction1)
 ```
 
 """
-function designmatrix(type,f,tbl,basisfunction;contrasts= Dict{Symbol,Any}(), kwargs...)
+function designmatrix(type,f::Union{Tuple,FormulaTerm},tbl,basisfunction;contrasts= Dict{Symbol,Any}(), kwargs...)
         @debug("generating DesignMatrix")
         form = apply_schema(f, schema(f, tbl, contrasts), MixedModels.LinearMixedModel)
         form = apply_basisfunction(form,basisfunction,get(Dict(kwargs),:eventfields,nothing))
@@ -234,6 +237,28 @@ function designmatrix(type,f,tbl,basisfunction;contrasts= Dict{Symbol,Any}(), kw
 end
 function designmatrix(type,f,tbl;kwargs...)
         return designmatrix(type,f,tbl,nothing;kwargs...)
+end
+
+function designmatrix(type,fDict::Dict,tbl;eventcolumn = :event,contrasts= Dict{Symbol,Any}(), kwargs...)
+        X = nothing
+        for (eventname,f) in pairs(fDict)        
+                if eventname == Any
+                        eventTbl = tbl
+                else
+                        if !(eventcolumn ∈ names(tbl))
+                                error("Couldnt find columnName: "*string(eventcolumn)*" in event-table.  Maybe need to specify eventcolumn=:correctColumnName (default is ':event') \n names(tbl) = "*join(names(tbl),","))
+                        end
+                        eventTbl = tbl[tbl[:,eventcolumn].==eventname,:]
+                end
+                if isempty(eventTbl)
+                        error("eventTable empty after subsetting. Couldnt find event '"*string(eventname)*"'{"*string(typeof(eventname))*"}, in field tbl[:,:"*string(eventcolumn)*"].?")
+                end
+
+                fIx = collect(typeof.(f) .<:FormulaTerm)
+                bIx = collect(typeof.(f) .<:BasisFunction)
+                X = X+designmatrix(type,f[fIx],eventTbl,collect(f[bIx])[1];contrasts= contrasts, kwargs...)
+        end
+        return X
 end
 
 

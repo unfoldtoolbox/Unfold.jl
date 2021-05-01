@@ -21,7 +21,7 @@ using ProgressMeter
 using DocStringExtensions # for Docu
 using MLBase # for crossVal
 using BSplines # for spline predictors
-
+import StatsBase: fit
 
 #using IncompleteLU
 import Base.(+) # overwrite for DesignMatrices
