@@ -1,24 +1,28 @@
----
-author: "Benedikt Ehinger, with help Dave Kleinschmidt"
-title: "Overlap Correction with Linear Models (aka Unfold.jl)"
-date: 2021-04-28
----
+# Overlap Correction with Linear Models
+date: 2021-04-29
+----
+
+!!! Note
+This is a tutorial, not so much a documentation.
 
 ```@setup index
 using Plots; gr()
-Plots.reset_defaults()
+Plots.reset_defaults();
 ```
-
-First we have to install some packages. in julia you would do this either by putting a "]" in the REPL ("julia-commandline").
+## Installation
+First we have to install some packages. in julia you would do this either by putting a `]` in the REPL ("julia-commandline").
 This should result in
 `(Unfold) pkg> ` - but if you see `(@v1.6) pkg> `  instead, you still have to activate your environment (using `cd("/path/to/your/project")` and `]activate .` or `]activate /path/to/your/project/`)
 
 Note that you should have done this already to install Unfold in the first place. have a look at the Readme.md - there we use the Pkg.add("") syntax, which is equivalent to the `]` package manager.
 Now we are ready to add packages:
+
 `add StatsModels,MixedModels,DataFrames,DSP.conv,Plots`
 
 Next we have to make sure to be in the `Unfold/docs` folder, else the tutorial will not be able to find the data. Thus `cd("./docs")` in case you cd'ed already to the Unfold project.
 
+
+## Setting up & loading the data
 ```@example Main
 
 using StatsModels, MixedModels, DataFrames
@@ -35,30 +39,20 @@ include("../../test/test_utilities.jl"); # to load the simulated data
 
 
 In this notebook we will fit regression models to (simulated) EEG data. We will see that we need some type of overlap correction, as the events are close in time to each other, so that the respective brain responses overlap.
-If you want more detailed introduction to this topic check out my paper: https://peerj.com/articles/7838/
+If you want more detailed introduction to this topic check out [our paper](https://peerj.com/articles/7838/)
 ```@example Main
-
-
-println(pwd())
 data, evts = loadtestdata("testCase2",dataPath="../../test/data/");
 ```
 
-
-
-
-
-```@example Main
-show(first(evts,6,),allcols=true)
-```
-
-
-
 The data has little noise and the underlying signal is a pos-neg spike pattern
 ```@example Main
+Plots.plot(range(1/50,length=200,step=1/50),data[1:200])
+Plots.vline!(evts[evts.latency.<=200,:latency]./50) # show events
+```
 
-
-Plots.plot(range(1/50,length=300,step=1/50),data[1:300])
-Plots.vline!(evts[evts.latency.<=300,:latency]./50) # show events
+Now have a look at the events
+```@example Main
+show(first(evts,6,),allcols=true)
 ```
 
 
@@ -67,13 +61,13 @@ Plots.vline!(evts[evts.latency.<=300,:latency]./50) # show events
 In order to demonstrate why overlap correction is important, we will first epoch the data and fit a linear model to each time point.
 This is a "traditional mass-univariate analysis".
 ```@example Main
-
-
 # we have multi channel support
 data_r = reshape(data,(1,:))
 # cut the data into epochs
 data_epochs,times = Unfold.epoch(data=data_r,tbl=evts,τ=(-0.4,0.8),sfreq=50);
 ```
+!!! Note
+In julia, `missing` is supported throughout the ecosystem. Thus, we can have partial trials and they will be incorporated / ignored at the respective functions.
 
 
 
@@ -90,16 +84,13 @@ f  = @formula 0~1+conditionA+conditionB # 0 as a dummy, we will combine wit data
 
 We fit the `UnfoldLinearModel` to the data
 ```@example Main
-m,results = Unfold.fit(UnfoldLinearModel,f,evts,data_epochs,times);
+m,results = Unfold.fit(UnfoldLinearModel,f,evts,data_epochs,times); nothing #hide
 ```
 
 
 
 The object has the following fields
 ```@example Main
-
-
-println(typeof(m))
 m
 ```
 
@@ -122,13 +113,16 @@ Plots.plot(results.colname_basis,results.estimate,
 
 
 
-(:colname_basis is used instead of :time, this might change. But the reason is that not all basisfunctions have a time dimension)
+!!! Note
+(`:colname_basis` is used instead of `:time` [this might change]. The reason is that not all basisfunctions have a time dimension)
+
+
 As can be seen a lot is going on here. As we will see later, most of the activity is due to overlap with the next event
 
 
 ## Basis Functions
 #### HRF / BOLD
-We are now ready to define a basisfunction. There are currently only two basisfunction implemented, so not much choice.
+We are now ready to define a basisfunction. There are currently only few basisfunction implemented.
 We first have a look at the BOLD-HRF basisfunction:
 
 ```@example Main
@@ -175,7 +169,7 @@ Not very clear, better show it in 2D
 
 basisfunction.kernel(0)[1:10,1:10]
 ```
-
+(all `.` are `0`'s)
 
 
 
@@ -201,9 +195,16 @@ And fit a `UnfoldLinearModel`. Not that instead of `times` as in the mass-univar
 ```@example Main
 
 
-m,results = Unfold.fit(UnfoldLinearModel,f,evts,data,basisfunction)
+m,results = fit(UnfoldLinearModel,Dict(Any=>(f,basisfunction),evts,data); nothing #hide
 ```
 
+!!! Note
+in `(Any=>(f,basisfunction)`, the `Any` means to use all rows in `evts`. In case you have multiple events, you'd want to specify multiple basisfunctions e.g. 
+```
+Dict("stimulus"=>(f1,basisfunction1),
+ "response"=>(f2,basisfunction2))
+```
+You likely have to specify a further argument to `fit`: `eventcolumn="type"` with `type` being the column in `evts` that codes for the event (stimulus / response in this case)
 
 
 

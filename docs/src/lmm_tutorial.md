@@ -1,8 +1,7 @@
----
-author: "Benedikt Ehinger with help from Dave Kleinschmidt"
-title: "Overlap Correction with Linear Mixed Models"
+# Overlap Correction with Linear Mixed Models
+
 date: 2021-04-29
----
+----
 
 ```@example Main
 
@@ -47,11 +46,12 @@ With the important fields being `latency`, `condA`, `condB` and `subject`.
 
 The data are a vector.
 ```@example Main
-
-println(typeof(data))
-println(size(data))
+typeof(data)
 ```
 
+```@example Main
+size(data)
+```
 
 
 
@@ -75,7 +75,7 @@ data_r = reshape(data,(1,:))
 # cut the data into epochs
 data_epochs,times = Unfold.epoch(data=data_r,tbl=evts,τ=(-0.4,0.8),sfreq=50);
 # missing or partially missing epochs are currenlty _only_ supported for non-mixed models!
-evts,data_epochs = Unfold.dropMissingEpochs(evts,data_epochs)
+evts,data_epochs = Unfold.dropMissingEpochs(evts,data_epochs); nothing #hide
 ```
 
 
@@ -122,15 +122,14 @@ f  = @formula 0~1+condA*condB+(1+condA*condB|subject);
 
 
 
-**Limitation:** Currently we cannot model correlation between time-points or random slopes.
-
-**Limitation:** See the low sampling frequency? This is because the modelfit increases quadratically with the number of predictors
+!!! warning
+See the low sampling frequency? This is because the modelfit increases quadratically with the number of predictors
 
 We can now run the mixed model.
 
 Easy syntax: Specify formula, events, EEG-data & the basis function
 ```@example Main
-@time mm,results = fit(UnfoldLinearMixedModel,f,evts,data,basisfunction) 
+@time mm,results = fit(UnfoldLinearMixedModel,(Any=>(f,basisfunction),evts,data); nothing #hide 
 ```
 
 
