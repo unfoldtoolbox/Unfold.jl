@@ -116,7 +116,7 @@ The random effects are very high in areas where we simulated overlap. (i.e. <-0.
 ## With Overlap Correction
 For overlap correction, we have to use a basis function once again.
 ```@example Main
-basisfunction = firbasis(τ=(-0.05,.4),sfreq=40)
+basisfunction = firbasis(τ=(-0.05,.4),sfreq=40,name="basis1")
 f  = @formula 0~1+condA*condB+(1+condA*condB|subject);
 ```
 
@@ -129,7 +129,7 @@ We can now run the mixed model.
 
 Easy syntax: Specify formula, events, EEG-data & the basis function
 ```@example Main
-@time mm,results = fit(UnfoldLinearMixedModel,(Any=>(f,basisfunction),evts,data); nothing #hide 
+@time mm,results = fit(UnfoldLinearMixedModel,Dict(Any=>(f,basisfunction)),evts,data); nothing #hide 
 ```
 
 

@@ -2,7 +2,7 @@
 date: 2021-04-29
 ----
 
-!!! Note
+!!! note
 This is a tutorial, not so much a documentation.
 
 ```@setup index
@@ -14,7 +14,7 @@ First we have to install some packages. in julia you would do this either by put
 This should result in
 `(Unfold) pkg> ` - but if you see `(@v1.6) pkg> `  instead, you still have to activate your environment (using `cd("/path/to/your/project")` and `]activate .` or `]activate /path/to/your/project/`)
 
-Note that you should have done this already to install Unfold in the first place. have a look at the Readme.md - there we use the Pkg.add("") syntax, which is equivalent to the `]` package manager.
+note that you should have done this already to install Unfold in the first place. have a look at the Readme.md - there we use the Pkg.add("") syntax, which is equivalent to the `]` package manager.
 Now we are ready to add packages:
 
 `add StatsModels,MixedModels,DataFrames,DSP.conv,Plots`
@@ -66,7 +66,7 @@ data_r = reshape(data,(1,:))
 # cut the data into epochs
 data_epochs,times = Unfold.epoch(data=data_r,tbl=evts,τ=(-0.4,0.8),sfreq=50);
 ```
-!!! Note
+!!! note
 In julia, `missing` is supported throughout the ecosystem. Thus, we can have partial trials and they will be incorporated / ignored at the respective functions.
 
 
@@ -113,7 +113,7 @@ Plots.plot(results.colname_basis,results.estimate,
 
 
 
-!!! Note
+!!! note
 (`:colname_basis` is used instead of `:time` [this might change]. The reason is that not all basisfunctions have a time dimension)
 
 
@@ -148,7 +148,7 @@ Plots.plot(y_conv)
 
 Which one would use as a regressor against the recorded BOLD timecourse.
 
-Note that events could fall inbetween TR (the sampling rate). Some packages subsample the time signal, but in `Unfold` we can directly call the `bold.kernel` function at a given event-time, which allows for non-TR-multiples to be used.
+note that events could fall inbetween TR (the sampling rate). Some packages subsample the time signal, but in `Unfold` we can directly call the `bold.kernel` function at a given event-time, which allows for non-TR-multiples to be used.
 
 ### FIR Basis Function
 
@@ -195,10 +195,10 @@ And fit a `UnfoldLinearModel`. Not that instead of `times` as in the mass-univar
 ```@example Main
 
 
-m,results = fit(UnfoldLinearModel,Dict(Any=>(f,basisfunction),evts,data); nothing #hide
+m,results = fit(UnfoldLinearModel,Dict(Any=>(f,basisfunction)),evts,data); nothing #hide
 ```
 
-!!! Note
+!!! note
 in `(Any=>(f,basisfunction)`, the `Any` means to use all rows in `evts`. In case you have multiple events, you'd want to specify multiple basisfunctions e.g. 
 ```
 Dict("stimulus"=>(f1,basisfunction1),
