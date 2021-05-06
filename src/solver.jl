@@ -42,7 +42,7 @@ function calculate_stderror(Xdc,data::Matrix{T},beta) where {T<:Union{Missing, <
         @assert(!isnan(residualVar),"residual Variance was NaN")
         hat = hat_prime .* residualVar
         #se = sqrt(diag(cfg.contrast(:,:)*hat*cfg.contrast(:,:)'));
-        se[ch,:] = diag(hat)
+        se[ch,:] = sqrt.(diag(hat))
     end
     return se
 end
@@ -62,7 +62,7 @@ function calculate_stderror(X,  data::AbstractArray{T,3},beta) where {T<:Union{M
             @assert(!isnan(residualVar),"residual Variance was NaN")
             hat = hat_prime .* residualVar
             #se = sqrt(diag(cfg.contrast(:,:)*hat*cfg.contrast(:,:)'));
-            se[ch,t,:] = diag(hat)
+            se[ch,t,:] = sqrt.(diag(hat))
         end
     end
     return se
