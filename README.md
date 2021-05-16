@@ -72,6 +72,10 @@ Tutorials see `doc/lmm_tutorial.html` & `doc/lm_tutorial.html` - more to come. C
 - **Phillip Alday**
 - **Benedikt Ehinger**
 - **Dave Kleinschmidt**
+- **Judith Schepers**
+- **Felix Schröder**
+- **René Skukies**
+
 
 ## Acknowledgements
 This work was supported by the Center for Interdisciplinary Research, Bielefeld (ZiF) Cooperation Group "Statistical models for psychological and linguistic data".
