@@ -85,15 +85,18 @@ function solver_default(X,data::AbstractArray{T,3};stderror=false) where {T<:Uni
        return beta, minfo
 end
 
-function solver_b2b(X,data::AbstractArray{T,3},cross_val_reps = 10) where {T<:Union{Missing, <:Number}}
+solver_b2b(X,data,cross_val_reps) = solver_b2b(X,data,cross_val_reps = cross_val_reps)
+function solver_b2b(X,data::AbstractArray{T,3};cross_val_reps = 10) where {T<:Union{Missing, <:Number}}
     
     X,data = dropMissingEpochs(X,data)
 
 
     E = zeros(size(data,2),size(X,2),size(X,2))
     W = Array{Float64}(undef,size(data,2),size(X,2),size(data,1))
-    println("n = samples = $(size(X,1)) = $(size(data,3))")
+    
+    prog = Progress(size(data,2)*cross_val_reps,.1)
     for t in 1:size(data,2)        
+
         for m in 1:cross_val_reps
             k_ix = collect(Kfold(size(data,3),2))
             Y1 = data[:,t,k_ix[1]]
@@ -106,7 +109,7 @@ function solver_b2b(X,data::AbstractArray{T,3},cross_val_reps = 10) where {T<:Un
             H = X2 \ (Y2'*G)
             
             E[t,:,:] = E[t,:,:]+Diagonal(H[diagind(H)])
-
+            ProgressMeter.next!(prog; showvalues = [(:time,t), (:cross_val_rep,m)])
         end
         E[t,:,:] = E[t,:,:] ./ cross_val_reps
         W[t,:,:] = (X*E[t,:,:])' / data[:,t,:]
