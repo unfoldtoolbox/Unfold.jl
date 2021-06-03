@@ -68,7 +68,7 @@ f1  = @formula 0~1+continuousA # 1
 f2  = @formula 0~1+continuousA # 1
 
 # Fast-lane new implementation
-m,res = fit(UnfoldLinearModel,Dict(0=>(f1,b1),1=>(f1,b1)),evts,data,eventcolumn="conditionA")
+m,res = fit(UnfoldLinearModel,Dict(0=>(f1,b1),1=>(f2,b)),evts,data,eventcolumn="conditionA")
 
 # slow manual
 X1 = designmatrix(UnfoldLinearModel,f1,filter(x->(x.conditionA==0),evts),b1)
