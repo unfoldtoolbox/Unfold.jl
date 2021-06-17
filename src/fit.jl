@@ -135,7 +135,7 @@ function unfoldfit(::Type{UnfoldLinearMixedModel},Xobj::DesignMatrix,data::Union
                 refit!(mm,data[ch,:])
             end
             #@debug println(MixedModels.fixef!(βsc,mm))
-            println(length(βsc))
+            
             β = NamedTuple{β_names}(MixedModels.fixef!(βsc, mm))
 
             out = (

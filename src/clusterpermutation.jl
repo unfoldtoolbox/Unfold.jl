@@ -3,7 +3,7 @@ using Random
 using ProgressMeter
 using PyMNE # not in Unfold.jl currently
 using MixedModelsPermutations
-#using BlockDiagonals # for olsranef
+using BlockDiagonals # for olsranefjf
 using StatsModels  # for olsranef
 
 function cluster_permutation_test(mres::UnfoldLinearMixedModel,
@@ -98,7 +98,7 @@ function cluster_permutation(rng::AbstractRNG,mres,dat,tRange,coeffOfInterest,nP
         H0[coeffOfInterest] = 0
         # run the permutation
         # important here is to set the same seed to keep flip all time-points the same
-        perm = permutation(deepcopy(rng),nPerm,mm;β=H0,blup_method=olsranef,use_threads=false); # constant rng to keep autocorr & olsranef for singular models
+        perm = permutation(deepcopy(rng),nPerm,mm;β=H0,blup_method=Unfold.olsranefjf,use_threads=false); # constant rng to keep autocorr & olsranef for singular models
         
         # extract the z-value
         perm_z = [m.z for m in perm.coefpvalues if String(m.coefname)==coefnames(mm)[coeffOfInterest]]
@@ -114,7 +114,10 @@ function cluster_permutation(rng::AbstractRNG,mres,dat,tRange,coeffOfInterest,nP
     # function to call pymne -> _find_cluster function
     function pymne_cluster(data,clusterFormingThreshold;tRange = 1:size(data,1), adjacency=nothing)
 
-        return PyMNE.stats.cluster_level._find_clusters(data,clusterFormingThreshold,adjacency=adjacency,include=tRange)
+    
+        #return PyMNE.stats.cluster_level._find_clusters(data,clusterFormingThreshold,adjacency=adjacency,include=tRange)
+        # this raised an error due to the named arguments, but was working before. not sure whats going on
+        return PyMNE.stats.cluster_level._find_clusters(data,clusterFormingThreshold,0,adjacency,1,tRange)
     end
     
     pymne_cluster(data,clusterFormingThreshold::String;kwargs...) = pymne_cluster(data,Dict(:start=>0,:step=>0.2);kwargs...)
@@ -160,4 +163,11 @@ function olsranefjf(model::LinearMixedModel{T}) where {T}
         push!(blups, re)
     end
     return blups,dummy_scalings(model.reterms)
+end
+
+function dummy_scalings(reterms)
+    scalings = repeat([LinearAlgebra.I],length(reterms))
+     scalings = vcat(scalings,1.) # add sigma scaling
+     return scalings
+
 end
