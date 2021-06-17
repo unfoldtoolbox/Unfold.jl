@@ -1,7 +1,7 @@
 # These functions are not included yet because I am not yet sure which plotting library to put my bets on.
 # Makie&StatsMakie could be supercool, but I ran into some issues
 
-using AlgebraOfGraphics
+using AlgebraOfGraphics, Makie
 
 #---
 #Plots.plot(m::Unfold.UnfoldModel)  = plot_results(m.results)
