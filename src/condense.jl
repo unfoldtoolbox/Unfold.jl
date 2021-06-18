@@ -139,6 +139,9 @@ function get_colnames_basis(rhs::AbstractTerm)
     return rhs.basisfunction.colnames
 end
 
+function get_basis_name(m::UnfoldModel)
+    return extract_term_info(Unfold.get_terms(m),1)
+end
 function get_basis_name(rhs::AbstractTerm)
     return rhs.basisfunction.name
 end
