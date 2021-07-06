@@ -23,7 +23,7 @@ basisfunction = firbasis(τ=(-1,1),sfreq=10,name="A")
 m_tul,m_tul_results = fit(UnfoldLinearModel,f,evts,data_r,basisfunction)
 m_tul_spl,m_tul_results_spl = fit(UnfoldLinearModel,f_spl,evts,data_r,basisfunction)
 
-evts_grid = gridexpand() 
+#evts_grid = gridexpand() 
 
 
 # results from timeexpanded and non should be equal

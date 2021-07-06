@@ -24,8 +24,8 @@ conditionA  = [0,1.]
 continuousA = [-1.,0,1.]
 
 tmp = reshape([ [x,y]  for x=conditionA, y=continuousA ],length(conditionA)*length(continuousA))
-evts_grid = DataFrame(hcat(tmp...)')
-rename!(evts_grid,["conditionA","continuousA"])
+evts_grid = DataFrame(collect(hcat(tmp...)'),["conditionA","continuousA"])
+
 
 yhat_tul = predict(m_tul,evts_grid)
 yhat_mul = predict(m_mul,evts_grid,times)

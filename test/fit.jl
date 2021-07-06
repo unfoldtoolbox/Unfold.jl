@@ -2,7 +2,7 @@
 # Test
 # ---
 using Test, StatsModels
-using DataFrames
+using DataFrames,CategoricalArrays
 
 using Unfold
 include("test_utilities.jl")
@@ -144,9 +144,11 @@ data = vcat(data,data)
 data = data.+ 1*randn(size(data)) # we have to add minimal noise, else mixed models crashes.
 data_missing = Array{Union{Missing,Number}}(undef,size(data))
 data_missing .= data
+
 data_missing[4500:4600] .= missing
 
-categorical!(evts,:subject)
+transform!(evts, :subject => categorical => :subject)
+
 f  = @formula 0~1+condA+condB + (1+condA+condB|subject)
 #f  = @formula 0~1 + (1|subject)
 

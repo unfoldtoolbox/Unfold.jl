@@ -5,7 +5,6 @@ version = "0.2.3"
 
 [deps]
 BSplines = "488c2830-172b-11e9-1591-253b8a7df96d"
-BlockDiagonals = "0a1fb500-61f7-11e9-3c65-f5ef3456f9f0"
 DSP = "717857b8-e6f2-59f4-9121-6e50c889abd2"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"

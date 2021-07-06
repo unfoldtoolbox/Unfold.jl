@@ -3,6 +3,7 @@ using Test,DataFrames,StatsModels
 using Unfold
 using MixedModels
 using SparseArrays
+using CategoricalArrays
 tbl = DataFrame([1 4]',[:latency])
 X = ones(size(tbl))
 shouldBeNeg = zeros(4,4)
@@ -61,9 +62,9 @@ if 1 == 0
     tbl = DataFrame([1 4 10 15 20 22 31 37; 1 1 1 2 2 2 3 3; 1 2 3 1 2 3 1 2]',[:latency,:subject,:item])
     tbl2 = DataFrame([2 3 12 18 19 25 40 43; 1 1 1 2 2 2 3 3; 1 2 3 1 2 3 1 2]',[:latency,:subject,:itemB])
     y = Float64.([collect(range(1,stop=100))...])'
-    categorical!(tbl,:subject)
-    categorical!(tbl2,:itemB)
-    categorical!(tbl,:item)
+    transform!(tbl, :subject => categorical => :subject)
+    transform!(tbl2, :itemB => categorical => :itemB)
+    transform!(tbl, :item => categorical => :item)
     #tbl.itemB = tbl.item
     f3 = @formula 0~1+(1|subject) + (1|item)
     f4 = @formula 0~1+(1|itemB)
@@ -105,10 +106,9 @@ bf2 = firbasis(τ=(0,0.5),sfreq = 10,name="basis2")
 tbl1 = DataFrame([1 4 10 15 20 22 31 37; 1 1 1 2 2 2 3 3; 1 2 3 1 2 3 1 2]',[:latency,:subject,:item])
 tbl2 = DataFrame([2 3 12 18 19 25 40 43; 1 1 1 2 2 2 3 3; 1 2 3 1 2 3 1 2]',[:latency,:subject,:itemB])
 
-categorical!(tbl1,:subject)
-categorical!(tbl1,:item)
-categorical!(tbl2,:itemB)
-
+transform!(tbl1, :subject => categorical => :subject)
+transform!(tbl1, :item => categorical => :item)
+transform!(tbl2, :itemB => categorical => :itemB)
 #tbl.itemB = tbl.item
 f1 = @formula 0~1+(1|subject) + (1|item)
 f2 = @formula 0~1+(1|itemB)
@@ -162,6 +162,7 @@ XA,XB = Unfold.changeMatSize!(40,X[1],X[2:end])
 
 data,evts = loadtestdata("testCase3",dataPath=(@__DIR__)*"/data") #
 evts.subject = categorical(evts.subject)
+
 
 f_zc  = @formula 0~1+condA+condB + zerocorr(1+condA+condB|subject)
 basisfunction = firbasis(τ=(-0.1,0.1),sfreq=10,name="ABC")

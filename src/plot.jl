@@ -6,8 +6,13 @@ using AlgebraOfGraphics, Makie
 #---
 #Plots.plot(m::Unfold.UnfoldModel)  = plot_results(m.results)
 
-function plot_results(results::DataFrame;y=:estimate,color=:term,layout_x=:group,stderror=false,pvalue = DataFrame(:from=>[],:to=>[],:pval=>[]))
-    m = mapping(:colname_basis,y,color=color,layout_x=layout_x)
+
+
+function plot_results(results::DataFrame;y=:estimate,color=:term,layout=:group,stderror=false,pvalue = DataFrame(:from=>[],:to=>[],:pval=>[]))
+    results = deepcopy(results)
+    results.group[isnothing.(results.group)] .= :fixef
+    m = mapping(:colname_basis,y,color=color,layout=layout)
+
 
     basic = AlgebraOfGraphics.data(results) * visual(Lines) * m
 
@@ -23,8 +28,10 @@ function plot_results(results::DataFrame;y=:estimate,color=:term,layout_x=:group
 
     # add the pvalues
     if !isempty(pvalue)
-        x = [Point(x,0.)=>Point(y,0.) for (x,y) in zip(pvalue.from,pvalue.to)]
-        linesegments!(d.children[1],x,linewidth=2) # assumes first one is where we want to plot. Limitation!
+
+        yval = d.grid[1,1].scales[2].extrema|>x->-0.01*(x[2]-x[1])+x[1]
+        x = [Point(x,yval)=>Point(y,yval) for (x,y) in zip(pvalue.from,pvalue.to)]
+        linesegments!(d.grid[1,1].axis,x,linewidth=4) # assumes first one is where we want to plot. Limitation!
 
     end
     return d

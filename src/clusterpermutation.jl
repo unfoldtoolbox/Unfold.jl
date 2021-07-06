@@ -3,13 +3,11 @@ using Random
 using ProgressMeter
 using PyMNE # not in Unfold.jl currently
 using MixedModelsPermutations
-using BlockDiagonals # for olsranefjf
-using StatsModels  # for olsranef
 
 function cluster_permutation_test(mres::UnfoldLinearMixedModel,
                     dat::Array,
                     times::StepRangeLen,
-                    coeffOfInterest = 2;
+                    coeffOfInterest;
                     clusterFormingThreshold = 2,
                     adjacency = nothing,
                     nPerm = 500,
@@ -54,11 +52,11 @@ fs = 1 ./Float64(times.step)
 # get p-values, we have to shift by the test_times[1] though
 if clusterFormingThreshold == "tfce"
     # not sure how to handle this nicer...
-    fromList = [o.start ./ fs - test_times[1] for o in obs_cluster[1]]
-    toList = [o.stop ./fs - test_times[1] for o in obs_cluster[1]]
+    fromList = [o.start ./ fs + test_times[1] for o in obs_cluster[1]]
+    toList = [o.stop ./fs + test_times[1] for o in obs_cluster[1]]
 else
-    fromList = [o[1].start ./ fs - test_times[1] for o in obs_cluster[1]]
-toList = [o[1].stop ./fs - test_times[1] for o in obs_cluster[1]]
+    fromList = [o[1].start ./ fs + test_times[1] for o in obs_cluster[1]]
+    toList = [o[1].stop ./fs + test_times[1] for o in obs_cluster[1]]
 end
 p_df = DataFrame(:from=>fromList,:to=>toList,:pval=>p_vals)
 
@@ -82,9 +80,8 @@ function cluster_permutation(rng::AbstractRNG,mres,dat,tRange,coeffOfInterest,nP
     #
     #p = Progress(length(tRange))
     #Threads.@threads for tIx =1:length(tRange)
-    #@showprogress "Processing Timepoints" 
-    for tIx =1:length(tRange)
-        println(string(tIx))
+    @showprogress "Processing Timepoints" for tIx =1:length(tRange)
+        #println(string(tIx))
         # splice in the correct data for residual calculation
         mm = deepcopy(mm_outer)
         mm.y .= dat[chIx,tRange[tIx],:]
@@ -98,7 +95,7 @@ function cluster_permutation(rng::AbstractRNG,mres,dat,tRange,coeffOfInterest,nP
         H0[coeffOfInterest] = 0
         # run the permutation
         # important here is to set the same seed to keep flip all time-points the same
-        perm = permutation(deepcopy(rng),nPerm,mm;β=H0,blup_method=Unfold.olsranefjf,use_threads=false); # constant rng to keep autocorr & olsranef for singular models
+        perm = permutation(deepcopy(rng),nPerm,mm;β=H0,blup_method=olsranef,use_threads=false); # constant rng to keep autocorr & olsranef for singular models
         
         # extract the z-value
         perm_z = [m.z for m in perm.coefpvalues if String(m.coefname)==coefnames(mm)[coeffOfInterest]]
@@ -123,51 +120,3 @@ function cluster_permutation(rng::AbstractRNG,mres,dat,tRange,coeffOfInterest,nP
     pymne_cluster(data,clusterFormingThreshold::String;kwargs...) = pymne_cluster(data,Dict(:start=>0,:step=>0.2);kwargs...)
 
 
-
-function olsranefjf(model::LinearMixedModel{T}) where {T}
-    
-    l = size(model.reterms)[1]
-
-    mat = Array{Any}(undef, l);
-    code = Array{Any}(undef, l);
-    ### I get the contrasts 
-    for i in 1:l
-        trm = model.reterms[i];
-        dim = size(trm.z)[1];
-        cd = StatsModels.ContrastsMatrix(EffectsCoding(), trm.levels).matrix;
-        cd = kron(cd,I(dim));
-        code[i] = cd;
-        mat[i] = trm*cd;
-    end
-    mat
-    X = hcat(mat...)
-    X1 = hcat(ones(size(X)[1]), X)  
-    fixef_res = response(model) - model.X*model.β;
-    flatblups = X1'X1 \ X1'fixef_res;
-    flatblups = deleteat!(flatblups,1)
-    
-    code_all = BlockDiagonal([x for x in code])
-    
-    flatblups = code_all*flatblups
-
-    blups = Vector{Matrix{T}}()
-
-    offset = 1
-    for trm in model.reterms
-        chunksize = size(trm, 2)
-        ngrps = length(trm.levels)
-        npreds = length(trm.cnames)
-        re = Matrix{T}(reshape(view(flatblups, offset:(offset+chunksize-1)),
-                               npreds, ngrps))
-        offset += chunksize
-        push!(blups, re)
-    end
-    return blups,dummy_scalings(model.reterms)
-end
-
-function dummy_scalings(reterms)
-    scalings = repeat([LinearAlgebra.I],length(reterms))
-     scalings = vcat(scalings,1.) # add sigma scaling
-     return scalings
-
-end
