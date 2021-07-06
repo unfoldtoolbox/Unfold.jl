@@ -4,10 +4,19 @@ using ProgressMeter
 using PyMNE # not in Unfold.jl currently
 using MixedModelsPermutations
 
+function cluster_permutation_test(mres,dat,times,coeffOfInterest::Array;kwargs...)
+    df_p = DataFrame()
+    for coef =coeffOfInterest
+        df_p_single = cluster_permutation_test(mres,dat,times,coef;kwargs...)
+        append!(df_p,df_p_single)
+    end
+end
+
+
 function cluster_permutation_test(mres::UnfoldLinearMixedModel,
                     dat::Array,
                     times::StepRangeLen,
-                    coeffOfInterest;
+                    coeffOfInterest::Int;
                     clusterFormingThreshold = 2,
                     adjacency = nothing,
                     nPerm = 500,
@@ -24,6 +33,7 @@ tRange = findfirst(times.>=test_times[1]):findfirst(times.>=test_times[2])
 
 # extract observed z-values
 z_obs = [m.z for m in coefpvalues(mres.modelinfo) if String(m.coefname)==coefnames(mres.X.formulas)[2][coeffOfInterest]]
+
 
 # cluster observed
 obs_cluster = pymne_cluster(z_obs,clusterFormingThreshold;tRange = tRange,adjacency=adjacency)
@@ -114,7 +124,11 @@ function cluster_permutation(rng::AbstractRNG,mres,dat,tRange,coeffOfInterest,nP
     
         #return PyMNE.stats.cluster_level._find_clusters(data,clusterFormingThreshold,adjacency=adjacency,include=tRange)
         # this raised an error due to the named arguments, but was working before. not sure whats going on
-        return PyMNE.stats.cluster_level._find_clusters(data,clusterFormingThreshold,0,adjacency,1,tRange)
+        
+        # need to convert to boolean
+        tRange_bool = zeros(size(data,1))
+        tRange_bool[tRange] .= 1
+        return PyMNE.stats.cluster_level._find_clusters(data,clusterFormingThreshold,0,adjacency,1,tRange_bool)
     end
     
     pymne_cluster(data,clusterFormingThreshold::String;kwargs...) = pymne_cluster(data,Dict(:start=>0,:step=>0.2);kwargs...)

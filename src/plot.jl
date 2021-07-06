@@ -21,7 +21,7 @@ function plot_results(results::DataFrame;y=:estimate,color=:term,layout=:group,s
         res_se = res_se[.!isnothing.(res_se.stderror),:]
         res_se[!,:se_low] = res_se[:,y].-res_se.stderror
         res_se[!,:se_high] = res_se[:,y].+res_se.stderror
-        basic =  AlgebraOfGraphics.data(res_se)*visual(Band,alpha=0.5)*mapping(:colname_basis,:se_low,:se_high,color=:term,layout_x=layout_x) + basic
+        basic =  AlgebraOfGraphics.data(res_se)*visual(Band,alpha=0.5)*mapping(:colname_basis,:se_low,:se_high,color=:term,layout=layout) + basic
     end
     
     d = basic |> draw
