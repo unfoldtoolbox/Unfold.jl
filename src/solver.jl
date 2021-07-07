@@ -124,3 +124,95 @@ function solver_b2b(X,data::AbstractArray{T,3};cross_val_reps = 10) where {T<:Un
     return beta, modelinfo
 end
 
+
+
+
+
+using MLJ
+function solver_b2bcv(X,data::AbstractArray{T,3},cross_val_reps = 10;solver=(a,b,c)->ridge(a,b,c)) where {T<:Union{Missing, <:Number}}
+    
+    #
+    X,data = Unfold.dropMissingEpochs(X,data)
+
+    # Open MLJ Tuner
+    @load RidgeRegressor pkg=MLJLinearModels
+    ##
+
+    tm = TunedModel(model=RidgeRegressor(fit_intercept=false),
+                resampling = CV(nfolds=5),
+                tuning = Grid(resolution=10),
+                range = range(RidgeRegressor(), :lambda, lower=1e-2, upper=1000, scale=:log10),
+                measure = rms)
+    
+
+    E = zeros(size(data,2),size(X,2),size(X,2))
+    W = Array{Float64}(undef,size(data,2),size(X,2),size(data,1))
+    println("n = samples = $(size(X,1)) = $(size(data,3))")
+    @showprogress 0.1 for t in 1:size(data,2)        
+        for m in 1:cross_val_reps
+            k_ix = collect(Kfold(size(data,3),2))
+            Y1 = data[:,t,k_ix[1]]
+            Y2 = data[:,t,k_ix[2]]
+            X1 = X[k_ix[1],:]
+            X2 = X[k_ix[2],:]
+       
+            G = solver(tm,Y1',X1)
+            H = solver(tm,X2, (Y2'*G))
+
+            E[t,:,:] = E[t,:,:]+Diagonal(H[diagind(H)])
+
+        end
+        E[t,:,:] = E[t,:,:] ./ cross_val_reps
+        W[t,:,:] = (X*E[t,:,:])' / data[:,t,:]
+
+    end
+
+    # extract diagonal
+    beta = mapslices(diag,E,dims=[2,3])
+    # reshape to conform to ch x time x pred
+    beta = permutedims(beta,[3 1 2])
+    modelinfo = Dict("W"=>W,"E"=>E,"cross_val_reps"=>cross_val_reps) # no history implemented (yet?)
+    return beta, modelinfo
+end
+
+
+
+function ridge(tm,data,X)
+    G = Array{Float64}(undef,size(data,2),size(X,2))
+    for pred in 1:size(X,2)
+        #println(elscitype(data))
+        mtm = machine(tm,table(data),X[:,pred])
+        fit!(mtm,verbosity=0)
+        G[:,pred] = Tables.matrix(fitted_params(mtm).best_fitted_params.coefs)[:,2]
+    end
+    return G
+end
+
+using GLMNet
+function ridge_glmnet(tm,data,X)
+    G = Array{Float64}(undef,size(data,2),size(X,2))
+    for pred in 1:size(X,2)
+        #println(elscitype(data))
+        cv = glmnetcv(data,X[:,pred],intercept=false)
+        G[:,pred] =cv.path.betas[:,argmin(cv.meanloss)]
+    end
+    return G
+end
+
+import ScikitLearn
+using ScikitLearn.GridSearch: GridSearchCV
+
+@ScikitLearn.sk_import linear_model: Ridge
+function ridge_sklearn(tm,data,X)
+    G = Array{Float64}(undef,size(data,2),size(X,2))
+    D = Dict(:C => 10 .^range(log10(tm.range.lower),stop=log10(tm.range.upper),length=10))
+
+    cv = GridSearchCV(Ridge(),Dict(:alpha => (10 .^range(log10(tm.range.lower),stop=log10(tm.range.upper),length=10))))
+    ScikitLearn.fit!(cv,data,X)
+
+    G = cv.best_estimator_.coef_'
+    
+    return G
+    
+
+end
