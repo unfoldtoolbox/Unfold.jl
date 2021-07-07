@@ -10,6 +10,7 @@ function cluster_permutation_test(mres,dat,times,coeffOfInterest::Array;kwargs..
         df_p_single = cluster_permutation_test(mres,dat,times,coef;kwargs...)
         append!(df_p,df_p_single)
     end
+    return df_p
 end
 
 
@@ -30,6 +31,8 @@ function cluster_permutation_test(mres::UnfoldLinearMixedModel,
 @assert(test_times[1]<test_times[2])
 tRange = findfirst(times.>=test_times[1]):findfirst(times.>=test_times[2])
 
+@show test_times
+@show tRange
 
 # extract observed z-values
 z_obs = [m.z for m in coefpvalues(mres.modelinfo) if String(m.coefname)==coefnames(mres.X.formulas)[2][coeffOfInterest]]
@@ -59,14 +62,15 @@ perm_H0 = vcat(perm_H0,zeros(nPerm-length(perm_H0)))
 p_vals = PyMNE.stats.cluster_level._pval_from_histogram(obs_cluster[2], perm_H0, 0)
 
 fs = 1 ./Float64(times.step)
+@show obs_cluster[1]
 # get p-values, we have to shift by the test_times[1] though
 if clusterFormingThreshold == "tfce"
     # not sure how to handle this nicer...
-    fromList = [o.start ./ fs + test_times[1] for o in obs_cluster[1]]
-    toList = [o.stop ./fs + test_times[1] for o in obs_cluster[1]]
+    fromList = [o.start ./fs + times[1] for o in obs_cluster[1]]
+    toList =   [o.stop  ./fs + times[1] for o in obs_cluster[1]]
 else
-    fromList = [o[1].start ./ fs + test_times[1] for o in obs_cluster[1]]
-    toList = [o[1].stop ./fs + test_times[1] for o in obs_cluster[1]]
+    fromList = [o[1].start ./fs + times[1] for o in obs_cluster[1]]
+    toList =   [o[1].stop  ./fs + times[1] for o in obs_cluster[1]]
 end
 p_df = DataFrame(:from=>fromList,:to=>toList,:pval=>p_vals)
 
@@ -105,7 +109,7 @@ function cluster_permutation(rng::AbstractRNG,mres,dat,tRange,coeffOfInterest,nP
         H0[coeffOfInterest] = 0
         # run the permutation
         # important here is to set the same seed to keep flip all time-points the same
-        perm = permutation(deepcopy(rng),nPerm,mm;β=H0,blup_method=olsranef,use_threads=false); # constant rng to keep autocorr & olsranef for singular models
+        perm = permutation(deepcopy(rng),nPerm,mm;β=H0,blup_method=olsranef,use_threads=false,hide_progress=true); # constant rng to keep autocorr & olsranef for singular models
         
         # extract the z-value
         perm_z = [m.z for m in perm.coefpvalues if String(m.coefname)==coefnames(mm)[coeffOfInterest]]
