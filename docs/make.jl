@@ -10,8 +10,14 @@ makedocs(sitename="Unfold.jl",
         prettyurls = get(ENV, "CI", nothing) == "true",
         pages = [
             "index.md",
-            "LM Tutorial" =>"lm_tutorial.md",
-            "LMM Tutorial" =>"lmm_tutorial.md",
+            "Tutorials",[
+                "Mass Univariate Tutorial" =>"tutorials/lm_mu.md",
+                "Overlap correction Tutorial" =>"tutorials/lm_overlap.md",
+                "(to be overhauled) LMM Tutorial" =>"tutorials/lmm_tutorial.md",],
+            "HowTo",[],
+            "Explanations",["Temporal Basisfunctions" => "explanations/basisfunctions.md"],
+            "Reference",[],
+            
         ])
 
 deploydocs(; repo = "github.com/unfoldtoolbox/Unfold.jl", push_preview = true,        devbranch = "main")
