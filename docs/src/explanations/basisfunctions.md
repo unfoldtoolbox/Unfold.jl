@@ -44,9 +44,11 @@ plot(y_conv)
 
 
 
-!!! note Eents could fall inbetween TR (the sampling rate). Some packages subsample the time signal, but in `Unfold` we can directly call the `bold.kernel` function at a given event-time, which allows for non-TR-multiples to be used.
 
 Now you can appreciate, that the conditions overlap in time with eachother. To get back to the original amplitude values, we need to specify a basis function, and use Unfold to deconvolve the signals.
+
+!!! note 
+    Events could fall inbetween TR (the sampling rate). Some packages subsample the time signal, but in `Unfold` we can directly call the `bold.kernel` function at a given event-time, which allows for non-TR-multiples to be used.
 
 
 ### FIR Basis Function

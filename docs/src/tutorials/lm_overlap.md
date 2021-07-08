@@ -64,7 +64,8 @@ The formula and basisfunction is not enough on their own. We also need to specif
 ```@example Main
 bfDict = Dict(Any=>(f,basisfunction))
 ```
-!!! note You can also use `(Any=>(f,basisfunction)`, the `Any` means to use all rows in `evts`. In case you have multiple events, you'd want to specify multiple basisfunctions e.g. 
+!!! note
+        You can also use `(Any=>(f,basisfunction)`, the `Any` means to use all rows in `evts`. In case you have multiple events, you'd want to specify multiple basisfunctions e.g. 
         ```
         bfDict = Dict("stimulus"=>(f1,basisfunction1),
               "response"=>(f2,basisfunction2))

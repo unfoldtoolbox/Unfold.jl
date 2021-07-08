@@ -39,6 +39,7 @@ first(evts,6)
 
 !!! note 
         Note how small the data is! Only 12k samples, that is only ~5minutes of recording in total for 25 subjects. More realistic samples quickly take hours to fit.
+        
         ```@example Main
         size(data)
         ```
@@ -74,7 +75,7 @@ m,results = fit(UnfoldLinearMixedModel,f,evts,data_epochs,times)
 
 Let's start with the **fixed** Effects
 ```@example Main
-res_fixef = results[results.group.==:fixed,:]
+res_fixef = results[isnothing.(results.group),:]
 Plots.plot(res_fixef.colname_basis,res_fixef.estimate,
         group=res_fixef.term,
         layout=1,legend=:outerbottom)

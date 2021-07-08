@@ -48,6 +48,7 @@ nothing #hide
 We define the formula. Importantly we need to specify a random effect. 
 
 !!! note We are using `zerocorr` because we need it here, else the model will try to model all correlations between all timepoints and all factors!
+
 ```@example Main
 f  = @formula 0~1+condA*condB+zerocorr(1+condA*condB|subject);
 ```
@@ -63,7 +64,8 @@ bfDict = Dict(Any=>(f,basisfunction))
 
 #### 4. Visualize results
 
-!!! note We are working on UnfoldMakie.jl - a library to make these plots automatic and beautiful. This tutorial will be updated
+!!! note
+        We are working on UnfoldMakie.jl - a library to make these plots automatic and beautiful. This tutorial will be updated
 
 Let's start with the **fixed** Effects
 ```@example Main
