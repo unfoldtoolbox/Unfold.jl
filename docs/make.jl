@@ -13,13 +13,13 @@ makedocs(sitename="Unfold.jl",
             "Tutorials"=>[
                 "Running these tutorials" => "tutorials/installation.md",
                 "Mass Univariate" =>"tutorials/lm_mu.md",
-                "Overlap correction" =>"tutorials/lm_overlap.md",
-                "(to be overhauled) Mass Univariate Mixed Model" =>"tutorials/lmm_mu.md",
-                "(to be overhauled) Mixed Model with Overlap" =>"tutorials/lmm_overlap.md",
+                "Mass Univariate Mixed Model" =>"tutorials/lmm_mu.md",
+                "LM Overlap correction" =>"tutorials/lm_overlap.md",
+                "(t.b.d.) LMM + Overlap correction" =>"tutorials/lmm_overlap.md",
             ],
-            "HowTo"=>[],
+            "HowTo"=>["Overlap: Different events"multiple_events.md"],
             "Explanations"=>["Temporal Basisfunctions" => "./explanations/basisfunctions.md"],
-            "Reference"=>[],
+            "Reference"=>["references/datastructures.md"],
             
         ])
 
