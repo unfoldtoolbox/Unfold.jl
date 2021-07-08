@@ -13,7 +13,7 @@ using StatsModels, MixedModels, DataFrames
 import DSP.conv
 import Plots
 using Unfold
-include("../../test/test_utilities.jl"); # to load the simulated data
+include("../../../test/test_utilities.jl"); # to load the simulated data
 
 nothing # hide
 ```
@@ -27,7 +27,7 @@ nothing # hide
 In this notebook we will fit regression models to (simulated) EEG data. We will see that we need some type o7overlap correction, as the events are close in time to each other, so that the respective brain responses overlap.
 If you want more detailed introduction to this topic check out [our paper](https://peerj.com/articles/7838/).
 ```@example Main
-data, evts = loadtestdata("testCase2",dataPath="../../test/data/");
+data, evts = loadtestdata("testCase2",dataPath="../../../test/data/");
 nothing # hide
 ```
 
@@ -68,7 +68,7 @@ size(data_epochs)
 
 
 ```@example Main
-type(data_epochs)
+typeof(data_epochs)
 ```
 !!! note In julia, `missing` is supported throughout the ecosystem. Thus, we can have partial trials and they will be incorporated / ignored at the respective functions.
 

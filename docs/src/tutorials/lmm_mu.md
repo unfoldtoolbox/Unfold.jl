@@ -1,75 +1,49 @@
 # Overlap Correction with Linear Mixed Models
 
-date: 2021-04-29
-----
-
 ```@example Main
-
-
-using StatsModels, MixedModels, DataFrames
+using StatsModels, MixedModels, DataFrames,CategoricalArrays
 import Plots
 using Unfold
-include("../../test/test_utilities.jl"); # function to load the simulated data
+include("../../../test/test_utilities.jl"); # function to load the simulated data
+nothing;#hide
 ```
 
 
+This notebook is similar to the `lm_tutorial`, but fits mass-univariate *mixed* models 
 
 
 
-This notebook is similar to the `lm_tutorial`, but fits mass-univariate *mixed* models and time-expanded/overlap-corrected *mixed* models.
+## Mass Univariate **Mixed** Models
+Again we have 4 steps:
+1. epoch the data
+2. specify a formula 
+3. fit a linear model to each time point & channel
+4. visualize the results.
 
-## Reading input
+
+#### 1. Epoching
 The data were simulated in MatLab using the `unmixed toolbox (www.unfoldtoolbox.org)` with the function`EEG_to_csv.m`.
-
-**Limitation**: due to current implementation in MixedModels.jl, we cannot fit overlap-corrected random effects.
-That is, the `(1|item)` cannot be modelled at the moment.
-
 ```@example Main
 
-data, evts = loadtestdata("testCase3",dataPath = "../../test/data/")
+data, evts = loadtestdata("testCase3",dataPath = "../../../test/data/")
 data = data.+ 0.1*randn(size(data)) # we have to add minimal noise, else mixed models crashes.
 
-categorical!(evts,:subject);
+transform!(evts,:subject=>categorical=>:subject);
+nothing #hide
 ```
 
-
-
-The `events` dataFrame looks like this
+The `events` dataFrame has an additional column (besides being much taller): `subject`
 ```@example Main
-
 first(evts,6)
 ```
 
+!!! note 
+        Note how small the data is! Only 12k samples, that is only ~5minutes of recording in total for 25 subjects. More realistic samples quickly take hours to fit.
+        ```@example Main
+        size(data)
+        ```
 
-
-With the important fields being `latency`, `condA`, `condB` and `subject`.
-
-The data are a vector.
-```@example Main
-typeof(data)
-```
-
-```@example Main
-size(data)
-```
-
-
-
-
-**Limitation** Note how small it is! Only 12k samples, that is only ~5minutes of recording in total for 25 subjects. More realistic samples quickly take hours to fit.
-
-## Without Overlap Correction
-We define the formula
-```@example Main
-f  = @formula 0~1+condA*condB+(1+condA*condB|subject);
-```
-
-
-
-
-
-
-epoch the data for the mass-univariate mixed model case
+Now we are ready to epoch the data - same as for the mass univariate, but we have more trials (nsubject more)
 ```@example Main
 data_r = reshape(data,(1,:))
 # cut the data into epochs
@@ -80,16 +54,27 @@ evts,data_epochs = Unfold.dropMissingEpochs(evts,data_epochs); nothing #hide
 
 
 
+#### 2. Specify the formula
+We define the formula. Importantly we need to specify a random effect. We are using `zerocorr` to speed up the calculation and show off that we can use it.
+```@example Main
+f  = @formula 0~1+condA*condB+zerocorr(1+condA*condB|subject);
+```
 
+
+#### 3. Fit the model
 We can now run the LinearMixedModel on each time point
 ```@example Main
 m,results = fit(UnfoldLinearMixedModel,f,evts,data_epochs,times) 
 ```
 
 
-### Fixed Effects
+#### 4. Visualize results
+
+!!! note We are working on UnfoldMakie.jl - a library to make these plots automatic and beautiful. This tutorial will be updated
+
+Let's start with the **fixed** Effects
 ```@example Main
-res_fixef = results[results.group.=="fixed",:]
+res_fixef = results[results.group.==:fixed,:]
 Plots.plot(res_fixef.colname_basis,res_fixef.estimate,
         group=res_fixef.term,
         layout=1,legend=:outerbottom)
@@ -98,10 +83,10 @@ Plots.plot(res_fixef.colname_basis,res_fixef.estimate,
 
 We see the condition effects and some residual overlap activity in the fixed effects
 
-### Random Effects
-And the random effect results
+
+And now the **random** effect results
 ```@example Main
-res_ranef = results[results.group.=="subject",:]
+res_ranef = results[results.group.==:subject,:]
 Plots.plot(res_ranef.colname_basis,res_ranef.estimate,
         group=res_ranef.term,
         layout=1,legend=:outerbottom)
@@ -153,7 +138,7 @@ first(results,6)
 and thus we can easily plot the fixed effect results.
 ```@example Main
 
-res_fixef = results[results.group.=="fixed",:]
+res_fixef = results[results.group.==:fixed,:]
 Plots.plot(res_fixef.colname_basis,res_fixef.estimate,
         group=res_fixef.term,
         layout=1,legend=:outerbottom)
