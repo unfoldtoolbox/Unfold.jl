@@ -62,6 +62,7 @@ basisfunction = firbasis(τ=(-0.4,.8),sfreq=50,name="myFIRbasis")
 plot(basisfunction.kernel(0))
 ```
 
+First thing to notice, it is not one basisfunction, but a basisfunction set. Thus every condition will be explained by several basisfunctions!
 
 
 Not very clear, better show it in 2D
