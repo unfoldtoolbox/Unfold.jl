@@ -128,7 +128,7 @@ end
 
 
 
-using MLJ
+using MLJ,MLJLinearModels,Tables,LinearAlgebra
 function solver_b2bcv(X,data::AbstractArray{T,3},cross_val_reps = 10;solver=(a,b,c)->ridge(a,b,c)) where {T<:Union{Missing, <:Number}}
     
     #
@@ -142,7 +142,7 @@ function solver_b2bcv(X,data::AbstractArray{T,3},cross_val_reps = 10;solver=(a,b
                 resampling = CV(nfolds=5),
                 tuning = Grid(resolution=10),
                 range = range(RidgeRegressor(), :lambda, lower=1e-2, upper=1000, scale=:log10),
-                measure = rms)
+                measure = MLJ.rms)
     
 
     E = zeros(size(data,2),size(X,2),size(X,2))
@@ -199,20 +199,20 @@ function ridge_glmnet(tm,data,X)
     return G
 end
 
-import ScikitLearn
-using ScikitLearn.GridSearch: GridSearchCV
+#import ScikitLearn
+#using ScikitLearn.GridSearch: GridSearchCV
 
-@ScikitLearn.sk_import linear_model: Ridge
-function ridge_sklearn(tm,data,X)
-    G = Array{Float64}(undef,size(data,2),size(X,2))
-    D = Dict(:C => 10 .^range(log10(tm.range.lower),stop=log10(tm.range.upper),length=10))
+#@ScikitLearn.sk_import linear_model: Ridge
+#function ridge_sklearn(tm,data,X)
+#    G = Array{Float64}(undef,size(data,2),size(X,2))
+#    D = Dict(:C => 10 .^range(log10(tm.range.lower),stop=log10(tm.range.upper),length=10))##
 
-    cv = GridSearchCV(Ridge(),Dict(:alpha => (10 .^range(log10(tm.range.lower),stop=log10(tm.range.upper),length=10))))
-    ScikitLearn.fit!(cv,data,X)
+#    cv = GridSearchCV(Ridge(),Dict(:alpha => (10 .^range(log10(tm.range.lower),stop=log10(tm.range.upper),length=10))))
+#    ScikitLearn.fit!(cv,data,X)
 
-    G = cv.best_estimator_.coef_'
+#    G = cv.best_estimator_.coef_'
     
-    return G
+#    return G
     
 
-end
+#end

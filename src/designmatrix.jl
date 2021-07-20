@@ -224,7 +224,7 @@ julia>  designmatrix(UnfoldLinearModel,f,tbl,basisfunction1)
 """
 function designmatrix(type,f::Union{Tuple,FormulaTerm},tbl,basisfunction;contrasts= Dict{Symbol,Any}(), kwargs...)
         @debug("generating DesignMatrix")
-        form = apply_schema(f, schema(f, tbl, contrasts), MixedModels.LinearMixedModel)
+        form = apply_schema(f, StatsModels.schema(f, tbl, contrasts), MixedModels.LinearMixedModel)
         form = apply_basisfunction(form,basisfunction,get(Dict(kwargs),:eventfields,nothing))
 
         # Evaluate the designmatrix
