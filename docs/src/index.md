@@ -9,8 +9,6 @@ Once you are familiar with the tools, check out further how-to guides for specif
 
 In case you want to understand the toolbox better, we plan to offer technical references. This includes Benchmarks & Explorations.
 
-## Summary
-
 
 ## Summary
 There are four different model types currently "fitable"
