@@ -70,7 +70,8 @@ size(data_epochs)
 ```@example Main
 typeof(data_epochs)
 ```
-!!! note In julia, `missing` is supported throughout the ecosystem. Thus, we can have partial trials and they will be incorporated / ignored at the respective functions.
+!!! note
+        In julia, `missing` is supported throughout the ecosystem. Thus, we can have partial trials and they will be incorporated / ignored at the respective functions.
 
 
 
@@ -103,7 +104,8 @@ Further, we got a *tidy*-dataframe with the results
 first(results,6)
 ```
 
-!!! note (`:colname_basis` is used instead of `:time` [this might change]. The reason is that not all basisfunctions have a time dimension)
+!!! note 
+        (`:colname_basis` is used instead of `:time` [this might change]. The reason is that not all basisfunctions have a time dimension)
 
 #### 4. Visualize the results
 Tidy-Dataframes make them easy to visualize.
