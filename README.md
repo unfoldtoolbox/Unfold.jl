@@ -1,6 +1,10 @@
 # Unfold.jl
 
-**Beta** Toolbox to perform linear regression on biological signals. ![](https://github.com/unfoldtoolbox/Unfold.jl/workflows/CI/badge.svg)
+**Beta** Toolbox to perform linear regression on biological signals. 
+
+![](https://github.com/unfoldtoolbox/Unfold.jl/workflows/CI/badge.svg)
+
+[link to tutorials / documentation](https://unfoldtoolbox.github.io/Unfold.jl/dev/)
 
 This tool combines mass-univariate linear (mixed) models with overlap correction.
 
@@ -16,9 +20,9 @@ The julia toolbox is a type of research-playground, but offers LinearMixedModel 
 |-------------------------|--------|---------|-----------|
 | overlap correction      | x      | x       | x         |
 | non-linear splines      | x      | x       | x         |
-| plotting tools          | x      |         |           |
+| plotting tools          | x      |         | (x)        |
 | sanity checks           | x      |         |           |
-| tutorials               | x      |         |           |
+| tutorials               | x      |         | (x)       |
 | speed                   | x      |         | x         |
 | unittests               | x      |         | x         |
 | HRF (fMRI) basis        |        |         | x         |
