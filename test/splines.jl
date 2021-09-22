@@ -12,16 +12,16 @@ f  = @formula 0~1+conditionA+continuousA # 1
 data_r = reshape(data,(1,:))
 data_e,times = Unfold.epoch(data=data_r,tbl=evts,τ=(-1.,1.),sfreq=10) # cut the data into epochs
 
-m_mul,m_mul_results = fit(UnfoldLinearModel,f,evts,data_e,times)
-m_mul_spl,m_mul_results_spl = fit(UnfoldLinearModel,f_spl,evts,data_e,times)
+m_mul = coeftable(fit(UnfoldModel,f,evts,data_e,times))
+m_mul_spl = coeftable(fit(UnfoldModel,f_spl,evts,data_e,times))
 
 # asking for 4 splines should generate 4 splines 
-@test length(unique(m_mul_results_spl.term)) == 6 # XXX check back with Unfold whether this is the same! could be n-1 splines in Unfold. We should keep that comparable I guess
+@test length(unique(m_mul_spl.term)) == 6 # XXX check back with Unfold whether this is the same! could be n-1 splines in Unfold. We should keep that comparable I guess
 
 
 basisfunction = firbasis(τ=(-1,1),sfreq=10,name="A")
-m_tul,m_tul_results = fit(UnfoldLinearModel,f,evts,data_r,basisfunction)
-m_tul_spl,m_tul_results_spl = fit(UnfoldLinearModel,f_spl,evts,data_r,basisfunction)
+m_tul = coeftable(fit(UnfoldModel,f,evts,data_r,basisfunction))
+m_tul_spl = coeftable(fit(UnfoldModel,f_spl,evts,data_r,basisfunction))
 
 #evts_grid = gridexpand() 
 
@@ -40,7 +40,7 @@ end
 
 # test much higher number of splines
 f_spl_many  = @formula 0~1+spl(continuousA,131) # 1
-m_mul_spl_many,m_mul_results_spl_many = fit(UnfoldLinearModel,f_spl_many,evts,data_e,times)
-@test length(unique(m_mul_results_spl_many.term)) == 132
+m_mul_spl_many = coeftable(fit(UnfoldModel,f_spl_many,evts,data_e,times))
+@test length(unique(m_mul_spl_many.term)) == 132
 
 
