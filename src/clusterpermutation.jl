@@ -21,8 +21,8 @@ function cluster_permutation_test(mres::UnfoldLinearMixedModel,
                     clusterFormingThreshold = 2,
                     adjacency = nothing,
                     nPerm = 500,
-                    test_times = (minimum(times),maximum(times))
-
+                    test_times = (minimum(times),maximum(times)),
+                    stat=:β,
                     )
 
 
@@ -31,15 +31,12 @@ function cluster_permutation_test(mres::UnfoldLinearMixedModel,
 @assert(test_times[1]<test_times[2])
 tRange = findfirst(times.>=test_times[1]):findfirst(times.>=test_times[2])
 
-@show test_times
-@show tRange
-
 # extract observed z-values
-z_obs = [m.z for m in coefpvalues(mres.modelinfo) if String(m.coefname)==coefnames(mres.X.formulas)[2][coeffOfInterest]]
+stat_obs = [getproperty(m,stat) for m in coefpvalues(mres.modelinfo) if String(m.coefname)==coefnames(mres.X.formulas)[2][coeffOfInterest]]
 
 
 # cluster observed
-obs_cluster = pymne_cluster(z_obs,clusterFormingThreshold;tRange = tRange,adjacency=adjacency)
+obs_cluster = pymne_cluster(stat_obs,clusterFormingThreshold;tRange = tRange,adjacency=adjacency)
 
 # if there is no cluster in the real data, return empty p_df
 if isempty(obs_cluster[2])
@@ -48,7 +45,7 @@ if isempty(obs_cluster[2])
 end
 
 # this is the meat of the function.
-permDat = cluster_permutation(mres,dat,tRange,coeffOfInterest,nPerm)
+permDat = cluster_permutation(mres,dat,tRange,coeffOfInterest,nPerm;stat=stat)
 
 
 # cluster permuted
@@ -62,7 +59,7 @@ perm_H0 = vcat(perm_H0,zeros(nPerm-length(perm_H0)))
 p_vals = PyMNE.stats.cluster_level._pval_from_histogram(obs_cluster[2], perm_H0, 0)
 
 fs = 1 ./Float64(times.step)
-@show obs_cluster[1]
+
 # get p-values, we have to shift by the test_times[1] though
 if clusterFormingThreshold == "tfce"
     # not sure how to handle this nicer...
@@ -86,7 +83,7 @@ end
 
 cluster_permutation(args...;kwargs...) = cluster_permutation(MersenneTwister(1),args...;kwargs...)
 
-function cluster_permutation(rng::AbstractRNG,mres,dat,tRange,coeffOfInterest,nPerm)
+function cluster_permutation(rng::AbstractRNG,mres,dat,tRange,coeffOfInterest,nPerm;stat=:β)
     permDat = Matrix{Float64}(undef,length(tRange),nPerm)
     mm_outer = Unfold.LinearMixedModel_wrapper(mres.X.formulas,dat[1,1,:],mres.X.Xs)
     
@@ -111,11 +108,11 @@ function cluster_permutation(rng::AbstractRNG,mres,dat,tRange,coeffOfInterest,nP
         # important here is to set the same seed to keep flip all time-points the same
         perm = permutation(deepcopy(rng),nPerm,mm;β=H0,blup_method=olsranef,use_threads=false,hide_progress=true); # constant rng to keep autocorr & olsranef for singular models
         
-        # extract the z-value
-        perm_z = [m.z for m in perm.coefpvalues if String(m.coefname)==coefnames(mm)[coeffOfInterest]]
+        # extract the test-statistic
+
+        #perm_z = [m.z for m in perm.coefpvalues if String(m.coefname)==coefnames(mm)[coeffOfInterest]]
+        permDat[tIx,:] = [getproperty(m,stat) for m in perm.coefpvalues if String(m.coefname)==coefnames(mm)[coeffOfInterest]]
     
-        # save it
-        permDat[tIx,:] = perm_z
         #next!(p)
     end
     return permDat

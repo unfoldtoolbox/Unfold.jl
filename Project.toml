@@ -1,10 +1,11 @@
 name = "Unfold"
 uuid = "181c99d8-e21b-4ff3-b70b-c233eddec679"
 authors = ["Benedikt Ehinger <science@benediktehinger.de>"]
-version = "0.2.4"
+version = "0.3.0"
 
 [deps]
 BSplines = "488c2830-172b-11e9-1591-253b8a7df96d"
+CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
 DSP = "717857b8-e6f2-59f4-9121-6e50c889abd2"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
@@ -32,6 +33,6 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 TimerOutputs = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
 
 [compat]
-MixedModels = "3.4.0"
+MixedModels = "4.0.0"
 Tables = "1"
 julia = "1.6"

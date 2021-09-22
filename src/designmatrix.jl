@@ -63,14 +63,6 @@ $(FIELDS)
 julia>  b = TimeExpandedTerm(term,kernel,[:latencyTR,:durationTR])
 ```
 """
-struct DesignMatrix
-        "Array of formulas"
-        formulas
-        "A concatenated designmatric. In case of Mixed Models an array, where the first one is a FeMat, later ones ReMats. "
-        Xs
-        "Event table with all events"
-        events
-end
 
 
 
@@ -222,6 +214,7 @@ julia>  designmatrix(UnfoldLinearModel,f,tbl,basisfunction1)
 ```
 
 """
+
 function designmatrix(type,f::Union{Tuple,FormulaTerm},tbl,basisfunction;contrasts= Dict{Symbol,Any}(), kwargs...)
         @debug("generating DesignMatrix")
         form = apply_schema(f, schema(f, tbl, contrasts), MixedModels.LinearMixedModel)
@@ -239,8 +232,12 @@ function designmatrix(type,f,tbl;kwargs...)
         return designmatrix(type,f,tbl,nothing;kwargs...)
 end
 
-function designmatrix(type,fDict::Dict,tbl;eventcolumn = :event,contrasts= Dict{Symbol,Any}(), kwargs...)
+# specify for abstract interface
+designmatrix(uf::UnfoldModel) = uf.designmatrix
+
+function designmatrix(uf::UnfoldModel,tbl;eventcolumn = :event,contrasts= Dict{Symbol,Any}(), kwargs...)
         X = nothing
+        fDict = design(uf)
         for (eventname,f) in pairs(fDict)        
                 if eventname == Any
                         eventTbl = tbl
@@ -256,12 +253,24 @@ function designmatrix(type,fDict::Dict,tbl;eventcolumn = :event,contrasts= Dict{
 
                 fIx = collect(typeof.(f) .<:FormulaTerm)
                 bIx = collect(typeof.(f) .<:BasisFunction)
-                X = X+designmatrix(type,f[fIx],eventTbl,collect(f[bIx])[1];contrasts= contrasts, kwargs...)
+        
+
+
+                if any(bIx)
+                        # timeContinuos way
+                        # TODO there should be a julian way to do this distinction
+
+                        X = X+designmatrix(typeof(uf),f[fIx],eventTbl,collect(f[bIx])[1];contrasts= contrasts, kwargs...)
+                else
+                        # normal way
+                        X = X+designmatrix(typeof(uf),f[fIx],eventTbl;contrasts= contrasts, kwargs...)
+                end
         end
         return X
 end
 
-
+import Base.isempty
+Base.isempty(d::DesignMatrix) = isempty(d.Xs)
 
 """
 $(SIGNATURES)
@@ -280,10 +289,36 @@ function apply_basisfunction(form,basisfunction::Nothing,eventfields)
 end
 
 
+function designmatrix!(uf::UnfoldModel,evts;kwargs...)
+        X = designmatrix(uf,evts;kwargs...)
+        uf.designmatrix = X
+    end
+    
+
+function modelmatrix(uf::UnfoldLinearModelContinuousTime;basisfunction=true)
+        if basisfunction
+                return modelmatrix(designmatrix(uf))
+        else
+                return modelmatrix(design(uf),events(uf))
+        end
+end
 
 
+modelmatrix(uf::UnfoldModel) =  modelmatrix(designmatrix(uf))#modelmatrix(uf.design,uf.designmatrix.events)
+modelmatrix(d::DesignMatrix) =  d.Xs
+modelmatrix(d::Dict,events) = modelcols(formula(d).rhs,events)
 
+formula(uf::UnfoldModel) = formula(designmatrix(uf))
+formula(d::DesignMatrix) = d.formulas
 
+events(uf::UnfoldModel) = events(designmatrix(uf))
+events(d::DesignMatrix) = d.events
+
+design(uf::UnfoldModel) = uf.design
+
+function formula(d::Dict) #TODO Specify Dict better
+        return collect(values(d))[1][1] # give back first formula for now
+end
 
 """
 $(SIGNATURES)

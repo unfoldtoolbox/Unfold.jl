@@ -9,17 +9,16 @@ function solver_default(X,data::AbstractArray{T,2};stderror=false) where {T<:Uni
         beta[ch,:],h = lsmr(X[ix,:],data[ch,ix],log=true)
         push!(minfo,h)   
     end
-
+    
     if stderror
         stderror = calculate_stderror(X,data,beta)
-        minfo = modelinfo(modelinfo,stderror)
+        modelfit = LinearModelFit(beta,[modelinfo,"lsmr"],stderror)
+    else
+        modelfit = LinearModelFit(beta,[modelinfo,"lsmr"])
     end
-    return beta, minfo
+    return modelfit
 end
-struct modelinfo
-    history
-    stderror
-end
+
 
 function calculate_stderror(Xdc,data::Matrix{T},beta) where {T<:Union{Missing, <:Number}}  
 
@@ -77,12 +76,14 @@ function solver_default(X,data::AbstractArray{T,3};stderror=false) where {T<:Uni
            end
        end
    
-       minfo = [undef] # no history implemented (yet?)
        if stderror
+        println("here I am")
             stderror = calculate_stderror(X,data,beta)
-            minfo = modelinfo(minfo,stderror)
+            modelfit = LinearModelFit(beta,["solver_default"],stderror)
+        else
+            modelfit = LinearModelFit(beta,["solver_default"])
         end
-       return beta, minfo
+        return modelfit
 end
 
 solver_b2b(X,data,cross_val_reps) = solver_b2b(X,data,cross_val_reps = cross_val_reps)
@@ -121,6 +122,6 @@ function solver_b2b(X,data::AbstractArray{T,3};cross_val_reps = 10) where {T<:Un
     # reshape to conform to ch x time x pred
     beta = permutedims(beta,[3 1 2])
     modelinfo = Dict("W"=>W,"E"=>E,"cross_val_reps"=>cross_val_reps) # no history implemented (yet?)
-    return beta, modelinfo
+    return LinearModelFit(beta, modelinfo)
 end
 

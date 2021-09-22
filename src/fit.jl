@@ -23,48 +23,72 @@ julia> model,results_long = fit(UnfoldLinearModel,f,evts,data_r,basisfunction)
 ```
 
 """
-function fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::FormulaTerm,tbl::DataFrame,data::Array{T,3},times;kwargs...) where {T}
-    @assert size(data,2) == length(times)
-
-    to = TimerOutput()
-    # Generate the designmatrices
-    @timeit to "designmatrix" Xs = designmatrix(type,f,tbl;kwargs...)
-
-    # Fit the model
-    @timeit to "fit" ufModel = unfoldfit(type,Xs,data;kwargs...)
-
-    @timeit to "condense" c = condense_long(ufModel,times)
-    # Condense output and return
-    @debug(to)
-    return ufModel,c
+# helper function encapsulating the call into an array
+function fit(UnfoldModelType::Type{T},f::FormulaTerm,tbl::DataFrame,data::AbstractArray,basisOrTimes::Union{BasisFunction,AbstractArray};kwargs...) where{T<:Union{<:UnfoldModel}}
+    fit(UnfoldModelType,Dict(Any=>(f,basisOrTimes)),tbl,data;kwargs...)
 end
 
 
-function fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::FormulaTerm, tbl::DataFrame, data::Array{T,2},basisfunction::BasisFunction; kwargs...) where {T}
-# backward compatible call, typically these models are run with multiple events
-fit(type,Dict(Any=>(f,basisfunction)), tbl, data; kwargs...)
+function fit(UnfoldModelType::Type{T},design::Dict,tbl::DataFrame,data::AbstractArray;kwargs...) where {T<:Union{<:UnfoldModel}}
+    to = TimerOutput()
+    if UnfoldModelType == UnfoldModel
+        UnfoldModelType = designToModeltype(design)
+    end
+    uf = UnfoldModelType(design)
+
+    @timeit to "designmatrix" designmatrix!(uf,tbl;kwargs...)
+    @timeit to "fit" fit!(uf,data;kwargs...)
+
+    return uf
 end
 
-# Timeexpanded Model
-function fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::Dict, tbl::DataFrame, data::Array{T,2}; kwargs...) where {T}
-    to = TimerOutput()
+function fit(UnfoldModelType::Type{T},X::DesignMatrix,data::AbstractArray;kwargs...) where {T<:Union{<:UnfoldModel}}
+    if UnfoldModelType == UnfoldModel
+        error("Can't infer model automatically, specify with e.g. fit(UnfoldLinearModel...) instead of fit(UnfoldModel...)")
+    end
+    uf = UnfoldModelType(Dict(),X)
+    
+    fit!(uf,data;kwargs...)
 
-    # Generate the designmatrices
-    @timeit to "unfoldDesignmat" Xs = designmatrix(type,f,tbl;kwargs...)
+    return uf
+end
 
-    # Fit the model
-    @timeit to "unfoldfit" ufModel = unfoldfit(type,Xs,data;kwargs...)
+isMixedModelFormula(f::ConstantTerm) = false
+isMixedModelFormula(f::FormulaTerm) = isMixedModelFormula(f.rhs)
 
-    @timeit to "unfoldCondense" c = condense_long(ufModel)
-    @debug(to)
-    return ufModel,c
+function isMixedModelFormula(f::Tuple)
+    ix = [isa(t,FunctionTerm) for t in f]
+    return any([isa(t.forig,typeof(|)) for t in f[ix]])
+end
+function designToModeltype(design)
+       # autoDetect
+       tmp = collect(values(design))[1]
+       f = tmp[1] # formula
+       t = tmp[2] # Vector or BasisFunction
+
+        isMixedModel = isMixedModelFormula(f)
+       if typeof(t) == BasisFunction
+        if isMixedModel
+            UnfoldModelType = UnfoldLinearMixedModelContinuousTime
+        else
+            UnfoldModelType = UnfoldLinearModelContinuousTime
+        end
+    else
+        if isMixedModel
+            UnfoldModelType = UnfoldLinearMixedModel
+        else
+            UnfoldModelType = UnfoldLinearModel
+        end
+    end
+    return UnfoldModelType
 end
 
 # helper function for 1 channel data
-function fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f, tbl::DataFrame, data::Array{T,1}, args...; kwargs...) where {T}
+function fit(UnfoldModelType::Type{T}, design::Dict, tbl::DataFrame, data::AbstractVector,args...; kwargs...) where {T<:Union{<:UnfoldModel}}
+    
     @debug("data array is size (X,), reshaping to (1,X)")
     data = reshape(data,1,:)
-    return fit(type,f,tbl,data,args...;kwargs...)
+    return fit(UnfoldModelType,design,tbl,data,args...;kwargs...)
 end
 
 
@@ -85,11 +109,14 @@ Note: Might be renamed/refactored to fit! at a later point
 ```
 
 """
-function unfoldfit(::Type{UnfoldLinearMixedModel},Xobj::DesignMatrix,data::Union{<:AbstractArray{T,2},<:AbstractArray{T,3}};kwargs...) where {T<:Union{Missing, <:Number}}
+
+
+function fit!(uf::Union{UnfoldLinearMixedModel,UnfoldLinearMixedModelContinuousTime},data::AbstractArray;kwargs...)
     # function content partially taken from MixedModels.jl bootstrap.jl
     df = Array{NamedTuple,1}()
     dataDim = length(size(data)) # surely there is a nicer way to get this but I dont know it
 
+    Xs = modelmatrix(uf)
     # If we have3 dimension, we have a massive univariate linear mixed model for each timepoint
     if dataDim == 3
         firstData = data[1,1,:]
@@ -105,10 +132,10 @@ function unfoldfit(::Type{UnfoldLinearMixedModel},Xobj::DesignMatrix,data::Union
     # get a un-fitted mixed model object
     
     
-    mm = LinearMixedModel_wrapper(Xobj.formulas,firstData,Xobj.Xs)
+    mm = LinearMixedModel_wrapper(formula(uf),firstData,Xs)
 
     # prepare some variables to be used
-    βsc, θsc= similar(coef(mm)), similar(mm.θ) # pre allocate
+    βsc, θsc= similar(MixedModels.coef(mm)), similar(mm.θ) # pre allocate
     p,k = length(βsc), length(θsc)
     #β_names = (Symbol.(fixefnames(mm))..., )
     
@@ -152,7 +179,7 @@ function unfoldfit(::Type{UnfoldLinearMixedModel},Xobj::DesignMatrix,data::Union
         end
     end
     
-    modelinfo = MixedModelBootstrap(
+    uf.modelfit = UnfoldMixedModelFitCollection(
         df,
         deepcopy(mm.λ),
         getfield.(mm.reterms, :inds),
@@ -160,33 +187,44 @@ function unfoldfit(::Type{UnfoldLinearMixedModel},Xobj::DesignMatrix,data::Union
         NamedTuple{Symbol.(fnames(mm))}(map(t -> (t.cnames...,), mm.reterms)),
     )
 
-    beta = [x.β for x in MixedModels.tidyβ(modelinfo)]
 
-    sigma = [x.σ for x in MixedModels.tidyσs(modelinfo)]
+    return uf.modelfit
+end
 
-    if ndims(data)==3
-        beta = permutedims(reshape(beta,:,ntime,nchan),[3 2 1])
-        sigma = permutedims(reshape(sigma,:,ntime,nchan),[3 2 1])
-    else
-        beta = reshape(beta,:,nchan)'
-        sigma = reshape(sigma,:,nchan)'
+function coef(uf::Union{UnfoldLinearMixedModel,UnfoldLinearMixedModelContinuousTime})
+    beta = [x.β for x in MixedModels.tidyβ(modelfit(uf))]
+    return reshape_lmm(uf,beta)
+end
+
+function ranef(uf::Union{UnfoldLinearMixedModel,UnfoldLinearMixedModelContinuousTime})
+    sigma = [x.σ for x in MixedModels.tidyσs(modelfit(uf))]
+    return reshape_lmm(uf,sigma)
+end
+
+function reshape_lmm(uf::UnfoldLinearMixedModel,est)
+        ntime = length(collect(values(design(uf)))[1][2])
+        nchan = modelfit(uf).fits[end].channel
+        return permutedims(reshape(est,:,ntime,nchan),[3 2 1])
+end
+    function reshape_lmm(uf::UnfoldLinearMixedModelContinuousTime,est)
+        nchan = modelfit(uf).fits[end].channel
+        return reshape(est,:,nchan)'
+   
     end
 
 
 
-    return UnfoldLinearMixedModel(beta,sigma,modelinfo,Xobj)
-end
 
- function unfoldfit(::Type{UnfoldLinearModel},Xobj::DesignMatrix,data;solver=(x,y)->solver_default(x,y),kwargs...)
-     X = Xobj.Xs
+
+ function fit!(uf::Union{UnfoldLinearModelContinuousTime,UnfoldLinearModel},data;solver=(x,y)->solver_default(x,y),kwargs...)
+    @assert ~isempty(designmatrix(uf))
+    X = modelmatrix(uf)
     # mass univariate, data = ch x times x epochs
     X,data = zeropad(X,data)
 
     @debug "UnfoldLinearModel, datasize: $(size(data))"
-    # mass univariate
-    beta,modelinfo = solver(X,data)
 
-    return UnfoldLinearModel(beta,modelinfo,Xobj)
+    uf.modelfit = solver(X,data)
 
 end
 

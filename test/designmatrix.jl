@@ -54,32 +54,33 @@ Xdc = Xdc1+Xdc2
 
 
 
-if 1 == 0
-    # not implemented yet
-    basisfunction1 = firbasis(τ=(0,1),sfreq = 10,name="basis1")
-    basisfunction2 = firbasis(τ=(0,0.5),sfreq = 10,name="basis2")
 
-    tbl = DataFrame([1 4 10 15 20 22 31 37; 1 1 1 2 2 2 3 3; 1 2 3 1 2 3 1 2]',[:latency,:subject,:item])
-    tbl2 = DataFrame([2 3 12 18 19 25 40 43; 1 1 1 2 2 2 3 3; 1 2 3 1 2 3 1 2]',[:latency,:subject,:itemB])
-    y = Float64.([collect(range(1,stop=100))...])'
-    transform!(tbl, :subject => categorical => :subject)
-    transform!(tbl2, :itemB => categorical => :itemB)
-    transform!(tbl, :item => categorical => :item)
-    #tbl.itemB = tbl.item
-    f3 = @formula 0~1+(1|subject) + (1|item)
-    f4 = @formula 0~1+(1|itemB)
-    f4_wrong = @formula 0~1+(1|item)
-    Xdc3          = designmatrix(UnfoldLinearMixedModel,f3,tbl,basisfunction1)
-    Xdc4          = designmatrix(UnfoldLinearMixedModel,f4,tbl2,basisfunction2)
-    Xdc4_wrong    = designmatrix(UnfoldLinearMixedModel,f4_wrong,tbl,basisfunction2)
+basisfunction1 = firbasis(τ=(0,1),sfreq = 10,name="basis1")
+basisfunction2 = firbasis(τ=(0,0.5),sfreq = 10,name="basis2")
 
-    Xdc = Xdc3+Xdc4;
-    @test typeof(Xdc.Xs[1]) <: SparseArrays.SparseMatrixCSC
-    @test size(Xdc.Xs[1],2) == size(Xdc3.Xs[1],2) + size(Xdc4.Xs[1],2)
-    @test length(Xdc.Xs) == 4 # one FeMat  + 3 ReMat
-    @test_throws String Xdc3+Xdc4_wrong
-    m = Unfold.unfoldfit(UnfoldLinearMixedModel,Xdc,y);
-end
+tbl = DataFrame([1 4 10 15 20 22 31 37; 1 1 1 2 2 2 3 3; 1 2 3 1 2 3 1 2]',[:latency,:subject,:item])
+tbl2 = DataFrame([2 3 12 18 19 25 40 43; 1 1 1 2 2 2 3 3; 1 2 3 1 2 3 1 2]',[:latency,:subject,:itemB])
+y = Float64.([collect(range(1,stop=100))...])'
+transform!(tbl, :subject => categorical => :subject)
+transform!(tbl2, :itemB => categorical => :itemB)
+transform!(tbl, :item => categorical => :item)
+#tbl.itemB = tbl.item
+f3 = @formula 0~1+(1|subject) + (1|item)
+f4 = @formula 0~1+(1|itemB)
+f4_wrong = @formula 0~1+(1|item)
+Xdc3          = designmatrix(UnfoldLinearMixedModel,f3,tbl,basisfunction1)
+Xdc4          = designmatrix(UnfoldLinearMixedModel,f4,tbl2,basisfunction2)
+Xdc4_wrong    = designmatrix(UnfoldLinearMixedModel,f4_wrong,tbl,basisfunction2)
+
+Xdc = Xdc3+Xdc4;
+@test typeof(Xdc.Xs[1]) <: SparseArrays.SparseMatrixCSC
+@test size(Xdc.Xs[1],2) == size(Xdc3.Xs[1],2) + size(Xdc4.Xs[1],2)
+@test length(Xdc.Xs) == 4 # one FeMat  + 3 ReMat
+@test_throws String Xdc3+Xdc4_wrong
+uf = UnfoldLinearMixedModelContinuousTime(Dict(),Xdc,[])
+fit!(uf,y);
+
+
 
 
 df = unfoldfit(UnfoldLinearModel,Xdc,rand(1,size(Xdc.Xs,1)))
@@ -178,4 +179,4 @@ evts_nonseq = copy(evts)
 evts_nonseq = evts_nonseq[.!(evts_nonseq.subject .== 2),:]
 Xdc_nonseq          = designmatrix(UnfoldLinearMixedModel,f_zc,evts_nonseq,basisfunction)
 # This used to lead to problems here:
-unfoldfit(UnfoldLinearMixedModel,Xdc_nonseq,data');
+fit(UnfoldLinearMixedModel,Xdc_nonseq,data');
