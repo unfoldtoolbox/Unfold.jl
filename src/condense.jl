@@ -10,11 +10,11 @@ function get_terms(uf)
 end
 
 modelfit(uf::UnfoldModel) = uf.modelfit
-coef(uf::UnfoldModel) = coef(modelfit(uf))
-coef(mf::LinearModelFit) = mf.estimate
+StatsModels.coef(uf::UnfoldModel) = coef(modelfit(uf))
+StatsModels.coef(mf::LinearModelFit) = mf.estimate
 
 
-function coeftable(uf::UnfoldModel)
+function StatsModels.coeftable(uf::UnfoldModel)
     termsRaw = get_terms(uf)
     terms = extract_term_info(termsRaw,2)
     #colnames_basis_raw = get_colnames_basis(formula(uf))# this is unconverted basisfunction basis,
@@ -47,7 +47,7 @@ function coeftable(uf::UnfoldModel)
 end
 
 
-function coeftable(uf::Union{UnfoldLinearModel,UnfoldLinearMixedModel})
+function StatsModels.coeftable(uf::Union{UnfoldLinearModel,UnfoldLinearMixedModel})
     # Mass Univariate Case
     terms = coefnames(formula(uf))
     terms = vcat(terms...)

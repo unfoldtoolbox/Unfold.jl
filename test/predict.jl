@@ -17,8 +17,10 @@ basisfunction = firbasis(τ=(0.,1),sfreq=20,name="basisA")
 # predict => (contA=0.5) y_hat = 1 * -1.5 + 0.5 * 2 = -0.5
 
 f  = @formula 0~1 # 1
-m_mul,m_mul_results = fit(UnfoldLinearModel,f,evts,data_e,times)
-m_tul,m_tul_results = fit(UnfoldLinearModel,f,evts,data_r,basisfunction)
+m_mul = fit(UnfoldModel,f,evts,data_e,times)
+m_tul = fit(UnfoldModel,f,evts,data_r,basisfunction)
+m_mul_results = coeftable(m_mul)
+m_tul_results = coeftable(m_tul)
 
 conditionA  = [0,1.]
 continuousA = [-1.,0,1.]
@@ -44,14 +46,18 @@ yhat_mul = predict(m_mul,evts_grid,times)
 
 
 f  = @formula 0~1+conditionA+continuousA# 1
-m_tul,m_tul_results = fit(UnfoldLinearModel,f,evts,data_r,basisfunction)
-m_mul,m_mul_results = fit(UnfoldLinearModel,f,evts,data_e,times)
+m_tul = fit(UnfoldModel,f,evts,data_r,basisfunction)
+m_mul = fit(UnfoldModel,f,evts,data_e,times)
+
+m_mul_results = coeftable(m_mul)
+m_tul_results = coeftable(m_tul)
+
 yhat_tul = predict(m_tul,evts_grid)
 yhat_mul = predict(m_mul,evts_grid,times)
 #@test predict(m_mul,evts).yhat ≈ yhat.yhat
 
 
-@test isapprox(sum(m_tul.beta[[5,25,45]]),  yhat_tul.yhat[end-3],atol=0.001)
+@test isapprox(sum(coef(m_tul)[[5,25,45]]),  yhat_tul.yhat[end-3],atol=0.001)
 
 
 @test isapprox(yhat_tul[yhat_tul.times.==0.5,:yhat], yhat_mul[yhat_mul.times.==0.5,:yhat],atol=0.001) 

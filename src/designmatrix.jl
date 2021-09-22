@@ -296,7 +296,7 @@ function designmatrix!(uf::UnfoldModel,evts;kwargs...)
     end
     
 
-function modelmatrix(uf::UnfoldLinearModelContinuousTime;basisfunction=true)
+function StatsModels.modelmatrix(uf::UnfoldLinearModelContinuousTime;basisfunction=true)
         if basisfunction
                 return modelmatrix(designmatrix(uf))
         else
@@ -305,9 +305,9 @@ function modelmatrix(uf::UnfoldLinearModelContinuousTime;basisfunction=true)
 end
 
 
-modelmatrix(uf::UnfoldModel) =  modelmatrix(designmatrix(uf))#modelmatrix(uf.design,uf.designmatrix.events)
-modelmatrix(d::DesignMatrix) =  d.Xs
-modelmatrix(d::Dict,events) = modelcols(formula(d).rhs,events)
+StatsModels.modelmatrix(uf::UnfoldModel) =  modelmatrix(designmatrix(uf))#modelmatrix(uf.design,uf.designmatrix.events)
+StatsModels.modelmatrix(d::DesignMatrix) =  d.Xs
+StatsModels.modelmatrix(d::Dict,events) = modelcols(formula(d).rhs,events)
 
 formula(uf::UnfoldModel) = formula(designmatrix(uf))
 formula(d::DesignMatrix) = d.formulas

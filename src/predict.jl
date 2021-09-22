@@ -2,15 +2,15 @@ import StatsBase.predict
 
 
 
-function predict(model::UnfoldLinearModel, newdata,times=nothing)
+function StatsBase.predict(model::UnfoldModel, newdata,times=nothing)
     # make a copy of it so we don't change it outside the function
      data = copy(newdata)
     #data = newdata
     # if only one formulas
-    if typeof(model.X.formulas) <: FormulaTerm
-        formulas = [model.X.formulas]
+    if typeof(formula(model)) <: FormulaTerm
+        formulas = [formula(model)]
     else
-        formulas = model.X.formulas
+        formulas = formula(model)
     end    
     # add those as latencies [xxx change to basisfunction field] to newdata
     ##
@@ -22,11 +22,11 @@ function predict(model::UnfoldLinearModel, newdata,times=nothing)
         X = designmatrix(UnfoldLinearModel,formulas[1],data)
 
         # setup the output matrix, has to be a matrix
-        yhat = Array{Union{Missing,Float64}}(missing,size(model.beta,1),size(X.Xs,1),size(model.beta,2))
+        yhat = Array{Union{Missing,Float64}}(missing,size(coef(model),1),size(modelmatrix(X),1),size(coef(model),2))
 
         
-        for ch = 1:size(model.beta,1)
-            yhat[ch,:,:] = X.Xs * permutedims(model.beta[ch,:,:],(2,1))
+        for ch = 1:size(coef(model),1)
+            yhat[ch,:,:] = X.Xs * permutedims(coef(model)[ch,:,:],(2,1))
         end
 
         # fake times because we never save it in the object
@@ -87,7 +87,7 @@ function predict(model::UnfoldLinearModel, newdata,times=nothing)
         
         # calculate yhat
         # yhat x channels
-        yhat =  Xconcat * model.beta'
+        yhat =  Xconcat * coef(model)'
     end
     
     # init the meta dataframe
@@ -98,7 +98,7 @@ function predict(model::UnfoldLinearModel, newdata,times=nothing)
    
     if !(typeof(formulas[1].rhs) <: Unfold.TimeExpandedTerm)
         # for mass univariate we can make use of the knowledge that all events have the same length :)
-        ntimes = size(model.beta,2)
+        ntimes = size(coef(model),2)
         for c  = names(newdata)
             for row = 1:size(data,1)
                 rowIx = (1. .+(row-1).*ntimes) .+ range(1.,length=ntimes) .-1

@@ -24,12 +24,12 @@ julia> model,results_long = fit(UnfoldLinearModel,f,evts,data_r,basisfunction)
 
 """
 # helper function encapsulating the call into an array
-function fit(UnfoldModelType::Type{T},f::FormulaTerm,tbl::DataFrame,data::AbstractArray,basisOrTimes::Union{BasisFunction,AbstractArray};kwargs...) where{T<:Union{<:UnfoldModel}}
+function StatsModels.fit(UnfoldModelType::Type{T},f::FormulaTerm,tbl::DataFrame,data::AbstractArray,basisOrTimes::Union{BasisFunction,AbstractArray};kwargs...) where{T<:Union{<:UnfoldModel}}
     fit(UnfoldModelType,Dict(Any=>(f,basisOrTimes)),tbl,data;kwargs...)
 end
 
 
-function fit(UnfoldModelType::Type{T},design::Dict,tbl::DataFrame,data::AbstractArray;kwargs...) where {T<:Union{<:UnfoldModel}}
+function StatsModels.fit(UnfoldModelType::Type{T},design::Dict,tbl::DataFrame,data::AbstractArray;kwargs...) where {T<:Union{<:UnfoldModel}}
     to = TimerOutput()
     if UnfoldModelType == UnfoldModel
         UnfoldModelType = designToModeltype(design)
@@ -42,7 +42,7 @@ function fit(UnfoldModelType::Type{T},design::Dict,tbl::DataFrame,data::Abstract
     return uf
 end
 
-function fit(UnfoldModelType::Type{T},X::DesignMatrix,data::AbstractArray;kwargs...) where {T<:Union{<:UnfoldModel}}
+function StatsModels.fit(UnfoldModelType::Type{T},X::DesignMatrix,data::AbstractArray;kwargs...) where {T<:Union{<:UnfoldModel}}
     if UnfoldModelType == UnfoldModel
         error("Can't infer model automatically, specify with e.g. fit(UnfoldLinearModel...) instead of fit(UnfoldModel...)")
     end
@@ -84,7 +84,7 @@ function designToModeltype(design)
 end
 
 # helper function for 1 channel data
-function fit(UnfoldModelType::Type{T}, design::Dict, tbl::DataFrame, data::AbstractVector,args...; kwargs...) where {T<:Union{<:UnfoldModel}}
+function StatsModels.fit(UnfoldModelType::Type{T}, design::Dict, tbl::DataFrame, data::AbstractVector,args...; kwargs...) where {T<:Union{<:UnfoldModel}}
     
     @debug("data array is size (X,), reshaping to (1,X)")
     data = reshape(data,1,:)
@@ -111,7 +111,7 @@ Note: Might be renamed/refactored to fit! at a later point
 """
 
 
-function fit!(uf::Union{UnfoldLinearMixedModel,UnfoldLinearMixedModelContinuousTime},data::AbstractArray;kwargs...)
+function StatsModels.fit!(uf::Union{UnfoldLinearMixedModel,UnfoldLinearMixedModelContinuousTime},data::AbstractArray;kwargs...)
     # function content partially taken from MixedModels.jl bootstrap.jl
     df = Array{NamedTuple,1}()
     dataDim = length(size(data)) # surely there is a nicer way to get this but I dont know it
@@ -191,12 +191,12 @@ function fit!(uf::Union{UnfoldLinearMixedModel,UnfoldLinearMixedModelContinuousT
     return uf.modelfit
 end
 
-function coef(uf::Union{UnfoldLinearMixedModel,UnfoldLinearMixedModelContinuousTime})
+function StatsModels.coef(uf::Union{UnfoldLinearMixedModel,UnfoldLinearMixedModelContinuousTime})
     beta = [x.β for x in MixedModels.tidyβ(modelfit(uf))]
     return reshape_lmm(uf,beta)
 end
 
-function ranef(uf::Union{UnfoldLinearMixedModel,UnfoldLinearMixedModelContinuousTime})
+function MixedModels.ranef(uf::Union{UnfoldLinearMixedModel,UnfoldLinearMixedModelContinuousTime})
     sigma = [x.σ for x in MixedModels.tidyσs(modelfit(uf))]
     return reshape_lmm(uf,sigma)
 end
@@ -216,7 +216,7 @@ end
 
 
 
- function fit!(uf::Union{UnfoldLinearModelContinuousTime,UnfoldLinearModel},data;solver=(x,y)->solver_default(x,y),kwargs...)
+ function StatsModels.fit!(uf::Union{UnfoldLinearModelContinuousTime,UnfoldLinearModel},data;solver=(x,y)->solver_default(x,y),kwargs...)
     @assert ~isempty(designmatrix(uf))
     X = modelmatrix(uf)
     # mass univariate, data = ch x times x epochs
