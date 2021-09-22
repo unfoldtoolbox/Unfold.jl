@@ -37,6 +37,7 @@ bfDict = Dict(:EventA=>(f,bf1),
 Finally, fitting & plotting works the same way as always
 ```@example main
 
-m,results = Unfold.fit(UnfoldLinearModel,bfDict,evts,data,solver=se_solver)
+m = Unfold.fit(UnfoldLinearModel,bfDict,evts,data,solver=se_solver)
+results = coeftable(m)
 plot_results(results,stderror=true)
 ``` 

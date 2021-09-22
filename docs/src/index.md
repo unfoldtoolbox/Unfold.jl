@@ -13,10 +13,15 @@ In case you want to understand the toolbox better, we plan to offer technical re
 ## Summary
 There are four different model types currently "fitable"
 
-1. Timeexpansion **No**, Mixed **No**  : `fit(UnfoldLinearModel,f,evts,data_epoch,times)`
-1. Timeexpansion **Yes**, Mixed **No** : `fit(UnfoldLinearModel,f,evts,data,basisfunction)`
-1. Timeexpansion **No**, Mixed **Yes** : `fit(UnfoldLinearMixedModel,f,evts,data_epoch,times)`
-1. Timeexpansion **Yes**, Mixed **Yes**: `fit(UnfoldLinearMixedModel,f,evts,data,basisfunction)`
+1. Timeexpansion **No**, Mixed **No**  : `fit(UnfoldModel,Dict(Any=>(f,-0.1:0.01:0.5)),evts,data_epoch)`
+1. Timeexpansion **Yes**, Mixed **No** : `fit(UnfoldModel,Dict(Any=>(f,basisfunction)),evts,data)`
+1. Timeexpansion **No**, Mixed **Yes** : `fit(UnfoldModel,Dict(Any=>(fLMM,-0.1:0.01:0.5)),evts,data_epoch)`
+1. Timeexpansion **Yes**, Mixed **Yes**: `fit(UnfoldModel,Dict(Any=>(fLMM,basisfunction)),evts,data)`
+
+With
+`f = @formula 0~1+condition`
+`fLMM = @formula 0~1+condition+(1|subject) + (1|item)`
+`basisfunction = firbasis(τ=(-0.1,0.5),sfreq=100"))`
 
 
 

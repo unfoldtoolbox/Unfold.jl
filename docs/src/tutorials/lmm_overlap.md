@@ -58,7 +58,8 @@ f  = @formula 0~1+condA*condB+zerocorr(1+condA*condB|subject);
 ```@example Main
 bfDict = Dict(Any=>(f,basisfunction))
 # for some reason this results in a big error. Skipping this tutorial right now
-#m,results = fit(UnfoldLinearMixedModel,bfDict,evts,data) 
+m = fit(UnfoldModel,bfDict,evts,data) 
+results = coeftable(m)
 ```
 
 

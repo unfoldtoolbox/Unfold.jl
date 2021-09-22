@@ -12,9 +12,9 @@ function solver_default(X,data::AbstractArray{T,2};stderror=false) where {T<:Uni
     
     if stderror
         stderror = calculate_stderror(X,data,beta)
-        modelfit = LinearModelFit(beta,[modelinfo,"lsmr"],stderror)
+        modelfit = LinearModelFit(beta,["lsmr"],stderror)
     else
-        modelfit = LinearModelFit(beta,[modelinfo,"lsmr"])
+        modelfit = LinearModelFit(beta,["lsmr"])
     end
     return modelfit
 end

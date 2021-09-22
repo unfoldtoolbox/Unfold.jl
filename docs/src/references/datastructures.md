@@ -2,12 +2,8 @@
 ## What is happening under the hood?
 ```@example Main
 
-Xdc = designmatrix(UnfoldLinearMixedModel,f,evts,basisfunction)
+Xdc = designmatrix(UnfoldModel,f,evts,basisfunction)
 ```
-
-
-
-
 
 
 Formula-Terms are wrapped with a `TimeExpandedTerm`, which upon calling `modelcols` will timeexpand the designmatrix.
@@ -15,8 +11,6 @@ There is one TimeExpandedTerm for the FixedEffects and one for each RandomEffect
 ```@example Main
 typeof(Xdc.formulas.rhs)
 ```
-
-
 
 
 

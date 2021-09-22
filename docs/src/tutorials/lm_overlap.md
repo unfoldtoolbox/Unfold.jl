@@ -79,13 +79,14 @@ bfDict = Dict(Any=>(f,basisfunction))
 Now we are ready to fit a `UnfoldLinearModel`. Not that instead of `times` as in the mass-univariate case, we have to provide the `BasisFunction` dictionary now.
 
 ```@example Main
-m,results = fit(UnfoldLinearModel,bfDict,evts,data); 
+m = fit(UnfoldModel,bfDict,evts,data); 
 nothing #hide
 ```
 
 #### 4. Visualize the model
 Similarly to the previous tutorial, we can visualize the model
 ```@example Main
+results = coeftable(m)
 Plots.plot(results.colname_basis,results.estimate,
         group=results.term,
         layout=1,legend=:outerbottom)

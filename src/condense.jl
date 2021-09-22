@@ -17,7 +17,7 @@ coef(mf::LinearModelFit) = mf.estimate
 function coeftable(uf::UnfoldModel)
     termsRaw = get_terms(uf)
     terms = extract_term_info(termsRaw,2)
-    colnames_basis_raw = get_colnames_basis(formula(uf))# this is unconverted basisfunction basis,
+    #colnames_basis_raw = get_colnames_basis(formula(uf))# this is unconverted basisfunction basis,
     colnames_basis = extract_term_info(termsRaw,3) # this is converted to strings! 
     basisnames = extract_term_info(termsRaw,1)
     @debug terms
@@ -47,7 +47,7 @@ function coeftable(uf::UnfoldModel)
 end
 
 
-function coeftable(uf::UnfoldLinearModel)#,times::AbstractArray)
+function coeftable(uf::Union{UnfoldLinearModel,UnfoldLinearMixedModel})
     # Mass Univariate Case
     terms = coefnames(formula(uf))
     terms = vcat(terms...)
