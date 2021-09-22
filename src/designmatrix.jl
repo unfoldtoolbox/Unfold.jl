@@ -93,13 +93,14 @@ function combineDesignmatrices(X1::DesignMatrix,X2::DesignMatrix)
 
         sX1 = size(Xs1,1)
         sX2 = size(Xs2,1)
-
+        
         # append 0 to the shorter designmat
         if sX1 < sX2
                 Xs1 = SparseMatrixCSC(sX2, Xs1.n, Xs1.colptr, Xs1.rowval, Xs1.nzval)
         elseif sX2 < sX1
                 Xs2 = SparseMatrixCSC(sX1, Xs2.n, Xs2.colptr, Xs2.rowval, Xs2.nzval)
         end
+        
         Xcomb = hcat(Xs1,Xs2)
      
         #if !(Float64(X1.formulas.rhs.basisfunction.times.step) ≈ Float64(X2.formulas.rhs.basisfunction.times.step))
@@ -112,10 +113,10 @@ function combineDesignmatrices(X1::DesignMatrix,X2::DesignMatrix)
                 Xs2 = MixedModels._amalgamate([X2.Xs[2:end]...],Float64)
                 
                 Xcomb = (Xcomb,Xs1...,Xs2...)
-
+                
                 # Next we make the ranefs all equal size
                 equalizeReMatLengths!(Xcomb[2:end])
-
+                
                 # check if ranefs can be amalgamated. If this fails, then MixedModels tried to amalgamate over different eventtypes and we should throw the warning
                 # if it success, we have to check if the size before and after is identical. If it is not, it tried to amalgamize over different eventtypes which were of the same length
                 
@@ -137,7 +138,7 @@ function combineDesignmatrices(X1::DesignMatrix,X2::DesignMatrix)
 
 
         end
-
+        
         if typeof(X1.formulas) <: FormulaTerm
                 DesignMatrix([X1.formulas X2.formulas],Xcomb,[X1.events, X2.events])
         else

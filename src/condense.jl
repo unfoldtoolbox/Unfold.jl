@@ -103,7 +103,7 @@ function make_estimate(m::Union{UnfoldLinearMixedModel,UnfoldLinearMixedModelCon
             
        
         group_s = ranef_group
-        stderror_fixef = stderror(m)
+        stderror_fixef = Unfold.stderror(m)
         stderror_ranef = fill(nothing,size(ranef(m)))
         stderror = cat(stderror_fixef,stderror_ranef,dims=3)
     else

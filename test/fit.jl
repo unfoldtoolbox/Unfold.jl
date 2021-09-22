@@ -188,7 +188,7 @@ df = Unfold.coeftable(m_mum)
 @test isapprox(df[(df.channel .== 1).&(df.term.=="condA: 1").&(df.colname_basis.==0.0),:estimate], [5.618,9.175],rtol=0.1)
 
 # with missing
-@time m_mum = coeftable(fit(UnfoldModel,f,evts_missing_e,data_missing_e    ,times,contrasts=Dict(:condA => EffectsCoding(), :condB => EffectsCoding())))
+@time m_mum = fit(UnfoldModel,f,evts_missing_e,data_missing_e    ,times,contrasts=Dict(:condA => EffectsCoding(), :condB => EffectsCoding()))
 df = coeftable(m_mum)
 @test isapprox(df[(df.channel .== 1).&(df.term.=="condA: 1").&(df.colname_basis.==0.0),:estimate], [5.618,9.175],rtol=0.1)
 
@@ -196,8 +196,8 @@ df = coeftable(m_mum)
 # Timexpanded Univariate Mixed
 f  = @formula 0~1+condA+condB + (1+condA+condB|subject)
 basisfunction = firbasis(τ=(-0.2,0.3),sfreq=10,name="ABC")
-@time m_tum = coeftable(fit(UnfoldModel,f,evts,data,basisfunction, contrasts=Dict(:condA => EffectsCoding(), :condB => EffectsCoding()) ))
-df = m_tum[2]
+@time m_tum = fit(UnfoldModel,f,evts,data,basisfunction, contrasts=Dict(:condA => EffectsCoding(), :condB => EffectsCoding()) )
+df = coeftable(m_tum)
 @test isapprox(df[(df.channel .== 1).&(df.term.=="condA: 1").&(df.colname_basis.==0.0),:estimate], [5.618,9.175],rtol=0.1)
 
 
@@ -223,7 +223,7 @@ b2 = firbasis(τ=(-0.1,0.3),sfreq=10,name="B")
 X1_lmm  = designmatrix(UnfoldLinearMixedModel,f1_lmm,evts1,b1)
 X2_lmm  = designmatrix(UnfoldLinearMixedModel,f2_lmm,evts2,b2)
 
-r = fit(UnfoldLinearMixedModel,X1_lmm+X2_lmm,data);
+r = fit(UnfoldLinearMixedModelContinuousTime,X1_lmm+X2_lmm,data);
 df = coeftable(r)
 
 @test isapprox(df[(df.channel .== 1).&(df.term.=="condB").&(df.colname_basis.==0.0),:estimate],[18.18,10.4],rtol=0.1)

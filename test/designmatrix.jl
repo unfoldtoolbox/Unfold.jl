@@ -78,13 +78,11 @@ Xdc = Xdc3+Xdc4;
 @test length(Xdc.Xs) == 4 # one FeMat  + 3 ReMat
 @test_throws String Xdc3+Xdc4_wrong
 uf = UnfoldLinearMixedModelContinuousTime(Dict(),Xdc,[])
-fit!(uf,y);
+Unfold.fit!(uf,y);
 
-
-
-
-df = unfoldfit(UnfoldLinearModel,Xdc,rand(1,size(Xdc.Xs,1)))
-@test size(df.beta,2) == 17
+Xdc = Xdc3+Xdc4;
+df = fit(UnfoldLinearMixedModelContinuousTime,Xdc,rand(1,size(Unfold.modelmatrix(Xdc)[1],1)))
+@test size(Unfold.coef(df),2) == 17
 
 ## Speedtest
 if 1==0
