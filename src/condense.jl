@@ -1,12 +1,13 @@
 
-function extract_term_info(terms,ix)
+
+function extract_coef_info(coefs,ix)
     # 1 = basisname, 2 = coefname, 3 = colname
-        return [c[ix] for c in split.(terms," : ")]
+        return [c[ix] for c in split.(coefs," : ")]
 end
 
-function get_terms(uf)
-    terms = coefnames(formula(uf))
-    terms = vcat(terms...) # gets rid of an empty Any() XXX not sure where it comes from, only in MixedModel Timexpanded case
+function get_coefnames(uf::UnfoldModel)
+    coefnames = coefnames(formula(uf))
+    coefnames = vcat(coefnames...) # gets rid of an empty Any() XXX not sure where it comes from, only in MixedModel Timexpanded case
 end
 
 modelfit(uf::UnfoldModel) = uf.modelfit
@@ -15,17 +16,17 @@ StatsModels.coef(mf::LinearModelFit) = mf.estimate
 
 
 function StatsModels.coeftable(uf::UnfoldModel)
-    termsRaw = get_terms(uf)
-    terms = extract_term_info(termsRaw,2)
+    coefsRaw = get_coefnames(uf)
+    coefs = extract_coef_info(coefsRaw,2)
     #colnames_basis_raw = get_colnames_basis(formula(uf))# this is unconverted basisfunction basis,
-    colnames_basis = extract_term_info(termsRaw,3) # this is converted to strings! 
-    basisnames = extract_term_info(termsRaw,1)
-    @debug terms
+    colnames_basis = extract_coef_info(coefsRaw,3) # this is converted to strings! 
+    basisnames = extract_coef_info(coefsRaw,1)
+    @debug coefs
     @debug colnames_basis
 
     nchan = size(coef(uf),1)
 
-    terms_rep = permutedims(repeat(terms,1,nchan),[2,1])
+    coefs_rep = permutedims(repeat(coefs,1,nchan),[2,1])
 
     if length(colnames_basis)==1
         colnames_basis = [colnames_basis]
@@ -43,42 +44,41 @@ function StatsModels.coeftable(uf::UnfoldModel)
     chan_rep = repeat(1:nchan,1,size(colnames_basis_rep,2))
 
     basisnames_rep = permutedims(repeat(basisnames,1,nchan),[2,1])
-    return make_long_df(uf,terms_rep,chan_rep,colnames_basis_rep,basisnames_rep) #DataFrame(term=linearize(terms_rep),estimate=linearize(coef(m)),stderror=linearize(MixedModels.stderror(m)),channel=linearize(chan_rep),group="fixed",colnames_basis=linearize(colnames_rep))
+    return make_long_df(uf,coefs_rep,chan_rep,colnames_basis_rep,basisnames_rep) 
 end
 
 
 function StatsModels.coeftable(uf::Union{UnfoldLinearModel,UnfoldLinearMixedModel})
     # Mass Univariate Case
-    terms = coefnames(formula(uf))
-    terms = vcat(terms...)
+    coefnames = get_coefnames(uf)
     
     colnames_basis = collect(values(design(uf)))[1][2]#times#get_colnames_basis(m.X.formulas,times)
 
-    @debug "terms: $(size(terms)),colnames_basis:$(size(colnames_basis)))"
-    @debug "terms: $terms,colnames_basis:$colnames_basis"
+    @debug "coefs: $(size(coefnames)),colnames_basis:$(size(colnames_basis)))"
+    @debug "coefs: $coefnames,colnames_basis:$colnames_basis"
     nchan = size(coef(uf),1)
     ncols = length(colnames_basis)
-    nterms = length(terms)
+    ncoefs = length(coefnames)
 
     # replicate
-    terms_rep = permutedims(repeat(terms,outer=[1,nchan,ncols]),[2,3,1])
-    colnames_basis_rep = permutedims(repeat(colnames_basis,1,nchan,nterms),[2 1 3])
-    chan_rep = repeat(1:nchan,1,ncols,nterms)
-    basisnames_rep = repeat(["mass-univariate"],nchan,ncols,nterms)
+    coefs_rep = permutedims(repeat(coefnames,outer=[1,nchan,ncols]),[2,3,1])
+    colnames_basis_rep = permutedims(repeat(colnames_basis,1,nchan,ncoefs),[2 1 3])
+    chan_rep = repeat(1:nchan,1,ncols,ncoefs)
+    basisnames_rep = repeat(["mass-univariate"],nchan,ncols,ncoefs)
     #
-    results = make_long_df(uf,terms_rep,chan_rep,colnames_basis_rep,basisnames_rep)
+    results = make_long_df(uf,coefs_rep,chan_rep,colnames_basis_rep,basisnames_rep)
 
     return results
 end
 #---
 # Returns a long df given the already matched
-function make_long_df(m,terms,chans,colnames,basisnames)
-    @assert all(size(terms) .== size(chans)) "terms, chans and colnames need to have the same size at this point, $(size(terms)),$(size(chans)),$(size(colnames)), should be $(size(coef(m))))"
-    @assert all(size(terms) .== size(colnames)) "terms, chans and colnames need to have the same size at this point"
+function make_long_df(m,coefs,chans,colnames,basisnames)
+    @assert all(size(coefs) .== size(chans)) "coefs, chans and colnames need to have the same size at this point, $(size(coefs)),$(size(chans)),$(size(colnames)), should be $(size(coef(m))))"
+    @assert all(size(coefs) .== size(colnames)) "coefs, chans and colnames need to have the same size at this point"
     estimate,stderror,group = make_estimate(m)
     
     
-    return  DataFrame(term=String.(linearize(terms)),
+    return  DataFrame(coefname=String.(linearize(coefs)),
         channel = linearize(chans),
         basisname = linearize(basisnames),
         colname_basis=linearize(colnames),
@@ -145,7 +145,7 @@ function get_colnames_basis(rhs::AbstractTerm)
 end
 
 function get_basis_name(m::UnfoldModel)
-    return extract_term_info(Unfold.get_terms(m),1)
+    return extract_coef_info(Unfold.get_coefnames(m),1)
 end
 function get_basis_name(rhs::AbstractTerm)
     return rhs.basisfunction.name

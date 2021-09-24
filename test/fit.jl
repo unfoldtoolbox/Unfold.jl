@@ -185,12 +185,12 @@ evts_missing_e,data_missing_e = Unfold.dropMissingEpochs(copy(evts),data_missing
 ##  Mass Univariate Mixed
 @time m_mum = fit(UnfoldModel,f,evts_e,data_e    ,times,contrasts=Dict(:condA => EffectsCoding(), :condB => EffectsCoding()))
 df = Unfold.coeftable(m_mum)
-@test isapprox(df[(df.channel .== 1).&(df.term.=="condA: 1").&(df.colname_basis.==0.0),:estimate], [5.618,9.175],rtol=0.1)
+@test isapprox(df[(df.channel .== 1).&(df.coefname.=="condA: 1").&(df.colname_basis.==0.0),:estimate], [5.618,9.175],rtol=0.1)
 
 # with missing
 @time m_mum = fit(UnfoldModel,f,evts_missing_e,data_missing_e    ,times,contrasts=Dict(:condA => EffectsCoding(), :condB => EffectsCoding()))
 df = coeftable(m_mum)
-@test isapprox(df[(df.channel .== 1).&(df.term.=="condA: 1").&(df.colname_basis.==0.0),:estimate], [5.618,9.175],rtol=0.1)
+@test isapprox(df[(df.channel .== 1).&(df.coefname.=="condA: 1").&(df.colname_basis.==0.0),:estimate], [5.618,9.175],rtol=0.1)
 
 
 # Timexpanded Univariate Mixed
@@ -198,7 +198,7 @@ f  = @formula 0~1+condA+condB + (1+condA+condB|subject)
 basisfunction = firbasis(τ=(-0.2,0.3),sfreq=10,name="ABC")
 @time m_tum = fit(UnfoldModel,f,evts,data,basisfunction, contrasts=Dict(:condA => EffectsCoding(), :condB => EffectsCoding()) )
 df = coeftable(m_tum)
-@test isapprox(df[(df.channel .== 1).&(df.term.=="condA: 1").&(df.colname_basis.==0.0),:estimate], [5.618,9.175],rtol=0.1)
+@test isapprox(df[(df.channel .== 1).&(df.coefname.=="condA: 1").&(df.colname_basis.==0.0),:estimate], [5.618,9.175],rtol=0.1)
 
 
 # missing data in LMMs
@@ -226,7 +226,7 @@ X2_lmm  = designmatrix(UnfoldLinearMixedModel,f2_lmm,evts2,b2)
 r = fit(UnfoldLinearMixedModelContinuousTime,X1_lmm+X2_lmm,data);
 df = coeftable(r)
 
-@test isapprox(df[(df.channel .== 1).&(df.term.=="condB").&(df.colname_basis.==0.0),:estimate],[18.18,10.4],rtol=0.1)
+@test isapprox(df[(df.channel .== 1).&(df.coefname.=="condB").&(df.colname_basis.==0.0),:estimate],[18.18,10.4],rtol=0.1)
 
 # Fast-lane new implementation
 m = coeftable(fit(UnfoldModel,Dict(0=>(f1_lmm,b1),1=>(f2_lmm,b2)),evts,data,eventcolumn="condA"))
@@ -234,7 +234,7 @@ m = coeftable(fit(UnfoldModel,Dict(0=>(f1_lmm,b1),1=>(f2_lmm,b2)),evts,data,even
 
 if 1 == 0
     using WGLMakie,AlgebraOfGraphics
-    m = mapping(:colname_basis,:estimate,color=:term,layout_x=:term,layout_y=:basisname)
+    m = mapping(:colname_basis,:estimate,color=:colname,layout_x=:colname,layout_y=:basisname)
     
     AlgebraOfGraphics.data(df[df.channel.==2,:]) * visual(Lines) * m  |> draw
 
@@ -262,7 +262,7 @@ if 1 == 0
         append!(resAll,m.results)
     end
 
-    results = resAll[resAll.term.=="(Intercept)",:]
+    results = resAll[resAll.coefname.=="(Intercept)",:]
 
     results[results.time .== .1,:]
 end
