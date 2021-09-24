@@ -15,8 +15,6 @@ struct BasisFunction
     colnames::AbstractVector
     " vector of times along rows of kernel-output (in seconds)"
     times::AbstractVector
-    "type of basisfunction (only for bookkeeping)"
-    type::String
     "name of the event, random 1:1000 if unspecified"
     name::String
     "by how many samples do we need to shift the event onsets? This number is determined by how many 'negative' timepoints the basisfunction defines"
@@ -28,7 +26,7 @@ end
 function Base.show(io::IO, obj::BasisFunction)
     println(io, "name: $(obj.name)")
     println(io, "colnames: $(obj.colnames)")
-    println(io, "kernel: $(obj.type)")
+    println(io, "kerneltype: $(typeof(obj))")
     println(io, "times: $(obj.times)")
     println(io, "shiftOnset: $(obj.shiftOnset)")
 end
@@ -56,11 +54,11 @@ function firbasis(τ,sfreq,name::String)
     times =range(τ[1],stop=τ[2],step=1 ./sfreq)
 
     kernel=e->firkernel(e,times)
-    type = "firkernel"
+    
 
     shiftOnset = Int64(floor(τ[1] * sfreq))
 
-    return BasisFunction(kernel,times,times,type,name,shiftOnset)
+    return BasisFunction(kernel,times,times,name,shiftOnset)
 end
 # cant multiple dispatch on optional arguments
 #firbasis(;τ,sfreq)           = firbasis(τ,sfreq)
@@ -101,11 +99,10 @@ function splinebasis(τ,sfreq,nsplines,name::String)
     τ = Unfold.round_times(τ,sfreq)
     times =range(τ[1],stop=τ[2],step=1 ./sfreq)
     kernel=e->splinekernel(e,times,nsplines-2)
-    type = "splinebasis"
 
     shiftOnset = Int64(floor(τ[1] * sfreq))
     colnames = spl_breakpoints(times,nsplines)
-    return BasisFunction(kernel,colnames,times,type,name,shiftOnset)
+    return BasisFunction(kernel,colnames,times,name,shiftOnset)
 end
 
     
@@ -161,8 +158,7 @@ function hrfbasis(TR::Float64;parameters= [6. 16. 1. 1. 6. 0. 32.],name::String=
     #        p(6) - onset {seconds}                                0
     #        p(7) - length of kernel {seconds}                    32
     kernel=e->hrfkernel(e,TR,parameters)
-    type = "hrfkernel"
-    return BasisFunction(kernel,["hrf"],range(0,(length(kernel([0, 1]))-1)*TR,step=TR),type,name,0)
+    return BasisFunction(kernel,["hrf"],range(0,(length(kernel([0, 1]))-1)*TR,step=TR),name,0)
 end
 
 
