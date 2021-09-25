@@ -77,7 +77,7 @@ function StatsModels.modelcols(p::uf_bsplineTerm, d::NamedTuple)
     end
         #X = Splines2.bs(col, df=p.df+1,intercept=true)
     X = p.fun(col)
-    @show size(X)
+
     # remove middle X to negate intercept = true, generating a pseudo effect code 
     X[:,Not(Int(ceil(end/2)))]
 end

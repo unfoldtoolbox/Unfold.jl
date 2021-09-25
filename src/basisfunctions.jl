@@ -140,6 +140,7 @@ end
 splinebasis(;τ,sfreq,nsplines,name)      = splinebasis(τ,sfreq,nsplines,name)
 splinebasis(τ,sfreq,nsplines)            = splinebasis(τ,sfreq,nsplines,"basis_"*string(rand(1:10000)))
 
+shiftOnset(basis::Union{SplineBasis,FIRBasis}) = basis.shiftOnset
 
 function splinebasis(τ,sfreq,nsplines,name::String)
     τ = Unfold.round_times(τ,sfreq)
@@ -215,15 +216,17 @@ collabel(basis::SplineBasis) = :splineTerm
 collabel(uf::UnfoldModel) = collabel(formula(uf))
 collabel(form::FormulaTerm) = collabel(form.rhs)
 collabel(term::TimeExpandedTerm) = collabel(term.basisfunction)
+collabel(t::Tuple) = collabel(t[1]) # MixedModels has Fixef+ReEf
 collabel(term::Array{<:AbstractTerm}) = collabel(term[1].rhs)  # in case of combined formulas
 #collabel(form::MatrixTerm) = collabel(form[1].rhs)
 
+# typical defaults
 colnames(basis::BasisFunction) = basis.colnames
 kernel(basis::BasisFunction) = basis.kernel
 
 times(basis::BasisFunction) = basis.times
 name(basis::BasisFunction) = basis.name
-shiftOnset(basis::Union{SplineBasis,FIRBasis}) = basis.shiftOnset
+
 
 
 
