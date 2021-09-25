@@ -17,7 +17,8 @@ using Unfold,DSP
 TR = 1.5
 bold = hrfbasis(TR) # using default SPM parameters
 eventonset = 1.3
-plot(bold.kernel(eventonset))
+bold_kernel = Unfold.kernel(bold)
+plot(bold_kernel(eventonset))
 ```
 This is the shape that is assumed to reflect activity to an event. Generally, we would like to know how much to scale this response-shape per condition, e.g. in `condA` we might scale it by 0.7, in `condB` by 1.2.
 
@@ -29,7 +30,8 @@ We start with convolving this HRF function with a impulse-vector, with impulse a
 y = zeros(100) # signal length = 100
 y[[10,30,45]] .=0.7 # 3 events at given for condition A
 y[[37]] .=1.2 # 1 events at given for condition B
-y_conv = conv(y,bold.kernel(0)) # convolve!
+
+y_conv = conv(y,bold_kernel(0)) # convolve!
 plot(y_conv) 
 ```
 
@@ -59,7 +61,8 @@ Okay, let's have a look at a different basis function: The FIR basisfunction.
 using Unfold #hide
 
 basisfunction = firbasis(τ=(-0.4,.8),sfreq=50,name="myFIRbasis")
-plot(basisfunction.kernel(0))
+fir_kernel = Unfold.kernel(basisfunction)
+plot(fir_kernel(0))
 ```
 
 First thing to notice, it is not one basisfunction, but a basisfunction set. Thus every condition will be explained by several basisfunctions!
@@ -67,7 +70,7 @@ First thing to notice, it is not one basisfunction, but a basisfunction set. Thu
 
 Not very clear, better show it in 2D
 ```@example main
-basisfunction.kernel(0)[1:10,1:10]
+fir_kernel(0)[1:10,1:10]
 ```
 (all `.` are `0`'s)
 
