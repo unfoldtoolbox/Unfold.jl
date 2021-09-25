@@ -45,6 +45,7 @@ include("clusterpermutation.jl")
 export fit, fit!, designmatrix!
 export firbasis,hrfbasis,condense_long
 export UnfoldLinearModel,UnfoldLinearMixedModel, UnfoldModel,UnfoldLinearMixedModelContinuousTime,UnfoldLinearModelContinuousTime
+export FIRBasis, HRFBasis, SplineBasis
 export modelmatrix
 export formula,design,designmatrix,coef
 export coeftable

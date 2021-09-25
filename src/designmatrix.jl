@@ -404,13 +404,14 @@ function StatsModels.modelcols(term::TimeExpandedTerm{<:Union{<:RandomEffectsTer
                         time_start = 1
                 else
                         time_start = time[ix_start]
-                        time_start = time_start - sum(term.basisfunction.times.<=0)
+                        # XXX Replace this functionality by shiftOnset?
+                        time_start = time_start - sum(times(term.basisfunction).<=0)
                 end
                 if i == length(uGroup)
                         time_stop = size(refs,1)
                 else
                         time_stop = time[ix_end]
-                        time_stop = time_stop + sum(term.basisfunction.times.>0)
+                        time_stop = time_stop + sum(times(term.basisfunction).>0)
                 end
                 if time_start < 0
                         time_start = 1
@@ -479,10 +480,10 @@ end
 
 # helper function to get the ranges from where to where the basisfunction is added
 function time_expand_getTimeRange(onset,basisfunction)
-        npos = sum(basisfunction.times.>=0)
-        nneg = sum(basisfunction.times.<0)
+        npos = sum(times(basisfunction).>=0)
+        nneg = sum(times(basisfunction).<0)
 
-        basis = basisfunction.kernel(onset)
+        #basis = kernel(basisfunction)(onset)
 
         fromRowIx = floor(onset)-nneg
         toRowIx = floor(onset)+npos
@@ -501,7 +502,7 @@ performs the actual time-expansion in a sparse way.
  Returns SparseMatrixCSC 
 """
 function time_expand(X,term,tbl)
-        ncolsBasis = size(term.basisfunction.kernel(0),2)
+        ncolsBasis = size(kernel(term.basisfunction)(0),2)
         X = reshape(X,size(X,1),:)
 
         ncolsX = size(X)[2]
@@ -515,9 +516,9 @@ function time_expand(X,term,tbl)
         onsets = tbl[!,term.eventfields[1]]
 
         if typeof(term.eventfields) <:Array && length(term.eventfields) == 1
-                bases = term.basisfunction.kernel.(tbl[!,term.eventfields[1]])
+                bases = kernel(term.basisfunction).(tbl[!,term.eventfields[1]])
         else
-                bases = term.basisfunction.kernel.(eachrow(tbl[!,term.eventfields]))
+                bases = kernel(term.basisfunction).(eachrow(tbl[!,term.eventfields]))
         end
 
         # generate rowindices
@@ -525,7 +526,7 @@ function time_expand(X,term,tbl)
         # this shift is necessary as some basisfunction time-points can be negative. But a matrix is always from 1:τ. Thus we have to shift it backwards in time.
         # The onsets are onsets-1 XXX not sure why.
         for r in 1:length(rows)
-                rows[r] .+= floor(onsets[r]-1)+term.basisfunction.shiftOnset
+                rows[r] .+= floor(onsets[r]-1)+shiftOnset(term.basisfunction)
         end
 
         rows = vcat(rows...)
@@ -566,8 +567,8 @@ Some examples for a firbasis:
 """
 function StatsModels.coefnames(term::TimeExpandedTerm)
         terms = coefnames(term.term)
-        colnames = term.basisfunction.colnames
-        name = term.basisfunction.name
+        colnames = Unfold.colnames(term.basisfunction)
+        name = Unfold.name(term.basisfunction)
         if typeof(terms) == String
                 terms = [terms]
         end
@@ -576,7 +577,7 @@ end
 
 function termnames(term::TimeExpandedTerm)
         terms = coefnames(term.term)
-        colnames = term.basisfunction.colnames
+        colnames = colnames(term.basisfunction)
         if typeof(terms) == String
                 terms = [terms]
         end
@@ -586,7 +587,7 @@ end
 
 function colname_basis(term::TimeExpandedTerm)
         terms = coefnames(term.term)
-        colnames = term.basisfunction.colnames
+        colnames = colnames(term.basisfunction)
         if typeof(terms) == String
                 terms = [terms]
         end
