@@ -43,13 +43,17 @@ include("splinepredictors.jl")
 include("clusterpermutation.jl")
 #include("plot.jl") # don't include for now
 export fit, fit!, designmatrix!
-export firbasis,hrfbasis,condense_long
-export UnfoldLinearModel,UnfoldLinearMixedModel, UnfoldModel,UnfoldLinearMixedModelContinuousTime,UnfoldLinearModelContinuousTime
+export firbasis, hrfbasis, condense_long
+export UnfoldLinearModel,
+    UnfoldLinearMixedModel,
+    UnfoldModel,
+    UnfoldLinearMixedModelContinuousTime,
+    UnfoldLinearModelContinuousTime
 export FIRBasis, HRFBasis, SplineBasis
 export modelmatrix
-export formula,design,designmatrix,coef
+export formula, design, designmatrix, coef
 export coeftable
 export unfoldfit # might be renamend to fit! in the future
-export predict,spl
-export cluster_permutation_test 
+export predict, spl
+export cluster_permutation_test
 end # module
