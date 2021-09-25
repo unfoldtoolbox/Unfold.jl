@@ -38,6 +38,9 @@ function TimeExpandedTerm(term,basisfunction;eventfields=[:latency])
         TimeExpandedTerm(term, basisfunction,eventfields)
 end
 
+collabel(term::TimeExpandedTerm) = collabel(term.basisfunction)
+
+
 function Base.show(io::IO, p::TimeExpandedTerm)
         #print(io, "timeexpand($(p.term), $(p.basisfunction.type),$(p.basisfunction.times))")
         println(io,"$(coefnames(p))")
