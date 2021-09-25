@@ -67,7 +67,8 @@ function designToModeltype(design)
        t = tmp[2] # Vector or BasisFunction
 
         isMixedModel = isMixedModelFormula(f)
-       if typeof(t) == BasisFunction
+        
+       if typeof(t) <: BasisFunction
         if isMixedModel
             UnfoldModelType = UnfoldLinearMixedModelContinuousTime
         else

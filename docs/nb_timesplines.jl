@@ -63,7 +63,7 @@ res
 x = [1]
 
 # ╔═╡ d964a5ca-7e63-41d5-bf97-526772d259e9
-[formTerm.basisfunction.kernel(0) for formTerm in getfield.(m.X.formulas,:rhs)]
+[kernel(formTerm.basisfunction)(0) for formTerm in getfield.(m.X.formulas,:rhs)]
 
 # ╔═╡ 54862fe8-be53-47c1-a249-e47bcd492ce4
 formTerm.basisfunction

@@ -77,7 +77,6 @@ function solver_default(X,data::AbstractArray{T,3};stderror=false) where {T<:Uni
        end
    
        if stderror
-        println("here I am")
             stderror = calculate_stderror(X,data,beta)
             modelfit = LinearModelFit(beta,["solver_default"],stderror)
         else

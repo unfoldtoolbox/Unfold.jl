@@ -1,22 +1,52 @@
 """
-Defines a basisfunction which can be called for each event, defining the time-expanded basis kernel
+See FIRBasis for an examples
+
+    a BasisFunction should implement:
+    kernel()
+    collabel() [default "colname_basis"]
+    colnames()
+    times()
+    name()
+    shiftOnset() [default 0]
+"""
+abstract type BasisFunction end
+
+
+"""
+Defines a FIRBasisfunction which can be called for each event, defining the time-expanded basis kernel
 $(TYPEDEF)
 $(TYPEDSIGNATURES)
 $(FIELDS)
 # Examples
 ```julia-repl
-julia>  b = BasisFunction(kernelfunction,["hrf"],range(0,(length(kernelfunction([0, 1]))-1)*TR,step=TR),"hrf_kernel","basis_A",0)
+julia>  b = BasisFunction(kernelfunction,"derivative",["f(x)"],range(0,(length(kernelfunction([0, 1]))-1)*TR,step=TR),"hrf_kernel","basis_A",0)
 ```
 """
-struct BasisFunction
+struct FIRBasis <: BasisFunction 
     "a design-matrix kernel function used to timeexpand, given a timepoint in 'sample' timeunits"
     kernel::Function
+      
+    " vector of times along rows of kernel-output (in seconds)"
+    times::AbstractVector
+    "name of the event, random 1:1000 if unspecified"
+    name::String
+    "by how many samples do we need to shift the event onsets? This number is determined by how many 'negative' timepoints the basisfunction defines"
+    shiftOnset::Integer
+end
+
+collabel(basis::FIRBasis) = :time
+colnames(basis::FIRBasis) = basis.times
+
+
+struct SplineBasis <: BasisFunction 
+    "a design-matrix kernel function used to timeexpand, given a timepoint in 'sample' timeunits"
+    kernel::Function
+    "name of column dimension (e.g 'time' for FIR, 'derivative', for HRF etc.)"
+    
     "vector of names along columns of kernel-output"
     colnames::AbstractVector
     " vector of times along rows of kernel-output (in seconds)"
     times::AbstractVector
-    "type of basisfunction (only for bookkeeping)"
-    type::String
     "name of the event, random 1:1000 if unspecified"
     name::String
     "by how many samples do we need to shift the event onsets? This number is determined by how many 'negative' timepoints the basisfunction defines"
@@ -24,13 +54,27 @@ struct BasisFunction
 end
 
 
+struct HRFBasis <: BasisFunction 
+    "a design-matrix kernel function used to timeexpand, given a timepoint in 'sample' timeunits"
+    kernel::Function 
+    "vector of names along columns of kernel-output"
+    colnames::AbstractVector
+    " vector of times along rows of kernel-output (in seconds)"
+    times::AbstractVector
+    "name of the event, random 1:1000 if unspecified"
+    name::String 
+end
+
+
+
 
 function Base.show(io::IO, obj::BasisFunction)
-    println(io, "name: $(obj.name)")
-    println(io, "colnames: $(obj.colnames)")
-    println(io, "kernel: $(obj.type)")
-    println(io, "times: $(obj.times)")
-    println(io, "shiftOnset: $(obj.shiftOnset)")
+    println(io, "name: $(name(obj))")
+    println(io, "collabel: $(collabel(obj))")
+    println(io, "colnames: $(colnames(obj))")
+    println(io, "kerneltype: $(typeof(obj))")
+    println(io, "times: $(times(obj))")
+    println(io, "shiftOnset: $(shiftOnset(obj))")
 end
 
 
@@ -56,11 +100,11 @@ function firbasis(τ,sfreq,name::String)
     times =range(τ[1],stop=τ[2],step=1 ./sfreq)
 
     kernel=e->firkernel(e,times)
-    type = "firkernel"
+    
 
     shiftOnset = Int64(floor(τ[1] * sfreq))
 
-    return BasisFunction(kernel,times,times,type,name,shiftOnset)
+    return FIRBasis(kernel,times,name,shiftOnset)
 end
 # cant multiple dispatch on optional arguments
 #firbasis(;τ,sfreq)           = firbasis(τ,sfreq)
@@ -96,16 +140,16 @@ end
 splinebasis(;τ,sfreq,nsplines,name)      = splinebasis(τ,sfreq,nsplines,name)
 splinebasis(τ,sfreq,nsplines)            = splinebasis(τ,sfreq,nsplines,"basis_"*string(rand(1:10000)))
 
+shiftOnset(basis::Union{SplineBasis,FIRBasis}) = basis.shiftOnset
 
 function splinebasis(τ,sfreq,nsplines,name::String)
     τ = Unfold.round_times(τ,sfreq)
     times =range(τ[1],stop=τ[2],step=1 ./sfreq)
     kernel=e->splinekernel(e,times,nsplines-2)
-    type = "splinebasis"
 
     shiftOnset = Int64(floor(τ[1] * sfreq))
     colnames = spl_breakpoints(times,nsplines)
-    return BasisFunction(kernel,colnames,times,type,name,shiftOnset)
+    return SplineBasis(kernel,"spline",colnames,times,name,shiftOnset)
 end
 
     
@@ -161,9 +205,28 @@ function hrfbasis(TR::Float64;parameters= [6. 16. 1. 1. 6. 0. 32.],name::String=
     #        p(6) - onset {seconds}                                0
     #        p(7) - length of kernel {seconds}                    32
     kernel=e->hrfkernel(e,TR,parameters)
-    type = "hrfkernel"
-    return BasisFunction(kernel,["hrf"],range(0,(length(kernel([0, 1]))-1)*TR,step=TR),type,name,0)
+    return HRFBasis(kernel,["f(x)"],range(0,(length(kernel([0, 1]))-1)*TR,step=TR),name)
 end
+
+shiftOnset(basis::HRFBasis) = 0
+
+collabel(basis::HRFBasis) = :derivative
+collabel(basis::SplineBasis) = :splineTerm
+
+collabel(uf::UnfoldModel) = collabel(formula(uf))
+collabel(form::FormulaTerm) = collabel(form.rhs)
+collabel(t::Tuple) = collabel(t[1]) # MixedModels has Fixef+ReEf
+collabel(term::Array{<:AbstractTerm}) = collabel(term[1].rhs)  # in case of combined formulas
+#collabel(form::MatrixTerm) = collabel(form[1].rhs)
+
+# typical defaults
+colnames(basis::BasisFunction) = basis.colnames
+kernel(basis::BasisFunction) = basis.kernel
+
+times(basis::BasisFunction) = basis.times
+name(basis::BasisFunction) = basis.name
+
+
 
 
 """
