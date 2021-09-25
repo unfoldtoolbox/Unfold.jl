@@ -86,11 +86,16 @@ nothing # hide
 
 We fit the `UnfoldLinearModel`.
 ```@example Main
-m,results = Unfold.fit(UnfoldLinearModel,f,evts,data_epochs,times); 
+m = fit(UnfoldModel,f,evts,data_epochs,times); 
 nothing #hide
 ```
 
-
+Alternatively, we could also call it using:
+```@example Main
+m = fit(UnfoldModel,Dict(Any=>(f,times)),evts,data_epochs); 
+nothing #hide
+```
+Which (will soon) allow for fitting multiple events at the same time
 
 We can inspect the object
 ```@example Main
@@ -98,10 +103,10 @@ m
 ```
 And see that it  contains the model, the original formula, the original events.
 
-Further, we got a *tidy*-dataframe with the results
+Further, we can get a *tidy*-dataframe using `coeftable`
 
 ```@example Main
-first(results,6)
+first(coeftable(m),6)
 ```
 
 !!! note 
@@ -110,6 +115,7 @@ first(results,6)
 #### 4. Visualize the results
 Tidy-Dataframes make them easy to visualize.
 ```@example Main
+results = coeftable(m)
 Plots.plot(results.colname_basis,results.estimate,
         group=results.term,
         layout=1,legend=:outerbottom)

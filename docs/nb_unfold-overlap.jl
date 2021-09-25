@@ -103,8 +103,8 @@ m,res = fit(UnfoldLinearModel,f_dict,evts,data_noise,eventcolumn="type");
 begin
 	
 	
-p1 = @df res_e plot(:colname_basis,:estimate,group=:term,title="Without ...",ylims=(-3,5),legend=false,xlims=(-0.3,3))
-	p2 = @df res plot(:colname_basis,:estimate,group=:term,title="... with overlap correction",ylims=(-3,5),xlims=(-0.3,3),legend=:bottomright)
+p1 = @df res_e plot(:colname_basis,:estimate,group=:coefname,title="Without ...",ylims=(-3,5),legend=false,xlims=(-0.3,3))
+	p2 = @df res plot(:colname_basis,:estimate,group=:coefname,title="... with overlap correction",ylims=(-3,5),xlims=(-0.3,3),legend=:bottomright)
 	plot(p1,p2,layout=(1,2))
 end
 

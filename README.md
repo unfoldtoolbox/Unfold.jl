@@ -51,6 +51,7 @@ For a quickstart:
 
 ```julia
 f = @formula 0~1+condA
+fLMM = @formula 0~1+condA+(1|subject) + (1|item)
 events::DataFrame
 data::Array{Float64,2}
 epochs::Array{Float64,3} # channel x time x epochs (n-epochs == nrows(events))
@@ -60,10 +61,11 @@ basisfunction::Unfold.BasisFunction
 basis = firbasis(τ=(-0.3,0.5),srate=250)
 ```
 
-1. Timeexpansion **No**, Mixed **No**  : `fit(UnfoldLinearModel,formula,events,epochs,times)`
-1. Timeexpansion **No**, Mixed **Yes** : `fit(UnfoldLinearMixedModel,formula,events,epochs,times)`
-1. Timeexpansion **Yes**, Mixed **No** : `fit(UnfoldLinearModel,Dict("eventname"=>(formula,basisfunction)),events,data)`
-1. Timeexpansion **Yes**, Mixed **Yes**: `fit(UnfoldLinearMixedModel,Dict("eventname"=>(formula,basisfunction),"event2"=>(formula2,basis2)),events,data)`
+
+1. Timeexpansion **No**, Mixed **No**  : `fit(UnfoldModel,Dict(Any=>(f,times)),evts,data_epoch)`
+1. Timeexpansion **Yes**, Mixed **No** : `fit(UnfoldModel,Dict(Any=>(f,basis)),evts,data)`
+1. Timeexpansion **No**, Mixed **Yes** : `fit(UnfoldModel,Dict(Any=>(fLMM,times)),evts,data_epoch)`
+1. Timeexpansion **Yes**, Mixed **Yes**: `fit(UnfoldModel,Dict(Any=>(fLMM,basis)),evts,data)`
 
 
 ## Documentation

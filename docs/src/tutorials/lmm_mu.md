@@ -65,7 +65,7 @@ f  = @formula 0~1+condA*condB+zerocorr(1+condA*condB|subject);
 #### 3. Fit the model
 We can now run the LinearMixedModel on each time point
 ```@example Main
-m,results = fit(UnfoldLinearMixedModel,f,evts,data_epochs,times) 
+m = fit(UnfoldModel,f,evts,data_epochs,times) 
 ```
 
 
@@ -75,6 +75,8 @@ m,results = fit(UnfoldLinearMixedModel,f,evts,data_epochs,times)
 
 Let's start with the **fixed** Effects
 ```@example Main
+results = coeftable(m)
+
 res_fixef = results[isnothing.(results.group),:]
 Plots.plot(res_fixef.colname_basis,res_fixef.estimate,
         group=res_fixef.term,
