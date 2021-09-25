@@ -33,6 +33,6 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 TimerOutputs = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
 
 [compat]
-MixedModels = "4.0.0"
+MixedModels = "4"
 Tables = "1"
 julia = "1.6"
