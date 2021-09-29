@@ -117,6 +117,16 @@ function zeropad(X, data::AbstractArray{T,2}) where {T<:Union{Missing,<:Number}}
     end
     return X, data
 end
+function zeropad(X, data::AbstractVector{T}) where {T<:Union{Missing,<:Number}}
+    @debug("1d zeropad")
+    if size(X, 1) > length(data)
+        X = X[1:length(data)]
+    else
+        data = data[1:size(X, 1)]
+    end
+    return X, data
+end
+
 function zeropad(X, data::AbstractArray{T,3}) where {T<:Union{Missing,<:Number}}
     @debug("3d zeropad")
     if size(X, 1) > size(data, 3)

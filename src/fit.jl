@@ -160,7 +160,7 @@ function StatsModels.fit!(
     end
     nchan = size(data, 1)
 
-    #_,data = zeropad(Xobj.Xs[1],data)
+    _,data = zeropad(Xs[1],data)
     # get a un-fitted mixed model object
 
 
@@ -295,7 +295,9 @@ function LinearMixedModel_wrapper(
 
 
     if m != size(data)[1]
-        Xs = changeMatSize!(size(data)[1], Xs[1], Xs[2:end])
+        fe,data = zeropad(Xs[1],data)
+        
+        Xs = changeMatSize!(size(data)[1], fe, Xs[2:end])
     end
 
     y = (reshape(float(data), (:, 1)))
