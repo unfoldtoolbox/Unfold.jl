@@ -173,6 +173,10 @@ XA, XB = Unfold.changeMatSize!(40, X[1], X[2:end])
 @test size(XA)[1] == 40
 @test size(XB)[1] == 40
 
+XA, XB = Unfold.changeMatSize!(30, Matrix(X[1]), X[2:end])
+@test size(XA)[1] == 30
+@test size(XB)[1] == 30
+
 
 #----- Some LinearMixedModel tests
 

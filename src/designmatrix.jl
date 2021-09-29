@@ -153,9 +153,14 @@ function combineDesignmatrices(X1::DesignMatrix, X2::DesignMatrix)
     end
 end
 
-function changeMatSize!(m, fe, remats)
+function changeMatSize!(m, fe::AbstractSparseMatrix, remats)
     changeReMatSize!.(remats, Ref(m))
-    fe = SparseMatrixCSC(m, size(fe,1), fe.colptr, fe.rowval, fe.nzval)
+    fe = SparseMatrixCSC(m, fe.n, fe.colptr, fe.rowval, fe.nzval)
+    return (fe, remats...)
+end
+function changeMatSize!(m, fe::AbstractMatrix, remats)
+    changeReMatSize!.(remats, Ref(m))
+    fe = fe[1:m,:]
     return (fe, remats...)
 end
 function changeReMatSize!(remat::MixedModels.AbstractReMat, m::Integer)
