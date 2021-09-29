@@ -155,7 +155,7 @@ end
 
 function changeMatSize!(m, fe, remats)
     changeReMatSize!.(remats, Ref(m))
-    fe = SparseMatrixCSC(m, fe.dims.n, fe.colptr, fe.rowval, fe.nzval)
+    fe = SparseMatrixCSC(m, size(fe,1), fe.colptr, fe.rowval, fe.nzval)
     return (fe, remats...)
 end
 function changeReMatSize!(remat::MixedModels.AbstractReMat, m::Integer)
