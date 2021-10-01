@@ -22,7 +22,7 @@ The julia toolbox is a type of research-playground, but offers LinearMixedModel 
 | non-linear splines      | x      | x       | x         |
 | plotting tools          | x      |         | (x)        |
 | sanity checks           | x      |         |           |
-| tutorials               | x      |         | (x)       |
+| tutorials               | x      |         | x       |
 | speed                   | x      |         | x         |
 | unittests               | x      |         | x         |
 | HRF (fMRI) basis        |        |         | x         |
