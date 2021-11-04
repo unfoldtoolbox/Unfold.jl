@@ -24,13 +24,18 @@ r = predict(m,DataFrame(conditionA=[0,0],continuousA=[0.9,1.9]))
 @test all(ismissing.(r.yhat[r.continuousA.==1.9]))
 @test !any(ismissing.(r.yhat[r.continuousA.==0.9]))
 
+
+# test time expanded
 basisfunction = firbasis(τ = (-1, 1), sfreq = 10, name = "A")
 m_tul = coeftable(fit(UnfoldModel, f, evts, data_r, basisfunction))
 m_tul_spl = coeftable(fit(UnfoldModel, f_spl, evts, data_r, basisfunction))
 
+# test safe predict
+m = fit(UnfoldModel, f_spl, evts, data_r, basisfunction)
+@test_broken predict(m,DataFrame(conditionA=[0,0,0],continuousA=[0.9,0.9,1.9]))
+#@test_broken all(ismissing.)
+
 #evts_grid = gridexpand() 
-
-
 # results from timeexpanded and non should be equal
 #yhat_tul  = predict(m_tul_spl,evts_grid)
 #yhat_mul  = predict(m_mul_spl,evts_grid)

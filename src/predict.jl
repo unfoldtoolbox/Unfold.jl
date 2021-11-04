@@ -20,7 +20,7 @@ function StatsBase.predict(model::UnfoldModel, newdata, times = nothing)
 
         # just a single designmat, same for all timepoints
         #X = designmatrix(UnfoldLinearModel, formulas[1], data)
-        X = modelcols(Unfold.formula(model).rhs,data)
+        X = modelcols(formulas.rhs,data)
         
         # setup the output matrix, has to be a matrix
         yhat = Array{Union{Missing,Float64}}(
