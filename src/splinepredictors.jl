@@ -27,12 +27,28 @@ function genSplFunction(x, df)
 end
 function splFunction(x, basis)
     df = length(basis)
-    large = zeros(length(x), df)
+    large = fill(missing,length(x), df)
+    large = zeros(Union{Missing,Float64},length(x), df)
 
+    @show x
+    @show basis
     bs_eval = bsplines.(Ref(basis), x)
+    
+    
+    
+    @show bs_eval
+    @show typeof(bs_eval)
     for k = 1:length(bs_eval)
-        offsetArrayToZeros!(view(large, k, :), bs_eval[k])
+        @show k
+        @show bs_eval[k]
+        if isnothing(bs_eval[k]) 
+            @warn("spline prediction outside of possible range, putting to missing")
+            large[k,:] .= missing
+        else
+            offsetArrayToZeros!(view(large, k, :), bs_eval[k])
+        end
     end
+    
     return large
 end
 

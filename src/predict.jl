@@ -19,19 +19,20 @@ function StatsBase.predict(model::UnfoldModel, newdata, times = nothing)
         # mass univariate model. Not sure how I can multiple dispatch correctly :| Maybe I need 4 types after all
 
         # just a single designmat, same for all timepoints
-        X = designmatrix(UnfoldLinearModel, formulas[1], data)
-
+        #X = designmatrix(UnfoldLinearModel, formulas[1], data)
+        X = modelcols(Unfold.formula(model).rhs,data)
+        
         # setup the output matrix, has to be a matrix
         yhat = Array{Union{Missing,Float64}}(
             missing,
             size(coef(model), 1),
-            size(modelmatrix(X), 1),
+            size(X, 1),
             size(coef(model), 2),
         )
 
 
         for ch = 1:size(coef(model), 1)
-            yhat[ch, :, :] = X.Xs * permutedims(coef(model)[ch, :, :], (2, 1))
+            yhat[ch, :, :] = X * permutedims(coef(model)[ch, :, :], (2, 1))
         end
 
         # fake times because we never save it in the object
@@ -141,7 +142,7 @@ function StatsBase.predict(model::UnfoldModel, newdata, times = nothing)
     end
 
 
-    out = DataFrame([:yhat => vec(reshape(Float64.(yhat), :, 1))])
+    out = DataFrame([:yhat => vec(reshape(yhat, :, 1))])
     nchannel = size(yhat, 2)
 
     out.channel = repeat(1:nchannel, inner = size(yhat, 1))
