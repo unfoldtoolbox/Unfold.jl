@@ -5,11 +5,11 @@ function extract_coef_info(coefs, ix)
     return [c[ix] for c in split.(coefs, " : ")]
 end
 
-function get_coefnames(uf::UnfoldModel)
+function get_coefnames(uf::Union{UnfoldModel,DesignMatrix})
     coefnames = Unfold.coefnames(formula(uf))
     coefnames = vcat(coefnames...) # gets rid of an empty Any() XXX not sure where it comes from, only in MixedModel Timexpanded case
 end
-
+    
 modelfit(uf::UnfoldModel) = uf.modelfit
 StatsModels.coef(uf::UnfoldModel) = coef(modelfit(uf))
 StatsModels.coef(mf::LinearModelFit) = mf.estimate
