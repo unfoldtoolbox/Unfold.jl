@@ -1,7 +1,8 @@
 
 """
-fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::FormulaTerm,tbl::DataFrame,data::Array{T,3},times)
-fit(type::Type{<:Union{UnfoldLinearModel,UnfoldLinearMixedModel}},f::FormulaTerm,tbl::DataFrame,data::Array{T,2},basisfunction::BasisFunction)
+fit(type::UnfoldModel,f::FormulaTerm,tbl::DataFrame,data::Array{T,3},times)
+fit(type::UnfoldModel,f::FormulaTerm,tbl::DataFrame,data::Array{T,2},basisfunction::BasisFunction)
+fit(type::UnfoldModel,d::Dict,tbl::DataFrame,data::Array)
 
 Generates Designmatrix & fits model, either mass-univariate (one model per epoched-timepoint) or time-expanded (modeling linear overlap).
 
@@ -14,12 +15,12 @@ julia> data_r = reshape(data,(1,:))
 julia> data_e,times = Unfold.epoch(data=data_r,tbl=evts,τ=(-1.,1.9),sfreq=10) # cut the data into epochs. data_e is now ch x times x epoch
 
 julia> f  = @formula 0~1+continuousA+continuousB # 1
-julia> model,results_long = fit(UnfoldLinearModel,f,evts,data_e,times)
+julia> model = fit(UnfoldModel,f,evts,data_e,times)
 ```
 Timexpanded Univariate Linear
 ```julia-repl
 julia> basisfunction = firbasis(τ=(-1,1),sfreq=10,name="A")
-julia> model,results_long = fit(UnfoldLinearModel,f,evts,data_r,basisfunction)
+julia> model = fit(UnfoldModel,Dict(Any=>(f,basisfunction),evts,data_r)
 ```
 
 """
@@ -122,15 +123,12 @@ end
 
 
 """
-unfoldfit(::Type{UnfoldLinearMixedModel},Xobj::DesignMatrix,data::Union{<:AbstractArray{T,2},<:AbstractArray{T,3}}) where {T<:Union{Missing, <:Number}}
-unfoldfit(::Type{UnfoldLinearModel},Xobj::DesignMatrix,data::Union{<:AbstractArray{T,2},<:AbstractArray{T,3}}) where {T<:Union{Missing, <:Number}}
+fit!(uf::UnfoldModel,data::Union{<:AbstractArray{T,2},<:AbstractArray{T,3}}) where {T<:Union{Missing, <:Number}}
 
 Fit a DesignMatrix against a 2D/3D Array data along its last dimension
 Data is typically interpreted as channel x time (with basisfunctions) or channel x time x epoch (for mass univariate)
 
-Returns an UnfoldModel object with fields .beta, .sigma (in case of mixed model) and .modelinfo with a summary of the modelfit
-
-Note: Might be renamed/refactored to fit! at a later point
+Returns an UnfoldModel object
 
 # Examples
 ```julia-repl
