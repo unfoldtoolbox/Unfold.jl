@@ -18,6 +18,11 @@ m_mul_spl = coeftable(fit(UnfoldModel, f_spl, evts, data_e, times))
 # asking for 4 splines should generate 4 splines 
 @test length(unique(m_mul_spl.coefname)) == 6 # XXX check back with Unfold whether this is the same! could be n-1 splines in Unfold. We should keep that comparable I guess
 
+# test safe prediction
+m = fit(UnfoldModel, f_spl, evts, data_e, times)
+r = predict(m,DataFrame(conditionA=[0,0],continuousA=[0.9,1.9]))
+@test all(ismissing.(r.yhat[r.continuousA.==1.9]))
+@test !any(ismissing.(r.yhat[r.continuousA.==0.9]))
 
 basisfunction = firbasis(τ = (-1, 1), sfreq = 10, name = "A")
 m_tul = coeftable(fit(UnfoldModel, f, evts, data_r, basisfunction))
