@@ -84,10 +84,9 @@ Not supported for models without timebasis, as it is not needed there (one can s
 ```julia-repl
 julia>  basisfunction1 = firbasis(τ=(0,1),sfreq = 10,name="basis1")
 julia>  basisfunction2 = firbasis(τ=(0,0.5),sfreq = 10,name="basis2")
-julia>  Xdc1          = designmatrix(UnfoldLinearModel,@formula 0~1,tbl_1,basisfunction1)
-julia>  Xdc2          = designmatrix(UnfoldLinearModel,@formula 0~1,tbl_2,basisfunction2)
-julia>  combineDesignmatrices(Xdc1,Xdc2)
-julia>  Xdc = Xdc1+Xdc2 # equivalently
+julia>  Xdc1          = designmatrix(UnfoldLinearModelContinuousTime(Dict(Any=>(@formula 0~1,basisfunction1)),tbl_1)
+julia>  Xdc2          = designmatrix(UnfoldLinearModelContinuousTime(Dict(Any=>(@formula 0~1,basisfunction2)),tbl_2)
+julia>  Xdc = Xdc1+Xdc2 
 ```
 
 """
@@ -207,6 +206,13 @@ end
 function get_Xs(Xs::SparseMatrixCSC)
     return Xs
 end
+function get_Xs(Xs::Matrix)
+    # mass univariate case
+    return Xs
+end
+function get_Xs(X::DesignMatrix)
+    return get_Xs(X.Xs)
+end
 
 """
 $(SIGNATURES)
@@ -223,7 +229,7 @@ First field of array always defines eventonset in samples. Default is [:latency]
 
 # Examples
 ```julia-repl
-julia>  designmatrix(UnfoldLinearModel,f,tbl,basisfunction1)
+julia>  designmatrix(UnfoldLinearModelContinuousTime(Dict(Any=>(f,basisfunction1),tbl)
 ```
 
 """
