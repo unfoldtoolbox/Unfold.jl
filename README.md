@@ -20,7 +20,7 @@ The julia toolbox is a type of research-playground, but offers LinearMixedModel 
 |-------------------------|--------|---------|-----------|
 | overlap correction      | x      | x       | x         |
 | non-linear splines      | x      | x       | x         |
-| plotting tools          | x      |         | (x)        |
+| plotting tools          | x      |         | UnfoldMakie.jl - beta        |
 | sanity checks           | x      |         |           |
 | tutorials               | x      |         | x       |
 | speed                   | x      |         | x         |
@@ -30,20 +30,12 @@ The julia toolbox is a type of research-playground, but offers LinearMixedModel 
 | different timewindows per event   |        |         | x         |
 | mixed models            |        | x       | x         |
 | item & subject effects  |        | x       | x         |
+| decoding  |        |        | back2back regression         |
 
 ## Install
 ```julia
 using Pkg;
 Pkg.add(url = "https://github.com/unfoldtoolbox/Unfold.jl")
-```
-
-For some of the testing functionality in the `test/` path, you will also need
-
-```julia
- Pkg.add("Makie") # use CairoMakie if in a headless environment
- Pkg.add("StatsMakie")
- Pkg.add("MAT")
- Pkg.add("HDF5")
 ```
 
 ## Usage
@@ -71,7 +63,8 @@ basis = firbasis(τ=(-0.3,0.5),srate=250)
 ## Documentation
 Most functions have documentation, e.g. `?Unfold.fit`
 
-Tutorials see `doc/lmm_tutorial.html` & `doc/lm_tutorial.html` - more to come. Contributions very welcome!
+Tutorials see [the documentation](https://unfoldtoolbox.github.io/Unfold.jl/dev/)
+
 
 
 ## Contributors (alphabetically)
