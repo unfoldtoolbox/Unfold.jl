@@ -34,8 +34,7 @@ The julia toolbox is a type of research-playground, but offers LinearMixedModel 
 
 ## Install
 ```julia
-using Pkg;
-Pkg.add(url = "https://github.com/unfoldtoolbox/Unfold.jl")
+]add Unfold
 ```
 
 ## Usage
