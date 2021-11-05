@@ -15,13 +15,11 @@ end
 
 # ╔═╡ 65edde2e-d03e-11eb-300b-897bdc66d875
 begin
-import Pkg;
-	Pkg.activate(".")
-	Pkg.add(url="https://github.com/unfoldtoolbox/Unfold.jl")
-	Pkg.add("PlutoUI")
-	Pkg.add("StatsPlots")
-	Pkg.add("DataFrames")
-	Pkg.add("StatsModels")
+	using Unfold
+	using PlutoUI
+	using StatsPlots
+	using DataFrames
+	using StatsModels
 end
 
 # ╔═╡ 0a821c04-1aff-4fca-aab8-07a4d450838c
