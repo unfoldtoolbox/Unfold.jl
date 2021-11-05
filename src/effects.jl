@@ -1,10 +1,10 @@
-import Effects.effects
-
-function Effects.effects(design::AbstractDict, model::UnfoldModel;
+import Effects: effects
+using Effects
+function effects(design::AbstractDict, model::UnfoldModel;
     eff_col=nothing, err_col=:err, typical=mean,
     lower_col=:lower, upper_col=:upper)
-grid = _reference_grid(design)
-dv = something(eff_col, formula(model).lhs.sym)
+grid = Effects._reference_grid(design)
+dv = something(eff_col, :yhat)
 effects!(grid, model; eff_col=dv, err_col=err_col, typical=typical)
 # XXX DataFrames dependency
 grid[!, lower_col] = grid[!, dv] - grid[!, err_col]
