@@ -34,6 +34,7 @@ using Distributions: Gamma, pdf # TODO replace this with direct implementation (
 include("linearmodels.jl")
 include("basisfunctions.jl")
 include("designmatrix.jl")
+include("effects.jl")
 include("fit.jl")
 include("utilities.jl")
 include("condense.jl")
