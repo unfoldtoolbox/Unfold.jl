@@ -33,7 +33,7 @@ evts_grid = DataFrame(collect(hcat(tmp...)'), ["conditionA", "continuousA"])
 
 
 yhat_tul = predict(m_tul, evts_grid)
-yhat_mul = predict(m_mul, evts_grid, times)
+yhat_mul = predict(m_mul, evts_grid)
 
 @test unique(yhat_mul.times) == times
 
@@ -56,7 +56,7 @@ m_mul_results = coeftable(m_mul)
 m_tul_results = coeftable(m_tul)
 
 yhat_tul = predict(m_tul, evts_grid)
-yhat_mul = predict(m_mul, evts_grid, times)
+yhat_mul = predict(m_mul, evts_grid)
 #@test predict(m_mul,evts).yhat ≈ yhat.yhat
 
 
