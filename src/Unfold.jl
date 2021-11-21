@@ -56,4 +56,7 @@ export coeftable
 export unfoldfit # might be renamend to fit! in the future
 export predict, spl
 export cluster_permutation_test
+
+import StatsModels.@formula # for exporting
+export @formula
 end # module
