@@ -78,6 +78,8 @@ Tutorials see [the documentation](https://unfoldtoolbox.github.io/Unfold.jl/dev/
 ## Acknowledgements
 This work was supported by the Center for Interdisciplinary Research, Bielefeld (ZiF) Cooperation Group "Statistical models for psychological and linguistic data".
 
+Funded by Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) under Germany´s Excellence Strategy – EXC 2075 – 390740016
+
 ## Research notice
 Please note that this repository is participating in a study into sustainability
  of open source projects. Data will be gathered about this repository for
