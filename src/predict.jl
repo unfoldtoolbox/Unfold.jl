@@ -2,7 +2,7 @@ import StatsBase.predict
 
 
 
-function StatsBase.predict(model::UnfoldModel, newdata, times = nothing)
+function StatsBase.predict(model::UnfoldModel, newdata)
     # make a copy of it so we don't change it outside the function
     data = copy(newdata)
     #data = newdata
@@ -17,35 +17,12 @@ function StatsBase.predict(model::UnfoldModel, newdata, times = nothing)
 
     if !(typeof(formulas[1].rhs) <: Unfold.TimeExpandedTerm)
         # mass univariate model. Not sure how I can multiple dispatch correctly :| Maybe I need 4 types after all
-
         # just a single designmat, same for all timepoints
-        #X = designmatrix(UnfoldLinearModel, formulas[1], data)
-        X = modelcols(formulas.rhs,data)
+        X = modelcols(formulas[1].rhs,data)
+        eff = yhat(model,X)
         
-        # setup the output matrix, has to be a matrix
-        yhat = Array{Union{Missing,Float64}}(
-            missing,
-            size(coef(model), 1),
-            size(X, 1),
-            size(coef(model), 2),
-        )
-
-
-        for ch = 1:size(coef(model), 1)
-            yhat[ch, :, :] = X * permutedims(coef(model)[ch, :, :], (2, 1))
-        end
-
         # fake times because we never save it in the object
-        timesVec = repeat(range(1, length = size(yhat, 3)), size(data, 1))
-        if !isnothing(times)
-            timesVec = times[timesVec]
-        end
-        # but times could be optionally given
-
-        # reshape yhat
-
-        yhat = reshape(permutedims(yhat, (1, 3, 2)), size(yhat, 1), :)
-        yhat = permutedims(yhat, (2, 1))
+        timesVec = gen_timeev(times(model)[1],size(X, 1)) # XXX needs to be modified to make automatic multi-event
     else
 
         X = []
@@ -93,8 +70,8 @@ function StatsBase.predict(model::UnfoldModel, newdata, times = nothing)
         Xconcat = blockdiag(X...)
 
         # calculate yhat
-        # yhat x channels
-        yhat = Xconcat * coef(model)'
+        eff = yhat(model,Xconcat)
+
     end
 
     # init the meta dataframe
@@ -142,11 +119,53 @@ function StatsBase.predict(model::UnfoldModel, newdata, times = nothing)
     end
 
 
-    out = DataFrame([:yhat => vec(reshape(yhat, :, 1))])
-    nchannel = size(yhat, 2)
+    out = DataFrame([:yhat => vec(reshape(eff, :, 1))])
+    nchannel = size(eff, 2)
 
-    out.channel = repeat(1:nchannel, inner = size(yhat, 1))
+    out.channel = repeat(1:nchannel, inner = size(eff, 1))
 
     out = hcat(out, repeat(metaData, nchannel))
     return out
+end
+
+
+function yhat(model::UnfoldLinearModelContinuousTime,X::AbstractArray{T,2};times=nothing) where {T<:Union{Missing, <:Number}}
+    yhat = X * coef(model)'
+    return yhat
+end
+function yhat(model::UnfoldLinearModel,X::AbstractArray{T,2};times=nothing) where {T<:Union{Missing, <:Number}}
+    # function that calculates coef*designmat, but in the ch x times x coef vector
+    # setup the output matrix, has to be a matrix
+    yhat = Array{Union{Missing,Float64}}(
+        missing,
+        size(coef(model), 1),
+        size(X, 1),
+        size(coef(model), 2),
+    )
+
+    
+    for ch = 1:size(coef(model), 1)
+        yhat[ch, :, :] = X * permutedims(coef(model)[ch, :, :], (2, 1))
+    end
+    
+
+    
+
+    yhat = reshape(permutedims(yhat, (1, 3, 2)), size(yhat, 1), :)
+    yhat = permutedims(yhat, (2, 1))
+    
+    return yhat
+end
+
+times(model::UnfoldLinearModel)=     times(design(model))
+times(d::Dict) = [k[2] for k in values(d)] # probably going for steprange would be better, this enforces ordering (formula,times) which is never explicitly checked
+
+
+function gen_timeev(timesVec,nRows)
+
+    timesVec = repeat(timesVec, nRows)
+    
+
+    # but times could be optionally given
+    return timesVec
 end
