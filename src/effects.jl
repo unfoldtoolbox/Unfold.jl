@@ -1,4 +1,6 @@
 import Effects: effects
+import Effects:_reference_grid
+import Effects:typify
 #using Effects
 
 """
@@ -20,9 +22,9 @@ Calculates marginal effects for all term-combinations in `design`.
 """ 
 
 function effects(design::AbstractDict, model::UnfoldModel;typical=mean)
-    reference_grid = Effects._reference_grid(design)
+    reference_grid = _reference_grid(design)
     form = formula(model) # get formula
-    form_typical = Effects.typify(reference_grid, form, modelmatrix(model); typical=typical) # replace non-specified fields with "constants"
+    form_typical = typify(reference_grid, form, modelmatrix(model); typical=typical) # replace non-specified fields with "constants"
     X = modelcols(form_typical, reference_grid) # get model cols
     eff = yhat(model,X) # apply coefficients
     
