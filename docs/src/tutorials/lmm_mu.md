@@ -2,8 +2,9 @@
 
 ```@example Main
 using StatsModels, MixedModels, DataFrames,CategoricalArrays
-import Plots
+
 using Unfold
+using UnfoldMakie,CairoMakie
 include("../../../test/test_utilities.jl"); # function to load the simulated data
 nothing;#hide
 ```
@@ -78,9 +79,7 @@ Let's start with the **fixed** Effects
 results = coeftable(m)
 
 res_fixef = results[isnothing.(results.group),:]
-Plots.plot(res_fixef.colname_basis,res_fixef.estimate,
-        group=res_fixef.term,
-        layout=1,legend=:outerbottom)
+plot_results(res_fixef)
 ```
 
 
@@ -90,9 +89,7 @@ We see the condition effects and some residual overlap activity in the fixed eff
 And now the **random** effect results
 ```@example Main
 res_ranef = results[results.group.==:subject,:]
-Plots.plot(res_ranef.colname_basis,res_ranef.estimate,
-        group=res_ranef.term,
-        layout=1,legend=:outerbottom)
+plot_results(res_ranef)
 ```
 
 
