@@ -19,7 +19,8 @@ makedocs(sitename="Unfold.jl",
             ],
             "HowTo"=>[
 		      #"Overlap: Different events"=>"HowTo/multiple_events.md",
-                      "Custom Solvers / StandardErrors / B2B"=>"HowTo/custom_solvers.md"  ],
+                    "Load Existing Dataset"=>"HowTo/pymne.md" 
+                    "Custom Solvers / StandardErrors / B2B"=>"HowTo/custom_solvers.md"  ],
             "Explanations"=>["Temporal Basisfunctions" => "./explanations/basisfunctions.md"],
             "Reference"=>["Types" => "references/types.md",
             "Functions" => "references/functions.md"],

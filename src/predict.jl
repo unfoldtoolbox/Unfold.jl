@@ -20,7 +20,7 @@ function StatsBase.predict(model::UnfoldModel, newdata)
         # just a single designmat, same for all timepoints
         X = modelcols(formulas[1].rhs,data)
         eff = yhat(model,X)
-        
+
         # fake times because we never save it in the object
         timesVec = gen_timeev(times(model)[1],size(X, 1)) # XXX needs to be modified to make automatic multi-event
     else
