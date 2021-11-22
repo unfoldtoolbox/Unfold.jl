@@ -21,7 +21,7 @@ makedocs(sitename="Unfold.jl",
 		            "Overlap: Different events"=>"HowTo/multiple_events.md",
                     "Load Existing Dataset with PyMNE.jl"=>"HowTo/pymne.md" ,
                     "Custom Solvers / StandardErrors / B2B"=>"HowTo/custom_solvers.md",
-                    "Unfold.jl directly from Python" => "HowTo/pyjulia_unfold.ipynb", # no idea if documenter allows that or not
+                    #"Unfold.jl directly from Python" => "HowTo/pyjulia_unfold.ipynb", # no idea if documenter allows that or not
                       ],
             "Explanations"=>["Temporal Basisfunctions" => "./explanations/basisfunctions.md"],
             "Reference"=>["Types" => "references/types.md",
