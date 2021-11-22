@@ -51,3 +51,10 @@ eff = Unfold.effects(Dict(:conditionA => [0,1],:continuousA =>[-0.5,0,0.5]),m_mu
 # testing for safe predictions
 eff = Unfold.effects(Dict(:conditionA => [0,1],:continuousA =>[2]),m_mul_spl)
 @test all(ismissing.(eff.yhat ))
+
+
+## Timeexpansion
+
+f = @formula 0 ~ 1 + conditionA + continuousA # 1
+uf = fit(Unfold.UnfoldModel, Dict(Any=>(f,firbasis([0,0.05],10))), evts, data_e)
+eff = Unfold.effects(Dict(:conditionA => [0,1],:continuousA =>[0]),uf)
