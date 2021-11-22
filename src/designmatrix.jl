@@ -43,7 +43,7 @@ function TimeExpandedTerm(term, basisfunction; eventfields = [:latency])
 end
 
 collabel(term::TimeExpandedTerm) = collabel(term.basisfunction)
-
+width(term::TimeExpandedTerm) = width(term.basisfunction)
 
 function Base.show(io::IO, p::TimeExpandedTerm)
     #print(io, "timeexpand($(p.term), $(p.basisfunction.type),$(p.basisfunction.times))")
@@ -233,7 +233,6 @@ julia>  designmatrix(UnfoldLinearModelContinuousTime(Dict(Any=>(f,basisfunction1
 ```
 
 """
-
 function designmatrix(
     type,
     f::Union{Tuple,FormulaTerm},
@@ -333,7 +332,6 @@ $(SIGNATURES)
 timeexpand the rhs-term of the formula with the basisfunction
 
 """
-
 function apply_basisfunction(form, basisfunction::BasisFunction, eventfields)
     @debug("apply_basisfunction")
     return FormulaTerm(form.lhs, TimeExpandedTerm(form.rhs, basisfunction, eventfields))
@@ -380,7 +378,6 @@ end
 $(SIGNATURES)
 calculates the actual designmatrix for a timeexpandedterm. Multiple dispatch on StatsModels.modelcols
 """
-# Timeexpand the fixed effect part
 function StatsModels.modelcols(term::TimeExpandedTerm, tbl)
 
     X = modelcols(term.term, tbl)
@@ -401,8 +398,11 @@ mutable struct SparseReMat{T,S} <: MixedModels.AbstractReMat{T}
     adjA::SparseMatrixCSC{T,Int32}
     scratch::Matrix{T}
 end
-# This function timeexpands the random effects and generates a ReMat object
-#function StatsModels.modelcols(term::TimeExpandedTerm{<:RandomEffectsTerm},tbl)
+
+"""
+$(SIGNATURES)
+This function timeexpands the random effects and generates a ReMat object
+"""
 function StatsModels.modelcols(
     term::TimeExpandedTerm{<:Union{<:RandomEffectsTerm,<:MixedModels.AbstractReTerm}},
     tbl,

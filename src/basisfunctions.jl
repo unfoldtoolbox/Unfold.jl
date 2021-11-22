@@ -2,11 +2,13 @@
 See FIRBasis for an examples
 
     a BasisFunction should implement:
-    kernel()
-    collabel() [default "colname_basis"]
-    colnames()
-    times()
-    name()
+    kernel() 
+    collabel() [default "colname_basis"] # name for 
+    colnames() # unique names of expanded columns
+    times() # vector of times along expanded columns
+    name() # name of basis
+    width() # expansion to how many columns
+
     shiftOnset() [default 0]
 """
 abstract type BasisFunction end
@@ -14,12 +16,16 @@ abstract type BasisFunction end
 
 """
 Defines a FIRBasisfunction which can be called for each event, defining the time-expanded basis kernel
+
+
 $(TYPEDEF)
 $(TYPEDSIGNATURES)
 $(FIELDS)
+
+(tipp: most users would you want to call firbasis, not generate it manually)
 # Examples
 ```julia-repl
-julia>  b = BasisFunction(kernelfunction,"derivative",["f(x)"],range(0,(length(kernelfunction([0, 1]))-1)*TR,step=TR),"hrf_kernel","basis_A",0)
+julia>  b = FIRBasis(kernelfunction,"derivative",["f(x)"],range(0,(length(kernelfunction([0, 1]))-1)*TR,step=TR),"hrf_kernel","basis_A",0)
 ```
 """
 struct FIRBasis <: BasisFunction
@@ -237,6 +243,7 @@ kernel(basis::BasisFunction) = basis.kernel
 times(basis::BasisFunction) = basis.times
 name(basis::BasisFunction) = basis.name
 
+width(basis::BasisFunction) = length(times(basis))
 
 
 

@@ -24,7 +24,6 @@ julia> model = fit(UnfoldModel,Dict(Any=>(f,basisfunction),evts,data_r)
 ```
 
 """
-# helper function encapsulating the call into an array
 function StatsModels.fit(
     UnfoldModelType::Type{T},
     f::FormulaTerm,
@@ -135,8 +134,6 @@ Returns an UnfoldModel object
 ```
 
 """
-
-
 function StatsModels.fit!(
     uf::Union{UnfoldLinearMixedModel,UnfoldLinearMixedModelContinuousTime},
     data::AbstractArray;
