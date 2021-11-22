@@ -2,9 +2,9 @@
 
 **Beta** Toolbox to perform linear regression on biological signals. 
 
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://unfoldtoolbox.github.io/Unfold.jl/stable)
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://unfoldtoolbox.github.io/Unfold.jl/dev)
 ![](https://github.com/unfoldtoolbox/Unfold.jl/workflows/CI/badge.svg)
-
-[link to tutorials / documentation](https://unfoldtoolbox.github.io/Unfold.jl/dev/)
 
 This tool combines mass-univariate linear (mixed) models with overlap correction.
 
@@ -77,6 +77,8 @@ Tutorials see [the documentation](https://unfoldtoolbox.github.io/Unfold.jl/dev/
 
 ## Acknowledgements
 This work was supported by the Center for Interdisciplinary Research, Bielefeld (ZiF) Cooperation Group "Statistical models for psychological and linguistic data".
+
+Funded by Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) under Germany´s Excellence Strategy – EXC 2075 – 390740016
 
 ## Research notice
 Please note that this repository is participating in a study into sustainability
