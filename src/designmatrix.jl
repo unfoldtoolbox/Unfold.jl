@@ -219,7 +219,7 @@ $(SIGNATURES)
 designmatrix(type, f, tbl; kwargs...)
 Return a *DesignMatrix* used to fit the models.
 # Arguments
-- type::Union{UnfoldLinearMixedModel,UnfoldLinearModel}
+- type::UnfoldModel
 - f::FormulaTerm: Formula to be used in this designmatrix
 - tbl: Events (usually a data frame) to be modelled
 - basisfunction::BasisFunction: basisfunction to be used in modeling (if specified)
@@ -229,7 +229,7 @@ First field of array always defines eventonset in samples. Default is [:latency]
 
 # Examples
 ```julia-repl
-julia>  designmatrix(UnfoldLinearModelContinuousTime(Dict(Any=>(f,basisfunction1),tbl)
+julia>  designmatrix(UnfoldLinearModelContinuousTime,Dict(Any=>(f,basisfunction1),tbl)
 ```
 
 """
