@@ -1,9 +1,25 @@
 import Effects: effects
-using Effects
+#using Effects
 
-# Implementation based on Effects Package; likely should repackage in UnfoldEffects; but then...
-function effects(design::AbstractDict, model::UnfoldModel;
-    typical=mean)
+"""
+effects(design::AbstractDict, model::UnfoldModel;typical=mean)
+
+Calculates marginal effects for all term-combinations in `design`.
+
+ Implementation based on Effects Package; likely could repackage in UnfoldEffects; somebody wants to do it? This would make it easier to cross-maintain it to changes/bugfixes in the Effects.jl Package
+ `design` is a Dictionary containing those predictors (als keys) with levels (as values), that you want to evaluate. The `typical` refers to the value, that other predictors not in the Dictionary should take on.
+
+ # Example
+ ```julia-repl
+ julia> f = @formula 0 ~ categoricalA + continuousA + continuousB
+ julia> uf = fit(UnfoldModel,(Any=>(f,times)),data,events)
+ julia> d = Dict(:categoricalA=>["levelA","levelB"],:continuousB=>[-2,0,2])
+ julia> effects(d,uf)
+```
+ will result in 6 predicted values: A/-2, A/0, A/2, B/-2, B/0, B/2.
+""" 
+
+function effects(design::AbstractDict, model::UnfoldModel;typical=mean)
     reference_grid = Effects._reference_grid(design)
     form = formula(model) # get formula
     form_typical = Effects.typify(reference_grid, form, modelmatrix(model); typical=typical) # replace non-specified fields with "constants"
