@@ -30,29 +30,31 @@ function effects(design::AbstractDict, model::UnfoldModel;typical=mean)
     reference_grid = _reference_grid(design)
     form = Unfold.formula(model) # get formula
     form_typical = typify(reference_grid, form, modelmatrix(model); typical=typical) # replace non-specified fields with "constants"
-    #@show reference_grid
-    @show size(form_typical)
     
     eff = yhat(model,form_typical,reference_grid)
-    #eff = yhat(model,X) # apply coefficients
-    @show eff
-    @show reference_grid
+
     # because coefficients are 2D/3D arry, we have to cast it correctly to one big dataframe
-    if isa(eff,Tuple)
-        result = DataFrame(cast_referenceGrid(reference_grid,eff[3],eff[2] ))
-        else
-         result = DataFrame(cast_referenceGrid(reference_grid,eff,model ))
+    if isa(eff,Tuple) 
+        # TimeContinuous Model, we also get back other things like times & fromWhereToWhere a BasisFunction goes
+        if typeof(form) <: FormulaTerm
+            form = [form]
+        end
+        # figure out the basisname
+        bnames = [[form[ix].rhs.basisfunction.name] for ix in 1:length(form)]
+        # repeat it as much as necessary
+        bnames = repeat.(bnames,[e.stop+e.step-1 for e in eff[1]])
+
+        result = DataFrame(cast_referenceGrid(reference_grid,eff[3],eff[2] ;basisname=vcat(bnames...)))
+    else
+        # normal mass univariate model
+        result = DataFrame(cast_referenceGrid(reference_grid,eff,times(model)[1] ))
     end
+    select!(result,Not(:latency)) # remove the latency column if it was added
     
 return result   
 end
-cast_reference_grid(r,eff::Tuple{Any},model) = cast_reference_grid(r,eff[3],eff[1])
 
-
- cast_referenceGrid(r,eff,model::UnfoldLinearModel) = cast_referenceGrid(r,eff,times(model)[1])
-
- function cast_referenceGrid(r,eff,times)
-   
+function cast_referenceGrid(r,eff,times;basisname=nothing)
     nchan = size(eff, 2)
     neff = size(r,1)
     neffCol = size(r,2)
@@ -65,22 +67,32 @@ cast_reference_grid(r,eff::Tuple{Any},model) = cast_reference_grid(r,eff[3],eff[
         # repeat it for nchan + ncols
         coefs_rep[:,:,:,k] = permutedims(repeat(r[:,k], outer = [1, nchan, ncols]), [2, 3, 1])
     end
-    @show times
-    @show neff
+
     if length(times)  == neff*ncols
         # in case we have timeexpanded, times is already in long format and doesnt need to be repeated for each coefficient
         colnames_basis_rep = permutedims(repeat(times, 1, nchan, 1), [2 1 3])
-        else
-    colnames_basis_rep = permutedims(repeat(times, 1, nchan, neff), [2 1 3])
-        end
+    else
+        colnames_basis_rep = permutedims(repeat(times, 1, nchan, neff), [2 1 3])
+    end
+
     chan_rep = repeat(1:nchan, 1, ncols, neff)
+    
+    if isnothing(basisname)
+        basisname = fill(nothing,ncols*neff)
+    end
+    
+    basisname_rep = permutedims(repeat(basisname,1,nchan,1),[2,1,3])
+    
+
     result = Dict(   :yhat => linearize(eff),
             :time => linearize(colnames_basis_rep),
-            :channel => linearize(chan_rep))
+            :channel => linearize(chan_rep),
+            :basisname =>linearize(basisname_rep))
    
     for k = 1:neffCol
             push!(result,Symbol(names(r)[k]) =>linearize(coefs_rep[:,:,:,k]))
     end
+
     return result
 end
 

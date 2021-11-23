@@ -80,9 +80,9 @@ end
 
 yhat(model::UnfoldLinearModel,formulas::FormulaTerm,newevents) = yhat(model,formulas.rhs,newevents)
 yhat(model::UnfoldLinearModelContinuousTime,formulas::FormulaTerm,newevents) = yhat(model,formulas.rhs,newevents)
+
 function yhat(model::UnfoldLinearModel,formulas::AbstractTerm,newevents)#::AbstractArray{AbstractTerm})
     X = modelcols(formulas,newevents)
-    
     return yhat(model,X)
 end
 
@@ -94,15 +94,15 @@ function yhat(model::UnfoldLinearModelContinuousTime,formulas,events)#::Abstract
     fromTo = []
     timesVec = []
     for f in formulas
-        @show 
-        @show isa(f,TimeExpandedTerm)
+
+        # due to many reasons, there can be several different options of how formula arrives here - not easy to catch via multiple dispatch
         if !(isa(f,TimeExpandedTerm))
             if !(isa(f,MatrixTerm))
             f = f.rhs
             else
                 f = f.terms[1]
             end
-            @show typeof(f)
+            
         end
         # find out how long each designmatrix is
         n_range = length(f.basisfunction.times)
@@ -168,9 +168,7 @@ function yhat(model::UnfoldLinearModel,X::AbstractArray{T,2};times=nothing) wher
         yhat[ch, :, :] = X * permutedims(coef(model)[ch, :, :], (2, 1))
     end
     
-
-    
-
+    # bring the yhat into a ch x yhat format
     yhat = reshape(permutedims(yhat, (1, 3, 2)), size(yhat, 1), :)
     yhat = permutedims(yhat, (2, 1))
     
@@ -182,10 +180,6 @@ times(d::Dict) = [k[2] for k in values(d)] # probably going for steprange would 
 
 
 function gen_timeev(timesVec,nRows)
-
     timesVec = repeat(timesVec, nRows)
-    
-
-    # but times could be optionally given
     return timesVec
 end

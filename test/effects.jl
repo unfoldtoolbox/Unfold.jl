@@ -3,6 +3,8 @@ using Unfold
 using StatsModels
 using DataFrames
 using Statistics
+using Random
+
 include("test_utilities.jl")
 
 data, evts = loadtestdata("test_case_3a") #
@@ -58,7 +60,10 @@ data, evts = loadtestdata("test_case_3a") #
 f = @formula 0 ~ 1 + conditionA + continuousA # 1
 uf = fit(Unfold.UnfoldModel, Dict(Any=>(f,firbasis([0,0.1],10))), evts, data)
 eff = Unfold.effects(Dict(:conditionA => [0,1],:continuousA =>[0]),uf)
-
+@test nrow(eff) == 4
+@test eff.yhat ≈ [2., 2., 5., 5.]
+@test eff.conditionA ≈ [0.,0.,1.,1.]
+@test eff.continuousA ≈ [0.,0.,0.,0.]
 ## Two event Timeexpansion
 data, evts = loadtestdata("test_case_4a") #
 b1 = firbasis(τ = (0.0, 0.95), sfreq = 20, name = "basisA")
@@ -67,7 +72,26 @@ f = @formula 0 ~ 1 # 1
 m_tul = fit(UnfoldModel, Dict("eventA"=>(f,b1),"eventB"=>(f,b2)), evts, data,eventcolumn="type")
 
 
-#p = predict(m_tul,DataFrame(:Cond => [1]))
-eff = Unfold.effects(Dict(:conditionA => [0,1],:continuousA =>[0]),m_tul)
+#p = predict(m_tul,DataFrame(:Cond => [0,1]))
 
-##
+eff = Unfold.effects(Dict(:conditionA => [0,1],:continuousA =>[0]),m_tul)
+@test unique(eff.basisname)==["basisA","basisB"]
+@test unique(eff.yhat) ≈ [2,3]
+@test size(eff,1) == 2*2*20 # 2 basisfunctions, 2x conditionA, 1s a 20Hz
+
+eff = Unfold.effects(Dict(:conditionA => [0,1],:continuousA =>[-1,0,1]),m_tul)
+@test size(eff,1) == 2*6*20
+
+
+## Different sized events + different Formulas
+data, evts = loadtestdata("test_case_4a") #
+evts[!,:continuousA] = rand(MersenneTwister(42),nrow(evts))
+b1 = firbasis(τ = (0.0, 0.95), sfreq = 20, name = "basisA")
+b2 = firbasis(τ = (0.0, 0.5), sfreq = 20, name = "basisB")
+f1 = @formula 0 ~ 1 # 1
+f2 = @formula 0 ~ 1+continuousA # 1
+m_tul = fit(UnfoldModel, Dict("eventA"=>(f1,b1),"eventB"=>(f2,b2)), evts, data,eventcolumn="type")
+eff = Unfold.effects(Dict(:conditionA => [0,1],:continuousA =>[-1,0,1]),m_tul)
+@test nrow(eff) == (length(b1.times)+length(b2.times))*6
+@test sum(eff.basisname .== "basisA") == 120
+@test sum(eff.basisname .== "basisB") == 66
