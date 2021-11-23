@@ -1,7 +1,11 @@
 import Effects: effects
 import Effects:_reference_grid
 import Effects:typify
-#using Effects
+import Effects.typify
+import Effects:_symequal
+
+
+using Effects
 
 """
 effects(design::AbstractDict, model::UnfoldModel;typical=mean)
@@ -20,21 +24,35 @@ Calculates marginal effects for all term-combinations in `design`.
 ```
  will result in 6 predicted values: A/-2, A/0, A/2, B/-2, B/0, B/2.
 """ 
+Effects.typify(reference_grid,form::Matrix,X;kwargs...) = typify.(Ref(reference_grid),form,Ref(X);kwargs...)
 
 function effects(design::AbstractDict, model::UnfoldModel;typical=mean)
     reference_grid = _reference_grid(design)
-    form = formula(model) # get formula
+    form = Unfold.formula(model) # get formula
     form_typical = typify(reference_grid, form, modelmatrix(model); typical=typical) # replace non-specified fields with "constants"
-    X = modelcols(form_typical, reference_grid) # get model cols
-    eff = yhat(model,X) # apply coefficients
+    #@show reference_grid
+    @show size(form_typical)
     
+    eff = yhat(model,form_typical,reference_grid)
+    #eff = yhat(model,X) # apply coefficients
+    @show eff
+    @show reference_grid
     # because coefficients are 2D/3D arry, we have to cast it correctly to one big dataframe
-    result = DataFrame(cast_referenceGrid(reference_grid,eff,times(model)[1]) )
+    if isa(eff,Tuple)
+        result = DataFrame(cast_referenceGrid(reference_grid,eff[3],eff[2] ))
+        else
+         result = DataFrame(cast_referenceGrid(reference_grid,eff,model ))
+    end
     
 return result   
 end
+cast_reference_grid(r,eff::Tuple{Any},model) = cast_reference_grid(r,eff[3],eff[1])
 
-function cast_referenceGrid(r,eff,times)
+
+ cast_referenceGrid(r,eff,model::UnfoldLinearModel) = cast_referenceGrid(r,eff,times(model)[1])
+
+ function cast_referenceGrid(r,eff,times)
+   
     nchan = size(eff, 2)
     neff = size(r,1)
     neffCol = size(r,2)
@@ -47,7 +65,14 @@ function cast_referenceGrid(r,eff,times)
         # repeat it for nchan + ncols
         coefs_rep[:,:,:,k] = permutedims(repeat(r[:,k], outer = [1, nchan, ncols]), [2, 3, 1])
     end
+    @show times
+    @show neff
+    if length(times)  == neff*ncols
+        # in case we have timeexpanded, times is already in long format and doesnt need to be repeated for each coefficient
+        colnames_basis_rep = permutedims(repeat(times, 1, nchan, 1), [2 1 3])
+        else
     colnames_basis_rep = permutedims(repeat(times, 1, nchan, neff), [2 1 3])
+        end
     chan_rep = repeat(1:nchan, 1, ncols, neff)
     result = Dict(   :yhat => linearize(eff),
             :time => linearize(colnames_basis_rep),
@@ -58,3 +83,6 @@ function cast_referenceGrid(r,eff,times)
     end
     return result
 end
+
+
+_symequal(t1::AbstractTerm,t2::Unfold.TimeExpandedTerm) = _symequal(t1,t2.term)

@@ -2,91 +2,35 @@ import StatsBase.predict
 
 
 
-function StatsBase.predict(model::UnfoldModel, newdata)
+function StatsBase.predict(model::UnfoldModel, events)
     # make a copy of it so we don't change it outside the function
-    data = copy(newdata)
-    #data = newdata
-    # if only one formulas
-    if typeof(formula(model)) <: FormulaTerm
-        formulas = [formula(model)]
-    else
-        formulas = formula(model)
+    newevents = copy(events)
+  
+    formulas = formula(model)
+    if typeof(formulas) <: FormulaTerm
+        formulas = [formulas]
     end
-    # add those as latencies [xxx change to basisfunction field] to newdata
-    ##
-
-    if !(typeof(formulas[1].rhs) <: Unfold.TimeExpandedTerm)
-        # mass univariate model. Not sure how I can multiple dispatch correctly :| Maybe I need 4 types after all
-        # just a single designmat, same for all timepoints
-        X = modelcols(formulas[1].rhs,data)
-        eff = yhat(model,X)
-
-        # fake times because we never save it in the object
-        timesVec = gen_timeev(times(model)[1],size(X, 1)) # XXX needs to be modified to make automatic multi-event
+    if typeof(model) == UnfoldLinearModel
+        eff = yhat(model,formulas[1],newevents)
+        timesVec = gen_timeev(times(model)[1],size(newevents, 1)) # XXX needs to be modified to make automatic multi-event
     else
-
-        X = []
-        fromTo = []
-        timesVec = []
-        for f in formulas
-
-            # find out how long each designmatrix is
-            n_range = length(f.rhs.basisfunction.times)
-            # find out how much to shift so that X[1,:] is the the first "sample"
-            n_negative = f.rhs.basisfunction.shiftOnset
-            # generate the correct eventfields (default: latencies)
-            data[:, f.rhs.eventfields[1]] =
-                range(-n_negative + 1, step = n_range, length = size(data, 1))
-
-
-
-            # get the model
-            Xsingle = modelcols(f.rhs, data)
-
-            # remove the last time-point because it is attached due to non-integer latency/eventonsets.
-            # e.g. x denotes a sample
-            # x- - -x- - -x- - -x
-            # e- - - -f- - - -g-
-            # 
-            # e is aligned (integer) with the sample
-            # f&g are between two samples, thus the design matrix would interpolate between them. Thus has as a result, that the designmatrix is +1 longer than what would naively be expected
-            #
-            # because in "predict" we define where samples onset, we can remove the last sample, it s always 0 anyway, but to be sure we test it
-            @assert Xsingle[end, end] == 0.0
-            Xsingle = Xsingle[1:end-1, :]
-
-            # combine designmats
-            append!(X, [Xsingle])
-
-            # keep track of how long each event is
-            append!(fromTo, [range(1, step = n_range, length = size(data, 1))])
-
-            # keep track of the times
-            append!(timesVec, repeat(f.rhs.basisfunction.times[1:end], size(data, 1)))
-
-        end
-
-        # Concat them, but without introducing any overlap, we want the isolated responses
-        Xconcat = blockdiag(X...)
-
-        # calculate yhat
-        eff = yhat(model,Xconcat)
-
+        fromTo,timesVec,eff = yhat(model,formulas,newevents) 
     end
 
+   
     # init the meta dataframe
-    metaData = DataFrame([:times => vcat(timesVec...), :basisname => ""])
-    for c in names(newdata)
-        metaData[:, c] .= newdata[1, c] # assign first element in order to have same column type
+    metaData = DataFrame([:time => vcat(timesVec...), :basisname => ""])
+    
+    for c in names(newevents)
+        metaData[:, c] .= newevents[1, c] # assign first element in order to have same column type
     end
-
-    if !(typeof(formulas[1].rhs) <: Unfold.TimeExpandedTerm)
+    if typeof(model) == UnfoldLinearModel
         # for mass univariate we can make use of the knowledge that all events have the same length :)
         ntimes = size(coef(model), 2)
-        for c in names(newdata)
-            for row = 1:size(data, 1)
+        for c in names(newevents)
+            for row = 1:size(newevents, 1)
                 rowIx = (1.0 .+ (row - 1) .* ntimes) .+ range(1.0, length = ntimes) .- 1
-                metaData[Int64.(rowIx), c] .= data[row, c]
+                metaData[Int64.(rowIx), c] .= newevents[row, c]
             end
         end
 
@@ -96,28 +40,31 @@ function StatsBase.predict(model::UnfoldModel, newdata)
         # shift variable to keep track of multiple basisfunctions
         shift = 0
         # for each basis function
+        
         for (bIx, basisfun) in enumerate(fromTo)
+        
             # go through all predictors
-            for (i, fstart) in enumerate(basisfun[1:end-1])
-
-                # the last one is skipped in the enumerate above
-                fend = basisfun[i+1] - 1
-
-                # couldn't figure out how to broadcast everything directly (i.e out[fstart:fend,names(newdata)] .= newdata[i,:])
+            for (i, fstart) in enumerate(basisfun[1:end])
+                
+                fend = basisfun[i] + basisfun.step-1
+        
+                # couldn't figure out how to broadcast everything directly (i.e out[fstart:fend,names(newevents)] .= newevents[i,:])
                 # copy the correct metadata
+                
                 for j = fstart:fend
-                    metaData[j+shift, names(newdata)] = newdata[i, :]
+                    metaData[j+shift, names(newevents)] = newevents[i, :]
                 end
                 # add basisfunction name
                 metaData[shift.+(fstart:fend), :basisname] .=
                     formulas[bIx].rhs.basisfunction.name
+                
             end
             # the next meta data has to be at the end
-            shift += basisfun[end] - 1
+            shift += basisfun[end]-1+basisfun.step
 
         end
     end
-
+    
 
     out = DataFrame([:yhat => vec(reshape(eff, :, 1))])
     nchannel = size(eff, 2)
@@ -128,8 +75,82 @@ function StatsBase.predict(model::UnfoldModel, newdata)
     return out
 end
 
+# in case the formula is not an array
+#yhat(model::UnfoldModel,formulas::AbstractTerm) = yhat(model,[formulas])
 
+yhat(model::UnfoldLinearModel,formulas::FormulaTerm,newevents) = yhat(model,formulas.rhs,newevents)
+yhat(model::UnfoldLinearModelContinuousTime,formulas::FormulaTerm,newevents) = yhat(model,formulas.rhs,newevents)
+function yhat(model::UnfoldLinearModel,formulas::AbstractTerm,newevents)#::AbstractArray{AbstractTerm})
+    X = modelcols(formulas,newevents)
+    
+    return yhat(model,X)
+end
+
+
+yhat(model::UnfoldLinearModelContinuousTime,formulas::MatrixTerm,events) = yhat(model,formulas.terms,events)
+
+function yhat(model::UnfoldLinearModelContinuousTime,formulas,events)#::AbstractArray{AbstractTerm})
+    X = []
+    fromTo = []
+    timesVec = []
+    for f in formulas
+        @show 
+        @show isa(f,TimeExpandedTerm)
+        if !(isa(f,TimeExpandedTerm))
+            if !(isa(f,MatrixTerm))
+            f = f.rhs
+            else
+                f = f.terms[1]
+            end
+            @show typeof(f)
+        end
+        # find out how long each designmatrix is
+        n_range = length(f.basisfunction.times)
+        # find out how much to shift so that X[1,:] is the the first "sample"
+        n_negative = f.basisfunction.shiftOnset
+        # generate the correct eventfields (default: latencies)
+        events[:, f.eventfields[1]] =
+            range(-n_negative + 1, step = n_range, length = size(events, 1))
+
+
+
+        # get the model
+        Xsingle = modelcols(f, events)
+
+        # remove the last time-point because it is attached due to non-integer latency/eventonsets.
+        # e.g. x denotes a sample
+        # x- - -x- - -x- - -x
+        # e- - - -f- - - -g-
+        # 
+        # e is aligned (integer) with the sample
+        # f&g are between two samples, thus the design matrix would interpolate between them. Thus has as a result, that the designmatrix is +1 longer than what would naively be expected
+        #
+        # because in "predict" we define where samples onset, we can remove the last sample, it s always 0 anyway, but to be sure we test it
+        @assert Xsingle[end, end] == 0.0
+        Xsingle = Xsingle[1:end-1, :]
+
+        # combine designmats
+        append!(X, [Xsingle])
+
+        # keep track of how long each event is
+        append!(fromTo, [range(1, step = n_range, length = size(events, 1))])
+        # keep track of the times
+        append!(timesVec, repeat(f.basisfunction.times[1:end], size(events, 1)))
+
+    end
+
+    # Concat them, but without introducing any overlap, we want the isolated responses
+    Xconcat = blockdiag(X...)
+
+    # calculate yhat
+    eff = yhat(model,Xconcat)
+
+    # output is a bit ugly, but we need the other two vectors as well. Should be refactored at some point - but not right now ;-) #XXX
+    return fromTo,timesVec,eff
+    
+end
 function yhat(model::UnfoldLinearModelContinuousTime,X::AbstractArray{T,2};times=nothing) where {T<:Union{Missing, <:Number}}
+    
     yhat = X * coef(model)'
     return yhat
 end
@@ -143,7 +164,6 @@ function yhat(model::UnfoldLinearModel,X::AbstractArray{T,2};times=nothing) wher
         size(coef(model), 2),
     )
 
-    
     for ch = 1:size(coef(model), 1)
         yhat[ch, :, :] = X * permutedims(coef(model)[ch, :, :], (2, 1))
     end

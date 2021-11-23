@@ -45,7 +45,7 @@ eff = Unfold.effects(Dict(:conditionA => [0,1],:continuousA =>[0]),m_mul_spl)
 eff = Unfold.effects(Dict(:conditionA => [0,1],:continuousA =>[-0.5,0,0.5]),m_mul_spl)
 @test size(eff,1) == 6 # we want 6 values
 @test eff.conditionA ≈ [0.,0.,0.,1.,1.,1.] 
-@test eff.continuousA ≈ [-0.5,0,0.5] 
+@test eff.continuousA ≈ [-0.5,0,0.5,-0.5,0,0.5] 
 @test eff.yhat ≈ [0,2,4,3,5,7]
 
 # testing for safe predictions
@@ -54,7 +54,20 @@ eff = Unfold.effects(Dict(:conditionA => [0,1],:continuousA =>[2]),m_mul_spl)
 
 
 ## Timeexpansion
-
+data, evts = loadtestdata("test_case_3a") #
 f = @formula 0 ~ 1 + conditionA + continuousA # 1
-uf = fit(Unfold.UnfoldModel, Dict(Any=>(f,firbasis([0,0.05],10))), evts, data_e)
+uf = fit(Unfold.UnfoldModel, Dict(Any=>(f,firbasis([0,0.1],10))), evts, data)
 eff = Unfold.effects(Dict(:conditionA => [0,1],:continuousA =>[0]),uf)
+
+## Two event Timeexpansion
+data, evts = loadtestdata("test_case_4a") #
+b1 = firbasis(τ = (0.0, 0.95), sfreq = 20, name = "basisA")
+b2 = firbasis(τ = (0.0, 0.95), sfreq = 20, name = "basisB")
+f = @formula 0 ~ 1 # 1
+m_tul = fit(UnfoldModel, Dict("eventA"=>(f,b1),"eventB"=>(f,b2)), evts, data,eventcolumn="type")
+
+
+#p = predict(m_tul,DataFrame(:Cond => [1]))
+eff = Unfold.effects(Dict(:conditionA => [0,1],:continuousA =>[0]),m_tul)
+
+##

@@ -9,12 +9,8 @@ include("test_utilities.jl")
 data, evts = loadtestdata("test_case_3a") #
 data_r = reshape(data, (1, :))
 
-data_e, times = Unfold.epoch(data = data_r, tbl = evts, τ = (0.0, 1), sfreq = 20) # cut the data into epochs
-basisfunction = firbasis(τ = (0.0, 1), sfreq = 20, name = "basisA")
-
-# f  = @formula 0~ 1 * beta_0 + contA*beta_1
-# fit => beta_0 = -1.5, beta_1 = 2
-# predict => (contA=0.5) y_hat = 1 * -1.5 + 0.5 * 2 = -0.5
+data_e, times = Unfold.epoch(data = data_r, tbl = evts, τ = (0.0, 0.95), sfreq = 20) # cut the data into epochs
+basisfunction = firbasis(τ = (0.0, 0.95), sfreq = 20, name = "basisA")
 
 f = @formula 0 ~ 1 # 1
 m_mul = fit(UnfoldModel, f, evts, data_e, times)
@@ -46,7 +42,11 @@ yhat_mul = predict(m_mul, evts_grid)
 
 
 @test yhat_mul.times[1] == 0.0
+@test length(unique(yhat_mul.times)) == 20
 
+@test length(unique(yhat_mul.yhat)) == 1
+
+## Case with multiple formulas
 
 f = @formula 0 ~ 1 + conditionA + continuousA# 1
 m_tul = fit(UnfoldModel, f, evts, data_r, basisfunction)
@@ -70,6 +70,24 @@ yhat_mul = predict(m_mul, evts_grid)
 )
 @test isapprox(yhat_tul[yhat_tul.times.==0.5, :yhat], [-2, 1, 2, 5, 6, 9.0], atol = 0.0001)
 
+## two events
+
+data, evts = loadtestdata("test_case_4a") #
+b1 = firbasis(τ = (0.0, 0.95), sfreq = 20, name = "basisA")
+b2 = firbasis(τ = (0.0, 0.95), sfreq = 20, name = "basisB")
+f = @formula 0 ~ 1 # 1
+m_tul = fit(UnfoldModel, Dict("eventA"=>(f,b1),"eventB"=>(f,b2)), evts, data,eventcolumn="type")
+
+p = predict(m_tul,DataFrame(:Cond => [1]))
+
+@test size(p,1) == 40
+@test length(unique(p.times)) ==20
+@test unique(p.basisname) == ["basisA","basisB"]
+
+
+
+
+##
 if 1 == 0
     #for visualization
     using AlgebraOfGraphics

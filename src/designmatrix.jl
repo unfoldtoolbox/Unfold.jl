@@ -43,33 +43,13 @@ function TimeExpandedTerm(term, basisfunction; eventfields = [:latency])
 end
 
 collabel(term::TimeExpandedTerm) = collabel(term.basisfunction)
-width(term::TimeExpandedTerm) = width(term.basisfunction)
+StatsModels.width(term::TimeExpandedTerm) = width(term.basisfunction)
+StatsModels.terms(t::TimeExpandedTerm) = terms(t.term)
 
 function Base.show(io::IO, p::TimeExpandedTerm)
     #print(io, "timeexpand($(p.term), $(p.basisfunction.type),$(p.basisfunction.times))")
     println(io, "$(coefnames(p))")
 end
-
-
-
-"""
-To be explored abstractTerm structure to automatically detect randomeffects. Not in use
-"""
-struct ZeroCorr2{T<:RandomEffectsTerm} <: AbstractTerm
-    term::T
-end
-
-"""
-Object with a *term* and an applicable *BasisFunction* and a eventfield that are later passed to the basisfunction.
-
-$(TYPEDEF)
-$(TYPEDSIGNATURES)
-$(FIELDS)
-# Examples
-```julia-repl
-julia>  b = TimeExpandedTerm(term,kernel,[:latencyTR,:durationTR])
-```
-"""
 
 
 
@@ -292,7 +272,7 @@ function designmatrix(
                 string(typeof(eventname)) *
                 "}, in field tbl[:,:" *
                 string(eventcolumn) *
-                "].?",
+                "].? - maybe you need to specify it as a string instead of a symbol?",
             )
         end
 
