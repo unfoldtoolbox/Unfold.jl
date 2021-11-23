@@ -1,7 +1,8 @@
 using BenchmarkTools
+using Random
 
 const SUITE = BenchmarkGroup()
-seed!(3)
+Random.seed!(3)
 
 
 SUITE = BenchmarkGroup()
