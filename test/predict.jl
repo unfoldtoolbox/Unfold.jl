@@ -31,7 +31,7 @@ evts_grid = DataFrame(collect(hcat(tmp...)'), ["conditionA", "continuousA"])
 yhat_tul = predict(m_tul, evts_grid)
 yhat_mul = predict(m_mul, evts_grid)
 
-@test unique(yhat_mul.times) == times
+@test unique(yhat_mul.time) == times
 
 @test size(m_tul_results)[1] * size(evts_grid)[1] == size(yhat_tul)[1]
 @test size(m_mul_results)[1] * size(evts_grid)[1] == size(yhat_mul)[1]
@@ -41,8 +41,8 @@ yhat_mul = predict(m_mul, evts_grid)
 @test yhat_tul[end-3, :yhat] ≈ mean(data[data.!=0])
 
 
-@test yhat_mul.times[1] == 0.0
-@test length(unique(yhat_mul.times)) == 20
+@test yhat_mul.time[1] == 0.0
+@test length(unique(yhat_mul.time)) == 20
 
 @test length(unique(yhat_mul.yhat)) == 1
 
@@ -64,11 +64,11 @@ yhat_mul = predict(m_mul, evts_grid)
 
 
 @test isapprox(
-    yhat_tul[yhat_tul.times.==0.5, :yhat],
-    yhat_mul[yhat_mul.times.==0.5, :yhat],
+    yhat_tul[yhat_tul.time.==0.5, :yhat],
+    yhat_mul[yhat_mul.time.==0.5, :yhat],
     atol = 0.001,
 )
-@test isapprox(yhat_tul[yhat_tul.times.==0.5, :yhat], [-2, 1, 2, 5, 6, 9.0], atol = 0.0001)
+@test isapprox(yhat_tul[yhat_tul.time.==0.5, :yhat], [-2, 1, 2, 5, 6, 9.0], atol = 0.0001)
 
 ## two events
 
@@ -81,7 +81,7 @@ m_tul = fit(UnfoldModel, Dict("eventA"=>(f,b1),"eventB"=>(f,b2)), evts, data,eve
 p = predict(m_tul,DataFrame(:Cond => [1]))
 
 @test size(p,1) == 40
-@test length(unique(p.times)) ==20
+@test length(unique(p.time)) ==20
 @test unique(p.basisname) == ["basisA","basisB"]
 
 
@@ -92,7 +92,7 @@ if 1 == 0
     #for visualization
     using AlgebraOfGraphics
     yhat_mul.conditionA = categorical(yhat_mul.conditionA)
-    m = mapping(:times, :yhat, color = :continuousA, linestyle = :conditionA)
+    m = mapping(:time, :yhat, color = :continuousA, linestyle = :conditionA)
     df = yhat_mul
     AlgebraOfGraphics.data(df) * visual(Lines) * m |> draw
 end
