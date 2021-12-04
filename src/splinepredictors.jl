@@ -49,6 +49,10 @@ end
 
 #spl(x,df) = Splines2.bs(x,df=df,intercept=true) # assumes intercept
 spl(x, df) = 1
+
+# make a nice call if the function is called via REPL
+spl(t::Symbol, d::Int) = uf_bsplineTerm(term(t), term(d))
+
 mutable struct uf_bsplineTerm{T,D} <: AbstractTerm
     term::T
     df::D
