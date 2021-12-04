@@ -27,6 +27,8 @@ import StatsBase: coef
 import StatsBase: fit!
 import StatsBase: coefnames
 import StatsBase: modelmatrix
+import StatsModels: width
+import StatsModels: terms
 #using IncompleteLU
 import Base.(+) # overwrite for DesignMatrices
 using Distributions: Gamma, pdf # TODO replace this with direct implementation (used in basisfunction.jl)
@@ -34,6 +36,7 @@ using Distributions: Gamma, pdf # TODO replace this with direct implementation (
 include("linearmodels.jl")
 include("basisfunctions.jl")
 include("designmatrix.jl")
+include("effects.jl")
 include("fit.jl")
 include("utilities.jl")
 include("condense.jl")

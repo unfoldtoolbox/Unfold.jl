@@ -217,12 +217,7 @@ function hrfbasis(
     #        p(6) - onset {seconds}                                0
     #        p(7) - length of kernel {seconds}                    32
     kernel = e -> hrfkernel(e, TR, parameters)
-    return HRFBasis(
-        kernel,
-        ["f(x)"],
-        range(0, (length(kernel([0, 1])) - 1) * TR, step = TR),
-        name,
-    )
+    return HRFBasis(kernel,["f(x)"],range(0, (length(kernel([0, 1])) - 1) * TR, step = TR),name)
 end
 
 shiftOnset(basis::HRFBasis) = 0
@@ -243,8 +238,9 @@ kernel(basis::BasisFunction) = basis.kernel
 times(basis::BasisFunction) = basis.times
 name(basis::BasisFunction) = basis.name
 
-width(basis::BasisFunction) = length(times(basis))
+StatsModels.width(basis::BasisFunction) = length(times(basis))
 
+StatsModels.width(basis::FIRBasis) = length(times(basis))
 
 
 """
