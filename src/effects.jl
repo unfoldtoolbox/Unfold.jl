@@ -45,11 +45,11 @@ function effects(design::AbstractDict, model::UnfoldModel;typical=mean)
         bnames = repeat.(bnames,[e.stop+e.step-1 for e in eff[1]])
 
         result = DataFrame(cast_referenceGrid(reference_grid,eff[3],eff[2] ;basisname=vcat(bnames...)))
+        select!(result,Not(:latency)) # remove the latency column if it was added
     else
         # normal mass univariate model
         result = DataFrame(cast_referenceGrid(reference_grid,eff,times(model)[1] ))
     end
-    select!(result,Not(:latency)) # remove the latency column if it was added
     
 return result   
 end
