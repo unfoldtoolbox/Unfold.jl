@@ -55,19 +55,27 @@ return result
 end
 
 function cast_referenceGrid(r,eff,times;basisname=nothing)
-    nchan = size(eff, 2)
-    neff = size(r,1)
-    neffCol = size(r,2)
+    nchan = size(eff, 2) # correct
+    neff = size(r,1) # how many effects requested
+    neffCol = size(r,2) # how many predictors
     ncols = size(eff,1) ÷ neff # typically ntimes
    
+    #@show size(basisname)
+    #@show size(times)
+    @show nchan
+    @show ncols
+    @show neff
+    @show neffCol
+    @show r
     # replicate
-    # for each predictor in r
+    # for each predictor in r (reference grid), we need this at the bottom
     coefs_rep = Array{Float64}(undef,nchan,ncols,neff,neffCol)
     for k = 1:neffCol
         # repeat it for nchan + ncols
         coefs_rep[:,:,:,k] = permutedims(repeat(r[:,k], outer = [1, nchan, ncols]), [2, 3, 1])
     end
-
+    
+    # often the "times" vector
     if length(times)  == neff*ncols
         # in case we have timeexpanded, times is already in long format and doesnt need to be repeated for each coefficient
         colnames_basis_rep = permutedims(repeat(times, 1, nchan, 1), [2 1 3])
@@ -75,16 +83,24 @@ function cast_referenceGrid(r,eff,times;basisname=nothing)
         colnames_basis_rep = permutedims(repeat(times, 1, nchan, neff), [2 1 3])
     end
 
+    # for multiple channels
     chan_rep = repeat(1:nchan, 1, ncols, neff)
     
+    # for mass univariate there is no basisname
     if isnothing(basisname)
-        basisname = fill(nothing,ncols*neff)
+        basisname = fill(nothing,ncols)
+        basisname_rep = permutedims(repeat(basisname,1,nchan,neff),[2,1,3])
+    else
+        basisname_rep = permutedims(repeat(basisname,1,nchan,1),[2,1,3])
     end
     
-    basisname_rep = permutedims(repeat(basisname,1,nchan,1),[2,1,3])
+    # repeat it!
     
 
-    result = Dict(   :yhat => linearize(eff),
+    #eff is already 2D, but we have to flip it.
+    @show (size(eff'), size(colnames_basis_rep),size(chan_rep), size(basisname_rep))
+    #@assert size(colnames_basis_rep) == size(chan_rep) == size(basisname_rep)
+    result = Dict(   :yhat => linearize(eff'),
             :time => linearize(colnames_basis_rep),
             :channel => linearize(chan_rep),
             :basisname =>linearize(basisname_rep))

@@ -157,13 +157,13 @@ end
 function yhat(model::UnfoldLinearModel,X::AbstractArray{T,2};times=nothing) where {T<:Union{Missing, <:Number}}
     # function that calculates coef*designmat, but in the ch x times x coef vector
     # setup the output matrix, has to be a matrix
+    # then transforms it back to 2D matrix times/coef x ch to be compatible with the timecontinuous format
     yhat = Array{Union{Missing,Float64}}(
         missing,
         size(coef(model), 1),
         size(X, 1),
         size(coef(model), 2),
     )
-
     for ch = 1:size(coef(model), 1)
         yhat[ch, :, :] = X * permutedims(coef(model)[ch, :, :], (2, 1))
     end
@@ -171,7 +171,6 @@ function yhat(model::UnfoldLinearModel,X::AbstractArray{T,2};times=nothing) wher
     # bring the yhat into a ch x yhat format
     yhat = reshape(permutedims(yhat, (1, 3, 2)), size(yhat, 1), :)
     yhat = permutedims(yhat, (2, 1))
-    
     return yhat
 end
 

@@ -95,3 +95,25 @@ eff = Unfold.effects(Dict(:conditionA => [0,1],:continuousA =>[-1,0,1]),m_tul)
 @test nrow(eff) == (length(b1.times)+length(b2.times))*6
 @test sum(eff.basisname .== "basisA") == 120
 @test sum(eff.basisname .== "basisB") == 66
+
+## Test two channels
+data, evts = loadtestdata("test_case_3a") #
+
+data_r = repeat(reshape(data, (1, :)),3,1)
+data_r[2,:] = data_r[2,:] .* 2
+
+
+data_e, times = Unfold.epoch(data = data_r, tbl = evts, τ = (0, 0.05), sfreq = 10) # cut the data into epochs
+
+#
+f = @formula 0 ~ 1 + conditionA + continuousA # 1
+m_mul = fit(Unfold.UnfoldModel, Dict(Any=>(f,times)), evts, data_e)
+m_tul = fit(Unfold.UnfoldModel, Dict(Any=>(f,firbasis([0,.05],10))), evts, data_r)
+# test simple case
+eff_m = Unfold.effects(Dict(:conditionA => [0,1,0,1],:continuousA =>[0]),m_mul)
+eff_t = Unfold.effects(Dict(:conditionA => [0,1,0,1],:continuousA =>[0]),m_tul)
+
+@test eff_m.yhat ≈ eff_t.yhat
+@test length(unique(eff_m.channel)) == 3
+@test eff_m[eff_m.channel .==1,:yhat] ≈ eff_m[eff_m.channel .==2,:yhat]./2
+@test eff_m[eff_m.channel .==1,:yhat] ≈ [2,5,2,5.] # these are the perfect predicted values - note that we requested them twice
