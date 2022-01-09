@@ -13,4 +13,4 @@ SUITE["dc"] = BenchmarkGroup(["dc"])
 # designmatrix generation
 SUITE["dc"]["X_gen_lin"] = @benchmarkable 1==1
 SUITE["nodc"]["fit_lin"] = @benchmarkable 1==2
-run(`git status`)
+read(run(`git status`))
