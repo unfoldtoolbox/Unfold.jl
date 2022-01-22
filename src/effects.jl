@@ -24,7 +24,7 @@ Calculates marginal effects for all term-combinations in `design`.
 ```
  will result in 6 predicted values: A/-2, A/0, A/2, B/-2, B/0, B/2.
 """ 
-Effects.typify(reference_grid,form::Matrix,X;kwargs...) = typify.(Ref(reference_grid),form,Ref(X);kwargs...)
+
 
 function effects(design::AbstractDict, model::UnfoldModel;typical=mean)
     reference_grid = _reference_grid(design)
@@ -53,6 +53,8 @@ function effects(design::AbstractDict, model::UnfoldModel;typical=mean)
     
 return result   
 end
+ 
+ Effects.typify(reference_grid,form::Matrix,X;kwargs...) = typify.(Ref(reference_grid),form,Ref(X);kwargs...)
 
 function cast_referenceGrid(r,eff,times;basisname=nothing)
     nchan = size(eff, 2) # correct
