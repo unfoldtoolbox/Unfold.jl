@@ -61,20 +61,31 @@ function cast_referenceGrid(r,eff,times;basisname=nothing)
     neff = size(r,1) # how many effects requested
     neffCol = size(r,2) # how many predictors
     ncols = size(eff,1) ÷ neff # typically ntimes
+
+    
    
-    #@show size(basisname)
-    #@show size(times)
-    @show nchan
-    @show ncols
-    @show neff
-    @show neffCol
-    @show r
     # replicate
     # for each predictor in r (reference grid), we need this at the bottom
-    coefs_rep = Array{Float64}(undef,nchan,ncols,neff,neffCol)
+    coefs_rep = Array{Float64}(undef,nchan,neff,ncols,neffCol)
+    
+    
     for k = 1:neffCol
-        # repeat it for nchan + ncols
-        coefs_rep[:,:,:,k] = permutedims(repeat(r[:,k], outer = [1, nchan, ncols]), [2, 3, 1])
+        # in case we have only a single basis (e.g. mass univariate), we can directly fill in all values
+        ixList = []
+        if isnothing(basisname)
+            ix = ones(ncols) .== 1.
+            append!(ixList,[ix])
+        else
+            #in case of multiple bases, we have to do it iteratively, because the bases can be different length
+            for b = unique(basisname)
+                ix = basisname[1:neff:end].==b
+                append!(ixList,[ix])
+            end
+        end
+        for ix = ixList
+            
+            coefs_rep[:,:,ix,k] = permutedims(repeat(r[:,k], outer = [1, nchan, sum(ix)]), [2,1, 3])
+        end
     end
     
     # often the "times" vector
@@ -96,17 +107,12 @@ function cast_referenceGrid(r,eff,times;basisname=nothing)
         basisname_rep = permutedims(repeat(basisname,1,nchan,1),[2,1,3])
     end
     
-    # repeat it!
-    
 
-    #eff is already 2D, but we have to flip it.
-    @show (size(eff'), size(colnames_basis_rep),size(chan_rep), size(basisname_rep))
-    #@assert size(colnames_basis_rep) == size(chan_rep) == size(basisname_rep)
     result = Dict(   :yhat => linearize(eff'),
             :time => linearize(colnames_basis_rep),
             :channel => linearize(chan_rep),
             :basisname =>linearize(basisname_rep))
-   
+
     for k = 1:neffCol
             push!(result,Symbol(names(r)[k]) =>linearize(coefs_rep[:,:,:,k]))
     end
