@@ -66,7 +66,7 @@ function cast_referenceGrid(r,eff,times;basisname=nothing)
    
     # replicate
     # for each predictor in r (reference grid), we need this at the bottom
-    coefs_rep = Array{Float64}(undef,nchan,neff,ncols,neffCol)
+    coefs_rep = Array{Array}(undef,length(unique(basisname)),neffCol)
     
     
     for k = 1:neffCol
@@ -82,9 +82,9 @@ function cast_referenceGrid(r,eff,times;basisname=nothing)
                 append!(ixList,[ix])
             end
         end
-        for ix = ixList
+        for i_ix = 1:length(ixList)
             
-            coefs_rep[:,:,ix,k] = permutedims(repeat(r[:,k], outer = [1, nchan, sum(ix)]), [2,1, 3])
+            coefs_rep[i_ix,k] = linearize(permutedims(repeat(r[:,k], outer = [1, nchan, sum(ixList[i_ix])]), [2,3,1]))
         end
     end
     
@@ -114,7 +114,7 @@ function cast_referenceGrid(r,eff,times;basisname=nothing)
             :basisname =>linearize(basisname_rep))
 
     for k = 1:neffCol
-            push!(result,Symbol(names(r)[k]) =>linearize(coefs_rep[:,:,:,k]))
+            push!(result,Symbol(names(r)[k]) =>vcat(vcat(coefs_rep[:,k]...)...))
     end
 
     return result
