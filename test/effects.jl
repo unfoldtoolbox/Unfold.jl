@@ -124,6 +124,9 @@ eff_t = Unfold.effects(Dict(:conditionA => [0,1,0,1],:continuousA =>[0]),m_tul)
 data, evts = loadtestdata("test_case_4a") #
 evts[!,:continuousA] = rand(MersenneTwister(42),nrow(evts))
 evts[!,:continuousB] = rand(MersenneTwister(43),nrow(evts))
+ixA = evts.type .== "eventA"
+evts.continuousB[ixA] = evts.continuousB[ixA] .-mean(evts.continuousB[ixA]) .-5
+evts.continuousB[.!ixA] = evts.continuousB[.!ixA] .-mean(evts.continuousB[.!ixA]) .+ 0.5
 b1 = firbasis(τ = (0.0, 0.02), sfreq = 20, name = "basisA")
 b2 = firbasis(τ = (1.0, 1.02), sfreq = 20, name = "basisB")
 f1 = @formula 0 ~ 1+continuousA # 1
@@ -131,4 +134,8 @@ f2 = @formula 0 ~ 1+continuousB # 1
 m_tul = fit(UnfoldModel, Dict("eventA"=>(f1,b1),"eventB"=>(f2,b2)), evts, data,eventcolumn="type")
 
 m_tul.modelfit.estimate .= [0 -1 0 2]
-eff = Unfold.effects(Dict(:continuousA => [1,0]),m_tul)
+eff = Unfold.effects(Dict(:continuousA => [0,1]),m_tul)
+@test eff.yhat[3] == eff.yhat[4]
+@test eff.yhat[1] == 0.
+@test eff.yhat[2] == -1.
+@test eff.yhat[3] == 1

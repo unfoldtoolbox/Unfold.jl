@@ -31,8 +31,8 @@ function effects(design::AbstractDict, model::UnfoldModel;typical=mean)
     form = Unfold.formula(model) # get formula
 
     # replace non-specified fields with "constants"
-    #form_typical = typify.(Ref(reference_grid), form, modelmatrix(model,basisfunction=false); typical=typical) 
-    form_typical = typify(reference_grid, form, modelmatrix(model,basisfunction=false); typical=typical) 
+    #form_typical = typify.(Ref(reference_grid), form, modelmatrix(model,basisfunction=false)'; typical=typical) 
+    form_typical = typify(reference_grid, form, modelmatrix(model); typical=typical) 
     
     eff = yhat(model,form_typical,reference_grid)
 
@@ -70,7 +70,13 @@ function cast_referenceGrid(r,eff,times;basisname=nothing)
    
     # replicate
     # for each predictor in r (reference grid), we need this at the bottom
-    coefs_rep = Array{Array}(undef,length(unique(basisname)),neffCol)
+
+    if isnothing(basisname)
+        nbases = 1
+    else
+        nbases = length(unique(basisname))
+    end
+    coefs_rep = Array{Array}(undef,nbases,neffCol)
     
     
     for k = 1:neffCol
