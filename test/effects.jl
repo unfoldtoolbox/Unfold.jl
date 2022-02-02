@@ -133,9 +133,9 @@ f1 = @formula 0 ~ 1+continuousA # 1
 f2 = @formula 0 ~ 1+continuousB # 1
 m_tul = fit(UnfoldModel, Dict("eventA"=>(f1,b1),"eventB"=>(f2,b2)), evts, data,eventcolumn="type")
 
-m_tul.modelfit.estimate .= [0 -1 0 2]
+m_tul.modelfit.estimate .= [0 -1 0 4]
 eff = Unfold.effects(Dict(:continuousA => [0,1]),m_tul)
 @test eff.yhat[3] == eff.yhat[4]
 @test eff.yhat[1] == 0.
 @test eff.yhat[2] == -1.
-@test eff.yhat[3] == 1
+@test eff.yhat[3] == 2

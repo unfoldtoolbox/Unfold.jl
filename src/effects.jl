@@ -32,8 +32,18 @@ function effects(design::AbstractDict, model::UnfoldModel;typical=mean)
 
     # replace non-specified fields with "constants"
     #form_typical = typify.(Ref(reference_grid), form, modelmatrix(model,basisfunction=false)'; typical=typical) 
-    form_typical = typify(reference_grid, form, modelmatrix(model); typical=typical) 
-    
+    m = modelmatrix(model,false)
+        
+    if isa(form,AbstractMatrix)
+
+        form_typical = Array{Any}(undef,1, length(form))
+        for f = 1:length(form)
+            tmp = term(0)~typify(reference_grid, form[f], m[f]; typical=typical) 
+            form_typical[f] = tmp
+        end
+    else
+        form_typical = typify(reference_grid, form, m; typical=typical) 
+    end
     eff = yhat(model,form_typical,reference_grid)
 
     # because coefficients are 2D/3D arry, we have to cast it correctly to one big dataframe

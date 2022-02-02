@@ -328,8 +328,15 @@ function designmatrix!(uf::UnfoldModel, evts; kwargs...)
     uf.designmatrix = X
 end
 
+function StatsModels.modelmatrix(uf::UnfoldLinearModel,basisfunction)
+    if basisfunction
+        @warn("basisfunction not defined for this kind of model")
+    else
+        return modelmatrix(uf)
+    end
+end
 
-function StatsModels.modelmatrix(uf::UnfoldLinearModelContinuousTime; basisfunction = true)
+function StatsModels.modelmatrix(uf::UnfoldLinearModelContinuousTime,basisfunction)
     if basisfunction
         return modelmatrix(designmatrix(uf))
     else
