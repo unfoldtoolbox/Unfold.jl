@@ -146,7 +146,7 @@ end
 
 splinebasis(; τ, sfreq, nsplines, name) = splinebasis(τ, sfreq, nsplines, name)
 splinebasis(τ, sfreq, nsplines) =
-    splinebasis(τ, sfreq, nsplines, "basis_" * string(rand(1:10000)))
+splinebasis(τ, sfreq, nsplines, "basis_" * string(rand(1:10000)))
 
 shiftOnset(basis::Union{SplineBasis,FIRBasis}) = basis.shiftOnset
 
