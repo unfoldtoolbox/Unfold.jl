@@ -99,6 +99,8 @@ function yhat(model::UnfoldLinearModelContinuousTime,formulas,events)#::Abstract
         if !(isa(f,TimeExpandedTerm))
             if !(isa(f,MatrixTerm))
             f = f.rhs
+            #elseif !(isa(f,Effects.TypicalTerm))
+                
             else
                 f = f.terms[1]
             end
