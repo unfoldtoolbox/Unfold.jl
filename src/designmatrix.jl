@@ -340,6 +340,19 @@ end
 
 StatsModels.modelmatrix(uf::UnfoldModel) = modelmatrix(designmatrix(uf))#modelmatrix(uf.design,uf.designmatrix.events)
 StatsModels.modelmatrix(d::DesignMatrix) = d.Xs
+
+# for the basisfunction = false case & if we have multiple events
+function StatsModels.modelmatrix(d::Dict, events::AbstractVector{<:DataFrame}) 
+    
+    forms = [apply_schema(f,schema(f,events[ix],Dict{Symbol,Any}()),MixedModels.LinearMixedModel).rhs for (ix,f) in enumerate(formula(d))] 
+    #form = apply_schema(f, schema(f, tbl, contrasts), MixedModels.LinearMixedModel)
+    # apply schema
+    
+m = modelcols.(forms, events)
+return m
+end
+
+
 StatsModels.modelmatrix(d::Dict, events) = modelcols(formula(d).rhs, events)
 
 formula(uf::UnfoldModel) = formula(designmatrix(uf))
@@ -351,7 +364,8 @@ events(d::DesignMatrix) = d.events
 design(uf::UnfoldModel) = uf.design
 
 function formula(d::Dict) #TODO Specify Dict better
-    return collect(values(d))[1][1] # give back first formula for now
+    return [c[1] for c in collect(values(d))]
+    #return collect(values(d))[1][1] # give back first formula for now
 end
 
 """

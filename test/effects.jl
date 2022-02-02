@@ -117,3 +117,18 @@ eff_t = Unfold.effects(Dict(:conditionA => [0,1,0,1],:continuousA =>[0]),m_tul)
 @test length(unique(eff_m.channel)) == 3
 @test eff_m[eff_m.channel .==1,:yhat] ≈ eff_m[eff_m.channel .==2,:yhat]./2
 @test eff_m[eff_m.channel .==1,:yhat] ≈ [2,5,2,5.] # these are the perfect predicted values - note that we requested them twice
+
+
+# test two events, both with predictors but only one predictor specified
+
+data, evts = loadtestdata("test_case_4a") #
+evts[!,:continuousA] = rand(MersenneTwister(42),nrow(evts))
+evts[!,:continuousB] = rand(MersenneTwister(43),nrow(evts))
+b1 = firbasis(τ = (0.0, 0.02), sfreq = 20, name = "basisA")
+b2 = firbasis(τ = (1.0, 1.02), sfreq = 20, name = "basisB")
+f1 = @formula 0 ~ 1+continuousA # 1
+f2 = @formula 0 ~ 1+continuousB # 1
+m_tul = fit(UnfoldModel, Dict("eventA"=>(f1,b1),"eventB"=>(f2,b2)), evts, data,eventcolumn="type")
+
+m_tul.modelfit.estimate .= [0 -1 0 2]
+eff = Unfold.effects(Dict(:continuousA => [1,0]),m_tul)

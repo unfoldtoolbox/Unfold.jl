@@ -29,7 +29,10 @@ Calculates marginal effects for all term-combinations in `design`.
 function effects(design::AbstractDict, model::UnfoldModel;typical=mean)
     reference_grid = _reference_grid(design)
     form = Unfold.formula(model) # get formula
-    form_typical = typify(reference_grid, form, modelmatrix(model); typical=typical) # replace non-specified fields with "constants"
+
+    # replace non-specified fields with "constants"
+    #form_typical = typify.(Ref(reference_grid), form, modelmatrix(model,basisfunction=false); typical=typical) 
+    form_typical = typify(reference_grid, form, modelmatrix(model,basisfunction=false); typical=typical) 
     
     eff = yhat(model,form_typical,reference_grid)
 
@@ -56,6 +59,7 @@ end
  
  Effects.typify(reference_grid,form::Matrix,X;kwargs...) = typify.(Ref(reference_grid),form,Ref(X);kwargs...)
 
+ 
 function cast_referenceGrid(r,eff,times;basisname=nothing)
     nchan = size(eff, 2) # correct
     neff = size(r,1) # how many effects requested
@@ -121,4 +125,18 @@ function cast_referenceGrid(r,eff,times;basisname=nothing)
 end
 
 
-_symequal(t1::AbstractTerm,t2::Unfold.TimeExpandedTerm) = _symequal(t1,t2.term)
+Effects._symequal(t1::AbstractTerm,t2::Unfold.TimeExpandedTerm) = _symequal(t1,t2.term)
+function Effects._replace(matrix_term::MatrixTerm{<:Tuple{<:Unfold.TimeExpandedTerm}},typicals::Dict)
+    
+    replaced_term = MatrixTerm((Effects._replace.(terms(matrix_term), Ref(typicals))...,))
+    return TimeExpandedTerm(replaced_term,matrix_term.terms[1].basisfunction,matrix_term.terms[1].eventfields)
+
+end
+
+# function Effects.typicalterm(term::Unfold.TimeExpandedTerm, context::MatrixTerm, model_matrix; typical=mean) 
+#    typicalterm = typicalterm(term.term,context,model_matrix;typical=mean)
+#    term.term = typicalterm
+#    return term#
+#
+# end
+    
