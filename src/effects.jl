@@ -139,8 +139,11 @@ function cast_referenceGrid(r,eff,times;basisname=nothing)
 
     return result
 end
+Effects._trmequal(t1::Unfold.uf_bsplineTerm,t2::AbstractTerm) = _symequal(t1.term,t2)
+Effects._trmequal(t1::Unfold.uf_bsplineTerm,t2::Unfold.uf_bsplineTerm) = _symequal(t1.term,t2.term)
 
-
+Effects._trmequal(t1::AbstractTerm,t2::Unfold.uf_bsplineTerm) = _symequal(t1,t2.term)
+Effects._symequal(t1::AbstractTerm,t2::Unfold.uf_bsplineTerm) = _symequal(t1,t2.term)
 Effects._symequal(t1::AbstractTerm,t2::Unfold.TimeExpandedTerm) = _symequal(t1,t2.term)
 function Effects._replace(matrix_term::MatrixTerm{<:Tuple{<:Unfold.TimeExpandedTerm}},typicals::Dict)
     
