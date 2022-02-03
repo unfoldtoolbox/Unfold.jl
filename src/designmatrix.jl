@@ -9,7 +9,7 @@ $(FIELDS)
 julia>  b = TimeExpandedTerm(term,kernel,[:latencyTR,:durationTR])
 ```
 """
-mutable struct TimeExpandedTerm{T<:AbstractTerm} <: AbstractTerm # needs to be mutable to exchange basisfunction, to get non-timeexpanded modelcols
+struct TimeExpandedTerm{T<:AbstractTerm} <: AbstractTerm 
     "Term that the basis function is applied to. This is regularly called in other functions to get e.g. term-coefnames and timeexpand those"
     term::T
     "Kernel that determines what should happen to the designmatrix of the term"
