@@ -31,9 +31,8 @@ function effects(design::AbstractDict, model::UnfoldModel;typical=mean)
     form = Unfold.formula(model) # get formula
 
     # replace non-specified fields with "constants"
-    #form_typical = typify.(Ref(reference_grid), form, modelmatrix(model,basisfunction=false)'; typical=typical) 
-    m = modelmatrix(model,false)
-        
+    m = modelmatrix(model,false) # get the modelmatrix without timeexpansion
+    
     if isa(form,AbstractMatrix)
 
         form_typical = Array{Any}(undef,1, length(form))
@@ -42,7 +41,7 @@ function effects(design::AbstractDict, model::UnfoldModel;typical=mean)
             form_typical[f] = tmp
         end
     else
-        form_typical = typify(reference_grid, form, m; typical=typical) 
+        form_typical = [typify(reference_grid, form, m; typical=typical)]
     end
     eff = yhat(model,form_typical,reference_grid)
 
