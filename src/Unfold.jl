@@ -56,7 +56,7 @@ export FIRBasis, HRFBasis, SplineBasis
 export modelmatrix
 export formula, design, designmatrix, coef
 export coeftable
-export unfoldfit # might be renamend to fit! in the future
+export modelfit
 export predict, spl
 export cluster_permutation_test
 
