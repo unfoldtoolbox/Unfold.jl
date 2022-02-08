@@ -179,7 +179,7 @@ end
 	@test size(eff,1) == 4
 	@test all(eff.basisname[1:2] .== "basisA")
 	@test all(eff.basisname[4:end] .== "basisB")
-	@test eff.yhat ≈ [2., 2., 2., 2., 0., 0., 0., 0.]
+	@test eff.yhat ≈ [0., mean(evts.continuousB[evts.type .== "eventA"].=="x") * coef(m_tul)[4] + 1*coef(m_tul)[2], 0., 0.]
 
 	eff = Unfold.effects(Dict(:continuousB => ["m","x"]),m_tul)
 	@test eff.yhat[1] == -eff.yhat[2]
