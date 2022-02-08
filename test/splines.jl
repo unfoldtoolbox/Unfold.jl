@@ -1,7 +1,4 @@
-using Test, StatsModels
-using DataFrames
 
-using Unfold
 include("test_utilities.jl")
 
 data, evts = loadtestdata("test_case_3a") #

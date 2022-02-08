@@ -1,10 +1,3 @@
-using Test
-using Unfold
-using StatsModels
-using DataFrames
-using Statistics
-using Random
-
 include("test_utilities.jl")
 
 data, evts = loadtestdata("test_case_3a") #
@@ -189,4 +182,19 @@ end
 	eff = Unfold.effects(Dict(:continuousA => [0,1],:continuousB => ["m","x"]),m_tul)
 	@test eff.yhat[3:4] == [-1,1]
 	@test all(eff.yhat[1:2, 5:end] .== 0)
+end
+
+
+
+begin
+	data, evts = loadtestdata("test_case_4a") #
+	evts[!,:continuousA] = rand(MersenneTwister(42),nrow(evts))
+	evts[!,:continuousB] = ["m","x"][Int.(1 .+ round.(rand(MersenneTwister(43),nrow(evts))))]
+	b1 = firbasis(τ = (0.0, 0.25), sfreq = 20, name = "basisA")
+	b2 = firbasis(τ = (1.0, 1.15), sfreq = 20, name = "basisB")
+	f1 = @formula 0 ~ 1+continuousA*continuousB # 1
+	f2 = @formula 0 ~ 1+continuousB # 1
+	m_tul = fit(UnfoldModel, Dict("eventA"=>(f1,b1),"eventB"=>(f2,b2)), evts, data,eventcolumn="type")
+	
+	
 end

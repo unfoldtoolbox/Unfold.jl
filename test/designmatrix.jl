@@ -1,9 +1,5 @@
 ##
-using Test, DataFrames, StatsModels
-using Unfold
-using MixedModels
-using SparseArrays
-using CategoricalArrays
+
 tbl = DataFrame([1 4]', [:latency])
 X = ones(size(tbl))
 shouldBeNeg = zeros(4, 4)

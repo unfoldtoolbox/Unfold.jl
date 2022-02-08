@@ -1,3 +1,5 @@
+include("setup.jl")
+
 
 @testset "BasisFunctions" begin
     include("basisfunctions.jl")
@@ -23,4 +25,6 @@ end
     include("effects.jl")
 end
 
+#@testset "ClusterPermutation" begin
 #include("clusterpermutation.jl")
+#end
