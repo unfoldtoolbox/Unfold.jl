@@ -99,7 +99,7 @@ function StatsModels.modelcols(p::uf_bsplineTerm, d::NamedTuple)
     # remove middle X to negate intercept = true, generating a pseudo effect code 
     X[:, Not(Int(ceil(end / 2)))]
 end
-StatsModels.terms(p::uf_bsplineTerm) = terms(p.term)
+#StatsModels.terms(p::uf_bsplineTerm) = terms(p.term)
 StatsModels.termvars(p::uf_bsplineTerm) = StatsModels.termvars(p.term)
 StatsModels.width(p::uf_bsplineTerm) = p.df
 StatsModels.coefnames(p::uf_bsplineTerm) =

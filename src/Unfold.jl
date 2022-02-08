@@ -36,13 +36,13 @@ using Distributions: Gamma, pdf # TODO replace this with direct implementation (
 include("linearmodels.jl")
 include("basisfunctions.jl")
 include("designmatrix.jl")
-include("effects.jl")
 include("fit.jl")
 include("utilities.jl")
 include("condense.jl")
 include("solver.jl")
 include("predict.jl")
 include("splinepredictors.jl")
+include("effects.jl")
 include("clusterpermutation.jl")
 #include("plot.jl") # don't include for now
 export fit, fit!, designmatrix!
@@ -56,7 +56,7 @@ export FIRBasis, HRFBasis, SplineBasis
 export modelmatrix
 export formula, design, designmatrix, coef
 export coeftable
-export unfoldfit # might be renamend to fit! in the future
+export modelfit
 export predict, spl
 export cluster_permutation_test
 

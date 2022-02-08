@@ -1,4 +1,4 @@
-
+using Logging
 using Random
 using ProgressMeter
 using PyMNE # not in Unfold.jl currently
@@ -34,8 +34,8 @@ function cluster_permutation_test(
 
     # extract observed z-values
     stat_obs = [
-        getproperty(m, stat) for m in coefpvalues(mres.modelinfo) if
-        String(m.coefname) == coefnames(mres.X.formulas)[2][coeffOfInterest]
+        getproperty(m, stat) for m in coefpvalues(mres.modelfit) if
+        String(m.coefname) == coefnames(formula(designmatrix(mres)))[2][coeffOfInterest]
     ]
 
 
@@ -83,7 +83,7 @@ function cluster_permutation_test(
     end
     p_df = DataFrame(:from => fromList, :to => toList, :pval => p_vals)
 
-    p_df[!, :coefname] .= coefnames(mres.X.formulas)[2][coeffOfInterest] # yeah this might break :S
+    p_df[!, :coefname] .= coefnames(formula(mres))[2][coeffOfInterest] # yeah this might break :S
     return p_df
     #println(p_vals) 
     #h = hist(perm_H0,bins=100)
@@ -106,7 +106,7 @@ function cluster_permutation(
     stat = :β,
 )
     permDat = Matrix{Float64}(undef, length(tRange), nPerm)
-    mm_outer = Unfold.LinearMixedModel_wrapper(mres.X.formulas, dat[1, 1, :], mres.X.Xs)
+    mm_outer = Unfold.LinearMixedModel_wrapper(formula(mres), dat[1, 1, :], modelmatrix(mres))
 
     chIx = 1 # for now we only support 1 channel anyway
     #
@@ -119,23 +119,28 @@ function cluster_permutation(
         mm.y .= dat[chIx, tRange[tIx], :]
 
         # set the previous calculated model-fit
-        updateL!(setθ!(mm, Vector(mres.modelinfo.θ[tRange[tIx]])))
+        updateL!(setθ!(mm, Vector(mres.modelfit.θ[tRange[tIx]])))
 
         # get the coefficient 
         H0 = coef(mm)
         # set the one of interest to 0
         H0[coeffOfInterest] = 0
         # run the permutation
-        # important here is to set the same seed to keep flip all time-points the same
-        perm = permutation(
-            deepcopy(rng),
+        
+        perm = undef
+        Logging.with_logger(NullLogger()) do   # remove NLopt warnings  
+         perm = permutation(
+            deepcopy(rng), # important here is to set the same seed to keep flip all time-points the same
             nPerm,
             mm;
             β = H0,
             blup_method = olsranef,
             use_threads = false,
             hide_progress = true,
+            inflation_method= (x,y,z) ->I(length(H0)),#MixedModelsPermutations.inflation_factor(mm, olsranef(mm), residuals(mm))
+
         ) # constant rng to keep autocorr & olsranef for singular models
+        end
 
         # extract the test-statistic
 

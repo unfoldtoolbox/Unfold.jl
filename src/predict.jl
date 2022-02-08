@@ -78,6 +78,11 @@ end
 # in case the formula is not an array
 #yhat(model::UnfoldModel,formulas::AbstractTerm) = yhat(model,[formulas])
 
+# special case if one formula is defined but in an array, just use this one.
+# Todo: case where multiple formulas are defined at the same time, not yet implemented
+yhat(model::UnfoldLinearModel,formulas::AbstractArray,newevents::DataFrame) = yhat(model,formulas[1],newevents)
+
+
 yhat(model::UnfoldLinearModel,formulas::FormulaTerm,newevents) = yhat(model,formulas.rhs,newevents)
 yhat(model::UnfoldLinearModelContinuousTime,formulas::FormulaTerm,newevents) = yhat(model,formulas.rhs,newevents)
 

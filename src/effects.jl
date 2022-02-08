@@ -3,8 +3,8 @@ import Effects:_reference_grid
 import Effects:typify
 import Effects.typify
 import Effects:_symequal
-
-
+import StatsModels.collect_matrix_terms
+import Base.getproperty
 using Effects
 
 """
@@ -31,9 +31,29 @@ function effects(design::AbstractDict, model::UnfoldModel;typical=mean)
     form = Unfold.formula(model) # get formula
 
     # replace non-specified fields with "constants"
-    #form_typical = typify.(Ref(reference_grid), form, modelmatrix(model,basisfunction=false)'; typical=typical) 
-    form_typical = typify(reference_grid, form, modelmatrix(model); typical=typical) 
+    m = modelmatrix(model,false) # get the modelmatrix without timeexpansion
     
+    if isa(form,AbstractMatrix)
+
+        form_typical = Array{Any}(undef,1, length(form))
+        for f = 1:length(form)
+            
+            # strip of basisfunction and put it on afterwards again
+            tmpf = deepcopy(form[f])
+            
+            # create a Formula without Timeexpansion
+            tmpf = FormulaTerm(tmpf.lhs,tmpf.rhs.term)
+
+            # typify that
+            tmpf = typify(reference_grid, tmpf, m[f]; typical=typical) 
+            
+            # regenerate TimeExpansion
+            tmpf = Unfold.TimeExpandedTerm(tmpf,form[f].rhs.basisfunction;eventfields=form[f].rhs.eventfields)
+            form_typical[f] = tmpf
+        end
+    else
+        form_typical = [typify(reference_grid, form, m; typical=typical)]
+    end
     eff = yhat(model,form_typical,reference_grid)
 
     # because coefficients are 2D/3D arry, we have to cast it correctly to one big dataframe
@@ -129,20 +149,16 @@ function cast_referenceGrid(r,eff,times;basisname=nothing)
 
     return result
 end
+Effects._trmequal(t1::Unfold.uf_bsplineTerm,t2::AbstractTerm) = _symequal(t1.term,t2)
+Effects._trmequal(t1::Unfold.uf_bsplineTerm,t2::Unfold.uf_bsplineTerm) = _symequal(t1.term,t2.term)
 
-
-Effects._symequal(t1::AbstractTerm,t2::Unfold.TimeExpandedTerm) = _symequal(t1,t2.term)
-function Effects._replace(matrix_term::MatrixTerm{<:Tuple{<:Unfold.TimeExpandedTerm}},typicals::Dict)
+Effects._trmequal(t1::AbstractTerm,t2::Unfold.uf_bsplineTerm) = _symequal(t1,t2.term)
+Effects._symequal(t1::AbstractTerm,t2::Unfold.uf_bsplineTerm) = _symequal(t1,t2.term)
+#Effects._symequal(t1::AbstractTerm,t2::Unfold.TimeExpandedTerm) = _symequal(t1,t2.term)
+#function Effects._replace(matrix_term::MatrixTerm{<:Tuple{<:Unfold.TimeExpandedTerm}},typicals::Dict)
     
-    replaced_term = MatrixTerm((Effects._replace.(terms(matrix_term), Ref(typicals))...,))
-    return TimeExpandedTerm(replaced_term,matrix_term.terms[1].basisfunction,matrix_term.terms[1].eventfields)
+#    replaced_term = MatrixTerm((Effects._replace.(matrix_term.terms, Ref(typicals))...,))
+#    basisfunctionTerm = getfield(matrix_term,:terms)[1]
+#    return TimeExpandedTerm(replaced_term,basisfunctionTerm.basisfunction,basisfunctionTerm.eventfields)
 
-end
-
-# function Effects.typicalterm(term::Unfold.TimeExpandedTerm, context::MatrixTerm, model_matrix; typical=mean) 
-#    typicalterm = typicalterm(term.term,context,model_matrix;typical=mean)
-#    term.term = typicalterm
-#    return term#
-#
-# end
-    
+#end
