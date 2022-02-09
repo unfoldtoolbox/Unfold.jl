@@ -78,7 +78,7 @@ isMixedModelFormula(f::FormulaTerm) = isMixedModelFormula(f.rhs)
 
 function isMixedModelFormula(f::Tuple)
     ix = [isa(t, FunctionTerm) for t in f]
-    return any([isa(t.forig, typeof(|)) for t in f[ix]])
+    return any([isa(t.forig, typeof(|))|isa(t.forig,typeof(MixedModels.zerocorr)) for t in f[ix]])
 end
 function designToModeltype(design)
     # autoDetect

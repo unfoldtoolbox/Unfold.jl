@@ -49,6 +49,10 @@ end
 
 #spl(x,df) = Splines2.bs(x,df=df,intercept=true) # assumes intercept
 spl(x, df) = 1
+
+# make a nice call if the function is called via REPL
+spl(t::Symbol, d::Int) = uf_bsplineTerm(term(t), term(d))
+
 mutable struct uf_bsplineTerm{T,D} <: AbstractTerm
     term::T
     df::D
@@ -95,8 +99,8 @@ function StatsModels.modelcols(p::uf_bsplineTerm, d::NamedTuple)
     # remove middle X to negate intercept = true, generating a pseudo effect code 
     X[:, Not(Int(ceil(end / 2)))]
 end
-StatsModels.terms(p::uf_bsplineTerm) = terms(p.term)
+#StatsModels.terms(p::uf_bsplineTerm) = terms(p.term)
 StatsModels.termvars(p::uf_bsplineTerm) = StatsModels.termvars(p.term)
-StatsModels.width(p::uf_bsplineTerm) = 1
+StatsModels.width(p::uf_bsplineTerm) = p.df
 StatsModels.coefnames(p::uf_bsplineTerm) =
     "spl(" .* coefnames(p.term) .* "," .* string.(1:p.df) .* ")"

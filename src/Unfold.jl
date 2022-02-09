@@ -27,6 +27,8 @@ import StatsBase: coef
 import StatsBase: fit!
 import StatsBase: coefnames
 import StatsBase: modelmatrix
+import StatsModels: width
+import StatsModels: terms
 #using IncompleteLU
 import Base.(+) # overwrite for DesignMatrices
 using Distributions: Gamma, pdf # TODO replace this with direct implementation (used in basisfunction.jl)
@@ -40,6 +42,7 @@ include("condense.jl")
 include("solver.jl")
 include("predict.jl")
 include("splinepredictors.jl")
+include("effects.jl")
 include("clusterpermutation.jl")
 #include("plot.jl") # don't include for now
 export fit, fit!, designmatrix!
@@ -53,7 +56,7 @@ export FIRBasis, HRFBasis, SplineBasis
 export modelmatrix
 export formula, design, designmatrix, coef
 export coeftable
-export unfoldfit # might be renamend to fit! in the future
+export modelfit
 export predict, spl
 export cluster_permutation_test
 

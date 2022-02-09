@@ -9,7 +9,7 @@ $(FIELDS)
 julia>  b = TimeExpandedTerm(term,kernel,[:latencyTR,:durationTR])
 ```
 """
-struct TimeExpandedTerm{T<:AbstractTerm} <: AbstractTerm
+struct TimeExpandedTerm{T<:AbstractTerm} <: AbstractTerm 
     "Term that the basis function is applied to. This is regularly called in other functions to get e.g. term-coefnames and timeexpand those"
     term::T
     "Kernel that determines what should happen to the designmatrix of the term"
@@ -43,33 +43,13 @@ function TimeExpandedTerm(term, basisfunction; eventfields = [:latency])
 end
 
 collabel(term::TimeExpandedTerm) = collabel(term.basisfunction)
-width(term::TimeExpandedTerm) = width(term.basisfunction)
+StatsModels.width(term::TimeExpandedTerm) = width(term.basisfunction)
+StatsModels.terms(t::TimeExpandedTerm) = terms(t.term)
 
 function Base.show(io::IO, p::TimeExpandedTerm)
     #print(io, "timeexpand($(p.term), $(p.basisfunction.type),$(p.basisfunction.times))")
     println(io, "$(coefnames(p))")
 end
-
-
-
-"""
-To be explored abstractTerm structure to automatically detect randomeffects. Not in use
-"""
-struct ZeroCorr2{T<:RandomEffectsTerm} <: AbstractTerm
-    term::T
-end
-
-"""
-Object with a *term* and an applicable *BasisFunction* and a eventfield that are later passed to the basisfunction.
-
-$(TYPEDEF)
-$(TYPEDSIGNATURES)
-$(FIELDS)
-# Examples
-```julia-repl
-julia>  b = TimeExpandedTerm(term,kernel,[:latencyTR,:durationTR])
-```
-"""
 
 
 
@@ -292,7 +272,7 @@ function designmatrix(
                 string(typeof(eventname)) *
                 "}, in field tbl[:,:" *
                 string(eventcolumn) *
-                "].?",
+                "].? - maybe you need to specify it as a string instead of a symbol?",
             )
         end
 
@@ -348,22 +328,41 @@ function designmatrix!(uf::UnfoldModel, evts; kwargs...)
     uf.designmatrix = X
 end
 
-
-function StatsModels.modelmatrix(uf::UnfoldLinearModelContinuousTime; basisfunction = true)
+function StatsModels.modelmatrix(uf::UnfoldLinearModel,basisfunction)
     if basisfunction
-        return modelmatrix(designmatrix(uf))
+        @warn("basisfunction not defined for this kind of model")
     else
-        return modelmatrix(design(uf), events(uf))
+        return modelmatrix(uf)
     end
 end
 
+function StatsModels.modelmatrix(uf::UnfoldLinearModelContinuousTime,basisfunction = true)
+    if basisfunction
+        return modelmatrix(designmatrix(uf))
+    else
+        # replace basisfunction with non-timeexpanded one
+        f = formula(uf)
+        
+        # probably a more julian way to do this...
+        if isa(f,AbstractArray)
+            return modelcols_nobasis.(f[1,:],events(uf))
+        else
+            return modelcols_nobasis(f,events(uf))
+        end
+        
+    end
+end
 
+modelcols_nobasis(f::FormulaTerm,tbl::DataFrame) = modelcols(f.rhs.term,tbl)
 StatsModels.modelmatrix(uf::UnfoldModel) = modelmatrix(designmatrix(uf))#modelmatrix(uf.design,uf.designmatrix.events)
 StatsModels.modelmatrix(d::DesignMatrix) = d.Xs
+
+
 StatsModels.modelmatrix(d::Dict, events) = modelcols(formula(d).rhs, events)
 
 formula(uf::UnfoldModel) = formula(designmatrix(uf))
 formula(d::DesignMatrix) = d.formulas
+
 
 events(uf::UnfoldModel) = events(designmatrix(uf))
 events(d::DesignMatrix) = d.events
@@ -371,7 +370,13 @@ events(d::DesignMatrix) = d.events
 design(uf::UnfoldModel) = uf.design
 
 function formula(d::Dict) #TODO Specify Dict better
-    return collect(values(d))[1][1] # give back first formula for now
+    if length(values(d)) == 1
+        
+        return [c[1] for c in collect(values(d))][1]
+    else
+    return [c[1] for c in collect(values(d))]
+    end
+    #return collect(values(d))[1][1] # give back first formula for now
 end
 
 """

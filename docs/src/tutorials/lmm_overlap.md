@@ -2,8 +2,9 @@
 
 ```@example Main
 using StatsModels, MixedModels, DataFrames,CategoricalArrays
-import Plots
+
 using Unfold
+using UnfoldMakie,CairoMakie
 include("../../../test/test_utilities.jl"); # function to load the simulated data
 nothing;#hide
 ```
@@ -65,27 +66,6 @@ results = coeftable(m)
 
 #### 4. Visualize results
 
-!!! note
-        We are working on UnfoldMakie.jl - a library to make these plots automatic and beautiful. This tutorial will be updated
-
-Let's start with the **fixed** Effects
 ```@example Main
-res_fixef = results[results.group.==:fixed,:]
-Plots.plot(res_fixef.colname_basis,res_fixef.estimate,
-        group=res_fixef.term,
-        layout=1,legend=:outerbottom)
+plot_results(results)
 ```
-
-
-
-
-And now the **random** effect results
-```@example Main
-res_ranef = results[results.group.==:subject,:]
-Plots.plot(res_ranef.colname_basis,res_ranef.estimate,
-        group=res_ranef.term,
-        layout=1,legend=:outerbottom)
-```
-
-
-

@@ -2,17 +2,13 @@
 
 !!! note We assume you went through the mass-univariate linear modelling tutorial before!
 
-```@setup index
-using Plots; gr()
-Plots.reset_defaults();
-```
 
 ## Setting up & loading the data
 ```@example Main
 using StatsModels, MixedModels, DataFrames
 import DSP.conv
-import Plots
 using Unfold
+using UnfoldMakie,CairoMakie
 include("../../../test/test_utilities.jl"); # to load the simulated data
 
 nothing # hide
@@ -87,9 +83,7 @@ nothing #hide
 Similarly to the previous tutorial, we can visualize the model
 ```@example Main
 results = coeftable(m)
-Plots.plot(results.colname_basis,results.estimate,
-        group=results.term,
-        layout=1,legend=:outerbottom)
+plot_results(results)
 ```
 Cool! All overlapping activity has been removed and we recovered the simulated underlying signal.
 

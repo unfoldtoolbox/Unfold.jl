@@ -1,9 +1,5 @@
 # Mass Univariate Linear Models (no overlap correction)
 
-```@setup index
-using Plots; gr()
-Plots.reset_defaults();
-```
 ## Installation
 See the installation tutorial
 
@@ -11,8 +7,8 @@ See the installation tutorial
 ```@example Main
 using StatsModels, MixedModels, DataFrames
 import DSP.conv
-import Plots
 using Unfold
+using UnfoldMakie,CairoMakie
 include("../../../test/test_utilities.jl"); # to load the simulated data
 
 nothing # hide
@@ -34,8 +30,8 @@ nothing # hide
 The data has little noise and the underlying signal is a pos-neg spike pattern
 ```@example Main
 times = range(1/50,length=200,step=1/50)
-Plots.plot(times,data[1:200])
-Plots.vline!(evts[evts.latency.<=200,:latency]./50) # show events, latency in samples!
+plot(times,data[1:200])
+vlines!(evts[evts.latency.<=200,:latency]./50) # show events, latency in samples!
 ```
 
 To inspect the event dataframe we use
@@ -116,8 +112,6 @@ first(coeftable(m),6)
 Tidy-Dataframes make them easy to visualize.
 ```@example Main
 results = coeftable(m)
-Plots.plot(results.colname_basis,results.estimate,
-        group=results.term,
-        layout=1,legend=:outerbottom)
+plot_results(results)
 ```
 As you can see here, a lot is going on, even in the baseline-period. Head over to the next tutorial to find out how to remedy this.

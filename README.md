@@ -2,8 +2,8 @@
 
 **Beta** Toolbox to perform linear regression on biological signals. 
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://unfoldtoolbox.github.io/Unfold.jl/stable)
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://unfoldtoolbox.github.io/Unfold.jl/dev)
+
+[![Docs](https://img.shields.io/badge/docs-dev-blue.svg)](https://unfoldtoolbox.github.io/Unfold.jl/dev)
 ![](https://github.com/unfoldtoolbox/Unfold.jl/workflows/CI/badge.svg)
 
 This tool combines mass-univariate linear (mixed) models with overlap correction.

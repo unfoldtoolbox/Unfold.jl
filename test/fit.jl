@@ -1,11 +1,3 @@
-# ---
-# Test
-# ---
-using Test, StatsModels
-using DataFrames, CategoricalArrays
-
-using Unfold
-include("test_utilities.jl")
 
 data, evts = loadtestdata("test_case_3a") #
 f = @formula 0 ~ 1 + conditionA + continuousA # 1
