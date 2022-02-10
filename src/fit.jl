@@ -43,7 +43,7 @@ function StatsModels.fit(
     data::AbstractArray;
     kwargs...,
 ) where {T<:Union{<:UnfoldModel}}
-    to = TimerOutput()
+    to = get_timer("Shared")
     if UnfoldModelType == UnfoldModel
         UnfoldModelType = designToModeltype(design)
     end
@@ -256,14 +256,19 @@ function StatsModels.fit!(
     solver = (x, y) -> solver_default(x, y),
     kwargs...,
 )
+
     @assert ~isempty(designmatrix(uf))
-    X = modelmatrix(uf)
+
+    to = get_timer("Shared")
+
+    @timeit to "modelmatrix" X = modelmatrix(uf)
     # mass univariate, data = ch x times x epochs
     X, data = zeropad(X, data)
 
     @debug "UnfoldLinearModel, datasize: $(size(data))"
 
-    uf.modelfit = solver(X, data)
+   
+    @timeit to "solver" uf.modelfit = solver(X, data)
 
 end
 
