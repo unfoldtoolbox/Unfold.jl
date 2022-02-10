@@ -67,5 +67,5 @@ SUITE["dc"]["X_cat_lmm"] = @benchmarkable $X1_lmm+$X2_lmm
 # Model Fit
 SUITE["nodc"]["fit_lin"] = @benchmarkable fit(UnfoldModel,$f1,$evts1,$data_epochs,$times)
 SUITE["nodc"]["fit_lmm"] = @benchmarkable fit(UnfoldModel,$f1_lmm,$evts1,$data_epochs,$times)
-SUITE["dc"]["fit_lin"] = @benchmarkable   fit(UnfoldModel,$dict_lin,$evts,$data_r,eventcolumn="condA");
-#SUITE["dc"]["fit_lmm"] = @benchmarkable   fit(UnfoldModel,$dict_lmm,$evts,$data_r,eventcolumn="condA");
+SUITE["dc"]["fit_lin"]   = @benchmarkable fit(UnfoldModel,$dict_lin,$evts,$data_r,eventcolumn="condA");
+SUITE["dc"]["fit_lmm"] = @benchmarkable   fit(UnfoldModel,$dict_lmm,$evts,$data_r,eventcolumn="condA");
