@@ -834,7 +834,7 @@ version = "1.0.2"
 
 [[Unfold]]
 deps = ["BSplines", "CategoricalArrays", "DSP", "DataFrames", "Distributions", "DocStringExtensions", "Effects", "GLM", "IncompleteLU", "IterativeSolvers", "LinearAlgebra", "Logging", "MLBase", "Missings", "MixedModels", "MixedModelsPermutations", "MixedModelsSim", "PkgBenchmark", "ProgressMeter", "PyMNE", "Random", "SparseArrays", "StaticArrays", "Statistics", "StatsBase", "StatsFuns", "StatsModels", "Tables", "Test", "TimerOutputs"]
-path = ".."
+git-tree-sha1 = "728a003e80409a968265314c0614785a1bef3fc5"
 uuid = "181c99d8-e21b-4ff3-b70b-c233eddec679"
 version = "0.3.7"
 
