@@ -20,6 +20,8 @@ jobs:
         run: julia --project=. -e 'using Pkg; pkg"add PkgBenchmark BenchmarkCI@0.1"'
       - name: Run benchmarks
         run: julia --project=. -e 'using BenchmarkCI; BenchmarkCI.judge(baseline="origin/benchmark")'
+      - name: check git
+        run: julia --project=. -e 'read(run(`git status`))'
       - name: Post results
         run: julia --project=. -e 'using BenchmarkCI; BenchmarkCI.postjudge()'
         env:
