@@ -9,6 +9,15 @@ function get_coefnames(uf::Union{UnfoldModel,DesignMatrix})
     coefnames = Unfold.coefnames(formula(uf))
     coefnames = vcat(coefnames...) # gets rid of an empty Any() XXX not sure where it comes from, only in MixedModel Timexpanded case
 end
+
+function get_coefnames(uf::UnfoldLinearMixedModelContinuousTime)
+    # special case here, because we have to reorder the random effects to the end, else labels get messed up as we concat (coefs,ranefs)
+ #   coefnames = Unfold.coefnames(formula(uf))
+#    coefnames(formula(uf)[1].rhs[1])
+    fe_coefnames = vcat([coefnames(f.rhs[1]) for f in formula(uf)]...)
+    re_coefnames = vcat([coefnames(f.rhs[2:end]) for f in formula(uf)]...)
+    return vcat(fe_coefnames,re_coefnames)
+end
     
 modelfit(uf::UnfoldModel) = uf.modelfit
 StatsModels.coef(uf::UnfoldModel) = coef(modelfit(uf))
@@ -46,6 +55,8 @@ function StatsModels.coeftable(
     chan_rep = repeat(1:nchan, 1, size(colnames_basis_rep, 2))
 
     basisnames_rep = permutedims(repeat(basisnames, 1, nchan), [2, 1])
+
+
     return make_long_df(
         uf,
         coefs_rep,
@@ -119,7 +130,7 @@ function make_estimate(
         )
 
         ranef_group = [x.group for x in MixedModels.tidyσs(modelfit(m))]
-
+        
         # reshape to pred x time x chan and then invert to chan x time x pred
         ranef_group = permutedims(
             reshape(ranef_group, :, size(coef(m), 2), size(coef(m), 1)),
@@ -132,8 +143,8 @@ function make_estimate(
         stderror_ranef = fill(nothing, size(ranef(m)))
         stderror = cat(stderror_fixef, stderror_ranef, dims = 3)
     else
-        group_f = repeat([nothing], size(coef(m), 1), size(coef(m), ndims(coef(m))))
-        group_s = repeat(["ranef"], size(coef(m), 1), size(ranef(m), ndims(coef(m))))
+        group_f = repeat([nothing], size(coef(m), 1), size(coef(m), 2))
+        group_s = repeat(["ranef"], size(coef(m), 1), size(ranef(m), 2))
         stderror = fill(nothing, size(estimate))
     end
     group = cat(group_f, group_s, dims = ndims(coef(m)))

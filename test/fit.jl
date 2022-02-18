@@ -332,6 +332,26 @@ if 1 == 0
 
 end
 
+## Condense check for multi channel, multi 
+@testset "LMM multi channel, multi basisfunction" begin
+    data,evts = loadtestdata("testCase3")
+    data = hcat(data,data)
+
+	bA0 = firbasis(τ=(-0.0,0.1),sfreq=10,name="bA0")
+	bA1 = firbasis(τ=(0.1,0.2),sfreq=10,name="bA1")
+	evts.subject2 = evts.subject
+	fA0 = @formula 0~1+condB + zerocorr(1|subject)
+	fA1  =@formula 0~1+condB + zerocorr(1|subject2)
+	m = fit(UnfoldModel,
+		Dict(0=>(fA0,bA0),
+			 1=>(fA1,bA1)),
+		evts,data,eventcolumn="condA")
+
+	res = coeftable(m)
+
+    @test all(last(.!isnothing.(res.group),8))
+    @test all(last(res.coefname,8).=="(Intercept)")
+end
 
 ##------
 
