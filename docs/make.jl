@@ -22,6 +22,7 @@ makedocs(sitename="Unfold.jl",
                     "Load Existing Dataset with PyMNE.jl"=>"HowTo/pymne.md" ,
                     "Custom Solvers / StandardErrors / B2B"=>"HowTo/custom_solvers.md",
                     #"Unfold.jl directly from Python" => "HowTo/pyjulia_unfold.ipynb", # no idea if documenter allows that or not
+                    "P-values in Mass Univariate MixedModels" => "HowTo/lmm_pvalues.md",
                       ],
             "Explanations"=>["Temporal Basisfunctions" => "./explanations/basisfunctions.md"],
             "Reference"=>["Types" => "references/types.md",
