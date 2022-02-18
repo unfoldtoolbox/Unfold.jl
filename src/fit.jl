@@ -273,7 +273,8 @@ function StatsModels.fit!(
 end
 
 
-
+function LinearMixedModel_wrapper(    form,data::Array{<:Union{TData},1},Xs;wts = [],) where {TData<:Union{Missing,Number}} = @error("currently no support for missing values in MixedModels.jl")
+    
 """
 $(SIGNATURES)
 
