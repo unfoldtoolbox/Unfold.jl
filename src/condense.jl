@@ -14,8 +14,12 @@ function get_coefnames(uf::UnfoldLinearMixedModelContinuousTime)
     # special case here, because we have to reorder the random effects to the end, else labels get messed up as we concat (coefs,ranefs)
  #   coefnames = Unfold.coefnames(formula(uf))
 #    coefnames(formula(uf)[1].rhs[1])
-    fe_coefnames = vcat([coefnames(f.rhs[1]) for f in formula(uf)]...)
-    re_coefnames = vcat([coefnames(f.rhs[2:end]) for f in formula(uf)]...)
+    formulas = formula(uf)
+    if !isa(formulas,AbstractArray) # in case we have only a single basisfunction
+        formulas = [formulas]
+    end
+    fe_coefnames = vcat([coefnames(f.rhs[1]) for f in formulas]...)
+    re_coefnames = vcat([coefnames(f.rhs[2:end]) for f in formulas]...)
     return vcat(fe_coefnames,re_coefnames)
 end
     
