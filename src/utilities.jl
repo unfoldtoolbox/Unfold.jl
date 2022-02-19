@@ -120,7 +120,7 @@ end
 function zeropad(X, data::AbstractVector{T}) where {T<:Union{Missing,<:Number}}
     @debug("1d zeropad")
     if size(X, 1) > length(data)
-        X = X[1:length(data)]
+        X = X[1:length(data),:]
     else
         data = data[1:size(X, 1)]
     end
