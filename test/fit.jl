@@ -334,7 +334,7 @@ end
 
 ## Condense check for multi channel, multi 
 @testset "LMM multi channel, multi basisfunction" begin
-    data,evts = loadtestdata("testCase3")
+    data,evts = loadtestdata("testCase3", dataPath = (@__DIR__) * "/data")
     data = hcat(data,data)
 
 	bA0 = firbasis(τ=(-0.0,0.1),sfreq=10,name="bA0")
@@ -343,8 +343,8 @@ end
 	fA0 = @formula 0~1+condB + zerocorr(1|subject)
 	fA1  =@formula 0~1+condB + zerocorr(1|subject2)
 	m = fit(UnfoldModel,
-		Dict(0=>(fA0,bA0),
-			 1=>(fA1,bA1)),
+		Dict(0=>(fA0,bA0)),
+			# 1=>(fA1,bA1)),
 		evts,data,eventcolumn="condA")
 
 	res = coeftable(m)
