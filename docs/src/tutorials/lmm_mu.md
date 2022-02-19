@@ -73,8 +73,6 @@ m = fit(UnfoldModel,f,evts,data_epochs,times)
 
 #### 4. Visualize results
 
-!!! note We are working on UnfoldMakie.jl - a library to make these plots automatic and beautiful. This tutorial will be updated
-
 Let's start with the **fixed** Effects
 ```@example Main
 results = coeftable(m)
@@ -92,7 +90,6 @@ And now the **random** effect results
 res_ranef = results[results.group.==:subject,:]
 plot_results(res_ranef)
 ```
-
 
 
 
