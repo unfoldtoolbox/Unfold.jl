@@ -1,16 +1,17 @@
-# Overlap Correction with Linear Mixed Models
+# Mass Univariate Linear Mixed Models
 
 ```@example Main
 using StatsModels, MixedModels, DataFrames,CategoricalArrays
 
 using Unfold
 using UnfoldMakie,CairoMakie
-include("../../../test/test_utilities.jl"); # function to load the simulated data
+using DataFrames
+include(joinpath(dirname(pathof(Unfold)), "../test/test_utilities.jl") ) # to load data
 nothing;#hide
 ```
 
 
-This notebook is similar to the `lm_tutorial`, but fits mass-univariate *mixed* models 
+This notebook is similar to the [Mass Univariate Linear Models (no overlap correction)](@Ref) tutorial, but fits mass-univariate *mixed* models 
 
 
 

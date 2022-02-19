@@ -1,6 +1,7 @@
-# Mass Univariate Linear Models (no overlap correction)
+# Linear Model with Overlap Correction
 
-!!! note We assume you went through the mass-univariate linear modelling tutorial before!
+!!! note 
+      We assume you went through the mass-univariate linear modelling tutorial before!
 
 
 ## Setting up & loading the data
@@ -9,7 +10,8 @@ using StatsModels, MixedModels, DataFrames
 import DSP.conv
 using Unfold
 using UnfoldMakie,CairoMakie
-include("../../../test/test_utilities.jl"); # to load the simulated data
+using DataFrames
+include(joinpath(dirname(pathof(Unfold)), "../test/test_utilities.jl") ) # to load data
 
 nothing # hide
 ```
@@ -38,7 +40,7 @@ For an overlap correction analysis we will have slightly different steps.
 
 ## Timeexpanded / Deconvolved ModelFit
 #### 1. specify a temporal basisfunction
-By default, we would want to use a FIR basisfunction. See [basisfunctions.md](@ref) for more details.
+By default, we would want to use a FIR basisfunction. See [Basis Functions](@ref) for more details.
 ```@example Main
 basisfunction = firbasis(τ=(-0.4,.8),sfreq=50,name="stimulus")
 nothing #hide
