@@ -335,6 +335,7 @@ end
 ## Condense check for multi channel, multi 
 @testset "LMM multi channel, multi basisfunction" begin
     data,evts = loadtestdata("testCase3", dataPath = (@__DIR__) * "/data")
+    transform!(evts,:subject=>categorical=>:subject);
     data = hcat(data,data)
 
 	bA0 = firbasis(τ=(-0.0,0.1),sfreq=10,name="bA0")
