@@ -4,8 +4,8 @@ There are currently two ways to get p-values for LMMs: Walds t-test & likelihood
 #### Setup
 ```@example Main
     using Unfold, DataFrames
-    include("../test_utilities.jl")
-     data,evts = loadtestdata("testCase3",dataPath="../test/data");
+   include(joinpath(dirname(pathof(Unfold)), "../test/test_utilities.jl") ) # to load data
+     data, evts = loadtestdata("testCase2",dataPath="../../../test/data/");
 ```
 
 #### Get some 3D data / epoched
