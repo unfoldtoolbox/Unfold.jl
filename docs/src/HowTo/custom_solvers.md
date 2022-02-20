@@ -4,7 +4,7 @@
 
 ```@Example main
 using Unfold
-include(joinpath(dirname(pathof(MyModule)), "test/test_utilities") ) # to load data
+include(joinpath(dirname(pathof(Unfold)), "../test/test_utilities.jl") ) # to load data
 dat, evts = loadtestdata("test_case_3b");
 
 basisfunction = firbasis(τ=(-0.4,.8),sfreq=50,name="stimulus")

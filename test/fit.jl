@@ -302,7 +302,7 @@ df = coeftable(r)
 
 @test isapprox(
     df[(df.channel.==1).&(df.coefname.=="condB").&(df.time.==0.0), :estimate],
-    [18.18, 10.4],
+    [18.21, 17.69],
     rtol = 0.1,
 )
 
@@ -336,7 +336,7 @@ end
 @testset "LMM multi channel, multi basisfunction" begin
     data,evts = loadtestdata("testCase3", dataPath = (@__DIR__) * "/data")
     transform!(evts,:subject=>categorical=>:subject);
-    data = hcat(data',data')
+    data = vcat(data',data')
 
 	bA0 = firbasis(τ=(-0.0,0.1),sfreq=10,name="bA0")
 	bA1 = firbasis(τ=(0.1,0.2),sfreq=10,name="bA1")
@@ -344,8 +344,8 @@ end
 	fA0 = @formula 0~1+condB + zerocorr(1|subject)
 	fA1  =@formula 0~1+condB + zerocorr(1|subject2)
 	m = fit(UnfoldModel,
-		Dict(0=>(fA0,bA0)),
-			# 1=>(fA1,bA1)),
+		Dict(0=>(fA0,bA0),
+			 1=>(fA1,bA1)),
 		evts,data,eventcolumn="condA")
 
 	res = coeftable(m)

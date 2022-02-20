@@ -4,16 +4,17 @@ In case of overlapping data, we often need to plot multiple events.
 
 
 ### Load Example Data
-```@example
+```@example main
 using Unfold
-using UnfoldMakie
+using UnfoldMakie, CairoMakie
+using DataFrames
 using StatsModels
 using MixedModels
 
-include(joinpath(dirname(pathof(MyModule)), "test/test_utilities") ) # to load data
+include(joinpath(dirname(pathof(Unfold)), "../test/test_utilities.jl") ) # to load data
 dat, evts = loadtestdata("test_case_4b");
 
-head(evts)
+evts[1:5,:]
 ```
 As you can see, there are two events here. EventA and EventB. Both are in the column `type` in which the toolbox looks for different events by default.
 
@@ -30,14 +31,14 @@ f  = @formula 0~1
 
 Next, we have to specify for each event, what is the formula and what is the basisfunction we want to use
 ```@example main
-bfDict = Dict(:EventA=>(f,bf1),
-              :EventB=>(f,bf2))
+bfDict = Dict("eventA"=>(f,bf1),
+              "eventB"=>(f,bf2))
 ```
 
 Finally, fitting & plotting works the same way as always
 ```@example main
 
-m = Unfold.fit(UnfoldLinearModel,bfDict,evts,data,solver=se_solver)
+m = Unfold.fit(UnfoldModel,bfDict,evts,dat,solver=(x,y) -> Unfold.solver_default(x,y;stderror=true),eventcolumn="type")
 results = coeftable(m)
 plot_results(results,stderror=true)
 ``` 

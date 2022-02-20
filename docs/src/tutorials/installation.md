@@ -14,7 +14,8 @@ This should result in
 
 instead, you still have to activate your environment (using `cd("/path/to/your/project")` and `]activate .` or `]activate /path/to/your/project/`)
 
-!!! note You should have done this already to install Unfold in the first place. have a look at the Readme.md - there we use the Pkg.add("") syntax, which is equivalent to the `]` package manager.
+!!! note 
+    You should have done this already to install Unfold in the first place. have a look at the Readme.md - there we use the Pkg.add("") syntax, which is equivalent to the `]` package manager.
 
 ### installing packages for the documentation
 Now we are ready to add packages:

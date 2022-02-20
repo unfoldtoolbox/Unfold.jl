@@ -1,7 +1,7 @@
 # Mass Univariate Linear Models (no overlap correction)
 
 ## Installation
-See the installation tutorial
+See the [Installation](@Ref) tutorial
 
 ## Setting up & loading the data
 ```@example Main
@@ -9,7 +9,8 @@ using StatsModels, MixedModels, DataFrames
 import DSP.conv
 using Unfold
 using UnfoldMakie,CairoMakie
-include("../../../test/test_utilities.jl"); # to load the simulated data
+using DataFrames
+include(joinpath(dirname(pathof(Unfold)), "../test/test_utilities.jl") ) # to load data
 
 nothing # hide
 ```
@@ -31,7 +32,7 @@ The data has little noise and the underlying signal is a pos-neg spike pattern
 ```@example Main
 times = range(1/50,length=200,step=1/50)
 plot(times,data[1:200])
-vlines!(evts[evts.latency.<=200,:latency]./50) # show events, latency in samples!
+vlines!(current_axis(),evts[evts.latency.<=200,:latency]./50) # show events, latency in samples!
 ```
 
 To inspect the event dataframe we use
