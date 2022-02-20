@@ -336,7 +336,7 @@ end
 @testset "LMM multi channel, multi basisfunction" begin
     data,evts = loadtestdata("testCase3", dataPath = (@__DIR__) * "/data")
     transform!(evts,:subject=>categorical=>:subject);
-    data = hcat(data,data)
+    data = hcat(data',data')
 
 	bA0 = firbasis(τ=(-0.0,0.1),sfreq=10,name="bA0")
 	bA1 = firbasis(τ=(0.1,0.2),sfreq=10,name="bA1")
