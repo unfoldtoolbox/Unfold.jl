@@ -29,6 +29,9 @@ import StatsBase: coefnames
 import StatsBase: modelmatrix
 import StatsModels: width
 import StatsModels: terms
+
+import MixedModels.likelihoodratiotest
+
 #using IncompleteLU
 import Base.(+) # overwrite for DesignMatrices
 using Distributions: Gamma, pdf # TODO replace this with direct implementation (used in basisfunction.jl)
@@ -44,6 +47,7 @@ include("predict.jl")
 include("splinepredictors.jl")
 include("effects.jl")
 include("clusterpermutation.jl")
+include("statistics.jl")
 #include("plot.jl") # don't include for now
 export fit, fit!, designmatrix!
 export firbasis, hrfbasis, condense_long
@@ -59,6 +63,9 @@ export coeftable
 export modelfit
 export predict, spl
 export cluster_permutation_test
+
+export likelihoodratiotest # statistics.jl
+export pvalues # statistics.jl
 
 import StatsModels.@formula # for exporting
 export @formula

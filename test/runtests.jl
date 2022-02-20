@@ -25,6 +25,9 @@ end
     include("effects.jl")
 end
 
+@testset "Statistics" begin
+    include("statistics.jl")
+end
 #@testset "ClusterPermutation" begin
 #include("clusterpermutation.jl")
 #end
