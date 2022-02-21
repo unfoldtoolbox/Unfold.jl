@@ -15,8 +15,10 @@ using CSV
 include(joinpath(dirname(pathof(Unfold)), "../test/test_utilities.jl") ) # to load data
 
 data, evts = loadtestdata("test_case_3a")
+
 basisfunction = firbasis(τ = (-0.5, 1.5), sfreq = 20, name = "basisA")
 
+evts.conditionA= ["off","on"][(evts.conditionA .+1)] # convert evts into categorical
 f = @formula 0 ~ 1+conditionA*continuousA # 1
 
 m = fit(UnfoldModel, Dict(Any=>(f,basisfunction)), evts, data,eventcolumn="type")
@@ -25,9 +27,26 @@ m = fit(UnfoldModel, Dict(Any=>(f,basisfunction)), evts, data,eventcolumn="type"
 plot_results(coeftable(m))
 
 # As expected, we get four lines - the interaction is flat, the slope of the continuous is around 4, the categorical effect is at 3 and the intercept at 0 (everything is dummy coded by default)
-#
-# A convenience function is [effects](@ref).
+# ### Effects
+# A convenience function is [effects](@ref). It allows to specify effects on specific levels, while setting non-specified ones to a typical value (usually the mean)
 
-eff = Unfold.effects(Dict(:conditionA => [0,1]),m)
+eff = effects(Dict(:conditionA => ["off","on"]),m)
+plot_results(eff;color=:conditionA)
 
-plot_results(eff)
+# We can also generate continuous predictions
+eff = effects(Dict(:continuousA => -1:0.1:1),m)
+plot_results(eff;color=:continuousA)
+
+# or split it up by condition
+eff = effects(Dict(:conditionA=>["off","on"],:continuousA => -1:0.1:1),m)
+plot_results(eff;color=:continuousA,col=:conditionA)
+
+# ## What is typical anyway?
+# The user can specify the typical function applied to the covariates/factors that are marginalized over. This offers even greater flexibility.
+# Note that this is rarely necessary, in most applications the mean will be assumed.
+eff_max = effects(Dict(:conditionA=>["off","on"]),m;typical=maximum) # typical continuous value fixed to 1
+eff_max.typical .= :maximum
+eff = effects(Dict(:conditionA=>["off","on"]),m)
+eff.typical .= :mean # mean is the default
+
+plot_results(vcat(eff,eff_max);color=:conditionA,col=:typical)
