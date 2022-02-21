@@ -61,12 +61,14 @@ export modelmatrix
 export formula, design, designmatrix, coef
 export coeftable
 export modelfit
-export predict, spl
+export predict
+export spl
 export cluster_permutation_test
 
 export likelihoodratiotest # statistics.jl
 export pvalues # statistics.jl
 
+export effects # effects.jl
 import StatsModels.@formula # for exporting
 export @formula
 end # module
