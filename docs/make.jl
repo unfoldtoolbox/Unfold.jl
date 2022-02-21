@@ -15,7 +15,7 @@ makedocs(sitename="Unfold.jl",
                 "Mass Univariate" =>"tutorials/lm_mu.md",
                 "LM Overlap correction" =>"tutorials/lm_overlap.md",
                 "Mass Univariate Mixed Model" =>"tutorials/lmm_mu.md",
-                "(t.b.d.) LMM + Overlap correction" =>"tutorials/lmm_overlap.md",
+                "LMM + Overlap correction" =>"tutorials/lmm_overlap.md",
             ],
             "HowTo"=>[
 		            "Overlap: Different events"=>"HowTo/multiple_events.md",

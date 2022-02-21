@@ -4,6 +4,7 @@
 
 ```@Example main
 using Unfold
+using UnfoldMakie, CairoMakie
 include(joinpath(dirname(pathof(Unfold)), "../test/test_utilities.jl") ) # to load data
 dat, evts = loadtestdata("test_case_3b");
 
@@ -18,9 +19,10 @@ bfDict = Dict(Any=>(f,basisfunction))
 se_solver =(x,y)->Unfold.solver_default(x,y,stderror=true)
 m = Unfold.fit(UnfoldLinearModel,bfDict,evts,data,solver=se_solver)
 results =coeftable(m)
-#plot_results(results) # => Wait with plotting till UnfoldPlots.jl and Unfold.jl is registered => Wait for overhall
+plot_results(results)
 ```
-!!! Warning Use single-subject SE on your own risk. Because EEG data are autocrrelated YOUR SE WILL BE TOO SMALL!
+!!! Warning 
+    Use single-subject SE on your own risk. Because EEG data are autocrrelated YOUR SE WILL BE TOO SMALL!
 
 ### Back2Back regression
 ```@Example main
@@ -28,7 +30,7 @@ b2b_solver = (x, y) -> Unfold.solver_b2b(x, y,cross_val_reps = 5)
 m = Unfold.fit(UnfoldLinearModel, f, events, beta, times, solver=b2b_solver)
 results = coeftable(m)
 
-#plot_results(results) # => Wait with plotting till UnfoldPlots.jl and Unfold.jl is registered => Wait for overhall
+plot_results(results)
 
 ```
 
