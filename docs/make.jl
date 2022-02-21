@@ -13,10 +13,9 @@ foreach(fn -> Literate.markdown(fn, GENERATED), SOURCE_FILES)
 gr() # plots - can be removed after updating basisfunction
 #unicodeplots()
 
-makedocs(sitename="Unfold.jl",
+makedocs(sitename="Unfold.jl Timeseries Analysis & Deconvolution",
         #root = joinpath(dirname(pathof(Unfold)), "..", "docs"),
         #prettyurls = get(ENV, "CI", nothing) == "true",
-        sitename="Unfold.jl Timeseries Analysis & Deconvolution",
         pages = [
             "index.md",
             "Tutorials"=>[
