@@ -1,4 +1,4 @@
-# Linear Model with Overlap Correction
+# [Linear Model with Overlap Correction](@id lm_overlap)
 
 !!! note 
       We assume you went through the mass-univariate linear modelling tutorial before!

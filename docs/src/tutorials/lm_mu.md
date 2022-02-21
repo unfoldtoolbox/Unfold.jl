@@ -1,10 +1,10 @@
-# Mass Univariate Linear Models (no overlap correction)
+# [Mass Univariate Linear Models (no overlap correction)](@id lm_massunivariate)
 
 In this notebook we will fit regression models to (simulated) EEG data. We will see that we need some type of overlap correction, as the events are close in time to each other, so that the respective brain responses overlap.
 If you want more detailed introduction to this topic check out [our paper](https://peerj.com/articles/7838/).
 
 ## Installation
-See the [Installation](@Ref) tutorial
+See the [installation instructions](@ref install_instruct).
 
 ## Setting up & loading the data
 ```@example Main

@@ -11,7 +11,7 @@ nothing;#hide
 ```
 
 
-This notebook is similar to the [Mass Univariate Linear Models (no overlap correction)](@Ref) tutorial, but fits mass-univariate *mixed* models 
+This notebook is similar to the [Mass Univariate Linear Models (no overlap correction) tutorial](@ref lm_massunivariate) , but fits mass-univariate *mixed* models 
 
 
 
@@ -94,3 +94,6 @@ plot_results(res_ranef)
 
 
 The random effects are very high in areas where we simulated overlap. (i.e. <-0.1 and >0.2)
+
+### Statistics
+Check out the [LMM p-value tutorial](@ref lmm_pvalues)
