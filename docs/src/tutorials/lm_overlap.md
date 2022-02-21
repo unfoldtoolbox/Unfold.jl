@@ -4,6 +4,9 @@
       We assume you went through the mass-univariate linear modelling tutorial before!
 
 
+In this notebook we will fit regression models to (simulated) EEG data. We will see that we need some type of overlap correction, as the events are close in time to each other, so that the respective brain responses overlap.
+If you want more detailed introduction to this topic check out [our paper](https://peerj.com/articles/7838/).
+
 ## Setting up & loading the data
 ```@example Main
 using StatsModels, MixedModels, DataFrames
@@ -13,18 +16,6 @@ using UnfoldMakie,CairoMakie
 using DataFrames
 include(joinpath(dirname(pathof(Unfold)), "../test/test_utilities.jl") ) # to load data
 
-nothing # hide
-```
-
-
-
-
-
-
-
-In this notebook we will fit regression models to (simulated) EEG data. We will see that we need some type of overlap correction, as the events are close in time to each other, so that the respective brain responses overlap.
-If you want more detailed introduction to this topic check out [our paper](https://peerj.com/articles/7838/).
-```@example Main
 data, evts = loadtestdata("testCase2",dataPath="../../../test/data/");
 nothing # hide
 ```
@@ -63,15 +54,13 @@ The formula and basisfunction is not enough on their own. We also need to specif
 bfDict = Dict(Any=>(f,basisfunction))
 ```
 !!! note
-        The `Any` means to use all rows in `evts`. In case you have multiple events, you'd want to specify multiple basisfunctions e.g. 
-        ```
-        bfDict = Dict("stimulus"=>(f1,basisfunction1),
+      The `Any` means to use all rows in `evts`. In case you have multiple events, you'd want to specify multiple basisfunctions e.g. 
+      ```
+      bfDict = Dict("stimulus"=>(f1,basisfunction1),
               "response"=>(f2,basisfunction2))
-        m,results = fit(UnfoldLinearModel,bfDict,evts,data);
-        ```
+      ```
 
-        You likely have to specify a further argument to `fit`: `eventcolumn="type"` with `type` being the column in `evts` that codes for the event (stimulus / response in this case)
-
+      You likely have to specify a further argument to `fit`: `eventcolumn="type"` with `type` being the column in `evts` that codes for the event (stimulus / response in this case)
 
 
 Now we are ready to fit a `UnfoldLinearModel`. Not that instead of `times` as in the mass-univariate case, we have to provide the `BasisFunction` dictionary now.

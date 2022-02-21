@@ -1,5 +1,8 @@
 # Mass Univariate Linear Models (no overlap correction)
 
+In this notebook we will fit regression models to (simulated) EEG data. We will see that we need some type of overlap correction, as the events are close in time to each other, so that the respective brain responses overlap.
+If you want more detailed introduction to this topic check out [our paper](https://peerj.com/articles/7838/).
+
 ## Installation
 See the [Installation](@Ref) tutorial
 
@@ -16,18 +19,12 @@ nothing # hide
 ```
 
 
-
-
-
-
-
-In this notebook we will fit regression models to (simulated) EEG data. We will see that we need some type o7overlap correction, as the events are close in time to each other, so that the respective brain responses overlap.
-If you want more detailed introduction to this topic check out [our paper](https://peerj.com/articles/7838/).
+## Load Data
 ```@example Main
 data, evts = loadtestdata("testCase2",dataPath="../../../test/data/");
 nothing # hide
 ```
-
+## Inspection
 The data has little noise and the underlying signal is a pos-neg spike pattern
 ```@example Main
 times = range(1/50,length=200,step=1/50)
@@ -98,21 +95,21 @@ We can inspect the object
 ```@example Main
 m
 ```
-And see that it  contains the model, the original formula, the original events.
+And see that there are several helpful functions to recover `design`, `designmatrix`, raw-`modelfit` and most importantly, `coeftable`. 
 
-Further, we can get a *tidy*-dataframe using `coeftable`
+!!! info
+        There are of course further methods, e.g. `coef`, `ranef`, `Unfold.formula`, `modelmatrix` which might be helpful at some point, but not important now
+
+Using `coeftable`, we can get a *tidy*-dataframe, very useful for your further analysis.
 
 ```@example Main
 first(coeftable(m),6)
 ```
 
-!!! note 
-        (`:colname_basis` is used instead of `:time` [this might change]. The reason is that not all basisfunctions have a time dimension)
-
 #### 4. Visualize the results
-Tidy-Dataframes make them easy to visualize.
+Tidy-Dataframes make them easy to visualize using e.g. AlgebraOfGraphics.jl. We simpliefied this even more, by implementing a wrapper in `UnfoldMakie`
 ```@example Main
 results = coeftable(m)
 plot_results(results)
 ```
-As you can see here, a lot is going on, even in the baseline-period. Head over to the next tutorial to find out how to remedy this.
+As you can see here, a lot is going on, even in the baseline-period! This is because the signal was simulated with overlapping events. Head over to the next tutorial to find out how to remedy this.

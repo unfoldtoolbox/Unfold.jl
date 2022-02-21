@@ -21,14 +21,10 @@ There are currently two ways to get p-values for LMMs: Walds t-test & likelihood
         
         # LMMs don't like missings
         evts_epoch,data_epoch = Unfold.dropMissingEpochs(evts,data_epoch) 
-
-
-
 ```
 
 #### Define f0 & f1 and fit!
 ```@example Main
-
         f0  = @formula 0~1+condA + (1|subject);
         f1  = @formula 0~1+condA+condB + (1+condB|subject); # could also differ in random effects
             
@@ -38,7 +34,6 @@ There are currently two ways to get p-values for LMMs: Walds t-test & likelihood
 
 ## Likelihoodratio
 ```@example Main
-
         uf_lrt = likelihoodratiotest(m0,m1)
         uf_lrt
 ```
@@ -65,7 +60,6 @@ Perfecto, these are the LRT pvalues of a model `condA` vs. `condA+condB` with sa
 This method is easier to calculate, but more limited and likely less accurate (due to degrees of freedom estimation, but that is a discussion for a proper LMM package). It is further limited, as e.g. random effects cannot be tested, and you can only test single predictors, which might make no sense for e.g. spline-effects
 
 ```@example Main
-
 res = coeftable(m1)
 # only fixef (what is not in a ranef group is a fixef)
 res = res[isnothing.(res.group),:] 

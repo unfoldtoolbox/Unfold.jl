@@ -19,13 +19,10 @@ This notebook is similar to the [Linear Model with Overlap Correction](@ref) tut
 ## Load the data
 
 ```@example Main
-
 dat, evts = loadtestdata("testCase3",dataPath = "../../../test/data/")
 dat = dat.+ 0.1*randn(size(dat)) # we have to add minimal noise, else mixed models crashes.
 
 evts.subject  = categorical(Array(evts.subject))
-
-
 nothing #hide
 ```
 
@@ -64,6 +61,7 @@ bfDict = Dict(Any=>(f,basisfunction))
 # for some reason this results in a big error. Skipping this tutorial right now
 m = fit(UnfoldModel,bfDict,evts,dat) 
 results = coeftable(m)
+first(results,6)
 ```
 
 

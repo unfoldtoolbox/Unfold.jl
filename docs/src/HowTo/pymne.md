@@ -6,6 +6,7 @@ Unfold is generally agnostic to how you load your data. You only require a Matri
 
 ```@Example main
 using Unfold
+using UnfoldMakie,CairoMakie
 using PyMNE
 using DataFrames
 ```
@@ -44,7 +45,7 @@ results = coeftable(uf)
 ```
 
 ```@Example main
-# plot_results(results) # once UnfoldMakie is a real package, this will work - for now you have to plot it yourself, sorry
+plot_results(results)
 ```
 
 

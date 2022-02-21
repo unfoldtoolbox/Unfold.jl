@@ -30,7 +30,7 @@ The data were simulated in MatLab using the `unmixed toolbox (www.unfoldtoolbox.
 data, evts = loadtestdata("testCase3",dataPath = "../../../test/data/")
 data = data.+ 0.1*randn(size(data)) # we have to add minimal noise, else mixed models crashes.
 
-transform!(evts,:subject=>categorical=>:subject);
+transform!(evts,:subject=>categorical=>:subject); # has to be categorical, else MixedModels.jl complains
 nothing #hide
 ```
 
@@ -52,22 +52,23 @@ data_r = reshape(data,(1,:))
 # cut the data into epochs
 data_epochs,times = Unfold.epoch(data=data_r,tbl=evts,τ=(-0.4,0.8),sfreq=50);
 # missing or partially missing epochs are currenlty _only_ supported for non-mixed models!
-evts,data_epochs = Unfold.dropMissingEpochs(evts,data_epochs); nothing #hide
+evts,data_epochs = Unfold.dropMissingEpochs(evts,data_epochs);
+nothing #hide
 ```
-
-
 
 #### 2. Specify the formula
 We define the formula. Importantly we need to specify a random effect. We are using `zerocorr` to speed up the calculation and show off that we can use it.
 ```@example Main
 f  = @formula 0~1+condA*condB+zerocorr(1+condA*condB|subject);
+nothing #hide
 ```
 
 
 #### 3. Fit the model
 We can now run the LinearMixedModel on each time point
 ```@example Main
-m = fit(UnfoldModel,f,evts,data_epochs,times) 
+m = fit(UnfoldModel,f,evts,data_epochs,times)
+nothing #hide
 ```
 
 
@@ -90,8 +91,6 @@ And now the **random** effect results
 res_ranef = results[results.group.==:subject,:]
 plot_results(res_ranef)
 ```
-
-
 
 
 The random effects are very high in areas where we simulated overlap. (i.e. <-0.1 and >0.2)
