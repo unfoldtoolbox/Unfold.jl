@@ -62,7 +62,7 @@ end
  # cast single form to a vector
 _typify(reference_grid,form::FormulaTerm{<:InterceptTerm,<:Unfold.TimeExpandedTerm},m,typical) = _typify(reference_grid,[form],[m],typical)
 
-function _typify(reference_grid, form::Vector{<:FormulaTerm{<:InterceptTerm,<:Unfold.TimeExpandedTerm}},m,typical)
+function _typify(reference_grid, form::AbstractArray{<:FormulaTerm{<:Union{<:InterceptTerm,<:Unfold.TimeExpandedTerm}}},m,typical)
     
     form_typical = Array{Any}(undef,1, length(form))
     for f = 1:length(form)
@@ -82,7 +82,7 @@ function _typify(reference_grid, form::Vector{<:FormulaTerm{<:InterceptTerm,<:Un
     end
     return form_typical
  end
- function _typify(reference_grid,form::FormulaTerm{InterceptTerm,MatrixTerm},m,typical)
+ function _typify(reference_grid,form::FormulaTerm,m,typical)
     return [typify(reference_grid, form, m; typical=typical)]
 
  end
