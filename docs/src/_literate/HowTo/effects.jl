@@ -28,4 +28,6 @@ plot_results(coeftable(m))
 #
 # A convenience function is [effects](@ref).
 
-eff = Unfold.effects(Dict(:conditionA => [0,1],:continuousA=>[0]),m)
+eff = Unfold.effects(Dict(:conditionA => [0,1]),m)
+
+plot_results(eff)
