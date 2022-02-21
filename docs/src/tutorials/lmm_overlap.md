@@ -20,7 +20,7 @@ This notebook is similar to the [Linear Model with Overlap Correction](@ref) tut
 
 ```@example Main
 dat, evts = loadtestdata("testCase3",dataPath = "../../../test/data/")
-dat = dat.+ 0.1*randn(size(dat)) # we have to add minimal noise, else mixed models crashes.
+dat = dat' .+ 0.1*randn(size(dat)) # we have to add minimal noise, else mixed models crashes.
 
 evts.subject  = categorical(Array(evts.subject))
 nothing #hide
