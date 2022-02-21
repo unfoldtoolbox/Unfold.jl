@@ -4,21 +4,25 @@ function solver_default(
     data::AbstractArray{T,2};
     stderror = false,
 ) where {T<:Union{Missing,<:Number}}
-    # likely much larger matrix, using lsqr
     minfo = []
-    beta = Array{Float64}(undef, size(data, 1), size(X, 2))
+    sizehint!(minfo, size(data,1))
+    beta = zeros(size(data,1),size(X,2)) # had issues with undef
+    for ch = 1:size(data, 1)
+	 	dd = view(data, ch, :)
+        ix = @. !ismissing(dd)
+	    # use the previous channel as a starting point
+        ch == 1 || copyto!(view(beta, ch, :), view(beta, ch-1, :))
+ 
+		beta[ch,:],h = lsmr!(@view(beta[ch, :]), (X[ix,:]), @view(data[ch, ix]),log=true)
 
-    @showprogress 0.1 for ch = 1:size(data, 1)
-        ix = .!ismissing.(data[ch, :])
-        beta[ch, :], h = lsmr(X[ix, :], data[ch, ix], log = true)
         push!(minfo, h)
     end
 
     if stderror
-        stderror = calculate_stderror(X, data, beta)
-        modelfit = LinearModelFit(beta, ["lsmr"], stderror)
+        stderror = calculate_stderror(X, data, beta) 
+        modelfit = Unfold.LinearModelFit(beta, ["lsmr",minfo], stderror)
     else
-        modelfit = LinearModelFit(beta, ["lsmr"])
+        modelfit = Unfold.LinearModelFit(beta, ["lsmr",minfo])
     end
     return modelfit
 end
@@ -85,12 +89,17 @@ function solver_default(
     data::AbstractArray{T,3};
     stderror = false,
 ) where {T<:Union{Missing,<:Number}}
-    beta = Array{Union{Missing,Number}}(undef, size(data, 1), size(data, 2), size(X, 2))
+    #beta = Array{Union{Missing,Number}}(undef, size(data, 1), size(data, 2), size(X, 2))
+    beta = zeros(Union{Missing,Number},size(data, 1), size(data, 2), size(X, 2))
     @showprogress 0.1 for ch = 1:size(data, 1)
         for t = 1:size(data, 2)
             @debug("$(ndims(data,)),$t,$ch")
-            ix = .!ismissing.(data[ch, t, :])
-            beta[ch, t, :] = X[ix, :] \ data[ch, t, ix]
+            
+            dd = view(data, ch, t,:)
+            ix = @. !ismissing(dd)
+            
+            beta[ch,t,:] = @view(X[ix,:]) \ @view(data[ch,t,ix]) 
+            # qr(X) was slower on Februar 2022
         end
     end
 
@@ -121,16 +130,16 @@ function solver_b2b(
 
         for m = 1:cross_val_reps
             k_ix = collect(Kfold(size(data, 3), 2))
-            Y1 = data[:, t, k_ix[1]]
-            Y2 = data[:, t, k_ix[2]]
-            X1 = X[k_ix[1], :]
-            X2 = X[k_ix[2], :]
+            Y1 = @view data[:, t, k_ix[1]]
+            Y2 = @view data[:, t, k_ix[2]]
+            X1 = @view X[k_ix[1], :]
+            X2 = @view X[k_ix[2], :]
 
 
             G = (Y1' \ X1)
             H = X2 \ (Y2' * G)
 
-            E[t, :, :] = E[t, :, :] + Diagonal(H[diagind(H)])
+            E[t, :, :] +=  Diagonal(H[diagind(H)])
             ProgressMeter.next!(prog; showvalues = [(:time, t), (:cross_val_rep, m)])
         end
         E[t, :, :] = E[t, :, :] ./ cross_val_reps
