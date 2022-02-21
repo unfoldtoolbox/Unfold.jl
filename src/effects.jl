@@ -32,28 +32,8 @@ function effects(design::AbstractDict, model::UnfoldModel;typical=mean)
 
     # replace non-specified fields with "constants"
     m = modelmatrix(model,false) # get the modelmatrix without timeexpansion
-    
-    if isa(form,AbstractMatrix)
+    form_typical = _typify(reference_grid,form,m,typical)
 
-        form_typical = Array{Any}(undef,1, length(form))
-        for f = 1:length(form)
-            
-            # strip of basisfunction and put it on afterwards again
-            tmpf = deepcopy(form[f])
-            
-            # create a Formula without Timeexpansion
-            tmpf = FormulaTerm(tmpf.lhs,tmpf.rhs.term)
-
-            # typify that
-            tmpf = typify(reference_grid, tmpf, m[f]; typical=typical) 
-            
-            # regenerate TimeExpansion
-            tmpf = Unfold.TimeExpandedTerm(tmpf,form[f].rhs.basisfunction;eventfields=form[f].rhs.eventfields)
-            form_typical[f] = tmpf
-        end
-    else
-        form_typical = [typify(reference_grid, form, m; typical=typical)]
-    end
     eff = yhat(model,form_typical,reference_grid)
 
     # because coefficients are 2D/3D arry, we have to cast it correctly to one big dataframe
@@ -79,6 +59,33 @@ end
  
  Effects.typify(reference_grid,form::Matrix,X;kwargs...) = typify.(Ref(reference_grid),form,Ref(X);kwargs...)
 
+ # cast single form to a vector
+_typify(reference_grid,form::FormulaTerm{<:InterceptTerm,<:Unfold.TimeExpandedTerm},m,typical) = _typify(reference_grid,[form],[m],typical)
+
+function _typify(reference_grid, form::Vector{<:FormulaTerm{<:InterceptTerm,<:Unfold.TimeExpandedTerm}},m,typical)
+    
+    form_typical = Array{Any}(undef,1, length(form))
+    for f = 1:length(form)
+        
+        # strip of basisfunction and put it on afterwards again
+        tmpf = deepcopy(form[f])
+        
+        # create a Formula without Timeexpansion
+        tmpf = FormulaTerm(tmpf.lhs,tmpf.rhs.term)
+
+        # typify that
+        tmpf = typify(reference_grid, tmpf, m[f]; typical=typical) 
+        
+        # regenerate TimeExpansion
+        tmpf = Unfold.TimeExpandedTerm(tmpf,form[f].rhs.basisfunction;eventfields=form[f].rhs.eventfields)
+        form_typical[f] = tmpf
+    end
+    return form_typical
+ end
+ function _typify(reference_grid,form::FormulaTerm{InterceptTerm,MatrixTerm},m,typical)
+    return [typify(reference_grid, form, m; typical=typical)]
+
+ end
  
 function cast_referenceGrid(r,eff,times;basisname=nothing)
     nchan = size(eff, 2) # correct
