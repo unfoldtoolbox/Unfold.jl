@@ -16,7 +16,7 @@ gr() # plots - can be removed after updating basisfunction
 makedocs(sitename="Unfold.jl",
         #root = joinpath(dirname(pathof(Unfold)), "..", "docs"),
         #prettyurls = get(ENV, "CI", nothing) == "true",
-        sitename="Unfold.jl Timeseries Analysis & Deconvolution"
+        sitename="Unfold.jl Timeseries Analysis & Deconvolution",
         pages = [
             "index.md",
             "Tutorials"=>[
