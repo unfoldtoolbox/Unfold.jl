@@ -2,10 +2,18 @@ using Documenter
 using Unfold
 using DocStringExtensions
 using Plots
-gr()
+using Literate
+using Glob
+
+GENERATED = joinpath(@__DIR__, "src", "_literate")
+SOURCE_FILES = Glob.glob("*/*.jl", GENERATED)
+foreach(fn -> Literate.markdown(fn, GENERATED), SOURCE_FILES)
+
+
+gr() # plots - can be removed after updating basisfunction
 #unicodeplots()
 
-makedocs(sitename="Unfold.jl",
+makedocs(sitename="Unfold.jl Timeseries Analysis & Deconvolution",
         #root = joinpath(dirname(pathof(Unfold)), "..", "docs"),
         #prettyurls = get(ENV, "CI", nothing) == "true",
         pages = [
