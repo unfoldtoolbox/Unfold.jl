@@ -160,6 +160,7 @@ function solver_robust(
     X,
     data::AbstractArray{T,3};
 	estimator = MEstimator{TukeyLoss}(),
+    rlmOptions = (initial_scale=:mad,)
 ) where {T<:Union{Missing,<:Number}}
     #beta = zeros(Union{Missing,Number},size(data, 1), size(data, 2), size(X, 2))
 	beta = zeros(T,size(data, 1), size(data, 2), size(X, 2))
@@ -180,9 +181,12 @@ function solver_robust(
 			X_local = disallowmissing((X[ix,:])) # view crashes robust model here. XXX follow up once 
             # https://github.com/JuliaStats/GLM.jl/issues/470 received a satisfying result
 			y_local = disallowmissing(@view(data[ch,t,ix]))
-			@info typeof(y_local)
-			@info typeof(X_local)
-			m = rlm(X_local,y_local,estimator,initial_scale=:mad,initial_coef=@view(beta[ch,t,:]))
+
+            # if not specified otherwise
+			if :initial_coef ∉ keys(rlmOptions)
+                rlmOptions = merge(rlmOptions,(initial_coef=@view(beta[ch,t,:]),))
+            end
+			m = rlm(X_local,y_local,estimator;rlmOptions...)
 			beta[ch,t,:] .= coef(m)
             
         end
