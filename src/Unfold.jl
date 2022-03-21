@@ -21,6 +21,8 @@ using ProgressMeter
 using DocStringExtensions # for Docu
 using MLBase # for crossVal
 using BSplines # for spline predictors
+
+using RobustModels # for robust modelling
 #using CategoricalArrays
 import StatsBase: fit
 import StatsBase: coef
