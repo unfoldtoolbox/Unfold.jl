@@ -74,7 +74,7 @@ data_outlier = copy(data_e)
 data_outlier[:,31,1] .= 1000
 m_mul_rob = coeftable(Unfold.fit(UnfoldModel, f, evts, data_outlier, times, solver = rob_solver))
 ix = findfirst(m_mul_rob.time .≈ 0.5)
-@test all(m_mul_rob.estimate .≈ m_mul.estimate)
+@test all(m_mul_rob.estimate[ix] .≈ m_mul.estimate[ix])
 
 m_mul_outlier = coeftable(Unfold.fit(UnfoldModel, f, evts, data_outlier, times))
 
