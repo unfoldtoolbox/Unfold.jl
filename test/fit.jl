@@ -69,7 +69,7 @@ m_mul_se = coeftable(Unfold.fit(UnfoldModel, f, evts, data_e, times, solver = se
 @test !all(isnothing.(m_mul_se.stderror))
 
 # robust solver
-rob_solver = (x, y) -> Unfold.solver_robust(x, y,rlmOptions=(initial_coef=ones(3 *length(times)),))
+rob_solver = (x, y) -> Unfold.solver_robust(x, y)#rlmOptions=(initial_coef=ones(3 *length(times)),))
 data_outlier = copy(data_e)
 data_outlier[:,31,1] .= 1000
 m_mul_rob = coeftable(Unfold.fit(UnfoldModel, f, evts, data_outlier, times, solver = rob_solver))
