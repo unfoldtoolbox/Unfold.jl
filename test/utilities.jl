@@ -13,11 +13,17 @@
     # check corner cases (sample doesnt end on sampling rate)
     @test ep((0.6,2)) ≈ collect(51:52.)
     @test ep((0.2,2)) ≈ collect(50:52.)
+
+
+    # test sampling frequencies
+
+    ep = τ -> Unfold.epoch(d,evt,τ,2)[1][1,:,1]
+    @test ep((-1.0, 2)) ≈ collect(48:54.)
+
+    ep = τ -> Unfold.epoch(d,evt,τ,0.5)[1][1,:,1]
+    @test ep((-4.0, 8)) ≈ collect(48:54.)
+
 end
 
 
-#evt = DataFrame(:latency=>(512.7))
-#ep = τ -> Unfold.epoch(d,evt,τ,256)[1][1,:,1]
 
-#ep((-0.4, 0.8))
-#tau = (-0.2, 0.8); srate = 256 -> 256 samples per epoch -> no error
