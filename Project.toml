@@ -1,7 +1,7 @@
 name = "Unfold"
 uuid = "181c99d8-e21b-4ff3-b70b-c233eddec679"
 authors = ["Benedikt Ehinger <science@benediktehinger.de>"]
-version = "0.3.8"
+version = "0.3.9"
 
 [deps]
 BSplines = "488c2830-172b-11e9-1591-253b8a7df96d"
@@ -55,6 +55,7 @@ MixedModelsSim = "0.2"
 PkgBenchmark = "0.2"
 ProgressMeter = "1"
 PyMNE = "0.1"
+RobustModels = "0.4"
 StaticArrays = "1"
 StatsBase = "0.33"
 StatsFuns = "0.9"
