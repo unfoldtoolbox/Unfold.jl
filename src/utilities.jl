@@ -55,8 +55,10 @@ function epoch(
     for si = 1:size(tbl, 1)
         #eventonset = tbl[si,eventtime] # in samples
         #d_start = eventonset
-        d_start = Int(round(tbl[si, eventtime] - sum(times .< 0)))
-        d_end = Int(round(tbl[si, eventtime] + lenEpochs - 1 - sum(times .< 0)))
+        d_start = Int(round(tbl[si, eventtime] + times[1].*sfreq))
+        d_end = Int(round(tbl[si, eventtime] +times[end].*sfreq))
+        @info d_start
+        @info d_end
         e_start = 1
         e_end = lenEpochs
         #println("d: $(size(data)),e: $(size(epochs)) | $d_start,$d_end,$e_start,$e_end | $(tbl[si,eventtime])")

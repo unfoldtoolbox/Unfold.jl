@@ -28,6 +28,10 @@ end
 @testset "Statistics" begin
     include("statistics.jl")
 end
+
+@testset "Utilities" begin
+    include("utilities.jl")
+end
 #@testset "ClusterPermutation" begin
 #include("clusterpermutation.jl")
 #end
