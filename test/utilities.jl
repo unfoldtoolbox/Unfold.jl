@@ -23,7 +23,11 @@
     ep = τ -> Unfold.epoch(d,evt,τ,0.5)[1][1,:,1]
     @test ep((-4.0, 8)) ≈ collect(48:54.)
 
+# rounding bug when latency was .5 -> bug #78
+d = zeros((1, 1270528))
+evt = DataFrame(:latency=>(181603.5))
+ep = τ -> Unfold.epoch(d,evt,τ,256.)[1][1,:,1]
+ep((-0.1, 0.8))
 end
-
 
 
