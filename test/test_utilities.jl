@@ -143,7 +143,7 @@ function exponentialCorrelation(x; nu = 1, length_ratio = 1)
 end
 
 function noise_exp(rng, n_t)
-    Σ = circulant(exponentialCorrelation([0:1:(n_t-1);], nu = 1))
+    Σ = circulant(exponentialCorrelation([0:1:(n_t-1);], nu = 1.5))
     Ut = LinearAlgebra.cholesky(Σ).U'
     return (randn(rng, n_t)'*Ut')[1, :]
 end
