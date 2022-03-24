@@ -8,7 +8,7 @@ using Unfold
 using DataFrames
 using Random
 using CSV
-
+using UnfoldMakie
 
 # # Setup things
 # Let's load some data and fit a model of a 2-level categorical and a continuous predictor with interaction.
