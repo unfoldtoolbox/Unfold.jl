@@ -70,6 +70,7 @@ end
 data, evts = loadtestdata("test_case_4a") #
 b1 = firbasis(τ = (0.0, 0.95), sfreq = 20, name = "basisA")
 b2 = firbasis(τ = (0.0, 0.95), sfreq = 20, name = "basisB")
+b3 = firbasis(τ = (0.0, 0.95), sfreq = 20, name = "basisC")
 f = @formula 0 ~ 1 # 1
 m_tul = fit(UnfoldModel, Dict("eventA"=>(f,b1),"eventB"=>(f,b2)), evts, data,eventcolumn="type")
 
@@ -83,6 +84,17 @@ eff = Unfold.effects(Dict(:conditionA => [0,1],:continuousA =>[0]),m_tul)
 eff = Unfold.effects(Dict(:conditionA => [0,1],:continuousA =>[-1,0,1]),m_tul)
 @test size(eff,1) == 2*6*20
 
+end
+@testset "Time Expansion, three events" begin
+    evts_3 = deepcopy(evts)
+	evts_3.type[1:50] .= "eventC"
+	evts_3.type[50:100] .= "eventD"
+	m_tul_3 = fit(UnfoldModel, Dict("eventA"=>(f,b1),"eventB"=>(f,b2),"eventC"=>(f,b3)), evts_3, data,eventcolumn="type")
+
+	eff = Unfold.effects(Dict(:conditionA => [0,1],:continuousA =>[0]),m_tul_3)
+	
+	@test size(eff,1) == 3*2*20 # 2 basisfunctions, 2x conditionA, 1s a 20Hz
+	
 end
 
 @testset "Time Expansion, two events different size + different formulas" begin
