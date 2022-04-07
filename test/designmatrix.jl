@@ -48,8 +48,12 @@ Xdc2 = designmatrix(UnfoldLinearModel, f, tbl .+ 1, basisfunction2)
 
 Xdc = Xdc1 + Xdc2
 @test size(Xdc.Xs, 2) == size(Xdc1.Xs, 2) + size(Xdc2.Xs, 2)
+@test length(Xdc.events) == 2
 
+Xdc_3 = Xdc1 + Xdc2 + Xdc2
 
+@test size(Xdc_3.Xs, 2) == size(Xdc1.Xs, 2) + 2*size(Xdc2.Xs, 2)
+@test length(Xdc_3.events) == 3
 
 
 basisfunction1 = firbasis(τ = (0, 1), sfreq = 10, name = "basis1")

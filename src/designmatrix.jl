@@ -128,7 +128,8 @@ function combineDesignmatrices(X1::DesignMatrix, X2::DesignMatrix)
     if typeof(X1.formulas) <: FormulaTerm
         DesignMatrix([X1.formulas X2.formulas], Xcomb, [X1.events, X2.events])
     else
-        DesignMatrix([X1.formulas... X2.formulas], Xcomb, [X1.events, X2.events])
+        
+        DesignMatrix([X1.formulas... X2.formulas], Xcomb, [X1.events..., X2.events])
     end
 end
 
