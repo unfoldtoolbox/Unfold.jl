@@ -1,5 +1,5 @@
 
-
+@testset "FIR" begin
 firbase = firbasis((-1, 1), 10)
 
 # test optional call
@@ -11,13 +11,14 @@ firbase = firbasis((-1, 1), 10)
 @test unique(Unfold.kernel(firbase)(1)) == [1.0, 0.0]
 
 # test length consistency
-@test length(Unfold.colnames(firbase)) ==
-      length(Unfold.times(firbase)) ==
-      size(Unfold.kernel(firbase)(3.1))[2]
+@test length(Unfold.colnames(firbase)) ==size(Unfold.kernel(firbase)(3.1))[2]
+@test length(Unfold.times(firbase)) == size(Unfold.kernel(firbase)(3.1))[1]
 
 # testing the non-sampling rate samples
 @test Unfold.kernel(firbase)(0.5)[1:3, 1:3] == [0.5 0.0 0.0; 0.5 0.5 0.0; 0.0 0.5 0.5]
 
+end
+@testset "BOLD" begin
 
 boldbase = hrfbasis(2.0, name = "test")
 
@@ -25,3 +26,14 @@ boldbase = hrfbasis(2.0, name = "test")
 @test Unfold.kernel(boldbase)(0) == Unfold.kernel(boldbase)(1)
 @test Unfold.kernel(boldbase)(0.1) != Unfold.kernel(boldbase)(1) # testing fractional kernel generation
 @test findmax(Unfold.kernel(boldbase)(0.3))[2][1] == 4
+
+
+end
+
+@testset "timespline" begin
+      splinebase = Unfold.splinebasis(τ=(-1,1),sfreq=20,nsplines=10,name="basisA")
+      
+      @test length(Unfold.colnames(splinebase)) ==size(Unfold.kernel(splinebase)(3.1))[2]
+      @test length(Unfold.times(splinebase)) == size(Unfold.kernel(splinebase)(3.1))[1]
+
+end
