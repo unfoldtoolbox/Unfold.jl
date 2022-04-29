@@ -41,7 +41,7 @@ struct FIRBasis <: BasisFunction
 end
 
 collabel(basis::FIRBasis) = :time
-colnames(basis::FIRBasis) = basis.times
+colnames(basis::FIRBasis) = basis.times[1:end-1]
 
 
 struct SplineBasis <: BasisFunction
@@ -103,9 +103,9 @@ julia>  f(103.3)
 """
 function firbasis(τ, sfreq, name::String)
     τ = round_times(τ, sfreq)
-    times = range(τ[1], stop = τ[2], step = 1 ./ sfreq)
+    times = range(τ[1], stop = τ[2]+1 ./ sfreq, step = 1 ./ sfreq) # stop + 1 step, because we support fractional event-timings
 
-    kernel = e -> firkernel(e, times)
+    kernel = e -> firkernel(e, times[1:end-1])
 
 
     shiftOnset = Int64(floor(τ[1] * sfreq))
@@ -145,8 +145,7 @@ end
 
 
 splinebasis(; τ, sfreq, nsplines, name) = splinebasis(τ, sfreq, nsplines, name)
-splinebasis(τ, sfreq, nsplines) =
-splinebasis(τ, sfreq, nsplines, "basis_" * string(rand(1:10000)))
+splinebasis(τ, sfreq, nsplines) = splinebasis(τ, sfreq, nsplines, "basis_" * string(rand(1:10000)))
 
 shiftOnset(basis::Union{SplineBasis,FIRBasis}) = basis.shiftOnset
 
@@ -157,7 +156,7 @@ function splinebasis(τ, sfreq, nsplines, name::String)
 
     shiftOnset = Int64(floor(τ[1] * sfreq))
     colnames = spl_breakpoints(times, nsplines)
-    return SplineBasis(kernel, "spline", colnames, times, name, shiftOnset)
+    return SplineBasis(kernel, colnames, times, name, shiftOnset)
 end
 
 
