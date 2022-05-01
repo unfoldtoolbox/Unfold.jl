@@ -10,11 +10,13 @@ This tool combines mass-univariate linear (mixed) models with overlap correction
 
 This kind of overlap correction is also known as encoding modeling, linear deconvolution, Temporal Response Functions (TRFs) and probably under other names. fMRI models with HRF-basis functions are also supported.
 
+## Citation
+Please cite
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6423476.svg)](https://doi.org/10.5281/zenodo.6423476) or [Ehinger & Dimigen](https://peerj.com/articles/7838/)
+
 ## Relation to Unfold (matlab)
-The matlab toolbox is recommended for research work. It is richer in features, better documented and tested.
-
-The julia toolbox is a type of research-playground, but offers LinearMixedModel support.
-
+I regularly use Unfold.jl in my research, but there are likely more hard corners there compared to the matlab version (but julia is more flexible and has some unique features)
 
 | Feature                 | Unfold | unmixed | Unfold.jl |
 |-------------------------|--------|---------|-----------|
