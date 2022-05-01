@@ -128,34 +128,34 @@ Useful functions:
 res = res[isnothing.(res.group),:]
 #calculate t-value
 res[:,:tvalue] = res.estimate ./ res.stderror</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">15-element Vector{Float64}:
-  1.172614766505831
- -3.575894811922863
-  0.27349325424004156
-  0.07936247222983556
- -0.723283060631678
- -0.6589978345184678
- 51.69420700749258
- -0.04306020930492138
-  0.6813366423833942
-  0.25860717508112235
- -1.7380673387878283
-  9.921295585712002
- -0.9365143350022328
- -0.8195806026961683
-  0.7096204405585663</code></pre><p>Okay cool, we have walds-t, but how to translate to a p-value?</p><p>This is by no means trivial, as the necessary degrees of freedom of the t-distribution are not well specified. There is a huge debate how to do it. One simple way is to simply assume the number of subjects as an upper bound to your p-value (your df will be between <span>$n_{subject}$</span> and <span>$\sum{n_{trials}}$</span>)</p><pre><code class="language-julia hljs">    df = length(unique(evts.subject))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">100</code></pre><p>Plug it into the t-distribution</p><pre><code class="language-julia hljs">    using Distributions
+  1.1726147665090954
+ -3.5758948130063457
+  0.2734932542531033
+  0.07936247197539918
+ -0.723283059838212
+ -0.6589978345239274
+ 51.694207007567016
+ -0.043060209317854946
+  0.6813366425740488
+  0.25860717496723123
+ -1.7380673387560326
+  9.92129558886961
+ -0.9365143349297776
+ -0.8195806020654834
+  0.7096204403444261</code></pre><p>Okay cool, we have walds-t, but how to translate to a p-value?</p><p>This is by no means trivial, as the necessary degrees of freedom of the t-distribution are not well specified. There is a huge debate how to do it. One simple way is to simply assume the number of subjects as an upper bound to your p-value (your df will be between <span>$n_{subject}$</span> and <span>$\sum{n_{trials}}$</span>)</p><pre><code class="language-julia hljs">    df = length(unique(evts.subject))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">100</code></pre><p>Plug it into the t-distribution</p><pre><code class="language-julia hljs">    using Distributions
     res.pvalue = pdf.(TDist(df),res.tvalue)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">15-element Vector{Float64}:
- 0.1996687320379996
- 0.0009135618614650287
- 0.3832002254657647
- 0.3966824928537397
- 0.3057661298741611
- 0.3197313647999792
- 5.450845659136302e-74
- 0.39757374321063105
- 0.3149545485804098
- 0.384735025514985
- 0.08853181458243331
- 3.7189580784015047e-16
- 0.25603981812904997
- 0.2837904861121901
- 0.30878848544068604</code></pre><p>Cool! Let&#39;s compare!</p><pre><code class="language-julia hljs">DataFrame(:walds=&gt;res[res.coefname .== &quot;condB&quot;,:pvalue],:lrt=&gt;pvals_lrt)</code></pre><div class="data-frame"><p>5 rows × 2 columns</p><table class="data-frame"><thead><tr><th></th><th>walds</th><th>lrt</th></tr><tr><th></th><th title="Float64">Float64</th><th title="Float64">Float64</th></tr></thead><tbody><tr><th>1</th><td>0.0885318</td><td>NaN</td></tr><tr><th>2</th><td>3.71896e-16</td><td>0.0</td></tr><tr><th>3</th><td>0.25604</td><td>NaN</td></tr><tr><th>4</th><td>0.28379</td><td>NaN</td></tr><tr><th>5</th><td>0.308788</td><td>NaN</td></tr></tbody></table></div><p>At least qualitatively similar - we should look for a better example here; working on UnfoldSim :-)</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../custom_solvers/">« Custom Solvers / StandardErrors / B2B</a><a class="docs-footer-nextpage" href="../../explanations/basisfunctions/">Temporal Basisfunctions »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.16 on <span class="colophon-date" title="Wednesday 27 April 2022 11:04">Wednesday 27 April 2022</span>. Using Julia version 1.7.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ 0.19966873203723817
+ 0.000913561858295411
+ 0.38320022546438315
+ 0.3966824928618294
+ 0.3057661300504728
+ 0.3197313647988224
+ 5.45084565837207e-74
+ 0.3975737432104074
+ 0.31495454853927896
+ 0.38473502552642236
+ 0.08853181458722986
+ 3.71895801910114e-16
+ 0.2560398181464448
+ 0.2837904862593589
+ 0.30878848548784077</code></pre><p>Cool! Let&#39;s compare!</p><pre><code class="language-julia hljs">DataFrame(:walds=&gt;res[res.coefname .== &quot;condB&quot;,:pvalue],:lrt=&gt;pvals_lrt)</code></pre><div class="data-frame"><p>5 rows × 2 columns</p><table class="data-frame"><thead><tr><th></th><th>walds</th><th>lrt</th></tr><tr><th></th><th title="Float64">Float64</th><th title="Float64">Float64</th></tr></thead><tbody><tr><th>1</th><td>0.0885318</td><td>NaN</td></tr><tr><th>2</th><td>3.71896e-16</td><td>0.0</td></tr><tr><th>3</th><td>0.25604</td><td>NaN</td></tr><tr><th>4</th><td>0.28379</td><td>NaN</td></tr><tr><th>5</th><td>0.308788</td><td>NaN</td></tr></tbody></table></div><p>At least qualitatively similar - we should look for a better example here; working on UnfoldSim :-)</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../custom_solvers/">« Custom Solvers / StandardErrors / B2B</a><a class="docs-footer-nextpage" href="../../explanations/basisfunctions/">Temporal Basisfunctions »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.16 on <span class="colophon-date" title="Sunday 1 May 2022 22:59">Sunday 1 May 2022</span>. Using Julia version 1.7.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
