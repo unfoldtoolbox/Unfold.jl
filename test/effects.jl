@@ -108,7 +108,7 @@ f1 = @formula 0 ~ 1 # 1
 f2 = @formula 0 ~ 1+continuousA # 1
 m_tul = fit(UnfoldModel, Dict("eventA"=>(f1,b1),"eventB"=>(f2,b2)), evts, data,eventcolumn="type")
 eff = Unfold.effects(Dict(:conditionA => [0,1],:continuousA =>[-1,0,1]),m_tul)
-@test nrow(eff) == (length(b1.times)+length(b2.times))*6
+@test nrow(eff) == (length(Unfold.times(b1))-1+length(Unfold.times(b2))-1)*6
 @test sum(eff.basisname .== "basisA") == 120
 @test sum(eff.basisname .== "basisB") == 66
 
