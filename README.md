@@ -1,5 +1,9 @@
 # Unfold.jl
 
+<img align="right" width="33%" src="https://www.unfoldtoolbox.org/_images/unfold_800x377.png">
+
+
+
 **Beta** Toolbox to perform linear regression on biological signals. 
 
 
