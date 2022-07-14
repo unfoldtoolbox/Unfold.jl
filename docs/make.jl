@@ -36,7 +36,7 @@ makedocs(sitename="Unfold.jl Timeseries Analysis & Deconvolution",
                       ],
             "Explanations"=>[
 		"Temporal Basisfunctions" => "./explanations/basisfunctions.md",
-		"Non-Linear Effects" => "./_literate/nonlinear_effects.jl",],
+		"Non-Linear Effects" => "./_literate/nonlinear_effects.md",],
             "Reference"=>["Types" => "references/types.md",
             "Functions" => "references/functions.md"],
             
