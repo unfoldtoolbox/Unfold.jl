@@ -29,10 +29,14 @@ makedocs(sitename="Unfold.jl Timeseries Analysis & Deconvolution",
 		            "Overlap: Different events"=>"HowTo/multiple_events.md",
                     "Load Existing Dataset with PyMNE.jl"=>"HowTo/pymne.md" ,
                     "Custom Solvers / StandardErrors / B2B"=>"HowTo/custom_solvers.md",
-                    #"Unfold.jl directly from Python" => "HowTo/pyjulia_unfold.ipynb", # no idea if documenter allows that or not
+                    "Unfold.jl directly from Python" => "_literate/pyjulia_unfold.md",
                     "P-values in Mass Univariate MixedModels" => "HowTo/lmm_pvalues.md",
+		    "marginal effects (what to do with non-linear predictors)" =>"_literate/effects.md",
+		    "Time Basis Functions"=>"_literate/timesplines.md",
                       ],
-            "Explanations"=>["Temporal Basisfunctions" => "./explanations/basisfunctions.md"],
+            "Explanations"=>[
+		"Temporal Basisfunctions" => "./explanations/basisfunctions.md",
+		"Non-Linear Effects" => "./_literate/nonlinear_effects.jl",],
             "Reference"=>["Types" => "references/types.md",
             "Functions" => "references/functions.md"],
             
