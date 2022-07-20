@@ -17,6 +17,14 @@ firbase = firbasis((-1, 1), 10)
 # testing the non-sampling rate samples
 @test Unfold.kernel(firbase)(0.5)[1:3, 1:3] == [0.5 0.0 0.0; 0.5 0.5 0.0; 0.0 0.5 0.5]
 
+# defining a firkernel with a duration = 1 sample, should be equal to the non-duration one
+f_dur = Unfold.firkernel([103.3;1],range(-0.1,step=0.01,stop=0.31))
+f_fir = Unfold.firkernel(103.3,range(-0.1,step=0.01,stop=0.31))
+@test f_dur == f_fir
+
+# test duration for samples = 4
+f_dur = Unfold.kernel(firbase)([1,4])
+@test all(sum(f_dur,dims=1) .== 4)
 end
 @testset "BOLD" begin
 
