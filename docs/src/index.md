@@ -27,4 +27,4 @@ basisfunction = firbasis(τ=(-0.1,0.5),sfreq=100"))
 
 ## Cheat-Sheet
 
-![](https://github.com/unfoldtoolbox/Unfold.jl/tree/main/docs/assets/CheatSheetCurrent.png)
+![](https://github.com/ReneSkukies/unfold.jl/blob/main/docs/assets/CheatSheetCurrent.png)
