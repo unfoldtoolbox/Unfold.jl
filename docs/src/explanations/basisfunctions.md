@@ -1,7 +1,6 @@
 # Basis Functions
 ```@setup main
-using Plots; gr()
-Plots.reset_defaults();
+using CairoMakie
 ```
 
 This document provides you an explanation of basisfunctions. We start with fMRI because they are very popular.
@@ -18,7 +17,7 @@ TR = 1.5
 bold = hrfbasis(TR) # using default SPM parameters
 eventonset = 1.3
 bold_kernel = Unfold.kernel(bold)
-plot(bold_kernel(eventonset))
+plot(Matrix(bold_kernel(eventonset)))
 ```
 This is the shape that is assumed to reflect activity to an event. Generally, we would like to know how much to scale this response-shape per condition, e.g. in `condA` we might scale it by 0.7, in `condB` by 1.2.
 
@@ -62,7 +61,7 @@ using Unfold #hide
 
 basisfunction = firbasis(τ=(-0.4,.8),sfreq=50,name="myFIRbasis")
 fir_kernel = Unfold.kernel(basisfunction)
-plot(fir_kernel(0))
+plot(Matrix(fir_kernel(0)))
 ```
 
 First thing to notice, it is not one basisfunction, but a basisfunction set. Thus every condition will be explained by several basisfunctions!

@@ -1,7 +1,7 @@
 using Documenter
 using Unfold
 using DocStringExtensions
-using Plots
+
 using Literate
 using Glob
 
@@ -10,8 +10,6 @@ SOURCE_FILES = Glob.glob("*/*.jl", GENERATED)
 foreach(fn -> Literate.markdown(fn, GENERATED), SOURCE_FILES)
 
 
-gr() # plots - can be removed after updating basisfunction
-#unicodeplots()
 
 makedocs(sitename="Unfold.jl Timeseries Analysis & Deconvolution",
         #root = joinpath(dirname(pathof(Unfold)), "..", "docs"),
