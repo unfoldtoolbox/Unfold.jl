@@ -1,16 +1,23 @@
 
 include("test_utilities.jl")
+include("setup.jl")
+include("../src/circsplinepredictors.jl")
 
 data, evts = loadtestdata("test_case_3a") #
+#
 ##
-
+f_circspl = @formula 0 ~ 1 + conditionA + circspl(continuousA, 4, 0.1, 10) # 1
 f_spl = @formula 0 ~ 1 + conditionA + spl(continuousA, 4) # 1
 f = @formula 0 ~ 1 + conditionA + continuousA # 1
 data_r = reshape(data, (1, :))
 data_e, times = Unfold.epoch(data = data_r, tbl = evts, τ = (-1.0, 1.0), sfreq = 10) # cut the data into epochs
 
 m_mul = coeftable(fit(UnfoldModel, f, evts, data_e, times))
+# to experiment with circular splines. TODO: remove them once test cases got implemented
+#test_circspl = fit(UnfoldModel, f_circspl, evts, data_e, times)
+#test_spl = fit(UnfoldModel, f_spl, evts, data_e, times)
 m_mul_spl = coeftable(fit(UnfoldModel, f_spl, evts, data_e, times))
+#m_mul_circspl = coeftable(fit(UnfoldModel, f_circspl, evts, data_e, times))
 
 # asking for 4 splines should generate 4 splines 
 @test length(unique(m_mul_spl.coefname)) == 6 # XXX check back with Unfold whether this is the same! could be n-1 splines in Unfold. We should keep that comparable I guess

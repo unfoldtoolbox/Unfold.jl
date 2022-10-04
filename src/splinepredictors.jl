@@ -25,6 +25,7 @@ function genSplFunction(x, df)
     basis = BSplineBasis(4, breakpoints) # 4 = cubic
     return x -> splFunction(x, basis)
 end
+
 function splFunction(x, basis)
     df = length(basis)
     
@@ -32,7 +33,6 @@ function splFunction(x, basis)
 
     
     bs_eval = bsplines.(Ref(basis), x)
-    
     
     for k = 1:length(bs_eval)
         if isnothing(bs_eval[k]) 
@@ -48,7 +48,7 @@ end
 
 
 #spl(x,df) = Splines2.bs(x,df=df,intercept=true) # assumes intercept
-spl(x, df) = 1
+spl(x, df) = 1 
 
 # make a nice call if the function is called via REPL
 spl(t::Symbol, d::Int) = uf_bsplineTerm(term(t), term(d))

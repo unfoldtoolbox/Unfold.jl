@@ -5,6 +5,7 @@ version = "0.3.11"
 
 [deps]
 BSplines = "488c2830-172b-11e9-1591-253b8a7df96d"
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
 DSP = "717857b8-e6f2-59f4-9121-6e50c889abd2"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
