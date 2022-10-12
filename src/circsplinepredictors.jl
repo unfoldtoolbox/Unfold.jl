@@ -106,25 +106,25 @@ end
 const CIRCSPL_CONTEXT = Any
 
 # syntax: best practice to define a _new_ function
-circspl(x, df, ubound, lbound) = 1
+circspl(x, df, lbound, ubound) = 1
 
 # make a nice call if the function is called via REPL
-circspl(t::Symbol, d::Int, u::Int, l::Int) = uf_circsplineTerm(term(t), term(d), term(u), term(l))
+circspl(t::Symbol, d::Int, l::Int, u::Int) = uf_circsplineTerm(term(t), term(d), term(l), term(u))
 
 # struct for behavior
-mutable struct uf_circSplTerm{T,D,U,L} <: AbstractTerm
+mutable struct uf_circSplTerm{T,D,L,U} <: AbstractTerm
     term::T
     deg::D
-    ub::U
     lb::L
+    ub::U
     fun::Any # function handle
 end
 
-function uf_circSplineTerm(term, df, ub, lb)
-    uf_circSplTerm(term, df, ub, lb, nothing)
+function uf_circSplineTerm(term, df, lb, ub)
+    uf_circSplTerm(term, df, lb, ub, nothing)
 end
 
-Base.show(io::IO, p::uf_circSplTerm) = print(io, "circspl($(p.term), $(p.deg))")
+Base.show(io::IO, p::uf_circSplTerm) = print(io, "circspl($(p.term), $(p.deg), $(p.lb), $(p.ub))")
 
 # for `circspl` use at run-time (outside @formula), return a schema-less uf_circSplTerm
 #circspl(t::Symbol, d::Int, b::Vector{Int64}) = uf_circSplTerm(term(t), term(d), term(b))
@@ -149,18 +149,18 @@ function StatsModels.apply_schema(
         throw(ArgumentError("uf_circSplineTerm only works with continuous terms (got $term)"))
     isa(t.deg, ConstantTerm) ||
         throw(ArgumentError("uf_circSplineTerm df must be a number (got $t.deg)"))
-    isa(t.ub, ConstantTerm) ||
-        throw(ArgumentError("uf_circSplineTerm ub must be a number (got $t.ub)"))
     isa(t.lb, ConstantTerm) ||
         throw(ArgumentError("uf_circSplineTerm lb must be a number (got $t.lb)"))
+    isa(t.ub, ConstantTerm) ||
+        throw(ArgumentError("uf_circSplineTerm ub must be a number (got $t.ub)"))
     
-    uf_circSplineTerm(term, t.deg.n, t.ub.n, t.lb.n)
+    uf_circSplineTerm(term, t.deg.n, t.lb.n, t.ub.n)
 end
 
 function StatsModels.modelcols(p::uf_circSplTerm, d::NamedTuple)
     col = modelcols(p.term, d)
     if isnothing(p.fun)
-        p.fun = genCircSplFunction(col, p.deg, [p.ub, p.lb])#Splines2.bs_(col,df=p.df+1,intercept=true)
+        p.fun = genCircSplFunction(col, p.deg, [p.lb, p.ub])#Splines2.bs_(col,df=p.df+1,intercept=true)
     end
     #X = Splines2.bs(col, df=p.df+1,intercept=true)
     X = p.fun(col)
@@ -176,4 +176,5 @@ StatsModels.termvars(p::uf_circSplTerm) = StatsModels.termvars(p.term)
 # number of columns in the matrix this term produces
 # QUESTION: this has to be deg - 1 for circulat splines, no?
 StatsModels.width(p::uf_circSplTerm) = p.deg
+#StatsBase.coefnames(p::uf_circSplTerm) = "circspl(" .* coefnames(p.term) .* "," .* string.(1:p.deg) .* "," .* string.(p.lb) .* "," .* string.(p.ub) .* ")"
 StatsBase.coefnames(p::uf_circSplTerm) = coefnames(p.term) .* "^" .* string.(1:p.deg)
