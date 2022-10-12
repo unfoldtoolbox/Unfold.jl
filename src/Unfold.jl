@@ -47,6 +47,7 @@ include("condense.jl")
 include("solver.jl")
 include("predict.jl")
 include("splinepredictors.jl")
+include("circsplinepredictors.jl")
 include("effects.jl")
 include("clusterpermutation.jl")
 include("statistics.jl")
@@ -65,6 +66,7 @@ export coeftable
 export modelfit
 export predict
 export spl
+export circspl
 export cluster_permutation_test
 
 export likelihoodratiotest # statistics.jl
