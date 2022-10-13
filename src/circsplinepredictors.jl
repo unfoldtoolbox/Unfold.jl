@@ -9,10 +9,10 @@ using LinearAlgebra
 
 function genCircSplFunction(x, df, bounds)
     x = mapValues(x, bounds[1], bounds[2])
-    p = range(0.0, length = df - 1, stop = 1.0)
+    p = range(0.0, length = df + 2, stop = 1.0)
     knots = quantile(x, p)
     basis = genCircSplBasis(x, knots)
-    return x -> circSplFunction(x, basis, knots)
+    return y -> circSplFunction(mapValues(y,bounds[1],bounds[2]), basis, knots)
 end
 
 function mapValues(x, lowerBound, upperBound)
@@ -20,13 +20,16 @@ function mapValues(x, lowerBound, upperBound)
         error("the lower bound has to be smaller than the upper bound.")
     end
 
-    for (index, value) in enumerate(x)
-        if value > upperBound
-            x[index] = lowerBound + (value - upperBound)
-        elseif value < lowerBound
-            x[index] = upperBound - (lowerBound - value)
-        end
-    end
+
+    x[x .> upperBound] .= lowerBound .+ (x[x .> upperBound] .- upperBound) .% (upperBound - lowerBound)
+    x[x .< lowerBound] .= upperBound .- (lowerBound .- x[x .< lowerBound]) .% (upperBound - lowerBound)
+    #for (index, value) in enumerate(x)
+    #    if value > upperBound
+    #        x[index] = lowerBound + (value - upperBound)
+    #    elseif value < lowerBound
+    #        x[index] = upperBound - (lowerBound - value)
+    #    end
+    #end
     return x
 end
 
