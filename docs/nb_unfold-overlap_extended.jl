@@ -16,13 +16,12 @@ end
 # ╔═╡ 65edde2e-d03e-11eb-300b-897bdc66d875
 begin
 import Pkg;
-	Pkg.activate(".")
+Pkg.activate(mktempdir())
 	Pkg.add(url="https://github.com/unfoldtoolbox/Unfold.jl")
 	Pkg.add("PlutoUI")
 	Pkg.add("StatsPlots")
 	Pkg.add("DataFrames")
 	Pkg.add("StatsModels")
-	Pkg.add("SignalAnalysis")
 	Pkg.add("DSP")
 end
 
@@ -31,7 +30,7 @@ let
 	using Revise
 	using Unfold
 	using StatsModels,PlutoUI,StatsPlots,DataFrames,Random
-	using SignalAnalysis,DSP
+	using DSP
 end
 
 # ╔═╡ bec07615-8ca3-4251-9e44-bf5044828274
