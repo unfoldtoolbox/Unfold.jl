@@ -23,7 +23,7 @@ jobs:
       matrix:
         julia-version: [1] # 1 without specifier uses the current release
         julia-arch: [x64]
-        os: [ubuntu-18.04]
+        os: [ubuntu-latest]
     steps:
       - uses: actions/checkout@v2
       - run: pwd
