@@ -11,7 +11,7 @@ data_r = vcat(data_r, data_r)#add second channel
 #--------------------------#
 data_e, times = Unfold.epoch(data = data_r, tbl = evts, τ = (-1.0, 1.9), sfreq = 20) # cut the data into epochs
 
-# test manual pathway
+@testset "test manual pathway" begin
 uf = UnfoldLinearModel(Dict(Any => (f, times)))
 designmatrix!(uf, evts; eventcolumn = "type")
 fit!(uf, data_e)
@@ -20,14 +20,10 @@ fit!(uf, data_e)
 @test typeof(uf.modelfit) == Unfold.LinearModelFit
 @test !isempty(coef(uf.modelfit))
 
-
-# test "automatic", non-dictionary call
-m_mul = coeftable(fit(UnfoldLinearModel, f, evts, data_e, times))
-
-@test m_mul[(m_mul.channel.==1).&(m_mul.time.==0.1), :estimate] ≈ [2, 3, 4]
+end
 
 
-# test Autodetection
+@testset "test Autodetection" begin
 @test Unfold.designToModeltype(Dict(Any => (@formula(0 ~ 1), 0:10))) == UnfoldLinearModel
 @test Unfold.designToModeltype(Dict(Any => (@formula(0 ~ 1 + A), 0:10))) ==
       UnfoldLinearModel
@@ -45,7 +41,13 @@ m_mul = coeftable(fit(UnfoldLinearModel, f, evts, data_e, times))
     ),
 ) == UnfoldLinearMixedModelContinuousTime
 
+end
 
+@testset "automatic, non-dictionary call" begin
+    m_mul = coeftable(fit(UnfoldLinearModel, f, evts, data_e, times))
+    
+    @test m_mul[(m_mul.channel.==1).&(m_mul.time.==0.1), :estimate] ≈ [2, 3, 4]
+    
 data_e_noreshape, times = Unfold.epoch(data = data, tbl = evts, τ = (-1.0, 1.9), sfreq = 20) # cut the data into epochs
 m_mul_noreshape = coeftable(fit(UnfoldLinearModel, f, evts, data_e_noreshape, times))
 
@@ -77,11 +79,13 @@ ix = findall(m_mul_rob.time .≈ 0.5)
 @test all(m_mul_rob.estimate .≈ m_mul.estimate)
 
 m_mul_outlier = coeftable(Unfold.fit(UnfoldModel, f, evts, data_outlier, times))
-
+end
 #---------------------------------#
 ## Timexpanded Univariate Linear ##
 #---------------------------------#
 basisfunction = firbasis(τ = (-1, 1), sfreq = 20, name = "basisA")
+@testset "timeexpanded uivariate linear" begin
+      
 m_tul = coeftable(fit(UnfoldModel, f, evts, data_r, basisfunction))
 
 @test isapprox(
@@ -142,8 +146,9 @@ tmp = coeftable(uf)
 # test fast way & slow way to be identical
 @test all(tmp.estimate .== res.estimate)
 
-
-
+end
+@testset "runtime tests" begin
+    
 # runntime tests - does something explode?
 for k = 1:4
     local f
@@ -160,8 +165,16 @@ for k = 1:4
     fit(UnfoldModel, f, evts, data_e, times)
     fit(UnfoldModel, f, evts, data, basisfunction)
 end
+end
 
-# Special solver solver_lsmr_se with Standard Error
+@testset "automatic, non-dictionary call" begin
+m_mul = coeftable(fit(UnfoldLinearModel, f, evts, data_e, times))
+
+@test m_mul[(m_mul.channel.==1).&(m_mul.time.==0.1), :estimate] ≈ [2, 3, 4]
+end
+
+
+@testset "Special solver solver_lsmr_se with Standard Error" begin
 se_solver = solver = (x, y) -> Unfold.solver_default(x, y, stderror = true)
 m_tul_se = coeftable(fit(UnfoldModel, f, evts, data_r, basisfunction, solver = se_solver))
 @test all(m_tul_se.estimate .== m_tul.estimate)
@@ -172,7 +185,9 @@ m_tul_se = coeftable(fit(UnfoldModel, f, evts, data_r, basisfunction, solver = s
 #m_tul_se,m_tul_se = fit(UnfoldLinearModel,f,evts,data_r.+randn(size(data_r)).*5,basisfunction,solver=se_solver)
 #plot(m_tul_se[m_tul_se.channel.==1,:],se=true)
 
-##
+end
+
+@testset "long data" begin
 data_long, evts_long = loadtestdata("test_case_1c") #
 data_long = reshape(data_long, (1, :))
 
@@ -195,7 +210,10 @@ basisfunction_long = firbasis(τ = (-1, 1), sfreq = 1000, name = "basisA")
 # new version 7s-10s, dataset4, sfreq=1000, 1200stim,
 # ~13s, test_case_1c, sfreq = 1000, 6000 events
 
+end
 
+
+@testset "lmm tests" begin
 ###############################
 ##  Mixed Model tests
 ###############################
@@ -288,6 +306,7 @@ Test.@test_broken m_tum = fit(
     contrasts = Dict(:condA => EffectsCoding(), :condB => EffectsCoding()),
 )
 
+
 evts.subjectB = evts.subject;
 evts1 = evts[evts.condA.==0, :]
 evts2 = evts[evts.condA.==1, :]
@@ -326,7 +345,7 @@ m = coeftable(
     ),
 )
 
-
+end
 if 1 == 0
     using WGLMakie, AlgebraOfGraphics
     m = mapping(
