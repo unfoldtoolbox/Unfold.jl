@@ -24,22 +24,22 @@ f = @formula 0 ~ 1+conditionA*continuousA # 1
 m = fit(UnfoldModel, Dict(Any=>(f,basisfunction)), evts, data,eventcolumn="type")
 
 # Plot the results
-plot_results(coeftable(m))
+plot_erp(coeftable(m))
 
 # As expected, we get four lines - the interaction is flat, the slope of the continuous is around 4, the categorical effect is at 3 and the intercept at 0 (everything is dummy coded by default)
 # ### Effects
 # A convenience function is [effects](@ref). It allows to specify effects on specific levels, while setting non-specified ones to a typical value (usually the mean)
 
 eff = effects(Dict(:conditionA => ["off","on"]),m)
-plot_results(eff;color=:conditionA)
+plot_erp(eff;setMappingValues=(:color=>:conditionA,))
 
 # We can also generate continuous predictions
-eff = effects(Dict(:continuousA => -1:0.1:1),m)
-plot_results(eff;color=:continuousA)
+eff = effects(Dict(:continuousA => -0.5:0.05:1),m)
+plot_erp(eff;setMappingValues=(:color=>:continuousA,),setExtraValues=(categoricalColor=false,categoricalGroup=false))
 
 # or split it up by condition
-eff = effects(Dict(:conditionA=>["off","on"],:continuousA => -1:0.1:1),m)
-plot_results(eff;color=:continuousA,col=:conditionA)
+eff = effects(Dict(:conditionA=>["off","on"],:continuousA => -1:.5:1),m)
+plot_erp(eff;setMappingValues=(:color=>:conditionA,:col=>:continuousA=>nonnumeric))
 
 # ## What is typical anyway?
 # The user can specify the typical function applied to the covariates/factors that are marginalized over. This offers even greater flexibility.
@@ -49,4 +49,4 @@ eff_max.typical .= :maximum
 eff = effects(Dict(:conditionA=>["off","on"]),m)
 eff.typical .= :mean # mean is the default
 
-plot_results(vcat(eff,eff_max);color=:conditionA,col=:typical)
+plot_erp(vcat(eff,eff_max);color=:conditionA,col=:typical)
