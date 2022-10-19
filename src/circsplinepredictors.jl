@@ -4,7 +4,6 @@ import Statistics.quantile
 #import Splines2.bs
 import Base.show
 using Random
-using BSplines
 using LinearAlgebra
 
 function genCircSplFunction(x, df, bounds)
