@@ -1,5 +1,5 @@
 import Effects: effects
-import Effects:expand_grid
+import Effects:_reference_grid
 import Effects:typify
 import Effects.typify
 import Effects:_symequal
@@ -27,7 +27,12 @@ Calculates marginal effects for all term-combinations in `design`.
 
 
 function effects(design::AbstractDict, model::UnfoldModel;typical=mean)
-    reference_grid = expand_grid(design)
+    error("correct function")
+    throw("correct funtion")
+    println("correct function")
+    sqrt(-1)
+
+    reference_grid = _reference_grid(design)
     form = Unfold.formula(model) # get formula
 
     # replace non-specified fields with "constants"
@@ -161,6 +166,12 @@ Effects._trmequal(t1::Unfold.BSplineTerm,t2::Unfold.BSplineTerm) = _symequal(t1.
 
 Effects._trmequal(t1::AbstractTerm,t2::Unfold.BSplineTerm) = _symequal(t1,t2.term)
 Effects._symequal(t1::AbstractTerm,t2::Unfold.BSplineTerm) = _symequal(t1,t2.term)
+
+Effects._trmequal(t1::Unfold.uf_circSplTerm,t2::AbstractTerm) = _symequal(t1.term,t2)
+Effects._trmequal(t1::Unfold.uf_circSplTerm,t2::Unfold.uf_circSplTerm) = _symequal(t1.term,t2.term)
+
+Effects._trmequal(t1::AbstractTerm,t2::Unfold.uf_circSplTerm) = _symequal(t1,t2.term)
+Effects._symequal(t1::AbstractTerm,t2::Unfold.uf_circSplTerm) = _symequal(t1,t2.term)
 #Effects._symequal(t1::AbstractTerm,t2::Unfold.TimeExpandedTerm) = _symequal(t1,t2.term)
 #function Effects._replace(matrix_term::MatrixTerm{<:Tuple{<:Unfold.TimeExpandedTerm}},typicals::Dict)
     
