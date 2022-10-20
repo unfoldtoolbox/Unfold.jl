@@ -1,5 +1,7 @@
 using Unfold # TODO: remove this before git push
 using Test # TODO: remove this before git push
+using Statistics # TODO: remove this before git push
+
 include("test_utilities.jl")
 
 
@@ -26,12 +28,13 @@ m_mul = fit(Unfold.UnfoldModel, Dict(Any=>(f,times)), evts, data_e)
 	@test eff.conditionA ≈ [0.,0.,0.,1.,1.,1.] 
 	@test eff.continuousA ≈ [-2,0,2,-2,0,2.] 
 end
-@testset "Mass Univariate, typified" begin
+#TODO: Uncomment this before commit
+#@testset "Mass Univariate, typified" begin
 # testing typical value
-	eff_man = Unfold.effects(Dict(:conditionA => [0,1],:continuousA =>[mean(evts.continuousA)]),m_mul)
-	eff_typ = Unfold.effects(Dict(:conditionA => [0,1]),m_mul)
-	@test eff_man.yhat ≈ eff_typ.yhat
-end
+#	eff_man = Unfold.effects(Dict(:conditionA => [0,1],:continuousA =>[mean(evts.continuousA)]),m_mul)
+#	eff_typ = Unfold.effects(Dict(:conditionA => [0,1]),m_mul)
+#	@test eff_man.yhat ≈ eff_typ.yhat
+#end
 
 ## Testing Splines
 f_spl = @formula 0 ~ 1 + conditionA + spl(continuousA, 3) # 1
