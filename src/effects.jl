@@ -27,11 +27,6 @@ Calculates marginal effects for all term-combinations in `design`.
 
 
 function effects(design::AbstractDict, model::UnfoldModel;typical=mean)
-    error("correct function")
-    throw("correct funtion")
-    println("correct function")
-    sqrt(-1)
-
     reference_grid = _reference_grid(design)
     form = Unfold.formula(model) # get formula
 
