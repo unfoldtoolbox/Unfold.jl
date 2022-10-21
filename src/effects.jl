@@ -1,5 +1,5 @@
 import Effects: effects
-import Effects:_reference_grid
+import Effects:expand_grid
 import Effects:typify
 import Effects.typify
 import Effects:_symequal
@@ -9,12 +9,9 @@ using Effects
 
 """
 effects(design::AbstractDict, model::UnfoldModel;typical=mean)
-
 Calculates marginal effects for all term-combinations in `design`.
-
  Implementation based on Effects Package; likely could repackage in UnfoldEffects; somebody wants to do it? This would make it easier to cross-maintain it to changes/bugfixes in the Effects.jl Package
  `design` is a Dictionary containing those predictors (als keys) with levels (as values), that you want to evaluate. The `typical` refers to the value, that other predictors not in the Dictionary should take on.
-
  # Example
  ```julia-repl
  julia> f = @formula 0 ~ categoricalA + continuousA + continuousB
@@ -27,7 +24,7 @@ Calculates marginal effects for all term-combinations in `design`.
 
 
 function effects(design::AbstractDict, model::UnfoldModel;typical=mean)
-    reference_grid = _reference_grid(design)
+    reference_grid = expand_grid(design)
     form = Unfold.formula(model) # get formula
 
     # replace non-specified fields with "constants"
@@ -54,7 +51,7 @@ function effects(design::AbstractDict, model::UnfoldModel;typical=mean)
         result = DataFrame(cast_referenceGrid(reference_grid,eff,times(model)[1] ))
     end
     
-    return result   
+return result   
 end
  
  Effects.typify(reference_grid,form::Matrix,X;kwargs...) = typify.(Ref(reference_grid),form,Ref(X);kwargs...)
@@ -167,6 +164,7 @@ Effects._trmequal(t1::uf_circSplTerm,t2::uf_circSplTerm) = _symequal(t1.term,t2.
 
 Effects._trmequal(t1::AbstractTerm,t2::uf_circSplTerm) = _symequal(t1,t2.term)
 Effects._symequal(t1::AbstractTerm,t2::uf_circSplTerm) = _symequal(t1,t2.term)
+
 #Effects._symequal(t1::AbstractTerm,t2::Unfold.TimeExpandedTerm) = _symequal(t1,t2.term)
 #function Effects._replace(matrix_term::MatrixTerm{<:Tuple{<:Unfold.TimeExpandedTerm}},typicals::Dict)
     
