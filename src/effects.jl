@@ -30,7 +30,9 @@ function effects(design::AbstractDict, model::UnfoldModel;typical=mean)
     # replace non-specified fields with "constants"
     m = modelmatrix(model,false) # get the modelmatrix without timeexpansion
     form_typical = _typify(reference_grid,form,m,typical)
-
+    @show reference_grid
+    @show m
+    @show form_typical
     eff = yhat(model,form_typical,reference_grid)
 
     # because coefficients are 2D/3D arry, we have to cast it correctly to one big dataframe
