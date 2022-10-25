@@ -10,8 +10,8 @@ function genCircSplFunction(x, df, bounds)
     x = mapValues(x, bounds[1], bounds[2])
     p = range(0.0, length = df + 2, stop = 1.0)
     knots = quantile(x, p)
-    basis = genCircSplBasis(x, knots)
-    return y -> circSplFunction(mapValues(y,bounds[1],bounds[2]), basis, knots)
+    #basis = genCircSplBasis(x, knots)
+    return y -> circSplFunction(mapValues(y,bounds[1],bounds[2])|>x->(genCircSplBasis(x,knots)), knots)
 end
 
 function mapValues(x, lowerBound, upperBound)
@@ -69,7 +69,7 @@ function findknotslowerbounds(x, knots)
     return lb
 end
 
-function circSplFunction(x, basis, knots)
+function circSplFunction(basis, knots)
     n = length(knots) - 1
     j1 = basis["j"] .+ 1
     j1[j1 .== n+1] .= 1
