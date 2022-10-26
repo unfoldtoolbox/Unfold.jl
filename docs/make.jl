@@ -1,13 +1,17 @@
 using Documenter
 using Unfold
+using AlgebraOfGraphics # can be removed with UnfoldMakie 0.3.0
 using DocStringExtensions
 
 using Literate
 using Glob
 
 GENERATED = joinpath(@__DIR__, "src", "_literate")
-SOURCE_FILES = Glob.glob("*/*.jl", GENERATED)
-foreach(fn -> Literate.markdown(fn, GENERATED), SOURCE_FILES)
+for subfolder ∈ ["explanations","HowTo","tutorials"]
+    SOURCE_FILES = Glob.glob(subfolder*"/*.jl", GENERATED)
+    foreach(fn -> Literate.markdown(fn, GENERATED*"/"*subfolder), SOURCE_FILES)
+
+end
 
 
 
@@ -27,14 +31,14 @@ makedocs(sitename="Unfold.jl Timeseries Analysis & Deconvolution",
 		            "Overlap: Different events"=>"HowTo/multiple_events.md",
                     "Load Existing Dataset with PyMNE.jl"=>"HowTo/pymne.md" ,
                     "Custom Solvers / StandardErrors / B2B"=>"HowTo/custom_solvers.md",
-                    "Unfold.jl directly from Python" => "_literate/pyjulia_unfold.md",
+                    "Unfold.jl directly from Python" => "_literate/HowTo/pyjulia_unfold.md",
                     "P-values in Mass Univariate MixedModels" => "HowTo/lmm_pvalues.md",
-		    "marginal effects (what to do with non-linear predictors)" =>"_literate/effects.md",
-		    "Time Basis Functions"=>"_literate/timesplines.md",
+		            "marginal effects (what to do with non-linear predictors)" =>"_literate/HowTo/effects.md",
+		            "Time Basis Functions"=>"_literate/HowTo/timesplines.md",
                       ],
             "Explanations"=>[
-		"Temporal Basisfunctions" => "./explanations/basisfunctions.md",
-		"Non-Linear Effects" => "./_literate/nonlinear_effects.md",],
+		            "Temporal Basisfunctions" => "./explanations/basisfunctions.md",
+		            "Non-Linear Effects" => "./_literate/explanations/nonlinear_effects.md",],
             "Reference"=>["Types" => "references/types.md",
             "Functions" => "references/functions.md"],
             

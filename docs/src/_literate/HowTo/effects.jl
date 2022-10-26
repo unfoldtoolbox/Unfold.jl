@@ -10,6 +10,7 @@ using Random
 using CSV
 using UnfoldMakie
 
+
 # # Setup things
 # Let's load some data and fit a model of a 2-level categorical and a continuous predictor with interaction.
 include(joinpath(dirname(pathof(Unfold)), "../test/test_utilities.jl") ) # to load data
@@ -49,4 +50,4 @@ eff_max.typical .= :maximum
 eff = effects(Dict(:conditionA=>["off","on"]),m)
 eff.typical .= :mean # mean is the default
 
-plot_erp(vcat(eff,eff_max);color=:conditionA,col=:typical)
+plot_erp(vcat(eff,eff_max);setMappingValues=(;color=:conditionA,col=:typical))

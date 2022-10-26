@@ -59,14 +59,14 @@ f  = @formula 0~1+condA*condB+zerocorr(1+condA*condB|subject);
 ```@example Main
 bfDict = Dict(Any=>(f,basisfunction))
 # for some reason this results in a big error. Skipping this tutorial right now
-m = fit(UnfoldModel,bfDict,evts,dat) 
-results = coeftable(m)
-first(results,6)
+#m = fit(UnfoldModel,bfDict,evts,dat) 
+#results = coeftable(m)
+#first(results,6)
 ```
 
 
 #### 4. Visualize results
 
 ```@example Main
-plot_erp(results;setMappingValues(;col=:group))
+#plot_erp(results;setMappingValues=(;col=:group))
 ```
