@@ -61,5 +61,5 @@ m_mul_spl_many = coeftable(fit(UnfoldModel, f_spl_many, evts, data_e, times))
 ## some circular test_spl
 m = fit(UnfoldModel, f_circspl, evts, data_e, times)
 f_evaluated = Unfold.formula(m)
-@test size(f_evaluated.rhs.term[3].fun([1])) == (1,5)
-@test size(modelcols(form.rhs.terms[3],DataFrame(conditionA=[0],continuousA=[1]))) == (1,4)
+@test size(f_evaluated.rhs.terms[3].fun([1])) == (1,5)
+@test size(modelcols(f_evaluated.rhs.terms[3],DataFrame(conditionA=[0],continuousA=[1]))) == (1,4)
