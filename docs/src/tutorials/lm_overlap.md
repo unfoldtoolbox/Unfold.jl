@@ -74,7 +74,7 @@ nothing #hide
 Similarly to the previous tutorial, we can visualize the model
 ```@example Main
 results = coeftable(m)
-plot_results(results)
+plot_erp(results)
 ```
 Cool! All overlapping activity has been removed and we recovered the simulated underlying signal.
 

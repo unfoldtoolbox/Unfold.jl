@@ -79,7 +79,7 @@ Let's start with the **fixed** Effects
 results = coeftable(m)
 
 res_fixef = results[isnothing.(results.group),:]
-plot_results(res_fixef)
+plot_erp(res_fixef)
 ```
 
 
@@ -89,7 +89,7 @@ We see the condition effects and some residual overlap activity in the fixed eff
 And now the **random** effect results
 ```@example Main
 res_ranef = results[results.group.==:subject,:]
-plot_results(res_ranef)
+plot_erp(res_ranef)
 ```
 
 
