@@ -45,7 +45,14 @@ m_mul = coeftable(fit(UnfoldLinearModel, f, evts, data_e, times))
     ),
 ) == UnfoldLinearMixedModelContinuousTime
 
+@testset "Bad Input" begin
+    # check that if UnfoldLinearModel or UnfoldLinearModelContinuousTime is defined, that the design is appropriate
+    basisfunction = firbasis(τ = (-1, 1), sfreq = 20, name = "basisA")
+    @test_throws "InputError" fit(UnfoldLinearModel,Dict(Any => (@formula(0 ~ 1),basisfunction)),evts,data_r)
+    @test_throws "MethodError" fit(UnfoldLinearModel,Dict(Any => (@formula(0 ~ 1),basisfunction)),evts,data_e)
+    @test_throws "InputError" fit(UnfoldLinearModelContinuousTime,Dict(Any => (@formula(0 ~ 1),0:0.1:1)),evts,data_r)
 
+end
 data_e_noreshape, times = Unfold.epoch(data = data, tbl = evts, τ = (-1.0, 1.9), sfreq = 20) # cut the data into epochs
 m_mul_noreshape = coeftable(fit(UnfoldLinearModel, f, evts, data_e_noreshape, times))
 
