@@ -17,7 +17,7 @@ TR = 1.5
 bold = hrfbasis(TR) # using default SPM parameters
 eventonset = 1.3
 bold_kernel = Unfold.kernel(bold)
-plot(Matrix(bold_kernel(eventonset)))
+lines(bold_kernel(eventonset)[:,1]) # (returns a matrix, thus [:,1])
 ```
 This is the shape that is assumed to reflect activity to an event. Generally, we would like to know how much to scale this response-shape per condition, e.g. in `condA` we might scale it by 0.7, in `condB` by 1.2.
 
@@ -31,7 +31,7 @@ y[[10,30,45]] .=0.7 # 3 events at given for condition A
 y[[37]] .=1.2 # 1 events at given for condition B
 
 y_conv = conv(y,bold_kernel(0)) # convolve!
-plot(y_conv) 
+lines(y_conv[:,1])
 ```
 
 Next we would add some noise
@@ -39,7 +39,7 @@ Next we would add some noise
 ```@example main
 using Random
 y_conv += randn(size(y_conv))
-plot(y_conv)
+lines(y_conv[:,1])
 ```
 🎉 - we did it, we simulated fMRI data.
 
@@ -61,7 +61,13 @@ using Unfold #hide
 
 basisfunction = firbasis(τ=(-0.4,.8),sfreq=50,name="myFIRbasis")
 fir_kernel = Unfold.kernel(basisfunction)
-plot(Matrix(fir_kernel(0)))
+m = fir_kernel(0)
+f = Figure()
+f[1,1] = Axis(f)
+for col = 1:size(m,2)
+    lines!(m[:,col])
+end
+current_figure()
 ```
 
 First thing to notice, it is not one basisfunction, but a basisfunction set. Thus every condition will be explained by several basisfunctions!
