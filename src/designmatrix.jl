@@ -48,7 +48,7 @@ StatsModels.terms(t::TimeExpandedTerm) = terms(t.term)
 
 function Base.show(io::IO, p::TimeExpandedTerm)
     #print(io, "timeexpand($(p.term), $(p.basisfunction.type),$(p.basisfunction.times))")
-    println(io, "$(coefnames(p))")
+    tprint(io, "$(coefnames(p))")
 end
 
 

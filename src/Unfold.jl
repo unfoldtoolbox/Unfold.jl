@@ -19,8 +19,11 @@ using StatsModels
 using StaticArrays # for MixedModels extraction of parametrs (inherited from MixedModels.jl, not strictly needed )
 using ProgressMeter
 using DocStringExtensions # for Docu
+using Term # beautiful output
+
 using MLBase # for crossVal
 using BSplines # for spline predictors
+using OrderedCollections # for Base.Show
 
 using RobustModels # for robust modelling
 #using CategoricalArrays
@@ -31,6 +34,8 @@ import StatsBase: coefnames
 import StatsBase: modelmatrix
 import StatsModels: width
 import StatsModels: terms
+
+import Term: Tree  # to display Dicts
 
 import MixedModels.likelihoodratiotest
 

@@ -75,16 +75,24 @@ end
 
 
 function Base.show(io::IO, obj::BasisFunction)
-    println(io, "name: $(name(obj))")
-    println(io, "collabel: $(collabel(obj))")
-    println(io, "colnames: $(colnames(obj))")
-    println(io, "kerneltype: $(typeof(obj))")
-    println(io, "times: $(times(obj))")
-    println(io, "shiftOnset: $(shiftOnset(obj))")
+    print(io,renderable(Term("none"),obj))
+    #println(io, "name: $(name(obj))")
+    #println(io, "collabel: $(collabel(obj))")
+    #println(io, "colnames: $(colnames(obj))")
+    #println(io, "kerneltype: $(typeof(obj))")
+    #println(io, "times: $(times(obj))")
+    #println(io, "shiftOnset: $(shiftOnset(obj))")
 end
 
-
-
+function renderable(form::FormulaTerm,obj::BasisFunction;title="::BasisFunction")
+    OrderedDict(:formula=>form,
+    :name=>name(obj),
+    :collabel=>collabel(obj),
+    :colnames=>colnames(obj),
+    :kerneltype=>typeof(obj),
+    :times=>times(obj),
+    :shiftOnset=>shiftOnset(obj)) |>x->Tree(x;title=title)
+end
 
 """
 $(SIGNATURES)
