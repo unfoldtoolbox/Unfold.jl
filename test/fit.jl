@@ -46,7 +46,7 @@ end
         # check that if UnfoldLinearModel or UnfoldLinearModelContinuousTime is defined, that the design is appropriate
         basisfunction = firbasis(τ = (-1, 1), sfreq = 20, name = "basisA")
         @test_throws "InputError" fit(UnfoldLinearModel,Dict(Any => (@formula(0 ~ 1),basisfunction)),evts,data_r)
-        @test_throws "MethodError" fit(UnfoldLinearModel,Dict(Any => (@formula(0 ~ 1),basisfunction)),evts,data_e)
+        @test_throws "InputError" fit(UnfoldLinearModel,Dict(Any => (@formula(0 ~ 1),basisfunction)),evts,data_e)
         @test_throws "InputError" fit(UnfoldLinearModelContinuousTime,Dict(Any => (@formula(0 ~ 1),0:0.1:1)),evts,data_r)
 
     end
