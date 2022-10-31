@@ -69,7 +69,7 @@ end
     @test size(m_mul_noreshape)[1] == size(m_mul)[1] / 2
 
     # Add Missing in Data
-    data_e_missing = data_e
+    data_e_missing = deepcopy(data_e)
     data_e_missing[1, 25, end-5:end] .= missing
     m_mul_missing = coeftable(Unfold.fit(UnfoldLinearModel, f, evts, data_e_missing, times))
 
@@ -97,7 +97,7 @@ end
 #---------------------------------#
 basisfunction = firbasis(τ = (-1, 1), sfreq = 20, name = "basisA")
 
-@testset "timeexpanded uivariate linear" begin
+@testset "timeexpanded univariate linear+missings" begin
         
     m_tul = coeftable(fit(UnfoldModel, f, evts, data_r, basisfunction))
 
@@ -113,7 +113,7 @@ basisfunction = firbasis(τ = (-1, 1), sfreq = 20, name = "basisA")
 
     # Test under missing data
     data_missing = Array{Union{Missing,Number}}(undef, size(data_r))
-    data_missing .= data_r
+    data_missing .= deepcopy(data_r)
     data_missing[4500:4600] .= missing
 
     m_tul_missing = coeftable(fit(UnfoldModel, f, evts, data_missing, basisfunction))
@@ -152,7 +152,7 @@ basisfunction = firbasis(τ = (-1, 1), sfreq = 20, name = "basisA")
         filter(x -> (x.conditionA == 1), evts),
         b2,
     )
-    uf = UnfoldLinearModelContinuousTime(Dict(), X1 + X2, [])
+    uf = UnfoldLinearModelContinuousTime(Dict(0 => (f1, b1), 1 => (f2, b2)), X1 + X2, [])
     @time fit!(uf, data_r)
     tmp = coeftable(uf)
 
@@ -190,7 +190,8 @@ end
 
 @testset "Special solver solver_lsmr_se with Standard Error" begin
     se_solver = solver = (x, y) -> Unfold.solver_default(x, y, stderror = true)
-    m_tul_se = coeftable(fit(UnfoldModel, f, evts, data_r, basisfunction, solver = se_solver))
+    m_tul_se = coeftable(fit(UnfoldModel, f, evts, data_r, basisfunction, solver = se_solver)) #with
+    m_tul = coeftable(fit(UnfoldModel, f, evts, data_r, basisfunction)) #without
     @test all(m_tul_se.estimate .== m_tul.estimate)
     @test !all(isnothing.(m_tul_se.stderror))
 
@@ -237,7 +238,7 @@ end
     data = vcat(data, data)
     data = data .+ 1 * randn(size(data)) # we have to add minimal noise, else mixed models crashes.
     data_missing = Array{Union{Missing,Number}}(undef, size(data))
-    data_missing .= data
+    data_missing .= deepcopy(data)
 
     data_missing[4500:4600] .= missing
 
@@ -273,6 +274,7 @@ end
         rtol = 0.1,
     )
 
+    
     # with missing
     @time m_mum = fit(
         UnfoldModel,
