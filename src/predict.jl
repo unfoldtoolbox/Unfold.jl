@@ -50,11 +50,7 @@ function StatsBase.predict(model::UnfoldModel, events)
         
                 # couldn't figure out how to broadcast everything directly (i.e out[fstart:fend,names(newevents)] .= newevents[i,:])
                 # copy the correct metadata
-                @show fstart
-                @show fend
-                @show size(metaData)
-                @show size(newevents)
-
+                
                 for j = fstart:fend
                     metaData[j+shift, names(newevents)] = newevents[i, :]
                 end
@@ -74,8 +70,6 @@ function StatsBase.predict(model::UnfoldModel, events)
     nchannel = size(eff, 2)
 
     out.channel = repeat(1:nchannel, inner = size(eff, 1))
-@show size(out)
-@show size(metaData)
     out = hcat(out, repeat(metaData, nchannel))
     return out
 end
@@ -144,18 +138,16 @@ function yhat(model::UnfoldLinearModelContinuousTime,formulas,events)#::Abstract
         # because in "predict" we define where samples onset, we can remove the last sample, it s always 0 anyway, but to be sure we test it
         #@show "here"
         if typeof(f.basisfunction) <: FIRBasis
-            @show "fir detected"
+            
             keep = ones(size(Xsingle,1))
             keep[range(length(timesSingle), size(Xsingle,1),step=length(timesSingle))] .= 0
-            @show size(keep)
-            @show size(Xsingle)
             Xsingle = Xsingle[keep.==1, :]
             timesSingle = timesSingle[1:end-1]
             n_range = n_range-1
         end
         # combine designmats
         append!(X, [Xsingle])
-        @show n_range
+        
         # keep track of how long each event is
         append!(fromTo, [range(1, step = n_range, length = size(events, 1))])
         # keep track of the times
