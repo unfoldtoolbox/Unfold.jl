@@ -19,7 +19,7 @@ using StatsModels
 using StaticArrays # for MixedModels extraction of parametrs (inherited from MixedModels.jl, not strictly needed )
 using ProgressMeter
 using DocStringExtensions # for Docu
-using Term # beautiful output
+using Term
 
 using MLBase # for crossVal
 using BSplines # for spline predictors
@@ -35,6 +35,7 @@ import StatsBase: modelmatrix
 import StatsModels: width
 import StatsModels: terms
 
+import Term: vstack
 import Term: Tree  # to display Dicts
 
 import MixedModels.likelihoodratiotest

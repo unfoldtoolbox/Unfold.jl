@@ -73,9 +73,18 @@ end
 
 
 
+function Base.show(io::IO, ::MIME"text/plain", obj::BasisFunction)
+    #tprint(io,renderable("none",obj))
+    println(io, "Basisfunction: $(name(obj))")
+    println(io, "collabel: $(collabel(obj))")
+    println(io, "colnames: $(colnames(obj))")
+    println(io, "kerneltype: $(typeof(obj))")
+    println(io, "times: $(times(obj))")
+    println(io, "shiftOnset: $(shiftOnset(obj))")
+end
 
 function Base.show(io::IO, obj::BasisFunction)
-    print(io,renderable(Term("none"),obj))
+    print(io,renderable("none",obj))
     #println(io, "name: $(name(obj))")
     #println(io, "collabel: $(collabel(obj))")
     #println(io, "colnames: $(colnames(obj))")
@@ -84,7 +93,7 @@ function Base.show(io::IO, obj::BasisFunction)
     #println(io, "shiftOnset: $(shiftOnset(obj))")
 end
 
-function renderable(form::FormulaTerm,obj::BasisFunction;title="::BasisFunction")
+function renderable(form,obj::BasisFunction;title="::BasisFunction")
     OrderedDict(:formula=>form,
     :name=>name(obj),
     :collabel=>collabel(obj),

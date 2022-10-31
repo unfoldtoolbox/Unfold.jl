@@ -77,17 +77,30 @@ end
 LinearModelFit(estimate) = LinearModelFit(estimate, [], [])
 LinearModelFit(estimate, info) = LinearModelFit(estimate, info, [])
 
+function Base.show(io::IO, ::MIME"text/plain", obj::UnfoldModel)
+    println(io, "Unfold-Type: $(typeof(obj)) \n")
+    println(io, "Design: $(design(obj))")
+
+    println(
+        io,
+        "Useful functions:\n 
+    `design(uf)` \t\t\t(returns Dict of event => (formula,times/basis))  \n
+    `designmatrix(uf)` \t\t(returns DesignMatrix with events) \n
+    `modelfit(uf)` \t\t(returns modelfit object) \n
+    `coeftable(uf)` \t\t(returns tidy result dataframe) \n",
+    )
+end
 function Base.show(io::IO, obj::UnfoldModel)
     println(io, "Unfold-Type: $(typeof(obj)) \n")
-    println(io, "formula: $(print_design(obj.design))")
+    tprint(print_design(io,obj.design))
 
     tprint(
         io,
         "Useful functions:\n 
-    `design(uf)`` \t\t\t(returns Dict of event => (formula,times/basis))  \n
-    `designmatrix(uf)`` \t\t(returns DesignMatrix with events) \n
-    `modelfit(uf)`` \t\t(returns modelfit object) \n
-    `coeftable(uf)`` \t\t(returns tidy result dataframe) \n",
+    `design(uf)` \t\t\t(returns Design `Dict(@formula,times/basis)`  \n
+    `designmatrix(uf)` \t\t(returns `DesignMatrix` with events) \n
+    `modelfit(uf)` \t\t(returns `modelfit`` object) \n
+    `coeftable(uf)` \t\t(returns tidy result `Dataframe`) \n",
     )
 end
 
@@ -97,8 +110,8 @@ print design in a beautiful way
 function print_design(io::IO,design::Dict)
     basisList = []
 	for (key,val)  in design
-    	push!(basisList,Panel(renderable(val[1],val[2];title=string(key));fit=true))
+    	push!(basisList,Panel(renderable(val[1],val[2];title=string(key));fit=false))
    end
-	print(io,Term.vstack(basisList...))
+	print(io,vstack(basisList...))
 end
    
