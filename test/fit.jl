@@ -53,6 +53,7 @@ end
 end
 
 @testset "automatic, non-dictionary call" begin
+    times = -1.0:0.05:1.9
     m_mul = coeftable(fit(UnfoldLinearModel, f, evts, data_e, times))
     
     @test m_mul[(m_mul.channel.==1).&(m_mul.time.==0.1), :estimate] ≈ [2, 3, 4]
