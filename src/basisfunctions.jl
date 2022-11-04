@@ -73,9 +73,9 @@ end
 
 
 
-
-function Base.show(io::IO, obj::BasisFunction)
-    println(io, "name: $(name(obj))")
+function Base.show(io::IO, ::MIME"text/plain", obj::BasisFunction)
+    #tprint(io,renderable("none",obj))
+    println(io, "Basisfunction: $(name(obj))")
     println(io, "collabel: $(collabel(obj))")
     println(io, "colnames: $(colnames(obj))")
     println(io, "kerneltype: $(typeof(obj))")
@@ -83,8 +83,31 @@ function Base.show(io::IO, obj::BasisFunction)
     println(io, "shiftOnset: $(shiftOnset(obj))")
 end
 
+function Base.show(io::IO, obj::BasisFunction)
+    print(io,renderable("none",obj))
+    #println(io, "name: $(name(obj))")
+    #println(io, "collabel: $(collabel(obj))")
+    #println(io, "colnames: $(colnames(obj))")
+    #println(io, "kerneltype: $(typeof(obj))")
+    #println(io, "times: $(times(obj))")
+    #println(io, "shiftOnset: $(shiftOnset(obj))")
+end
 
+function renderable(form,obj::BasisFunction;title="::BasisFunction")
+    d = OrderedDict(:formula=>form,
+    :name=>name(obj),
+    :collabel=>collabel(obj),
+    :colnames=>colnames(obj),
+    :kerneltype=>typeof(obj),
+    :times=>times(obj),
+    :shiftOnset=>shiftOnset(obj)) #|>x->Tree(x;title=title)
 
+    str = "{bold}::BasisFunction{/bold}\n"
+    for (key,val) in d
+        str = str * "{bold blue}$key: {/bold blue} {green}$val{/green}\n"
+    end
+    return Panel(str)
+end
 
 """
 $(SIGNATURES)
