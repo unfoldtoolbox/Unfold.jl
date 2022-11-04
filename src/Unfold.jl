@@ -33,7 +33,6 @@ import StatsModels: terms
 
 import MixedModels.likelihoodratiotest
 
-#using IncompleteLU
 import Base.(+) # overwrite for DesignMatrices
 using Distributions: Gamma, pdf # TODO replace this with direct implementation (used in basisfunction.jl)
 
