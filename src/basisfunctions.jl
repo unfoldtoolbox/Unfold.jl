@@ -94,13 +94,19 @@ function Base.show(io::IO, obj::BasisFunction)
 end
 
 function renderable(form,obj::BasisFunction;title="::BasisFunction")
-    OrderedDict(:formula=>form,
+    d = OrderedDict(:formula=>form,
     :name=>name(obj),
     :collabel=>collabel(obj),
     :colnames=>colnames(obj),
     :kerneltype=>typeof(obj),
     :times=>times(obj),
-    :shiftOnset=>shiftOnset(obj)) |>x->Tree(x;title=title)
+    :shiftOnset=>shiftOnset(obj)) #|>x->Tree(x;title=title)
+
+    str = "{bold}::BasisFunction{/bold}\n"
+    for (key,val) in d
+        str = str * "{bold blue}$key: {/bold blue} {green}$val{/green}\n"
+    end
+    return Panel(str)
 end
 
 """

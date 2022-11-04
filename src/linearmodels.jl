@@ -112,6 +112,6 @@ function print_design(io::IO,design::Dict)
 	for (key,val)  in design
     	push!(basisList,Panel(renderable(val[1],val[2];title=string(key));fit=false))
    end
-	print(io,vstack(basisList...))
+	print(io,grid(basisList))
 end
    
