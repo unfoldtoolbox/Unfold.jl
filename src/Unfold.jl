@@ -1,6 +1,5 @@
 module Unfold
 
-using PyMNE
 using SparseArrays
 using StatsModels
 using StatsBase
