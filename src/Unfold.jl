@@ -47,7 +47,6 @@ include("solver.jl")
 include("predict.jl")
 include("splinepredictors.jl")
 include("effects.jl")
-include("clusterpermutation.jl")
 include("statistics.jl")
 #include("plot.jl") # don't include for now
 export fit, fit!, designmatrix!
