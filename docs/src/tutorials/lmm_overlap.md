@@ -68,5 +68,5 @@ first(results,6)
 #### 4. Visualize results
 
 ```@example Main
-plot_results(results)
+plot_erp(results;setMappingValues(;col=:group))
 ```

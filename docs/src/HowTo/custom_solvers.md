@@ -19,7 +19,7 @@ bfDict = Dict(Any=>(f,basisfunction))
 se_solver =(x,y)->Unfold.solver_default(x,y,stderror=true)
 m = Unfold.fit(UnfoldLinearModel,bfDict,evts,dat,solver=se_solver)
 results =coeftable(m)
-plot_results(results)
+plot_erp(results;setExtraValues=(;stderror=true))
 ```
 !!! warning
     Use single-subject SE on your own risk. Because EEG data are autocrrelated YOUR SE WILL BE TOO SMALL!
@@ -30,7 +30,7 @@ b2b_solver = (x, y) -> Unfold.solver_b2b(x, y,cross_val_reps = 5)
 m = Unfold.fit(UnfoldLinearModel, f, events, dat, times, solver=b2b_solver)
 results = coeftable(m)
 
-plot_results(results)
+plot_erp(results)
 ```
 These are the decoding-results for `conditionA` while taking into account `conditionB` - and vice versa. Not very exciting right now because in this simple example we only have one channel ;-)
 

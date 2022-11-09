@@ -110,6 +110,6 @@ first(coeftable(m),6)
 Tidy-Dataframes make them easy to visualize using e.g. AlgebraOfGraphics.jl. We simpliefied this even more, by implementing a wrapper in `UnfoldMakie`
 ```@example Main
 results = coeftable(m)
-plot_results(results)
+plot_erp(results)
 ```
 As you can see here, a lot is going on, even in the baseline-period! This is because the signal was simulated with overlapping events. Head over to the next tutorial to find out how to remedy this.
