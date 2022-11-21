@@ -1,7 +1,7 @@
 
 include("test_utilities.jl")
 include("setup.jl")
-include("../src/circsplinepredictors.jl")
+#include("../src/circsplinepredictors.jl")
 
 data, evts = loadtestdata("test_case_3a") #
 #
@@ -18,7 +18,6 @@ m_mul = coeftable(fit(UnfoldModel, f, evts, data_e, times))
 #test_spl = fit(UnfoldModel, f_spl, evts, data_e, times)
 m_mul_spl = coeftable(fit(UnfoldModel, f_spl, evts, data_e, times))
 m_mul_circspl = coeftable(fit(UnfoldModel, f_circspl, evts, data_e, times))
-
 # asking for 4 splines should generate 4 splines 
 @test length(unique(m_mul_spl.coefname)) == 6 # XXX check back with Unfold whether this is the same! could be n-1 splines in Unfold. We should keep that comparable I guess
 
@@ -61,5 +60,12 @@ m_mul_spl_many = coeftable(fit(UnfoldModel, f_spl_many, evts, data_e, times))
 ## some circular test_spl
 m = fit(UnfoldModel, f_circspl, evts, data_e, times)
 f_evaluated = Unfold.formula(m)
+m
+effSingle = effects(Dict(:continuousA => [0.1,0.5,1,3,5,8,10]), m)
+effMeaned = combine(groupby(effSingle, [:continuousA]), [:yhat] .=> mean .=> [:yhat])
+@test length(unique(m_mul_circspl.coefname)) == 6
 @test size(f_evaluated.rhs.terms[3].fun([1])) == (1,5)
 @test size(modelcols(f_evaluated.rhs.terms[3],DataFrame(conditionA=[0],continuousA=[1]))) == (1,4)
+@test effMeaned.yhat[1] ≈ effMeaned.yhat[length(effMeaned.yhat)]
+println(effMeaned)
+@test mapValues([3,8,100,-100,11], 0, 10) == [3,8,0,10,1]
