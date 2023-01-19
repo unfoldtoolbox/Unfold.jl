@@ -61,11 +61,70 @@ m_mul_spl_many = coeftable(fit(UnfoldModel, f_spl_many, evts, data_e, times))
 m = fit(UnfoldModel, f_circspl, evts, data_e, times)
 f_evaluated = Unfold.formula(m)
 m
-effSingle = effects(Dict(:continuousA => [0.1,0.5,1,3,5,8,10]), m)
+effValues = [0.1,0.11,0.12,0.5,1,3,5,8,9.98,9.99,10]
+effSingle = effects(Dict(:continuousA => effValues), m)
 effMeaned = combine(groupby(effSingle, [:continuousA]), [:yhat] .=> mean .=> [:yhat])
 @test length(unique(m_mul_circspl.coefname)) == 6
 @test size(f_evaluated.rhs.terms[3].fun([1])) == (1,5)
 @test size(modelcols(f_evaluated.rhs.terms[3],DataFrame(conditionA=[0],continuousA=[1]))) == (1,4)
+# first and last value must approximately be the same
+#'check whether there is something like basisname which makes first and last value be of different categories'
 @test effMeaned.yhat[1] ≈ effMeaned.yhat[length(effMeaned.yhat)]
-println(effMeaned)
-@test mapValues([3,8,100,-100,11], 0, 10) == [3,8,0,10,1]
+#'TODO: run these two tests to see if they work'
+# check for first and second derivative whether they are similar in the border cases
+# both formulae taken from https://mathformeremortals.wordpress.com/2013/01/12/a-numerical-second-derivative-from-three-points/
+@testset "first and second derivative" begin    
+    x0 = effMeaned.continuousA[length(effMeaned.continuousA)-2]
+    x1 = effMeaned.continuousA[length(effMeaned.continuousA)-1]
+    x2_1 = effMeaned.continuousA[length(effMeaned.continuousA)]
+    x2_2 = effMeaned.continuousA[1]
+    x3 = effMeaned.continuousA[2]
+    x4 = effMeaned.continuousA[3]
+    y0 = effMeaned.yhat[length(effMeaned.yhat)-2]
+    y1 = effMeaned.yhat[length(effMeaned.yhat)-1]
+    y2_1 = effMeaned.yhat[length(effMeaned.yhat)]
+    y2_2 = effMeaned.yhat[1]
+    y3 = effMeaned.yhat[2]
+    y4 = effMeaned.yhat[3]
+    @test (y2_1 - y1) / (x2_1 - x1) ≈ (y3 - y2_2) / (x3 - x2_2)
+    @test hcat(2 / ((x1 - x0)*(x2_1 - x0)), -2 / ((x2_1 - x1)*(x1 - x0)), 2 / ((x2_1 - x1)*(x2_1 - x0))) * vcat(
+        y0, y1, y2_1) ≈ hcat(2 / ((x3 - x2_2)*(x4 - x2_2)), -2 / ((x4 - x3)*(x3 - x2_2)), 2 / ((x4 - x3)*(x4 - x2_2))
+         ) * vcat(y2_2, y3, y4)
+end
+
+@test mapValues([3,8,100,100,11], 0, 10) == [3,8,0,10,1]
+
+# visual test
+# inspired by https://unfoldtoolbox.github.io/Unfold.jl/dev/_literate/explanations/nonlinear_effects/
+for i in collect(1:10)
+    for nspl in [3,5,10]
+        rng = MersenneTwister(i) # make repeatable
+        n = 20 # datapoints
+        evts = DataFrame(:x=>rand(rng,n))
+        signal = (3*(evts.x .-0.5)).^2 .+ 0.5 .* rand(rng,n) .* 6
+        # making a sinus-like curve by concatenating a parabola with itself but mirrored
+        fullsignal = vcat(signal, signal .* -1 .+ 2 * maximum(signal))
+        fullsignal = reshape(fullsignal,length(fullsignal),1,1)
+        fullsignal = permutedims(fullsignal,[3,2,1])
+        size(fullsignal)
+        design = nothing
+        if(nspl == 3)
+            design = Dict(Any=>(@formula(0~1+circspl(x, 3, 0, 2)),[0]))
+        elseif(nspl == 5)
+            design = Dict(Any=>(@formula(0~1+circspl(x, 5, 0, 2)),[0]))
+        elseif(nspl == 10)
+            design = Dict(Any=>(@formula(0~1+circspl(x, 10, 0, 2)),[0]))
+        else
+            error("the visual test currently only works for 3, 5, and 10 splines. Received value: $(nspl)")
+        end
+        uf_spl = fit(UnfoldModel,design,DataFrame(:x=>vcat(evts.x, evts.x .+ 1)),fullsignal);
+
+        p_spl = Unfold.effects(Dict(:x => range(0,stop=2,length=200)),uf_spl);
+
+        pl = plot(DataFrame(:x=>vcat(evts.x, evts.x .+ 1)).x,fullsignal[1,1,:], xtickfontsize=30,ytickfontsize=30)
+        lines!(p_spl.x,p_spl.yhat)
+        display(pl)
+        save("plots/visualTests_circspl/vistest$(i)_$(nspl)spl.svg", pl)
+    end
+end
+
