@@ -68,7 +68,7 @@ times = range(0,length=size(epochs,3),step=1/sampling_rate)
 To fit any of the models, Unfold.jl offers a unified syntax:
 
 | Overlap-Correction | Mixed Modelling | julia syntax |
-|---|---|---|
+|:---:|:---:|---|
 |  |  | `fit(UnfoldModel,Dict(Any=>(f,times)),evts,data_epoch)` |
 | x |  | `fit(UnfoldModel,Dict(Any=>(f,basis)),evts,data)` |
 |  | x | `fit(UnfoldModel,Dict(Any=>(fLMM,times)),evts,data_epoch)` |
