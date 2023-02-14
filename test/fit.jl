@@ -59,6 +59,7 @@ end
     @test m_mul[(m_mul.channel.==1).&(m_mul.time.==0.1), :estimate] ≈ [2, 3, 4]
     
 
+
     data_e_noreshape, times = Unfold.epoch(data = data, tbl = evts, τ = (-1.0, 1.9), sfreq = 20) # cut the data into epochs
     m_mul_noreshape = coeftable(fit(UnfoldLinearModel, f, evts, data_e_noreshape, times))
 
@@ -67,7 +68,9 @@ end
         :estimate,
     ] ≈ [2, 3, 4]
     @test size(m_mul_noreshape)[1] == size(m_mul)[1] / 2
-
+    # test 2D call for UnfoldLinearModel
+    m_mul_autoreshape = coeftable(fit(UnfoldLinearModel, f, evts, data_e_noreshape[1,:,:], times))
+    m_mul_autoreshape == m_mul_noreshape
     # Add Missing in Data
     data_e_missing = deepcopy(data_e)
     data_e_missing[1, 25, end-5:end] .= missing

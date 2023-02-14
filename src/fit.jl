@@ -32,6 +32,7 @@ function StatsModels.fit(
     basisOrTimes::Union{BasisFunction,AbstractArray};
     kwargs...,
 ) where {T<:Union{<:UnfoldModel}}
+    # old input format, sometimes convenient.Convert to dict-based one
     fit(UnfoldModelType, Dict(Any => (f, basisOrTimes)), tbl, data; kwargs...)
 end
 
@@ -119,6 +120,19 @@ function StatsModels.fit(
     return fit(UnfoldModelType, design, tbl, data, args...; kwargs...)
 end
 
+# helper to reshape a 
+function StatsModels.fit(
+    UnfoldModelType::Type{T},
+    design::Dict,
+    tbl::DataFrame,
+    data::AbstractMatrix,
+    args...;
+    kwargs...)where {T<:UnfoldLinearModel}
+
+    @debug("MassUnivariate data array is size (X,Y), reshaping to (1,X,Y)")
+    data = reshape(data, 1, size(data)...)
+    return fit(UnfoldModelType, design, tbl, data, args...; kwargs...)
+end
 
 
 """
