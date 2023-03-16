@@ -274,8 +274,9 @@ function StatsModels.fit!(
     @assert ~isempty(designmatrix(uf))
     @assert typeof(first(values(design(uf)))[1]) <: FormulaTerm "InputError in design(uf) - :key=>(FORMULA,basis/times), formula not found. Maybe formula wasn't at the first place?"
     @assert (typeof(first(values(design(uf)))[2]) <: AbstractVector) ⊻ (typeof(uf) <: UnfoldLinearModelContinuousTime) "InputError: Either a basis function was declared, but a UnfoldLinearModel was built, or a times-vector (and no basis function) was given, but a UnfoldLinearModelContinuousTime was asked for."
+    if isa(uf,UnfoldLinearModel)
     @assert length(first(values(design(uf)))[2]) == size(data,length(size(data))-1) "Times Vector does not match second last dimension of input data - forgot to epoch?"
-
+    end
     to = get_timer("Shared")
 
     @timeit to "modelmatrix" X = modelmatrix(uf)
