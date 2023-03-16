@@ -93,7 +93,7 @@ function solver_default(
     beta = zeros(Union{Missing,Number},size(data, 1), size(data, 2), size(X, 2))
     @showprogress 0.1 for ch = 1:size(data, 1)
         for t = 1:size(data, 2)
-            @debug("$(ndims(data,)),$t,$ch")
+#            @debug("$(ndims(data,)),$t,$ch")
             
             dd = view(data, ch, t,:)
             ix = @. !ismissing(dd)

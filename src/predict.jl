@@ -1,5 +1,6 @@
 import StatsBase.predict
 
+using DocStringExtensions: format
 
 
 function StatsBase.predict(model::UnfoldModel, events)
@@ -77,9 +78,23 @@ end
 # in case the formula is not an array
 #yhat(model::UnfoldModel,formulas::AbstractTerm) = yhat(model,[formulas])
 
-# special case if one formula is defined but in an array, just use this one.
-# Todo: case where multiple formulas are defined at the same time, not yet implemented
-yhat(model::UnfoldLinearModel,formulas::AbstractArray,newevents::DataFrame) = yhat(model,formulas[1],newevents)
+# special case if one formula is defined but in an array => multiple events
+function yhat(model::UnfoldLinearModel,formulas::AbstractArray,newevents::DataFrame)
+    X = modelcols.(formulas,Ref(newevents))
+    
+    co = coef(model)
+    Xsizes = size.(X,Ref(2))
+    Xsizes_cumsum = vcat(0,cumsum(Xsizes))
+    
+    indexes = [(Xsizes_cumsum[ix]+1):Xsizes_cumsum[ix+1] for ix = 1:length(formulas)]
+    
+    coArray = [co[:,:,ix] for ix in indexes]
+    
+
+    return yhat.(coArray,X)
+    
+
+end
 
 
 yhat(model::UnfoldLinearModel,formulas::FormulaTerm,newevents) = yhat(model,formulas.rhs,newevents)
@@ -136,7 +151,7 @@ function yhat(model::UnfoldLinearModelContinuousTime,formulas,events)#::Abstract
         # f&g are between two samples, thus the design matrix would interpolate between them. Thus has as a result, that the designmatrix is +1 longer than what would naively be expected
         #
         # because in "predict" we define where samples onset, we can remove the last sample, it s always 0 anyway, but to be sure we test it
-        #@show "here"
+        
         if typeof(f.basisfunction) <: FIRBasis
             
             keep = ones(size(Xsingle,1))
@@ -169,19 +184,25 @@ function yhat(model::UnfoldLinearModelContinuousTime,X::AbstractArray{T,2};times
     
     yhat = X * coef(model)'
     return yhat
+
 end
-function yhat(model::UnfoldLinearModel,X::AbstractArray{T,2};times=nothing) where {T<:Union{Missing, <:Number}}
+
+# kept for backwards compatability
+yhat(model::UnfoldLinearModel,X::AbstractArray{T,2};kwargs...) where {T<:Union{Missing, <:Number}} = yhat(coef(model),X;kwargs...)
+
+
+function yhat(coef::AbstractArray,X::AbstractArray{T,2};kwargs...) where {T<:Union{Missing, <:Number}}
     # function that calculates coef*designmat, but in the ch x times x coef vector
     # setup the output matrix, has to be a matrix
     # then transforms it back to 2D matrix times/coef x ch to be compatible with the timecontinuous format
     yhat = Array{Union{Missing,Float64}}(
         missing,
-        size(coef(model), 1),
+        size(coef, 1),
         size(X, 1),
-        size(coef(model), 2),
+        size(coef, 2),
     )
-    for ch = 1:size(coef(model), 1)
-        yhat[ch, :, :] = X * permutedims(coef(model)[ch, :, :], (2, 1))
+    for ch = 1:size(coef, 1)
+        yhat[ch, :, :] = X * permutedims(coef[ch, :, :], (2, 1))
     end
     
     # bring the yhat into a ch x yhat format
@@ -190,8 +211,9 @@ function yhat(model::UnfoldLinearModel,X::AbstractArray{T,2};times=nothing) wher
     return yhat
 end
 
-times(model::UnfoldLinearModel)=     times(design(model))
-times(d::Dict) = [k[2] for k in values(d)] # probably going for steprange would be better, this enforces ordering (formula,times) which is never explicitly checked
+# there is only 1 times for Mass Univariate Models possible
+times(model::UnfoldLinearModel) = times(design(model))
+times(d::Dict{<:Union{Any,<:AbstractString,Symbol},<:Tuple{FormulaTerm,<:AbstractVector}}) = first(values(d))[2]#[k[2] for k in values(d)] # probably going for steprange would be better
 
 
 function gen_timeev(timesVec,nRows)

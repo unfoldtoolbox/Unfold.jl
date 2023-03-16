@@ -1,4 +1,3 @@
-
 struct DesignMatrix
     "Array of formulas"
     formulas::Any

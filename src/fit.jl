@@ -44,14 +44,13 @@ function StatsModels.fit(
     data::AbstractArray;
     kwargs...,
 ) where {T<:Union{<:UnfoldModel}}
-    to = get_timer("Shared")
     if UnfoldModelType == UnfoldModel
         UnfoldModelType = designToModeltype(design)
     end
     uf = UnfoldModelType(design)
 
-    @timeit to "designmatrix" designmatrix!(uf, tbl; kwargs...)
-    @timeit to "fit" fit!(uf, data; kwargs...)
+    designmatrix!(uf, tbl; kwargs...)
+    fit!(uf, data; kwargs...)
 
     return uf
 end
@@ -277,16 +276,44 @@ function StatsModels.fit!(
     if isa(uf,UnfoldLinearModel)
     @assert length(first(values(design(uf)))[2]) == size(data,length(size(data))-1) "Times Vector does not match second last dimension of input data - forgot to epoch?"
     end
-    to = get_timer("Shared")
-
-    @timeit to "modelmatrix" X = modelmatrix(uf)
-    # mass univariate, data = ch x times x epochs
-    X, data = zeropad(X, data)
-
-    @debug "UnfoldLinearModel, datasize: $(size(data))"
-
    
-    @timeit to "solver" uf.modelfit = solver(X, data)
+    X = modelmatrix(uf)
+
+    @debug "UnfoldLinearModel(ContinuousTime), datasize: $(size(data))"
+    
+    if isa(uf,UnfoldLinearModel)
+        d = designmatrix(uf)
+
+        if isa(X,Vector)
+        # mass univariate with multiple events fitted at the same time
+        
+        coefs = []
+        for m = 1:length(X)
+            # the main issue is, that the designmatrices are subsets of the event table - we have 
+            # to do the same for the data, but data and designmatrix dont know much about each other.
+            # Thus we use parentindices() to get the original indices of the @view events[...] from desigmatrix.jl
+            push!(coefs,solver(X[m], @view data[:,:,parentindices(d.events[m])[1]]))
+        end
+        @debug @show [size(c.estimate) for c in coefs]
+        uf.modelfit = LinearModelFit(
+            cat([c.estimate for c in coefs]...,dims=3),
+            [c.info for c in coefs],
+            cat([c.standarderror for c in coefs]...,dims=3)
+        )
+        return # we are done here
+   
+        elseif isa(d.events,SubDataFrame)
+            # in case the user specified an event to subset (and not any) we have to use the view from now on
+            data = @view data[:,:,parentindices(d.events)[1]]
+        end
+    end
+
+
+        # mass univariate, data = ch x times x epochs
+        X, data = zeropad(X, data)
+
+        uf.modelfit = solver(X, data)
+        return
 
 end
 

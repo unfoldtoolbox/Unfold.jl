@@ -93,9 +93,9 @@ end
 $(SIGNATURES)
 Flatten a 1D array from of a 2D/3D array. Also drops the empty dimension
 """
-function linearize(x::AbstractArray)
+function linearize(x::AbstractArray{T,N}) where {T,N}
     # used in condense_long to generate the long format
-    return dropdims(reshape(x, :, 1), dims = 2)
+    return dropdims(reshape(x, :, 1), dims = 2)::AbstractArray{T,1}
 end
 function linearize(x::String)
     return x
@@ -130,13 +130,13 @@ end
 
 function zeropad(X, data::AbstractArray{T,3}) where {T<:Union{Missing,<:Number}}
     @debug("3d zeropad")
-    if size(X, 1) > size(data, 3)
-        X = X[1:size(data, 3), :]
-    else
-        data = data[:, :, 1:size(X, 1)]
-    end
+    
+    @assert size(X, 1) == size(data, 3) "Your events are not of the same size as your last dimension of data"
+        
     return X, data
 end
+
+
 
 function clean_data(
     data::AbstractArray{T,2},

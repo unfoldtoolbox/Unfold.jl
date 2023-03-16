@@ -1,60 +1,6 @@
 """
-Object with a *term* and an applicable *BasisFunction* and a eventfield that are later passed to the basisfunction.
-
-$(TYPEDEF)
-$(TYPEDSIGNATURES)
-$(FIELDS)
-# Examples
-```julia-repl
-julia>  b = TimeExpandedTerm(term,kernel,[:latencyTR,:durationTR])
-```
-"""
-struct TimeExpandedTerm{T<:AbstractTerm} <: AbstractTerm 
-    "Term that the basis function is applied to. This is regularly called in other functions to get e.g. term-coefnames and timeexpand those"
-    term::T
-    "Kernel that determines what should happen to the designmatrix of the term"
-    basisfunction::BasisFunction
-    "Which fields of the event-table should be passed to the basisfunction.Important: The first entry has to be the event-latency in samples!"
-    eventfields::Array{Symbol}
-end
-
-
-function TimeExpandedTerm(
-    term::NTuple{N,Union{<:AbstractTerm,<:MixedModels.RandomEffectsTerm}},
-    basisfunction,
-    eventfields::Array{Symbol,1},
-) where {N}
-    # for mixed models, apply it to each Term
-    TimeExpandedTerm.(term, Ref(basisfunction), Ref(eventfields))
-end
-function TimeExpandedTerm(term, basisfunction, eventfields::Nothing)
-    # if the eventfield is nothing, call default
-    TimeExpandedTerm(term, basisfunction)
-end
-
-function TimeExpandedTerm(term, basisfunction, eventfields::Symbol)
-    # call with symbol, convert to array of symbol
-    TimeExpandedTerm(term, basisfunction, [eventfields])
-end
-
-function TimeExpandedTerm(term, basisfunction; eventfields = [:latency])
-    # default call, use latency
-    TimeExpandedTerm(term, basisfunction, eventfields)
-end
-
-collabel(term::TimeExpandedTerm) = collabel(term.basisfunction)
-StatsModels.width(term::TimeExpandedTerm) = width(term.basisfunction)
-StatsModels.terms(t::TimeExpandedTerm) = terms(t.term)
-
-function Base.show(io::IO, p::TimeExpandedTerm)
-    #print(io, "timeexpand($(p.term), $(p.basisfunction.type),$(p.basisfunction.times))")
-    println(io, "$(coefnames(p))")
-end
-
-
-
-"""
 $(SIGNATURES)
+using DataFrames: AbstractAggregate
 Combine two UnfoldDesignmatrices. This allows combination of multiple events.
 
 This also allows to define events with different lengths.
@@ -74,8 +20,8 @@ function combineDesignmatrices(X1::DesignMatrix, X2::DesignMatrix)
 
     X1 = deepcopy(X1)
     X2 = deepcopy(X2)
-    Xs1 = get_Xs(X1.Xs)
-    Xs2 = get_Xs(X2.Xs)
+    Xs1 = get_Xs(X1)
+    Xs2 = get_Xs(X2)
 
     sX1 = size(Xs1, 1)
     sX2 = size(Xs2, 1)
@@ -86,12 +32,21 @@ function combineDesignmatrices(X1::DesignMatrix, X2::DesignMatrix)
     elseif sX2 < sX1
         Xs2 = SparseMatrixCSC(sX1, Xs2.n, Xs2.colptr, Xs2.rowval, Xs2.nzval)
     end
-
+    if typeof(X1.Xs) <: Matrix
+        # mass univariate case, simply put in a vector
+        if typeof(Xs1) <:Vector
+            Xcomb = [Xs1...,Xs2]
+        else
+            Xcomb = [Xs1,Xs2]
+        end
+    else
     Xcomb = hcat(Xs1, Xs2)
+    end
 
     #if !(Float64(X1.formulas.rhs.basisfunction.times.step) ≈ Float64(X2.formulas.rhs.basisfunction.times.step))
     #        @warn("Concatenating formulas with different sampling rates. Be sure that this is what you want.")
     #end
+    
     if typeof(X1.Xs) <: Tuple
         # we have random effects                
         # combine REMats in single-eventtpe formulas ala y ~ (1|x) + (a|x)
@@ -191,6 +146,10 @@ function get_Xs(Xs::Matrix)
     # mass univariate case
     return Xs
 end
+function get_Xs(Xs::Vector)
+    # mass univariate case with multiple events
+    return Xs
+end
 function get_Xs(X::DesignMatrix)
     return get_Xs(X.Xs)
 end
@@ -228,11 +187,13 @@ function designmatrix(
         apply_basisfunction(form, basisfunction, get(Dict(kwargs), :eventfields, nothing))
 
     # Evaluate the designmatrix
+    @debug typeof(form)
     if (!isnothing(basisfunction)) & (type <: UnfoldLinearMixedModel)
         X = modelcols.(form.rhs, Ref(tbl))
     else
         X = modelcols(form.rhs, tbl)
     end
+    @debug typeof(X)
     return DesignMatrix(form, X, tbl)
 end
 function designmatrix(type, f, tbl; kwargs...)
@@ -252,6 +213,7 @@ function designmatrix(
     X = nothing
     fDict = design(uf)
     for (eventname, f) in pairs(fDict)
+        @debug eventname,X
         if eventname == Any
             eventTbl = tbl
         else
@@ -263,7 +225,7 @@ function designmatrix(
                     join(names(tbl), ","),
                 )
             end
-            eventTbl = tbl[tbl[:, eventcolumn].==eventname, :]
+            eventTbl = @view tbl[tbl[:, eventcolumn].==eventname, :] # we need a view so we can remap later if needed
         end
         if isempty(eventTbl)
             error(
@@ -372,12 +334,11 @@ design(uf::UnfoldModel) = uf.design
 
 function formula(d::Dict) #TODO Specify Dict better
     if length(values(d)) == 1
-        
         return [c[1] for c in collect(values(d))][1]
     else
-    return [c[1] for c in collect(values(d))]
+        return [c[1] for c in collect(values(d))]
     end
-    #return collect(values(d))[1][1] # give back first formula for now
+    
 end
 
 """

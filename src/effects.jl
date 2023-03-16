@@ -35,7 +35,7 @@ function effects(design::AbstractDict, model::UnfoldModel;typical=mean)
     form_typical = _typify(reference_grid,form,m,typical)
 
     eff = yhat(model,form_typical,reference_grid)
-
+    
     # because coefficients are 2D/3D arry, we have to cast it correctly to one big dataframe
     if isa(eff,Tuple) 
         # TimeContinuous Model, we also get back other things like times & fromWhereToWhere a BasisFunction goes
@@ -49,20 +49,27 @@ function effects(design::AbstractDict, model::UnfoldModel;typical=mean)
 
         result = DataFrame(cast_referenceGrid(reference_grid,eff[3],eff[2] ;basisname=vcat(bnames...)))
         select!(result,Not(:latency)) # remove the latency column if it was added
+    elseif isa(eff,Vector)
+        # mass univariate with multiple effects
+        results_tmp = DataFrame.(cast_referenceGrid.(Ref(reference_grid),eff,Ref(times(model))))
+        names = collect(keys(Unfold.design(model)))
+        [df.basisname .= n for (df,n) in zip(results_tmp,names)]
+        result = vcat(results_tmp...)
     else
         # normal mass univariate model
-        result = DataFrame(cast_referenceGrid(reference_grid,eff,times(model)[1] ))
+        result = DataFrame(cast_referenceGrid(reference_grid,eff,times(model) ))
     end
     
 return result   
 end
  
  Effects.typify(reference_grid,form::Matrix,X;kwargs...) = typify.(Ref(reference_grid),form,Ref(X);kwargs...)
+ 
 
  # cast single form to a vector
 _typify(reference_grid,form::FormulaTerm{<:InterceptTerm,<:Unfold.TimeExpandedTerm},m,typical) = _typify(reference_grid,[form],[m],typical)
 
-function _typify(reference_grid, form::AbstractArray{<:FormulaTerm{<:Union{<:InterceptTerm,<:Unfold.TimeExpandedTerm}}},m,typical)
+function _typify(reference_grid, form::AbstractArray{<:FormulaTerm{<:Union{<:InterceptTerm,<:Unfold.TimeExpandedTerm}}},m::AbstractSparseArray,typical)
     
     form_typical = Array{Any}(undef,1, length(form))
     for f = 1:length(form)
@@ -84,6 +91,17 @@ function _typify(reference_grid, form::AbstractArray{<:FormulaTerm{<:Union{<:Int
  end
  function _typify(reference_grid,form::FormulaTerm,m,typical)
     return [typify(reference_grid, form, m; typical=typical)]
+
+ end
+
+ function _typify(reference_grid,form::AbstractArray{<:FormulaTerm},m::Vector{<:Matrix},typical)
+    # Mass Univariate with multiple effects
+    
+    out = []
+    for k = 1:length(form)
+        push!(out,typify(reference_grid, form[k], m[k]; typical=typical))
+    end
+    return out
 
  end
  
