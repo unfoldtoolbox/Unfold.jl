@@ -13,7 +13,7 @@ function StatsBase.predict(model::UnfoldModel, events)
     end
     if typeof(model) == UnfoldLinearModel
         eff = yhat(model,formulas[1],newevents)
-        timesVec = gen_timeev(times(model)[1],size(newevents, 1)) # XXX needs to be modified to make automatic multi-event
+        timesVec = gen_timeev(times(model),size(newevents, 1)) 
     else
         fromTo,timesVec,eff = yhat(model,formulas,newevents) 
     end
