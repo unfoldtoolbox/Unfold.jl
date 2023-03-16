@@ -312,7 +312,7 @@ end
 
 
     # Timexpanded Univariate Mixed
-    f = @formula 0 ~ 1 + condA + condB + (1 + condA + condB | subject)
+    f = @formula 0 ~ 1 + condA + condB + (1 + condA | subject)
     basisfunction = firbasis(τ = (-0.2, 0.3), sfreq = 10, name = "ABC")
     @time m_tum = fit(
         UnfoldModel,
