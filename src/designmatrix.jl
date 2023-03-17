@@ -18,6 +18,9 @@ julia>  Xdc = Xdc1+Xdc2
 """
 function combineDesignmatrices(X1::DesignMatrix, X2::DesignMatrix)
 
+    # the reason for the assertion is simply that I found it too difficult to concatenate the formulas down below ;) should be easy to implement hough
+    @assert !(isa(X1.formulas,AbstractArray) && isa(X2.formulas,AbstractArray)) "it is currently not possible to combine desigmatrices from two already concatenated designs - please concatenate one after the other"
+
     X1 = deepcopy(X1)
     X2 = deepcopy(X2)
     Xs1 = get_Xs(X1)
@@ -40,7 +43,7 @@ function combineDesignmatrices(X1::DesignMatrix, X2::DesignMatrix)
             Xcomb = [Xs1,Xs2]
         end
     else
-    Xcomb = hcat(Xs1, Xs2)
+        Xcomb = hcat(Xs1, Xs2)
     end
 
     #if !(Float64(X1.formulas.rhs.basisfunction.times.step) ≈ Float64(X2.formulas.rhs.basisfunction.times.step))
@@ -80,11 +83,26 @@ function combineDesignmatrices(X1::DesignMatrix, X2::DesignMatrix)
 
     end
 
-    if typeof(X1.formulas) <: FormulaTerm
-        DesignMatrix([X1.formulas X2.formulas], Xcomb, [X1.events, X2.events])
+    if X1.formulas isa FormulaTerm
+        # due to the assertion above, we can assume we have only 2 formulas here
+        if X1.formulas.rhs isa Unfold.TimeExpandedTerm
+            fcomb = Vector{FormulaTerm{<:InterceptTerm, <:TimeExpandedTerm}}(undef,2)
+        else
+            fcomb = Vector{FormulaTerm}(undef,2) # mass univariate case
+        end
+        fcomb[1] = X1.formulas
+        fcomb[2] = X2.formulas
+        return DesignMatrix(fcomb, Xcomb, [X1.events, X2.events])
     else
-        
-        DesignMatrix([X1.formulas... X2.formulas], Xcomb, [X1.events..., X2.events])
+        if X1.formulas[1].rhs isa Unfold.TimeExpandedTerm
+            # we can ignore length of X2, as it has to be a single formula due to the assertion above
+            fcomb = Vector{FormulaTerm{<:InterceptTerm, <:TimeExpandedTerm}}(undef,length(X1.formulas)+1)
+        else
+            fcomb = Vector{FormulaTerm}(undef,length(X1.formulas)+1) # mass univariate case
+        end
+        fcomb[1:end-1] = X1.formulas
+        fcomb[end] = X2.formulas
+        return DesignMatrix(fcomb, Xcomb, [X1.events..., X2.events])
     end
 end
 
@@ -316,7 +334,7 @@ function StatsModels.modelmatrix(uf::UnfoldLinearModelContinuousTime,basisfuncti
     end
 end
 
-modelcols_nobasis(f::FormulaTerm,tbl::DataFrame) = modelcols(f.rhs.term,tbl)
+modelcols_nobasis(f::FormulaTerm,tbl::AbstractDataFrame) = modelcols(f.rhs.term,tbl)
 StatsModels.modelmatrix(uf::UnfoldModel) = modelmatrix(designmatrix(uf))#modelmatrix(uf.design,uf.designmatrix.events)
 StatsModels.modelmatrix(d::DesignMatrix) = d.Xs
 
@@ -346,7 +364,7 @@ $(SIGNATURES)
 calculates the actual designmatrix for a timeexpandedterm. Multiple dispatch on StatsModels.modelcols
 """
 function StatsModels.modelcols(term::TimeExpandedTerm, tbl)
-
+    @debug term.term , first(tbl)
     X = modelcols(term.term, tbl)
 
     time_expand(X, term, tbl)
