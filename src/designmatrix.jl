@@ -221,7 +221,7 @@ function designmatrix(
 
 
     form = apply_schema(f, schema(f, tbl_nomissing, contrasts), MixedModels.LinearMixedModel)
-    @show s_tmp[term(:d)]
+    
     form =
         apply_basisfunction(form, basisfunction, get(Dict(kwargs), :eventfields, nothing))
 
