@@ -200,11 +200,34 @@ function designmatrix(
     kwargs...,
 )
     @debug("generating DesignMatrix")
-    form = apply_schema(f, schema(f, tbl, contrasts), MixedModels.LinearMixedModel)
+
+    # check for missings-columns - currently missings not really supported in StatsModels
+    s_tmp = schema(f,tbl,contrasts) # temporary scheme to get necessary terms
+    neededCols = [v.sym for v in values(s_tmp.schema)]
+
+    tbl_nomissing = DataFrame(tbl) # tbl might be a SubDataFrame due to a view - but we can't modify a subdataframe, can we?
+    try 
+        disallowmissing!(tbl_nomissing,neededCols) # if this fails, it means we have a missing value in a column we need. We do not support this
+    catch e
+        if e isa ArgumentError
+            error(e.msg*"\n we tried to get rid of a event-column declared as type Union{Missing,T}. But there seems to be some actual missing values in there. 
+            You have to replace them yourself (e.g. replace(tbl.colWithMissingValue,missing=>0)) or impute them otherwise.")
+        else
+           rethrow()
+        end
+    end
+
+        
+
+
+    form = apply_schema(f, schema(f, tbl_nomissing, contrasts), MixedModels.LinearMixedModel)
+    @show s_tmp[term(:d)]
     form =
         apply_basisfunction(form, basisfunction, get(Dict(kwargs), :eventfields, nothing))
 
     # Evaluate the designmatrix
+    
+    #note that we use tbl again, not tbl_nomissing.
     @debug typeof(form)
     if (!isnothing(basisfunction)) & (type <: UnfoldLinearMixedModel)
         X = modelcols.(form.rhs, Ref(tbl))
@@ -231,11 +254,12 @@ function designmatrix(
     X = nothing
     fDict = design(uf)
     for (eventname, f) in pairs(fDict)
+        
         @debug eventname,X
         if eventname == Any
             eventTbl = tbl
         else
-            if !(eventcolumn ∈ names(tbl))
+            if !((eventcolumn ∈ names(tbl)) | (eventcolumn ∈ propertynames(tbl)))
                 error(
                     "Couldnt find columnName: " *
                     string(eventcolumn) *
