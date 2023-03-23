@@ -226,4 +226,8 @@ tbl.event = string.(tbl.event)
     uf = UnfoldLinearModelContinuousTime(design)
     designmatrix(uf,tbl);
 
+    # prior to the Missing disallow sanity check, this gave an error
+    design = Dict("1"=>(@formula(0~spl(a,4)+spl(b,4)+d+e),firbasis((0,1),1)),"2"=>(@formula(0~a+d),firbasis((0,1),1)))
+    uf = UnfoldLinearModelContinuousTime(design)
+    designmatrix(uf,tbl);
 end
