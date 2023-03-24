@@ -194,3 +194,24 @@ end
 	@test all(eff.yhat[1:2, 5:end] .== 0)
 end
 
+
+@testset "splinesMissings" begin
+	@testset "Missings in Events" begin
+		tbl = DataFrame(
+			:a => [1,2,3,4,5,6,7,8],
+			:b=>[1,1,1,2,2,2,3,missing],
+			:c=>[1,2,3,4,5,6,7,missing],
+			:d=>["1","2","3","4","5","6","7","8"],
+			:e=>["1","2","3","4","5","6","7",missing],
+			:event=>[1,1,1,1,2,2,2,2],
+			:latency=> [10,20,30,40,50,60,70,80])
+			data = rand(120)
+			tbl.event = string.(tbl.event)
+		
+			# prior to the Missing disallow sanity check, this gave an error
+			design = Dict("1"=>(@formula(0~spl(a,4)+spl(b,4)+d+e),firbasis((0,2),1)),"2"=>(@formula(0~a+d),firbasis((0,1),1)))
+			m =fit(UnfoldModel,design,tbl,data)
+			effects(Dict(:a=>[1,2,3],:b=>[1,1.5]),m)
+		end
+
+end

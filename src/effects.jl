@@ -70,7 +70,7 @@ end
  # cast single form to a vector
 _typify(reference_grid,form::FormulaTerm{<:InterceptTerm,<:Unfold.TimeExpandedTerm},m,typical) = _typify(reference_grid,[form],[m],typical)
 
-function _typify(reference_grid, form::AbstractArray{FormulaTerm{<:InterceptTerm,<:Unfold.TimeExpandedTerm}},m::Vector{<:Matrix},typical)
+function _typify(reference_grid, form::AbstractArray{<:FormulaTerm{<:InterceptTerm,<:Unfold.TimeExpandedTerm}},m::Vector{<:AbstractMatrix},typical)
     @debug "_typify - stripping away timeexpandedterm"
     form_typical = Array{Any}(undef,1, length(form))
     for f = 1:length(form)
@@ -96,7 +96,7 @@ function _typify(reference_grid, form::AbstractArray{FormulaTerm{<:InterceptTerm
 
  end
 
- function _typify(reference_grid,form::AbstractArray{<:FormulaTerm},m::Vector{<:Matrix},typical)
+ function _typify(reference_grid,form::AbstractArray{<:FormulaTerm},m::Vector{<:AbstractMatrix},typical)
     # Mass Univariate with multiple effects
     @debug "_typify going the mass univariate route"
     out = []

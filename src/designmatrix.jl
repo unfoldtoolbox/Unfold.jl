@@ -350,7 +350,7 @@ function StatsModels.modelmatrix(uf::UnfoldLinearModelContinuousTime,basisfuncti
         
         # probably a more julian way to do this...
         if isa(f,AbstractArray)
-            return modelcols_nobasis.(f[1,:],events(uf))
+            return modelcols_nobasis.(f,events(uf))
         else
             return modelcols_nobasis(f,events(uf))
         end
