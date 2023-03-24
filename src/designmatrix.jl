@@ -1,60 +1,6 @@
 """
-Object with a *term* and an applicable *BasisFunction* and a eventfield that are later passed to the basisfunction.
-
-$(TYPEDEF)
-$(TYPEDSIGNATURES)
-$(FIELDS)
-# Examples
-```julia-repl
-julia>  b = TimeExpandedTerm(term,kernel,[:latencyTR,:durationTR])
-```
-"""
-struct TimeExpandedTerm{T<:AbstractTerm} <: AbstractTerm 
-    "Term that the basis function is applied to. This is regularly called in other functions to get e.g. term-coefnames and timeexpand those"
-    term::T
-    "Kernel that determines what should happen to the designmatrix of the term"
-    basisfunction::BasisFunction
-    "Which fields of the event-table should be passed to the basisfunction.Important: The first entry has to be the event-latency in samples!"
-    eventfields::Array{Symbol}
-end
-
-
-function TimeExpandedTerm(
-    term::NTuple{N,Union{<:AbstractTerm,<:MixedModels.RandomEffectsTerm}},
-    basisfunction,
-    eventfields::Array{Symbol,1},
-) where {N}
-    # for mixed models, apply it to each Term
-    TimeExpandedTerm.(term, Ref(basisfunction), Ref(eventfields))
-end
-function TimeExpandedTerm(term, basisfunction, eventfields::Nothing)
-    # if the eventfield is nothing, call default
-    TimeExpandedTerm(term, basisfunction)
-end
-
-function TimeExpandedTerm(term, basisfunction, eventfields::Symbol)
-    # call with symbol, convert to array of symbol
-    TimeExpandedTerm(term, basisfunction, [eventfields])
-end
-
-function TimeExpandedTerm(term, basisfunction; eventfields = [:latency])
-    # default call, use latency
-    TimeExpandedTerm(term, basisfunction, eventfields)
-end
-
-collabel(term::TimeExpandedTerm) = collabel(term.basisfunction)
-StatsModels.width(term::TimeExpandedTerm) = width(term.basisfunction)
-StatsModels.terms(t::TimeExpandedTerm) = terms(t.term)
-
-function Base.show(io::IO, p::TimeExpandedTerm)
-    #print(io, "timeexpand($(p.term), $(p.basisfunction.type),$(p.basisfunction.times))")
-    println(io, "$(coefnames(p))")
-end
-
-
-
-"""
 $(SIGNATURES)
+using DataFrames: AbstractAggregate
 Combine two UnfoldDesignmatrices. This allows combination of multiple events.
 
 This also allows to define events with different lengths.
@@ -72,10 +18,13 @@ julia>  Xdc = Xdc1+Xdc2
 """
 function combineDesignmatrices(X1::DesignMatrix, X2::DesignMatrix)
 
+    # the reason for the assertion is simply that I found it too difficult to concatenate the formulas down below ;) should be easy to implement hough
+    @assert !(isa(X1.formulas,AbstractArray) && isa(X2.formulas,AbstractArray)) "it is currently not possible to combine desigmatrices from two already concatenated designs - please concatenate one after the other"
+
     X1 = deepcopy(X1)
     X2 = deepcopy(X2)
-    Xs1 = get_Xs(X1.Xs)
-    Xs2 = get_Xs(X2.Xs)
+    Xs1 = get_Xs(X1)
+    Xs2 = get_Xs(X2)
 
     sX1 = size(Xs1, 1)
     sX2 = size(Xs2, 1)
@@ -86,12 +35,21 @@ function combineDesignmatrices(X1::DesignMatrix, X2::DesignMatrix)
     elseif sX2 < sX1
         Xs2 = SparseMatrixCSC(sX1, Xs2.n, Xs2.colptr, Xs2.rowval, Xs2.nzval)
     end
-
-    Xcomb = hcat(Xs1, Xs2)
+    if typeof(X1.Xs) <: Matrix
+        # mass univariate case, simply put in a vector
+        if typeof(Xs1) <:Vector
+            Xcomb = [Xs1...,Xs2]
+        else
+            Xcomb = [Xs1,Xs2]
+        end
+    else
+        Xcomb = hcat(Xs1, Xs2)
+    end
 
     #if !(Float64(X1.formulas.rhs.basisfunction.times.step) ≈ Float64(X2.formulas.rhs.basisfunction.times.step))
     #        @warn("Concatenating formulas with different sampling rates. Be sure that this is what you want.")
     #end
+    
     if typeof(X1.Xs) <: Tuple
         # we have random effects                
         # combine REMats in single-eventtpe formulas ala y ~ (1|x) + (a|x)
@@ -125,11 +83,26 @@ function combineDesignmatrices(X1::DesignMatrix, X2::DesignMatrix)
 
     end
 
-    if typeof(X1.formulas) <: FormulaTerm
-        DesignMatrix([X1.formulas X2.formulas], Xcomb, [X1.events, X2.events])
+    if X1.formulas isa FormulaTerm
+        # due to the assertion above, we can assume we have only 2 formulas here
+        if X1.formulas.rhs isa Unfold.TimeExpandedTerm
+            fcomb = Vector{FormulaTerm{<:InterceptTerm, <:TimeExpandedTerm}}(undef,2)
+        else
+            fcomb = Vector{FormulaTerm}(undef,2) # mass univariate case
+        end
+        fcomb[1] = X1.formulas
+        fcomb[2] = X2.formulas
+        return DesignMatrix(fcomb, Xcomb, [X1.events, X2.events])
     else
-        
-        DesignMatrix([X1.formulas... X2.formulas], Xcomb, [X1.events..., X2.events])
+        if X1.formulas[1].rhs isa Unfold.TimeExpandedTerm
+            # we can ignore length of X2, as it has to be a single formula due to the assertion above
+            fcomb = Vector{FormulaTerm{<:InterceptTerm, <:TimeExpandedTerm}}(undef,length(X1.formulas)+1)
+        else
+            fcomb = Vector{FormulaTerm}(undef,length(X1.formulas)+1) # mass univariate case
+        end
+        fcomb[1:end-1] = X1.formulas
+        fcomb[end] = X2.formulas
+        return DesignMatrix(fcomb, Xcomb, [X1.events..., X2.events])
     end
 end
 
@@ -191,6 +164,10 @@ function get_Xs(Xs::Matrix)
     # mass univariate case
     return Xs
 end
+function get_Xs(Xs::Vector)
+    # mass univariate case with multiple events
+    return Xs
+end
 function get_Xs(X::DesignMatrix)
     return get_Xs(X.Xs)
 end
@@ -223,16 +200,41 @@ function designmatrix(
     kwargs...,
 )
     @debug("generating DesignMatrix")
-    form = apply_schema(f, schema(f, tbl, contrasts), MixedModels.LinearMixedModel)
+
+    # check for missings-columns - currently missings not really supported in StatsModels
+    s_tmp = schema(f,tbl,contrasts) # temporary scheme to get necessary terms
+    neededCols = [v.sym for v in values(s_tmp.schema)]
+
+    tbl_nomissing = DataFrame(tbl) # tbl might be a SubDataFrame due to a view - but we can't modify a subdataframe, can we?
+    try 
+        disallowmissing!(tbl_nomissing,neededCols) # if this fails, it means we have a missing value in a column we need. We do not support this
+    catch e
+        if e isa ArgumentError
+            error(e.msg*"\n we tried to get rid of a event-column declared as type Union{Missing,T}. But there seems to be some actual missing values in there. 
+            You have to replace them yourself (e.g. replace(tbl.colWithMissingValue,missing=>0)) or impute them otherwise.")
+        else
+           rethrow()
+        end
+    end
+
+        
+
+
+    form = apply_schema(f, schema(f, tbl_nomissing, contrasts), MixedModels.LinearMixedModel)
+    
     form =
         apply_basisfunction(form, basisfunction, get(Dict(kwargs), :eventfields, nothing))
 
     # Evaluate the designmatrix
+    
+    #note that we use tbl again, not tbl_nomissing.
+    @debug typeof(form)
     if (!isnothing(basisfunction)) & (type <: UnfoldLinearMixedModel)
         X = modelcols.(form.rhs, Ref(tbl))
     else
         X = modelcols(form.rhs, tbl)
     end
+    @debug typeof(X)
     return DesignMatrix(form, X, tbl)
 end
 function designmatrix(type, f, tbl; kwargs...)
@@ -252,10 +254,12 @@ function designmatrix(
     X = nothing
     fDict = design(uf)
     for (eventname, f) in pairs(fDict)
+        
+        @debug eventname,X
         if eventname == Any
             eventTbl = tbl
         else
-            if !(eventcolumn ∈ names(tbl))
+            if !((eventcolumn ∈ names(tbl)) | (eventcolumn ∈ propertynames(tbl)))
                 error(
                     "Couldnt find columnName: " *
                     string(eventcolumn) *
@@ -263,7 +267,7 @@ function designmatrix(
                     join(names(tbl), ","),
                 )
             end
-            eventTbl = tbl[tbl[:, eventcolumn].==eventname, :]
+            eventTbl = @view tbl[tbl[:, eventcolumn].==eventname, :] # we need a view so we can remap later if needed
         end
         if isempty(eventTbl)
             error(
@@ -354,7 +358,7 @@ function StatsModels.modelmatrix(uf::UnfoldLinearModelContinuousTime,basisfuncti
     end
 end
 
-modelcols_nobasis(f::FormulaTerm,tbl::DataFrame) = modelcols(f.rhs.term,tbl)
+modelcols_nobasis(f::FormulaTerm,tbl::AbstractDataFrame) = modelcols(f.rhs.term,tbl)
 StatsModels.modelmatrix(uf::UnfoldModel) = modelmatrix(designmatrix(uf))#modelmatrix(uf.design,uf.designmatrix.events)
 StatsModels.modelmatrix(d::DesignMatrix) = d.Xs
 
@@ -372,12 +376,11 @@ design(uf::UnfoldModel) = uf.design
 
 function formula(d::Dict) #TODO Specify Dict better
     if length(values(d)) == 1
-        
         return [c[1] for c in collect(values(d))][1]
     else
-    return [c[1] for c in collect(values(d))]
+        return [c[1] for c in collect(values(d))]
     end
-    #return collect(values(d))[1][1] # give back first formula for now
+    
 end
 
 """
@@ -385,7 +388,7 @@ $(SIGNATURES)
 calculates the actual designmatrix for a timeexpandedterm. Multiple dispatch on StatsModels.modelcols
 """
 function StatsModels.modelcols(term::TimeExpandedTerm, tbl)
-
+    @debug term.term , first(tbl)
     X = modelcols(term.term, tbl)
 
     time_expand(X, term, tbl)

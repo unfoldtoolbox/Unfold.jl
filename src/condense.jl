@@ -88,7 +88,23 @@ function StatsModels.coeftable(uf::Union{UnfoldLinearModel,UnfoldLinearMixedMode
     coefs_rep = permutedims(repeat(coefnames, outer = [1, nchan, ncols]), [2, 3, 1])
     colnames_basis_rep = permutedims(repeat(colnames_basis, 1, nchan, ncoefs), [2 1 3])
     chan_rep = repeat(1:nchan, 1, ncols, ncoefs)
-    basisnames_rep = repeat(["mass-univariate"], nchan, ncols, ncoefs)
+
+    designkeys =  collect(keys(design(uf)))
+
+    
+  
+    
+    if length(designkeys) == 1
+        # in case of 1 event, repeat it by ncoefs
+        basisnames = repeat(["event: $(designkeys[1])"],ncoefs)
+    else
+        basisnames = String[]
+        for (ix,evt) = enumerate(designkeys)
+            push!(basisnames,repeat(["event: $(evt)"],size(modelmatrix(uf)[ix],2) )...)
+        end
+    end
+    
+    basisnames_rep = permutedims(repeat(basisnames,1, nchan, ncols),[2,3,1])
     #
     results =
         make_long_df(uf, coefs_rep, chan_rep, colnames_basis_rep, basisnames_rep, :time)

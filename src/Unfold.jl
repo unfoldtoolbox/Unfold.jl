@@ -36,8 +36,9 @@ import MixedModels.likelihoodratiotest
 import Base.(+) # overwrite for DesignMatrices
 using Distributions: Gamma, pdf # TODO replace this with direct implementation (used in basisfunction.jl)
 
-include("linearmodels.jl")
+include("typedefinitions.jl")
 include("basisfunctions.jl")
+include("timeexpandedterm.jl")
 include("designmatrix.jl")
 include("fit.jl")
 include("utilities.jl")
@@ -47,6 +48,7 @@ include("predict.jl")
 include("splinepredictors.jl")
 include("effects.jl")
 include("statistics.jl")
+
 #include("plot.jl") # don't include for now
 export fit, fit!, designmatrix!
 export firbasis, hrfbasis, condense_long

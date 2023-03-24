@@ -1,4 +1,3 @@
-
 data, evts = loadtestdata("test_case_3a") #
 f = @formula 0 ~ 1 + conditionA + continuousA # 1
 
@@ -22,6 +21,24 @@ data_e, times = Unfold.epoch(data = data_r, tbl = evts, τ = (-1.0, 1.9), sfreq 
 
 end
 
+@testset "epoched auto multi-event" begin
+    
+    evts_local = deepcopy(evts)
+    evts_local.type .= repeat(["A","B"],nrow(evts)÷2)
+
+    uf = fit(UnfoldModel, Dict("A" => (f, times)),evts_local,data_e;eventcolumn="type")
+    @test size(coef(uf)) == (2,59,3)
+    uf_2events = fit(UnfoldModel, Dict("A" => (f, times),"B"=>(@formula(0~1),times)),evts_local,data_e;eventcolumn="type")
+    @test size(coef(uf_2events)) == (2,59,4)
+
+    c = coeftable(uf)
+    c2 = coeftable(uf_2events)
+    @test c2[c2.basisname .== "event: A",:] == c
+
+    e_uf2 = effects(Dict(:condtionA=>[0,1]),uf_2events)
+    e_uf = effects(Dict(:condtionA=>[0,1]),uf)
+    
+end
 
 @testset "test Autodetection" begin
     @test Unfold.designToModeltype(Dict(Any => (@formula(0 ~ 1), 0:10))) == UnfoldLinearModel
@@ -255,8 +272,7 @@ end
     # cut the data into epochs
     # TODO This ignores subject bounds
     data_e, times = Unfold.epoch(data = data, tbl = evts, τ = (-1.0, 1.9), sfreq = 10)
-    data_missing_e, times =
-        Unfold.epoch(data = data_missing, tbl = evts, τ = (-1.0, 1.9), sfreq = 10)
+    data_missing_e, times =        Unfold.epoch(data = data_missing, tbl = evts, τ = (-1.0, 1.9), sfreq = 10)
     evts_e, data_e = Unfold.dropMissingEpochs(copy(evts), data_e)
     evts_missing_e, data_missing_e = Unfold.dropMissingEpochs(copy(evts), data_missing_e)
 
@@ -296,7 +312,7 @@ end
 
 
     # Timexpanded Univariate Mixed
-    f = @formula 0 ~ 1 + condA + condB + (1 + condA + condB | subject)
+    f = @formula 0 ~ 1 + condA + condB + (1 + condA | subject)
     basisfunction = firbasis(τ = (-0.2, 0.3), sfreq = 10, name = "ABC")
     @time m_tum = fit(
         UnfoldModel,

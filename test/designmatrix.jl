@@ -199,3 +199,35 @@ evts_nonseq = evts_nonseq[.!(evts_nonseq.subject .== 2), :]
 Xdc_nonseq = designmatrix(UnfoldLinearMixedModel, f_zc, evts_nonseq, basisfunction)
 # This used to lead to problems here:
 fit(UnfoldLinearMixedModel, Xdc_nonseq, data');
+
+
+#---- some missing event testsbasisfunction2 = firbasis(τ = (0, 0.5), sfreq = 10, name = "basis2")
+@testset "Missings in Events" begin
+tbl = DataFrame(
+    :a => [1,2,3,4,5,6,7,8],
+    :b=>[1,1,1,2,2,2,3,missing],
+    :c=>[1,2,3,4,5,6,7,missing],
+    :d=>["1","2","3","4","5","6","7","8"],
+    :e=>["1","2","3","4","5","6","7",missing],
+    :event=>[1,1,1,1,2,2,2,2],
+    :latency=> [10,20,30,40,50,60,70,80])
+tbl.event = string.(tbl.event)
+    designmatrix(UnfoldLinearModel,@formula(0~a),tbl)
+    @test_throws ErrorException   designmatrix(UnfoldLinearModel,@formula(0~a+b),tbl)
+    @test_throws ErrorException designmatrix(UnfoldLinearModel,@formula(0~e),tbl)
+
+    # including an actual missing doesnt work
+    design = Dict("1"=>(@formula(0~a+b+c+d+e),firbasis((0,1),1)),"2"=>(@formula(0~a+b+c+d+e),firbasis((0,1),1)))
+    uf = UnfoldLinearModelContinuousTime(design)
+    @test_throws ErrorException designmatrix(uf,tbl);
+
+    # but if the missing is in another event, no problem
+    design = Dict("1"=>(@formula(0~a+b+c+d+e),firbasis((0,1),1)),"2"=>(@formula(0~a+d),firbasis((0,1),1)))
+    uf = UnfoldLinearModelContinuousTime(design)
+    designmatrix(uf,tbl);
+
+    # prior to the Missing disallow sanity check, this gave an error
+    design = Dict("1"=>(@formula(0~spl(a,4)+spl(b,4)+d+e),firbasis((0,1),1)),"2"=>(@formula(0~a+d),firbasis((0,1),1)))
+    uf = UnfoldLinearModelContinuousTime(design)
+    designmatrix(uf,tbl);
+end
