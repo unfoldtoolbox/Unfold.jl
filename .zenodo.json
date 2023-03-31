@@ -27,9 +27,6 @@
 
     "keywords": ["EEG","fMRI","GLM","MixedModels","ERP","rERP","regression ERP","non-linear","non-linear ERP", "circular","statistics","event-related potentials"],
 
-    "communities": [
-        {"identifier": "software-cats"}
-    ],
 
     "grants": [{"id":"DFG: EXC 2075 – 390740016"}]
 }
