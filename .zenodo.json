@@ -1,0 +1,35 @@
+{
+    "creators": [
+        {
+            "orcid": "0000-0002-6276-3332",
+            "affiliation": "University of Stuttgart",
+            "name": "Ehinger, Benedikt"
+        },
+        {
+            "orcid": "0000-0002-9984-5745",
+            "affiliation": "",
+            "name": "Alday, Phillip"
+        }
+    ],
+
+    "license": "MIT",
+
+    "title": "Unfold.jl: event-related regression toolbox",
+
+    "related_identifiers": [
+        {
+            "scheme": "doi",
+            "identifier": "0000-0002-9984-5745",
+            "relation": "isDerivedFrom",
+            "resource_type": "publication-article"
+        }
+    ],
+
+    "keywords": ["EEG","fMRI","GLM","MixedModels","ERP","rERP","regression ERP","non-linear","non-linear ERP", "circular","statistics","event-related potentials"],
+
+    "communities": [
+        {"identifier": "software-cats"}
+    ],
+
+    "grants": [{"id":"DFG: EXC 2075 – 390740016"}]
+}
