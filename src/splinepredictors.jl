@@ -12,11 +12,11 @@ function offsetArrayToZeros!(oneRow, spl)
     oneRow[spl.offsets[1]+1:spl.offsets[1]+length(spl)] = parent(spl)
 end
 
-function genSplFunction(x, df)
+function genSplBasis(x, df)
     p = range(0.0, length = df - 1, stop = 1.0)
     breakpoints = quantile(x, p)
     basis = BSplineBasis(4, breakpoints) # 4 = cubic
-    return x -> splFunction(x, basis)
+    return basis,breakpoints
 end
 function splFunction(x, basis)
     df = length(basis)
@@ -50,7 +50,8 @@ spl(t::Symbol, d::Int) = BSplineTerm(term(t), term(d))
 mutable struct BSplineTerm{T,D} <: AbstractTerm
     term::T
     df::D
-    fun::Any # function handle
+    breakpoints
+    basis::Any # function handle
 end
 function BSplineTerm(term, df)
     BSplineTerm(term, df, nothing)
@@ -84,11 +85,11 @@ function StatsModels.modelcols(p::BSplineTerm, d::NamedTuple)
     col = modelcols(p.term, d)
 
 
-    if isnothing(p.fun)
-        p.fun = genSplFunction(col, p.df)#Splines2.bs_(col,df=p.df+1,intercept=true)
+    if isnothing(p.basis)
+        p.basis,p.breakpoints = genSplBasis(col, p.df)#Splines2.bs_(col,df=p.df+1,intercept=true)
     end
     #X = Splines2.bs(col, df=p.df+1,intercept=true)
-    X = p.fun(col)
+    X = splFunction(col,p.basis)
 
     # remove middle X to negate intercept = true, generating a pseudo effect code 
     return X[:, Not(Int(ceil(end / 2)))]
