@@ -12,12 +12,29 @@ function offsetArrayToZeros!(oneRow, spl)
     oneRow[spl.offsets[1]+1:spl.offsets[1]+length(spl)] = parent(spl)
 end
 
+"""
+generate a cubic spline basis function set, with df-1 breakpoints fixed to the quantiles of x
+"""
 function genSplBasis(x, df)
     p = range(0.0, length = df - 1, stop = 1.0)
     breakpoints = quantile(x, p)
     basis = BSplineBasis(4, breakpoints) # 4 = cubic
     return basis,breakpoints
 end
+
+"""
+Returns an anonymous function evaluating a spline basis-set
+"""
+function genSplFunction(x,df)
+    basis = genSplBasis(x,df)
+    return x->splFunction(x,basis)
+end
+
+"""
+evaluate a spline basisset `basis` at `x`
+
+returns `Missing` if x is outside of the basis set
+"""
 function splFunction(x, basis)
     df = length(basis)
     
@@ -51,10 +68,13 @@ mutable struct BSplineTerm{T,D} <: AbstractTerm
     term::T
     df::D
     breakpoints
-    basis::Any # function handle
+    basis::Any
 end
+"""
+Construct a BSplineTerm, if breakpoints/basis are not defined yet, put to `nothing`
+"""
 function BSplineTerm(term, df)
-    BSplineTerm(term, df, nothing)
+    BSplineTerm(term, df, nothing,nothing)
 end
 
 
