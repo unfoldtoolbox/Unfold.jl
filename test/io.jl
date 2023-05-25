@@ -1,11 +1,13 @@
 using UnfoldSim
-
-save_path = tempdir()
+using DataFrames
+save_path = mktempdir(;cleanup=false)#tempdir()
 
 ## 1. Test data set:
 # - Generate a P1/N1/P3 complex for one subject (using UnfoldSim)
 # - Use a Continuous Time Unfold model with two event types
 # - Use splines to model the continuous predictor variable
+
+
 
 data1, evts1 = UnfoldSim.predef_eeg(; n_repeats=100, noiselevel=0.8);
 # Assume that the data is from two different events
@@ -19,10 +21,21 @@ f1_B = @formula 0 ~ 1 + condition + spl(continuous, 3);
 
 bfDict1 = Dict("event_A" => (f1_A, bf1_A), "event_B" => (f1_B, bf1_B));
 
-m1 = Unfold.fit(UnfoldModel, bfDict1, evts1, data1, eventcolumn="type");
+data1_e,times = Unfold.epoch(data1,evts1,[-0.1,1],100)
+bfDict1_e = Dict("event_A" => (f1_A, times), "event_B" => (f1_B, times));
 
-@testset "SingleSubjectDesign with two event types and splines" begin
+
+for deconv = [false,true]
+
+    if deconv
+        
+        m1 = Unfold.fit(UnfoldModel, bfDict1, evts1, data1, eventcolumn="type");
+    else
+        m1 = Unfold.fit(UnfoldLinearModel, bfDict1_e, evts1, data1_e; eventcolumn="type");
+    end
+    @testset "SingleSubjectDesign with two event types and splines" begin
     # save the model to a compressed .jld2 file and load it again
+    
     save(joinpath(save_path, "m1_compressed.jld2"), m1; compress=true)
     m1_loaded = load(joinpath(save_path, "m1_compressed.jld2"), UnfoldModel, generate_Xs=true)
 
@@ -35,7 +48,7 @@ m1 = Unfold.fit(UnfoldModel, bfDict1, evts1, data1, eventcolumn="type");
     # In the loaded version one gets two matrices instead of one.
     # The dimensions do also not match.
     # Probably the designmatrix reconstruction in the load function needs to be changed.
-    @test_broken m1.designmatrix.Xs == m1_loaded.designmatrix.Xs
+    @test m1.designmatrix.Xs == m1_loaded.designmatrix.Xs
 
     # Test whether the effects function works with the loaded model
     # and the results match the ones of the original model
@@ -46,9 +59,12 @@ m1 = Unfold.fit(UnfoldModel, bfDict1, evts1, data1, eventcolumn="type");
     # load the model without reconstructing the designmatrix
     m1_loaded_without_dm = load(joinpath(save_path, "m1_compressed.jld2"), UnfoldModel, generate_Xs=false)
 
-    @test ismissing(m1_loaded_without_dm.designmatrix.Xs) == true
+    
+    # ismissing should only be true fr the deconv case
+    @test ismissing(m1_loaded_without_dm.designmatrix.Xs) == (deconv == true)
+    
 end
-
+end
 #----
 ## 2. Test data set:
 # - Generate a 2x2 design with Hanning window for multiple subjects (using UnfoldSim)
