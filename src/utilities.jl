@@ -3,10 +3,19 @@ function epoch(; data, tbl, τ, sfreq, kwargs...)
     epoch(data, tbl, τ, sfreq; kwargs...)
 end
 
+"""
 function epoch(
     data::Array{T,1},
     tbl::DataFrame,
-    τ::Tuple{Number,Number},
+    τ::Tuple/Vector,
+    sfreq;
+    kwargs...,
+) 
+"""
+function epoch(
+    data::Array{T,1},
+    tbl,
+    τ,
     sfreq;
     kwargs...,
 ) where {T<:Union{Missing,Number}}
@@ -14,15 +23,19 @@ function epoch(
     epoch(data_r, tbl, τ, sfreq; kwargs...)
 end
 
-epoch(data::Matrix, tbl::DataFrame, τ::Vector, sfreq; eventtime) =
-    epoch(data, tbl, Tuple(τ...), sfreq; eventtime = eventtime)
-epoch(
+function epoch(data::Matrix, tbl::DataFrame, τ::Vector, sfreq; kwargs...)
+    return epoch(data, tbl, (τ[1],τ[2]), sfreq; kwargs...)
+end
+
+function epoch(
     data::Matrix,
     tbl::DataFrame,
     τ::Tuple{Number,Number},
     sfreq;
     eventtime::String = "latency",
-) = epoch(data, tbl, τ, sfreq; eventtime = Symbol(eventtime))
+) 
+return epoch(data, tbl, τ, sfreq; eventtime = Symbol(eventtime))
+end
 
 function epoch(
     data::Array{T,2},
