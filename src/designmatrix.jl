@@ -324,7 +324,7 @@ function StatsModels.modelmatrix(uf::UnfoldLinearModel,basisfunction)
         return modelmatrix(uf)
     end
 end
-
+equalizeLengths(Xs::Tuple) = (equalizeLengths(Xs[1]),Xs[2:end]...)
 equalizeLengths(Xs::AbstractMatrix) = Xs
 equalizeLengths(Xs::Vector{<:SparseMatrixCSC}) = equalizeLengths(Xs...)#equalizeLengths(Xs[1],Xs[2],equalizeLengths(Xs[2:end]))
 equalizeLengths(Xs1::SparseMatrixCSC,Xs2::SparseMatrixCSC,args...) = equalizeLengths(equalizeLengths(Xs1,Xs2),args...)
@@ -342,7 +342,7 @@ function equalizeLengths(Xs1::SparseMatrixCSC,Xs2::SparseMatrixCSC)
 end
 function StatsModels.modelmatrix(uf::UnfoldLinearModelContinuousTime,basisfunction = true)
     if basisfunction
-        return equalizeLengths(modelmatrix(designmatrix(uf)))
+        return modelmatrix(designmatrix(uf))
         #return hcat(modelmatrix(designmatrix(uf))...)
     else
         # replace basisfunction with non-timeexpanded one
@@ -360,7 +360,7 @@ end
 
 modelcols_nobasis(f::FormulaTerm,tbl::AbstractDataFrame) = modelcols(f.rhs.term,tbl)
 StatsModels.modelmatrix(uf::UnfoldModel) = modelmatrix(designmatrix(uf))#modelmatrix(uf.design,uf.designmatrix.events)
-StatsModels.modelmatrix(d::DesignMatrix) = d.Xs
+StatsModels.modelmatrix(d::DesignMatrix) = equalizeLengths(d.Xs)
 
 
 StatsModels.modelmatrix(d::Dict, events) = modelcols(formula(d).rhs, events)

@@ -47,12 +47,12 @@ Xdc1 = designmatrix(UnfoldLinearModel, f, tbl, basisfunction1)
 Xdc2 = designmatrix(UnfoldLinearModel, f, tbl .+ 1, basisfunction2)
 
 Xdc = Xdc1 + Xdc2
-@test size(Xdc.Xs, 2) == size(Xdc1.Xs, 2) + size(Xdc2.Xs, 2)
+@test size(modelmatrix(Xdc), 2) == size(modelmatrix(Xdc1), 2) + size(modelmatrix(Xdc2), 2)
 @test length(Xdc.events) == 2
 
 Xdc_3 = Xdc1 + Xdc2 + Xdc2
 
-@test size(Xdc_3.Xs, 2) == size(Xdc1.Xs, 2) + 2*size(Xdc2.Xs, 2)
+@test size(modelmatrix(Xdc_3), 2) == size(modelmatrix(Xdc1), 2) + 2*size(modelmatrix(Xdc2), 2)
 @test length(Xdc_3.events) == 3
 
 
@@ -80,8 +80,7 @@ Xdc4 = designmatrix(UnfoldLinearMixedModel, f4, tbl2, basisfunction2)
 Xdc4_wrong = designmatrix(UnfoldLinearMixedModel, f4_wrong, tbl, basisfunction2)
 
 Xdc = Xdc3 + Xdc4;
-@test typeof(Xdc.Xs[1]) <: SparseArrays.SparseMatrixCSC
-@test size(Xdc.Xs[1], 2) == size(Xdc3.Xs[1], 2) + size(Xdc4.Xs[1], 2)
+@test typeof(Xdc.Xs[1][1]) <: SparseArrays.SparseMatrixCSC
 @test length(Xdc.Xs) == 4 # one FeMat  + 3 ReMat
 @test_throws String Xdc3 + Xdc4_wrong
 uf = UnfoldLinearMixedModelContinuousTime(Dict(), Xdc, [])
