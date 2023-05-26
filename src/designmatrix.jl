@@ -332,7 +332,7 @@ equalizeLengths(Xs::AbstractMatrix) = Xs
 equalizeLengths(Xs::Tuple) = (equalizeLengths(Xs[1]),Xs[2:end]...)
 
 # UnfoldLinearModel - they have to be equal already
-equalizeLengths(Xs::Vector{<:Matrix}) = Xs 
+equalizeLengths(Xs::Vector{<:AbstractMatrix}) = Xs 
 
 #UnfoldLinearModelContinuousTime
 equalizeLengths(Xs::Vector{<:SparseMatrixCSC}) = equalizeLengths(Xs...) 
