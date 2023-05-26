@@ -326,7 +326,8 @@ function StatsModels.modelmatrix(uf::UnfoldLinearModel,basisfunction)
 end
 equalizeLengths(Xs::Tuple) = (equalizeLengths(Xs[1]),Xs[2:end]...)
 equalizeLengths(Xs::AbstractMatrix) = Xs
-equalizeLengths(Xs::Vector{<:SparseMatrixCSC}) = equalizeLengths(Xs...)#equalizeLengths(Xs[1],Xs[2],equalizeLengths(Xs[2:end]))
+equalizeLengths(Xs::Vector{<:SparseMatrixCSC}) = equalizeLengths(Xs...)
+equalizeLengths(Xs::Vector{<:Matrix}) = Xs
 equalizeLengths(Xs1::SparseMatrixCSC,Xs2::SparseMatrixCSC,args...) = equalizeLengths(equalizeLengths(Xs1,Xs2),args...)
 function equalizeLengths(Xs1::SparseMatrixCSC,Xs2::SparseMatrixCSC)
     sX1 = size(Xs1, 1)
