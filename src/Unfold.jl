@@ -51,7 +51,7 @@ include("statistics.jl")
 
 #include("plot.jl") # don't include for now
 export fit, fit!, designmatrix!
-export firbasis, hrfbasis, condense_long
+export firbasis, hrfbasis
 export UnfoldLinearModel,
     UnfoldLinearMixedModel,
     UnfoldModel,
@@ -64,7 +64,6 @@ export coeftable
 export modelfit
 export predict
 export spl
-export cluster_permutation_test
 
 export likelihoodratiotest # statistics.jl
 export pvalues # statistics.jl

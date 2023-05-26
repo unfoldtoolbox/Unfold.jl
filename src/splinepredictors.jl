@@ -43,8 +43,7 @@ function splFunction(x, basis)
     
     bs_eval = bsplines.(Ref(basis), x)
     
-    @show x
-    @show bs_eval
+   
     for k = 1:length(bs_eval)
         if isnothing(bs_eval[k]) 
             @warn("spline prediction outside of possible range, putting to missing")
