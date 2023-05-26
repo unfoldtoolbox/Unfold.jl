@@ -324,10 +324,18 @@ function StatsModels.modelmatrix(uf::UnfoldLinearModel,basisfunction)
         return modelmatrix(uf)
     end
 end
-equalizeLengths(Xs::Tuple) = (equalizeLengths(Xs[1]),Xs[2:end]...)
+
+# catch all case
 equalizeLengths(Xs::AbstractMatrix) = Xs
-equalizeLengths(Xs::Vector{<:SparseMatrixCSC}) = equalizeLengths(Xs...)
-equalizeLengths(Xs::Vector{<:Matrix}) = Xs
+
+# UnfoldLinearMixedModelContinuousTime case
+equalizeLengths(Xs::Tuple) = (equalizeLengths(Xs[1]),Xs[2:end]...)
+
+# UnfoldLinearModel - they have to be equal already
+equalizeLengths(Xs::Vector{<:Matrix}) = Xs 
+
+#UnfoldLinearModelContinuousTime
+equalizeLengths(Xs::Vector{<:SparseMatrixCSC}) = equalizeLengths(Xs...) 
 equalizeLengths(Xs1::SparseMatrixCSC,Xs2::SparseMatrixCSC,args...) = equalizeLengths(equalizeLengths(Xs1,Xs2),args...)
 function equalizeLengths(Xs1::SparseMatrixCSC,Xs2::SparseMatrixCSC)
     sX1 = size(Xs1, 1)
