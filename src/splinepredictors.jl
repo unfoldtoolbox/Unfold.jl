@@ -90,7 +90,7 @@ function BSplineTerm(term, df,order=4)
 end
 
 function PeriodicBSplineTerm(term, df,low,high)
-    PeriodicBSplineTerm(term, df,4,low,high,[])
+    PeriodicBSplineTerm(term, df,4,low,high)
 end
 function PeriodicBSplineTerm(term, df,order,low,high)
     PeriodicBSplineTerm(term, df,order,low,high,[])
