@@ -56,13 +56,17 @@ f_spl_many = @formula 0 ~ 1 + spl(continuousA, 131) # 1
 m_mul_spl_many = coeftable(fit(UnfoldModel, f_spl_many, evts, data_e, times))
 @test length(unique(m_mul_spl_many.coefname)) == 131
 end
-if 1 == 0
+
 @testset "PeriodicSplines" begin
-    f_circspl = @formula 0 ~ 1  + circspl(continuousA, 4,0.,10.) # 1
+    f_circspl = @formula 0 ~ 1  + circspl(continuousA, 10,-1,1) # 1
     m = fit(UnfoldModel, f_circspl, evts, data_e, times)
     f_evaluated = Unfold.formula(m)
-    m
-    effValues = [0.1,0.11,0.12,0.5,1,3,5,8,9.98,9.99,10]
+    
+    effValues = [-1,-0.99,0,0.99,1]
+    effValues = range(-1.1,1.1,step=0.1)
     effSingle = effects(Dict(:continuousA => effValues), m)
-end
+    tmp = subset(effSingle,:time =>x->x.== -1.0)
+    @test tmp.yhat[tmp.continuousA .== -1.1] ≈ tmp.yhat[tmp.continuousA .== 0.9]
+    @test tmp.yhat[tmp.continuousA .== -1.0] ≈ tmp.yhat[tmp.continuousA .== 1]
+    @test tmp.yhat[tmp.continuousA .== -0.9] ≈ tmp.yhat[tmp.continuousA .== 1.1]
 end
