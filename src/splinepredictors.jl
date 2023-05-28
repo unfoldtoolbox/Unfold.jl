@@ -58,7 +58,7 @@ function splFunction(x, bs)
     ix = x .< bnds[1] .|| x .>bnds[2]
     
     if sum(ix) != 0
-        @warn("spline prediction outside of possible range, putting those values to missing")
+        @warn("spline prediction outside of possible range  putting those values to missing.\n `findfirst(Out-Of-Bound-value)` is x=$(x[findfirst(ix)]), with bounds: $bnds")
         large[ix,:] .= missing
     end
 
@@ -149,7 +149,7 @@ end
 
 #StatsModels.terms(p::BSplineTerm) = terms(p.term)
 StatsModels.termvars(p::AbstractSplineTerm) = StatsModels.termvars(p.term)
-StatsModels.width(p::AbstractSplineTerm) = p.df
+StatsModels.width(p::AbstractSplineTerm) = p.df-1
 StatsModels.coefnames(p::BSplineTerm) =
     "spl(" .* coefnames(p.term) .* "," .* string.(1:p.df-1) .* ")"
 StatsModels.coefnames(p::PeriodicBSplineTerm) =
