@@ -10,7 +10,7 @@ m_mul = coeftable(fit(UnfoldModel, f, evts, data_e, times))
 m_mul_spl = coeftable(fit(UnfoldModel, f_spl, evts, data_e, times))
 
 # asking for 4 splines should generate 4 splines 
-@test length(unique(m_mul_spl.coefname)) == 6 # XXX check back with Unfold whether this is the same! could be n-1 splines in Unfold. We should keep that comparable I guess
+@test length(unique(m_mul_spl.coefname)) == 5
 
 # test safe prediction
 m = fit(UnfoldModel, f_spl, evts, data_e, times)
@@ -45,4 +45,4 @@ end
 # test much higher number of splines
 f_spl_many = @formula 0 ~ 1 + spl(continuousA, 131) # 1
 m_mul_spl_many = coeftable(fit(UnfoldModel, f_spl_many, evts, data_e, times))
-@test length(unique(m_mul_spl_many.coefname)) == 132
+@test length(unique(m_mul_spl_many.coefname)) == 131

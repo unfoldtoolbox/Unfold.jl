@@ -26,7 +26,6 @@ Note: that due to the boundary condition (`natural`) spline, we repeat the bound
 """
 function genSpl_breakpoints(x, df)
     p = range(0.0, length = df-2, stop = 1.0) 
-    @show "df -1 or not?"
     breakpoints = quantile(x, p)
     return breakpoints
 end
@@ -152,6 +151,6 @@ end
 StatsModels.termvars(p::AbstractSplineTerm) = StatsModels.termvars(p.term)
 StatsModels.width(p::AbstractSplineTerm) = p.df
 StatsModels.coefnames(p::BSplineTerm) =
-    "spl(" .* coefnames(p.term) .* "," .* string.(1:p.df) .* ")"
+    "spl(" .* coefnames(p.term) .* "," .* string.(1:p.df-1) .* ")"
 StatsModels.coefnames(p::PeriodicBSplineTerm) =
-    "circspl(" .* coefnames(p.term) .* "," .* string.(1:p.df) .* ",$(p.low):$(p.high))"
+    "circspl(" .* coefnames(p.term) .* "," .* string.(1:p.df-1) .* ",$(p.low):$(p.high))"

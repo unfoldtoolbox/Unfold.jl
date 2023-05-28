@@ -29,7 +29,7 @@ end
 end
 
 ## Testing Splines
-f_spl = @formula 0 ~ 1 + conditionA + spl(continuousA, 3) # 1
+f_spl = @formula 0 ~ 1 + conditionA + spl(continuousA, 4) # 1
 m_mul_spl = fit(UnfoldModel, f_spl, evts, data_e, times)
 
 @testset "Mass Univariate, splines" begin
