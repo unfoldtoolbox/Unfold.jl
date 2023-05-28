@@ -5,7 +5,6 @@ version = "0.4.2"
 
 [deps]
 BSplineKit = "093aae92-e908-43d7-9660-e50ee39d5a0a"
-BSplines = "488c2830-172b-11e9-1591-253b8a7df96d"
 CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
 DSP = "717857b8-e6f2-59f4-9121-6e50c889abd2"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
@@ -34,7 +33,6 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 TimerOutputs = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
 
 [compat]
-BSplines = "0.3"
 CategoricalArrays = "0.10"
 DSP = "0.7"
 DataFrames = "1"

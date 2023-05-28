@@ -168,7 +168,7 @@ end
 
 function splinekernel(e, times, nsplines)
     breakpoints = spl_breakpoints(times, nsplines)
-    basis = BSplineBasis(4, breakpoints)  # 4= cubic
+    basis = BSplineKit.BSplineBasis(BSplineOrder(4), breakpoints)  # 4= cubic
     return sparse(Unfold.splFunction(times, basis))
 end
 
