@@ -66,7 +66,7 @@ export formula, design, designmatrix, coef
 export coeftable
 export modelfit
 export predict
-export spl
+export spl,circspl
 
 export likelihoodratiotest # statistics.jl
 export pvalues # statistics.jl
