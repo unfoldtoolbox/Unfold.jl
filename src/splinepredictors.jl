@@ -25,7 +25,7 @@ Note: that due to the boundary condition (`natural`) spline, we repeat the bound
 
 """
 function genSpl_breakpoints(p::AbstractSplineTerm,x)
-    p = range(0.0, length = p.df-1, stop = 1.0) 
+    p = range(0.0, length = p.df-2, stop = 1.0) 
     breakpoints = quantile(x, p)
     return breakpoints
 end
@@ -107,6 +107,11 @@ Construct a BSplineTerm, if breakpoints/basis are not defined yet, put to `nothi
 function BSplineTerm(term, df,order=4)
     BSplineTerm(term, df,order,[])
 end
+
+function BSplineTerm(term, df::ConstantTerm,order=4)
+    BSplineTerm(term, df.n,order,[])
+end
+
 
 function PeriodicBSplineTerm(term, df,low,high)
     PeriodicBSplineTerm(term, df,4,low,high)
