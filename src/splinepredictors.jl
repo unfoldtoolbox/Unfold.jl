@@ -24,8 +24,8 @@ minus one due to the intercept.
 Note: that due to the boundary condition (`natural`) spline, we repeat the boundary knots to each side `order` times, enforcing smoothness there - this is done within BSplineKit
 
 """
-function genSpl_breakpoints(x, df)
-    p = range(0.0, length = df-2, stop = 1.0) 
+function genSpl_breakpoints(p::AbstractSplineTerm,x)
+    p = range(0.0, length = p.df-1, stop = 1.0) 
     breakpoints = quantile(x, p)
     return breakpoints
 end
@@ -33,28 +33,34 @@ end
 """
 In the circular case, we do not use quantiles, (circular quantiles are difficult)
 """
-function genSpl_breakpoints(x,df,lo,hi)
+function genSpl_breakpoints(p::PeriodicBSplineTerm,x)
     # periodic case - 
-    return range(lo,hi,length=df-1)
+    return range(p.low,p.high,length=p.df+2)
 end
 
 """
-evaluate a spline basisset `basis` at `x`
+function that fills in an Matrix `large` according to the evaluated values in `x` with the designmatrix values for the spline.
 
-returns `Missing` if x is outside of the basis set
+    Two separate functions are needed here, as the periodicBSplineBasis implemented in BSplineKits is a bit weird, that it requires to evalute "negative" knots + knots above the top-boundary and fold them down
 """
-function splFunction(x, bs)
-    df = length(bs)
-    
-    large = zeros(Union{Missing,Float64},length(x), df)
-    
-    #bs_eval = evaluate_all.(basis, x)
+function spl_fillMat!(bs::PeriodicBSplineBasis,large::Matrix,x::AbstractVector)
+    # wrap values around the boundaries
     bnds = boundaries(bs)
-    for k = 1:df
-        #@show k
-        large[:,k] .= bs[k](x)
-    end
+    x = deepcopy(x)
+    x = mod.(x .- bnds[1],period(bs)) .+ bnds[1]
 
+    for k = -1:length(bs)+2
+        ix = basis_to_array_index(bs,axes(large,2),k)
+        large[:,ix] .+= bs[k](x)
+    end
+end
+function spl_fillMat!(bs::BSplineBasis,large::Matrix,x::AbstractVector)
+    for k = 1:length(bs)
+        
+        large[:,k] .+= bs[k](x)
+    end
+     
+    bnds = boundaries(bs)
     ix = x .< bnds[1] .|| x .>bnds[2]
     
     if sum(ix) != 0
@@ -62,6 +68,19 @@ function splFunction(x, bs)
         large[ix,:] .= missing
     end
 
+end
+    
+"""
+evaluate a spline basisset `basis` at `x`
+
+returns `Missing` if x is outside of the basis set
+"""
+function splFunction(x, bs)
+    # init array
+    large = zeros(Union{Missing,Float64},length(x), length(bs))
+    
+    # fill it with spline values
+    spl_fillMat!(bs,large,x)
     
     return large
 end
@@ -91,6 +110,9 @@ end
 
 function PeriodicBSplineTerm(term, df,low,high)
     PeriodicBSplineTerm(term, df,4,low,high)
+end
+function PeriodicBSplineTerm(term::AbstractTerm, df::ConstantTerm,order,low::ConstantTerm,high::ConstantTerm,breakvec)
+     PeriodicBSplineTerm(term, df.n,order,low.n,high.n,breakvec)
 end
 function PeriodicBSplineTerm(term, df,order,low,high)
     PeriodicBSplineTerm(term, df,order,low,high,[])
@@ -123,19 +145,25 @@ function StatsModels.apply_schema(
     isa(term, ContinuousTerm) ||
         throw(ArgumentError("BSplineTerm only works with continuous terms (got $term)"))
 
-    isa(t.df, ConstantTerm) ||
+    if isa(t.df, ConstantTerm)
+        try
+            # in case of ConstantTerm of Èffects.jl``
+            t.df.n
+        catch
         throw(ArgumentError("BSplineTerm df must be a number (got $(t.df))"))
+        end
+    end
     return construct_spline(t,term)
     end
-construct_spline(t::BSplineTerm,term)=BSplineTerm(term, t.df.n,t.order)
-construct_spline(t::PeriodicBSplineTerm,term)=PeriodicBSplineTerm(term, t.df.n,t.order,t.low,t.high)
+construct_spline(t::BSplineTerm,term)=BSplineTerm(term, t.df,t.order)
+construct_spline(t::PeriodicBSplineTerm,term)=PeriodicBSplineTerm(term, t.df,t.order,t.low,t.high)
 
 function StatsModels.modelcols(p::AbstractSplineTerm, d::NamedTuple)
 
     col = modelcols(p.term, d)
 
     if isempty(p.breakpoints)
-        p.breakpoints = genSpl_breakpoints(col,p.df)
+        p.breakpoints = genSpl_breakpoints(p,col)
     end
     
     #basis = genSpl_basis(pp.breakpoints,p.order)#Splines2.bs_(col,df=p.df+1,intercept=true)
