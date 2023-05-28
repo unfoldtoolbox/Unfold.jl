@@ -128,34 +128,34 @@ Useful functions:
 res = res[isnothing.(res.group),:]
 #calculate t-value
 res[:,:tvalue] = res.estimate ./ res.stderror</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">15-element Vector{Float64}:
-  1.1726147664685682
- -3.57589481317766
-  0.2734932541715418
-  0.07936247222983481
- -0.7232830597874109
- -0.6589978344561604
- 51.69420700704282
- -0.04306020932222559
-  0.6813366423833944
-  0.25860717501672253
- -1.7380673391507424
-  9.921295583772539
- -0.9365143345550325
- -0.8195806026961677
-  0.7096204401454708</code></pre><p>Okay cool, we have walds-t, but how to translate to a p-value?</p><p>This is by no means trivial, as the necessary degrees of freedom of the t-distribution are not well specified. There is a huge debate how to do it. One simple way is to simply assume the number of subjects as an upper bound to your p-value (your df will be between <span>$n_{subject}$</span> and <span>$\sum{n_{trials}}$</span>)</p><pre><code class="language-julia hljs">    df = length(unique(evts.subject))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">100</code></pre><p>Plug it into the t-distribution</p><pre><code class="language-julia hljs">    using Distributions
+  1.1726147665090954
+ -3.5758948130063457
+  0.2734932542531033
+  0.07936247197539918
+ -0.723283059838212
+ -0.6589978345239274
+ 51.694207007567016
+ -0.043060209317854946
+  0.6813366425740488
+  0.25860717496723123
+ -1.7380673387560326
+  9.92129558886961
+ -0.9365143349297776
+ -0.8195806020654834
+  0.7096204403444261</code></pre><p>Okay cool, we have walds-t, but how to translate to a p-value?</p><p>This is by no means trivial, as the necessary degrees of freedom of the t-distribution are not well specified. There is a huge debate how to do it. One simple way is to simply assume the number of subjects as an upper bound to your p-value (your df will be between <span>$n_{subject}$</span> and <span>$\sum{n_{trials}}$</span>)</p><pre><code class="language-julia hljs">    df = length(unique(evts.subject))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">100</code></pre><p>Plug it into the t-distribution</p><pre><code class="language-julia hljs">    using Distributions
     res.pvalue = pdf.(TDist(df),res.tvalue)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">15-element Vector{Float64}:
- 0.19966873204668617
- 0.0009135618577942217
- 0.38320022547299915
- 0.3966824928537285
- 0.30576613006175235
- 0.3197313648131724
- 5.450845663753298e-74
- 0.3975737432103205
- 0.3149545485804008
- 0.38473502552144134
- 0.08853181452768308
- 3.7189581148247963e-16
- 0.2560398182364053
- 0.28379048611218216
- 0.30878848553164295</code></pre><p>Cool! Let&#39;s compare!</p><pre><code class="language-julia hljs">DataFrame(:walds=&gt;res[res.coefname .== &quot;condB&quot;,:pvalue],:lrt=&gt;pvals_lrt)</code></pre><div><div style = "float: left;"><span>5×2 DataFrame</span></div><div style = "clear: both;"></div></div><div class = "data-frame" style = "overflow-x: scroll;"><table class = "data-frame" style = "margin-bottom: 6px;"><thead><tr class = "header"><th class = "rowNumber" style = "font-weight: bold; text-align: right;">Row</th><th style = "text-align: left;">walds</th><th style = "text-align: left;">lrt</th></tr><tr class = "subheader headerLastRow"><th class = "rowNumber" style = "font-weight: bold; text-align: right;"></th><th title = "Float64" style = "text-align: left;">Float64</th><th title = "Float64" style = "text-align: left;">Float64</th></tr></thead><tbody><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">1</td><td style = "text-align: right;">0.0885318</td><td style = "text-align: right;">NaN</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">2</td><td style = "text-align: right;">3.71896e-16</td><td style = "text-align: right;">0.0</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">3</td><td style = "text-align: right;">0.25604</td><td style = "text-align: right;">NaN</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">4</td><td style = "text-align: right;">0.28379</td><td style = "text-align: right;">NaN</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">5</td><td style = "text-align: right;">0.308788</td><td style = "text-align: right;">NaN</td></tr></tbody></table></div><p>At least qualitatively similar - we should look for a better example here; working on UnfoldSim :-)</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../_literate/HowTo/pyjulia_unfold/">« Unfold.jl directly from Python</a><a class="docs-footer-nextpage" href="../../_literate/HowTo/effects/">marginal effects (what to do with non-linear predictors) »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Tuesday 4 April 2023 08:23">Tuesday 4 April 2023</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ 0.19966873203723248
+ 0.000913561858295385
+ 0.38320022546437227
+ 0.3966824928618181
+ 0.30576613005046416
+ 0.3197313647988133
+ 5.450845658371915e-74
+ 0.3975737432103961
+ 0.31495454853927
+ 0.3847350255264114
+ 0.08853181458722735
+ 3.7189580191010343e-16
+ 0.2560398181464375
+ 0.2837904862593508
+ 0.308788485487832</code></pre><p>Cool! Let&#39;s compare!</p><pre><code class="language-julia hljs">DataFrame(:walds=&gt;res[res.coefname .== &quot;condB&quot;,:pvalue],:lrt=&gt;pvals_lrt)</code></pre><div><div style = "float: left;"><span>5×2 DataFrame</span></div><div style = "clear: both;"></div></div><div class = "data-frame" style = "overflow-x: scroll;"><table class = "data-frame" style = "margin-bottom: 6px;"><thead><tr class = "header"><th class = "rowNumber" style = "font-weight: bold; text-align: right;">Row</th><th style = "text-align: left;">walds</th><th style = "text-align: left;">lrt</th></tr><tr class = "subheader headerLastRow"><th class = "rowNumber" style = "font-weight: bold; text-align: right;"></th><th title = "Float64" style = "text-align: left;">Float64</th><th title = "Float64" style = "text-align: left;">Float64</th></tr></thead><tbody><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">1</td><td style = "text-align: right;">0.0885318</td><td style = "text-align: right;">NaN</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">2</td><td style = "text-align: right;">3.71896e-16</td><td style = "text-align: right;">0.0</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">3</td><td style = "text-align: right;">0.25604</td><td style = "text-align: right;">NaN</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">4</td><td style = "text-align: right;">0.28379</td><td style = "text-align: right;">NaN</td></tr><tr><td class = "rowNumber" style = "font-weight: bold; text-align: right;">5</td><td style = "text-align: right;">0.308788</td><td style = "text-align: right;">NaN</td></tr></tbody></table></div><p>At least qualitatively similar - we should look for a better example here; working on UnfoldSim :-)</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../_literate/HowTo/pyjulia_unfold/">« Unfold.jl directly from Python</a><a class="docs-footer-nextpage" href="../../_literate/HowTo/effects/">marginal effects (what to do with non-linear predictors) »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Sunday 28 May 2023 07:29">Sunday 28 May 2023</span>. Using Julia version 1.9.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

@@ -9,18 +9,17 @@ using DataFrames
 using Random
 using CSV
 using UnfoldMakie
-
+using UnfoldSim
+using UnfoldMakie
 
 # # Setup things
-# Let's load some data and fit a model of a 2-level categorical and a continuous predictor with interaction.
-include(joinpath(dirname(pathof(Unfold)), "../test/test_utilities.jl") ) # to load data
+# Let's generate some data and fit a model of a 2-level categorical and a continuous predictor with interaction.
+data,evts = UnfoldSim.predef_eeg(;noiselevel=8)
 
-data, evts = loadtestdata("test_case_3a")
+basisfunction = firbasis(τ = (-0.1, 0.5), sfreq = 100, name = "basisA")
 
-basisfunction = firbasis(τ = (-0.5, 1.5), sfreq = 20, name = "basisA")
 
-evts.conditionA= ["off","on"][(evts.conditionA .+1)] # convert evts into categorical
-f = @formula 0 ~ 1+conditionA*continuousA # 1
+f = @formula 0 ~ 1+condition+continuous # 1
 
 m = fit(UnfoldModel, Dict(Any=>(f,basisfunction)), evts, data,eventcolumn="type")
 
@@ -31,23 +30,23 @@ plot_erp(coeftable(m))
 # ### Effects
 # A convenience function is [effects](@ref). It allows to specify effects on specific levels, while setting non-specified ones to a typical value (usually the mean)
 
-eff = effects(Dict(:conditionA => ["off","on"]),m)
-plot_erp(eff;setMappingValues=(:color=>:conditionA,))
+eff = effects(Dict(:condition => ["car","face"]),m)
+plot_erp(eff;setMappingValues=(:color=>:condition,))
 
 # We can also generate continuous predictions
-eff = effects(Dict(:continuousA => -0.5:0.05:1),m)
-plot_erp(eff;setMappingValues=(:color=>:continuousA,),setExtraValues=(categoricalColor=false,categoricalGroup=false))
+eff = effects(Dict(:continuous => -5:0.5:5),m)
+plot_erp(eff;setMappingValues=(:color=>:continuous,:group=>:continuous=>nonnumeric),setExtraValues=(categoricalColor=false,categoricalGroup=false))
 
 # or split it up by condition
-eff = effects(Dict(:conditionA=>["off","on"],:continuousA => -1:.5:1),m)
-plot_erp(eff;setMappingValues=(:color=>:conditionA,:col=>:continuousA=>nonnumeric))
+eff = effects(Dict(:condition=>["car","face"],:continuous => -5:2:5),m)
+plot_erp(eff;setMappingValues=(:color=>:condition,:col=>:continuous=>nonnumeric))
 
 # ## What is typical anyway?
 # The user can specify the typical function applied to the covariates/factors that are marginalized over. This offers even greater flexibility.
 # Note that this is rarely necessary, in most applications the mean will be assumed.
-eff_max = effects(Dict(:conditionA=>["off","on"]),m;typical=maximum) # typical continuous value fixed to 1
+eff_max = effects(Dict(:condition=>["car","face"]),m;typical=maximum) # typical continuous value fixed to 1
 eff_max.typical .= :maximum
-eff = effects(Dict(:conditionA=>["off","on"]),m)
+eff = effects(Dict(:condition=>["car","face"]),m)
 eff.typical .= :mean # mean is the default
 
-plot_erp(vcat(eff,eff_max);setMappingValues=(;color=:conditionA,col=:typical))
+plot_erp(vcat(eff,eff_max);setMappingValues=(;color=:condition,col=:typical))
