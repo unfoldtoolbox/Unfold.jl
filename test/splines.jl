@@ -12,6 +12,10 @@ m_mul_spl = coeftable(fit(UnfoldModel, f_spl, evts, data_e, times))
 # asking for 4 splines should generate 4 splines 
 @test length(unique(m_mul_spl.coefname)) == 5
 
+s = Unfold.formula(fit(UnfoldModel, f_spl, evts, data_e, times)).rhs.terms[3]
+@test width(s) == 3
+@test length(coefnames(s)) == 3
+@test s.df == 3
 # test safe prediction
 m = fit(UnfoldModel, f_spl, evts, data_e, times)
 r = predict(m,DataFrame(conditionA=[0,0],continuousA=[0.9,1.9]))
