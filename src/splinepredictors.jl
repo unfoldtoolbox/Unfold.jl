@@ -18,9 +18,15 @@ end
 
 """
 generate a cubic spline basis function set, with df-1 breakpoints fixed to the quantiles of x
+
+minus one due to the intercept.
+
+Note: that due to the boundary condition (`natural`) spline, we repeat the boundary knots to each side `order` times, enforcing smoothness there - this is done within BSplineKit
+
 """
 function genSpl_breakpoints(x, df)
-    p = range(0.0, length = df - 1, stop = 1.0)
+    p = range(0.0, length = df-2, stop = 1.0) 
+    @show "df -1 or not?"
     breakpoints = quantile(x, p)
     return breakpoints
 end
@@ -62,12 +68,12 @@ function splFunction(x, bs)
 end
 
 function splFunction(x,spl::PeriodicBSplineTerm)
-    basis = PeriodicBSplineBasis(BSplineOrder(spl.order),spl.breakpoints)
+    basis = PeriodicBSplineBasis(BSplineOrder(spl.order),deepcopy(spl.breakpoints))
     splFunction(x,basis)
 end
 
 function splFunction(x,spl::BSplineTerm)
-    basis = BSplineKit.BSplineBasis(BSplineOrder(spl.order),spl.breakpoints)
+    basis = BSplineKit.BSplineBasis(BSplineOrder(spl.order),deepcopy(spl.breakpoints))
     splFunction(x,basis)
 end
 #spl(x,df) = Splines2.bs(x,df=df,intercept=true) # assumes intercept
