@@ -27,10 +27,10 @@ signal = reshape(signal,length(signal),1,1)
 signal = permutedims(signal,[3,2,1])
 size(signal)
 
-# Next we define three different models. **linear** **3 splines** and **10 splines**
-# note the different formulas, one `x` the other `spl(x,3)`
+# Next we define three different models. **linear** **4 splines** and **10 splines**
+# note the different formulas, one `x` the other `spl(x,4)`
 design_linear = Dict(Any=>	(@formula(0~1+x),[0]))
-design_spl3   = Dict(Any=>	(@formula(0~1+spl(x,3)),[0]))
+design_spl3   = Dict(Any=>	(@formula(0~1+spl(x,4)),[0]))
 design_spl10  = Dict(Any=>	(@formula(0~1+spl(x,10)),[0])) #hide
 
 # and we fit the parameters
@@ -52,7 +52,7 @@ pl = plot(evts.x,signal[1,1,:])
 	lines!(p_spl10.x,p_spl10.yhat)
 pl
 
-# What we can clearly see here, that the linear effect (blue) underfits the data, the `spl(x,10)` overfits it, but the `spl(x,3)` fits it perfectly.
+# What we can clearly see here, that the linear effect (blue) underfits the data, the `spl(x,10)` overfits it, but the `spl(x,4)` fits it perfectly.
 
 
 # ## Looking under the hood
