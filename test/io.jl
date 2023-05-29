@@ -17,7 +17,7 @@ bf1_A = firbasis(τ=[-0.1, 1], sfreq=100, name="event_A");
 bf1_B = firbasis(τ=[-0.1, 1], sfreq=100, name="event_B");
 
 f1_A = @formula 0 ~ 1;
-f1_B = @formula 0 ~ 1 + condition + spl(continuous, 3);
+f1_B = @formula 0 ~ 1 + condition + spl(continuous, 4);
 
 bfDict1 = Dict("event_A" => (f1_A, bf1_A), "event_B" => (f1_B, bf1_B));
 
