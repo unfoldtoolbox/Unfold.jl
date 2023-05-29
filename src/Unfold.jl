@@ -51,6 +51,7 @@ include("predict.jl")
 include("splinepredictors.jl")
 include("effects.jl")
 include("statistics.jl")
+include("io.jl")
 
 #include("plot.jl") # don't include for now
 export fit, fit!, designmatrix!
@@ -74,4 +75,7 @@ export pvalues # statistics.jl
 export effects # effects.jl
 import StatsModels.@formula # for exporting
 export @formula
+
+export save
+export load
 end # module

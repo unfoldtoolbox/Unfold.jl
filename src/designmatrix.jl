@@ -25,31 +25,12 @@ function combineDesignmatrices(X1::DesignMatrix, X2::DesignMatrix)
     X2 = deepcopy(X2)
     Xs1 = get_Xs(X1)
     Xs2 = get_Xs(X2)
-
-    sX1 = size(Xs1, 1)
-    sX2 = size(Xs2, 1)
-
-    # append 0 to the shorter designmat
-    if sX1 < sX2
-        Xs1 = SparseMatrixCSC(sX2, Xs1.n, Xs1.colptr, Xs1.rowval, Xs1.nzval)
-    elseif sX2 < sX1
-        Xs2 = SparseMatrixCSC(sX1, Xs2.n, Xs2.colptr, Xs2.rowval, Xs2.nzval)
-    end
-    if typeof(X1.Xs) <: Matrix
-        # mass univariate case, simply put in a vector
-        if typeof(Xs1) <:Vector
-            Xcomb = [Xs1...,Xs2]
-        else
-            Xcomb = [Xs1,Xs2]
-        end
+    if typeof(Xs1) <:Vector
+        Xcomb = [Xs1...,Xs2]
     else
-        Xcomb = hcat(Xs1, Xs2)
+        Xcomb = [Xs1,Xs2]
     end
 
-    #if !(Float64(X1.formulas.rhs.basisfunction.times.step) ≈ Float64(X2.formulas.rhs.basisfunction.times.step))
-    #        @warn("Concatenating formulas with different sampling rates. Be sure that this is what you want.")
-    #end
-    
     if typeof(X1.Xs) <: Tuple
         # we have random effects                
         # combine REMats in single-eventtpe formulas ala y ~ (1|x) + (a|x)
@@ -160,14 +141,17 @@ end
 function get_Xs(Xs::SparseMatrixCSC)
     return Xs
 end
-function get_Xs(Xs::Matrix)
+function get_Xs(Xs::AbstractArray)
     # mass univariate case
-    return Xs
-end
-function get_Xs(Xs::Vector)
     # mass univariate case with multiple events
     return Xs
 end
+
+"""
+Typically returns the field X.Xs of the designmatrix
+
+Compare to `modelmatrix` which further concatenates the designmatrices (in the UnfoldLinearModelContinuousTime) as needed
+"""
 function get_Xs(X::DesignMatrix)
     return get_Xs(X.Xs)
 end
@@ -341,9 +325,34 @@ function StatsModels.modelmatrix(uf::UnfoldLinearModel,basisfunction)
     end
 end
 
+# catch all case
+equalizeLengths(Xs::AbstractMatrix) = Xs
+
+# UnfoldLinearMixedModelContinuousTime case
+equalizeLengths(Xs::Tuple) = (equalizeLengths(Xs[1]),Xs[2:end]...)
+
+# UnfoldLinearModel - they have to be equal already
+equalizeLengths(Xs::Vector{<:AbstractMatrix}) = Xs 
+
+#UnfoldLinearModelContinuousTime
+equalizeLengths(Xs::Vector{<:SparseMatrixCSC}) = equalizeLengths(Xs...) 
+equalizeLengths(Xs1::SparseMatrixCSC,Xs2::SparseMatrixCSC,args...) = equalizeLengths(equalizeLengths(Xs1,Xs2),args...)
+function equalizeLengths(Xs1::SparseMatrixCSC,Xs2::SparseMatrixCSC)
+    sX1 = size(Xs1, 1)
+    sX2 = size(Xs2, 1)
+
+    # append 0 to the shorter designmat
+    if sX1 < sX2
+        Xs1 = SparseMatrixCSC(sX2, Xs1.n, Xs1.colptr, Xs1.rowval, Xs1.nzval)
+    elseif sX2 < sX1
+        Xs2 = SparseMatrixCSC(sX1, Xs2.n, Xs2.colptr, Xs2.rowval, Xs2.nzval)
+    end
+    return hcat(Xs1,Xs2)
+end
 function StatsModels.modelmatrix(uf::UnfoldLinearModelContinuousTime,basisfunction = true)
     if basisfunction
         return modelmatrix(designmatrix(uf))
+        #return hcat(modelmatrix(designmatrix(uf))...)
     else
         # replace basisfunction with non-timeexpanded one
         f = formula(uf)
@@ -360,7 +369,7 @@ end
 
 modelcols_nobasis(f::FormulaTerm,tbl::AbstractDataFrame) = modelcols(f.rhs.term,tbl)
 StatsModels.modelmatrix(uf::UnfoldModel) = modelmatrix(designmatrix(uf))#modelmatrix(uf.design,uf.designmatrix.events)
-StatsModels.modelmatrix(d::DesignMatrix) = d.Xs
+StatsModels.modelmatrix(d::DesignMatrix) = equalizeLengths(d.Xs)
 
 
 StatsModels.modelmatrix(d::Dict, events) = modelcols(formula(d).rhs, events)
@@ -665,4 +674,19 @@ end
 
 function StatsModels.coefnames(term::RandomEffectsTerm)
     coefnames(term.lhs)
+end
+
+
+
+
+function Base.show(io::IO,d::DesignMatrix)
+    println(io,"Unfold.DesignMatrix")
+    println(io,"Formulas: $(d.formulas)")
+    #display(io,d.formulas)
+    sz_evts =  isa(d.events,Vector) ? size.(d.events) : size(d.events)
+    sz_Xs =  (isa(d.Xs,Vector) | isa(d.Xs,Tuple)) ? size.(d.Xs) : size(d.Xs)
+    
+    println(io,"\nSizes: Xs: $sz_Xs, events: $sz_evts")
+    println(io,"\nuseful functions: formula(d),modelmatrix(d)")
+    println(io,"Fields: .formulas, .Xs, .events")
 end

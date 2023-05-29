@@ -168,12 +168,12 @@ function StatsModels.fit!(
     end
     nchan = size(data, 1)
 
+    Xs = (equalizeLengths(Xs[1]),Xs[2:end]...)
     _,data = zeropad(Xs[1],data)
     # get a un-fitted mixed model object
 
 
     mm = LinearMixedModel_wrapper(formula(uf), firstData, Xs)
-
     # prepare some variables to be used
     βsc, θsc = similar(MixedModels.coef(mm)), similar(mm.θ) # pre allocate
     p, k = length(βsc), length(θsc)
@@ -333,8 +333,7 @@ function LinearMixedModel_wrapper(
     wts = [],
 ) where {TData<:Number}
     #    function LinearMixedModel_wrapper(form,data::Array{<:Union{Missing,TData},1},Xs;wts = []) where {TData<:Number}
-
-
+    Xs = (equalizeLengths(Xs[1]),Xs[2:end]...)
     # XXX Push this to utilities zeropad
     # Make sure X & y are the same size
     m = size(Xs[1])[1]
@@ -347,7 +346,7 @@ function LinearMixedModel_wrapper(
     end
 
     y = (reshape(float(data), (:, 1)))
-
+    
     MixedModels.LinearMixedModel(y, Xs, form, wts)
 end
 

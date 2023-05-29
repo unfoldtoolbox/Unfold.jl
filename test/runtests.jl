@@ -34,6 +34,10 @@ end
 @testset "Utilities" begin
     include("utilities.jl")
 end
+
+@testset "IO" begin
+    include("io.jl")
+end
 #@testset "ClusterPermutation" begin
 #include("clusterpermutation.jl")
 #end
