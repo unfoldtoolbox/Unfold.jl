@@ -64,7 +64,7 @@ UnfoldLinearMixedModelContinuousTime(d::Dict) =
 UnfoldLinearMixedModelContinuousTime(d::Dict, X::DesignMatrix) =
     UnfoldLinearMixedModelContinuousTime(d, X, [])
 
-
+abstract type AbstractSplineTerm <:AbstractTerm end
 abstract type ModelFit end
 
 struct LinearModelFit <: ModelFit

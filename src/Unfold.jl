@@ -19,7 +19,7 @@ using StaticArrays # for MixedModels extraction of parametrs (inherited from Mix
 using ProgressMeter
 using DocStringExtensions # for Docu
 using MLBase # for crossVal
-using BSplines # for spline predictors
+using BSplineKit # for spline predictors
 
 using RobustModels # for robust modelling
 #using CategoricalArrays
@@ -33,6 +33,9 @@ import StatsModels: terms
 
 import MixedModels.likelihoodratiotest
 
+import StatsBase.quantile
+
+import Base.show
 import Base.(+) # overwrite for DesignMatrices
 using Distributions: Gamma, pdf # TODO replace this with direct implementation (used in basisfunction.jl)
 
@@ -63,7 +66,7 @@ export formula, design, designmatrix, coef
 export coeftable
 export modelfit
 export predict
-export spl
+export spl,circspl
 
 export likelihoodratiotest # statistics.jl
 export pvalues # statistics.jl
