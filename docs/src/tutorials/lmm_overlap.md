@@ -6,7 +6,8 @@ using StatsModels, MixedModels, DataFrames,CategoricalArrays
 using Unfold
 using UnfoldMakie,CairoMakie
 using DataFrames
-include(joinpath(dirname(pathof(Unfold)), "../test/test_utilities.jl") ) # to load data
+using UnfoldSim
+
 nothing;#hide
 ```
 
@@ -16,13 +17,11 @@ This notebook is similar to the [Linear Model with Overlap Correction](@ref) tut
 !!! warning 
     **Limitation**: This is not production ready at all. Still lot's of things to find out and tinker with. Don't use this if you did not look under the hood of the toolbox!
 
-## Load the data
+## Get some  data
 
 ```@example Main
-dat, evts = loadtestdata("testCase3",dataPath = "../../../test/data/")
-dat = dat .+ 0.1*randn(size(dat)) # we have to add minimal noise, else mixed models crashes.
-dat = dat'
-evts.subject  = categorical(Array(evts.subject))
+dat,evts = UnfoldSim.predef_2x2(;n_items=52,n_subjects=40)
+#evts.subject  = categorical(Array(evts.subject))
 nothing #hide
 ```
 
@@ -51,7 +50,7 @@ We define the formula. Importantly we need to specify a random effect.
     We are using `zerocorr` because we need it here, else the model will try to model all correlations between all timepoints and all factors!
 
 ```@example Main
-f  = @formula 0~1+condA*condB+zerocorr(1+condA*condB|subject);
+f  = @formula 0~1+A*B+zerocorr(1+A*B|subject);
 ```
 
 
@@ -59,7 +58,8 @@ f  = @formula 0~1+condA*condB+zerocorr(1+condA*condB|subject);
 ```@example Main
 bfDict = Dict(Any=>(f,basisfunction))
 # for some reason this results in a big error. Skipping this tutorial right now
-#m = fit(UnfoldModel,bfDict,evts,dat) 
+m = fit(UnfoldModel,bfDict,evts,dat) 
+evts
 #results = coeftable(m)
 #first(results,6)
 ```
@@ -68,5 +68,5 @@ bfDict = Dict(Any=>(f,basisfunction))
 #### 4. Visualize results
 
 ```@example Main
-#plot_erp(results;setMappingValues=(;col=:group))
+plot_erp(results;mapping=(;col=:group))
 ```
