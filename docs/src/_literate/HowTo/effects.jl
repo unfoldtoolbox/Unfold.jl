@@ -31,15 +31,15 @@ plot_erp(coeftable(m))
 # A convenience function is [effects](@ref). It allows to specify effects on specific levels, while setting non-specified ones to a typical value (usually the mean)
 
 eff = effects(Dict(:condition => ["car","face"]),m)
-plot_erp(eff;setMappingValues=(:color=>:condition,))
+plot_erp(eff;mapping=(:color=>:condition,))
 
 # We can also generate continuous predictions
 eff = effects(Dict(:continuous => -5:0.5:5),m)
-plot_erp(eff;setMappingValues=(:color=>:continuous,:group=>:continuous=>nonnumeric),setExtraValues=(categoricalColor=false,categoricalGroup=false))
+plot_erp(eff;mapping=(:color=>:continuous,:group=>:continuous=>nonnumeric),setExtraValues=(categoricalColor=false,categoricalGroup=false))
 
 # or split it up by condition
 eff = effects(Dict(:condition=>["car","face"],:continuous => -5:2:5),m)
-plot_erp(eff;setMappingValues=(:color=>:condition,:col=>:continuous=>nonnumeric))
+plot_erp(eff;mapping=(:color=>:condition,:col=>:continuous=>nonnumeric))
 
 # ## What is typical anyway?
 # The user can specify the typical function applied to the covariates/factors that are marginalized over. This offers even greater flexibility.
@@ -49,4 +49,4 @@ eff_max.typical .= :maximum
 eff = effects(Dict(:condition=>["car","face"]),m)
 eff.typical .= :mean # mean is the default
 
-plot_erp(vcat(eff,eff_max);setMappingValues=(;color=:condition,col=:typical))
+plot_erp(vcat(eff,eff_max);mapping=(;color=:condition,col=:typical))
