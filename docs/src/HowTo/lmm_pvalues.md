@@ -3,39 +3,26 @@ There are currently two ways to get p-values for LMMs: Walds t-test & likelihood
 
 #### Setup
 ```@example Main
-    using Unfold, DataFrames
-   include(joinpath(dirname(pathof(Unfold)), "../test/test_utilities.jl") ) # to load data
-     data, evts = loadtestdata("testCase3",dataPath="../../../test/data/");
-```
-
-#### Get some 3D data / epoched
-```@example Main
-        # convert subject to categorical
-        evts[!,:subject] .= string.(evts.subject); 
-   
-        # we need to add noise, else LMM crashes
-        data=data.+2 .*randn(MersenneTwister(1),size(data))
-        
-        # epoch
-        data_epoch,times = Unfold.epoch(data = data,tbl=evts,τ=(-0.1,0.3),sfreq=10);
-        
-        # LMMs don't like missings
-        evts_epoch,data_epoch = Unfold.dropMissingEpochs(evts,data_epoch) 
+using Unfold, DataFrames
+using UnfoldSim
+data_epoch,evts = UnfoldSim.predef_2x2(;n_items=52,n_subjects=40,return_epoched=true)
+data_epoch = reshape(data_epoch,1,size(data_epoch)... )
+times = range(0,1,length=size(data,1))
 ```
 
 #### Define f0 & f1 and fit!
 ```@example Main
-        f0  = @formula 0~1+condA + (1|subject);
-        f1  = @formula 0~1+condA+condB + (1+condB|subject); # could also differ in random effects
+        f0  = @formula 0~1+A + (1+A|subject);
+        f1  = @formula 0~1+A+B + (1+A|subject); # could also differ in random effects
             
-        m0 = fit(UnfoldModel,Dict(Any=>(f0,times)),evts_epoch,data_epoch);
-        m1 = fit(UnfoldModel,Dict(Any=>(f1,times)),evts_epoch,data_epoch);
+        m0 = fit(UnfoldModel,Dict(Any=>(f0,times)),evts,data_epoch);
+        m1 = fit(UnfoldModel,Dict(Any=>(f1,times)),evts,data_epoch);
 ```
 
 ## Likelihoodratio
 ```@example Main
         uf_lrt = likelihoodratiotest(m0,m1)
-        uf_lrt
+        uf_lrt[1]
 ```
 As you can see, we have some lrts, exciting!
 
@@ -43,7 +30,7 @@ As you can see, we have some lrts, exciting!
 ```@example Main
     pvalues(uf_lrt)
 ```
-Now we extracted the p-values. Oops, lot's of NaN's, this is the case because we do not have realistic variability in our simulation. You can interpret them as "1's" or "undefined".
+Now we extracted the p-values. 
 
 Let's look at the structure. How do we get them to something usable? The solution is in the docs `?pvalues`
 
@@ -84,6 +71,13 @@ Plug it into the t-distribution
 
 Cool! Let's compare!
 ```@example Main
-DataFrame(:walds=>res[res.coefname .== "condB",:pvalue],:lrt=>pvals_lrt)
+df = DataFrame(:walds=>res[res.coefname .== "B: b_tiny",:pvalue],:lrt=>pvals_lrt)
+f = Figure()
+scatter(f[1,1],times,res[res.coefname .== "B: b_tiny",:estimate])
+scatter(f[1,2],df.walds,df.lrt)
+scatter(f[2,1],times,df.walds)
+scatter(f[2,2],times,df.lrt)
+
+f
 ``` 
-At least qualitatively similar - we should look for a better example here; working on UnfoldSim :-)
+Look pretty similar! note that the Walds-T is typically too liberal (LRT also, but to a lesser exted). Best is to use the forthcoming MixedModelsPermutations.jl or go the route via R and use KenwardRoger (data not yet published)
