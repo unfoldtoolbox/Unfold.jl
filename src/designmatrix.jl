@@ -629,7 +629,7 @@ function time_expand(X, term, tbl)
         end
     end
 
-    vals = vcat(vals...)
+    #vals = vcat(vals...)
     ix = rows .> 0
     A = sparse(rows[ix], cols[ix], vals[ix])
 
