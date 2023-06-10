@@ -615,7 +615,7 @@ function time_expand(X, term, tbl)
 
     # generate values
     #vals = []
-    vals = Array{Float64}(undef,size(cols))
+    vals = Array{Union{Missing,Float64}}(undef,size(cols))
     ix = 1
     
     for Xcol = 1:ncolsX
