@@ -614,9 +614,19 @@ function time_expand(X, term, tbl)
     cols = vcat(cols...)
 
     # generate values
-    vals = []
+    #vals = []
+    vals = Array{Float64}(undef,size(cols))
+    ix = 1
+    
     for Xcol = 1:ncolsX
-        push!(vals, vcat(nonzeros.(bases) .* X[:, Xcol]...))
+        for (i,b) = enumerate(bases)
+            b_nz = nonzeros(b)
+            l = length(b_nz)
+            
+            vals[ix:ix+l-1] .= b_nz .* @view X[i, Xcol]
+            ix = ix+l
+        #push!(vals, )
+        end
     end
 
     vals = vcat(vals...)
