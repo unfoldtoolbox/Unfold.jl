@@ -423,7 +423,7 @@ This function timeexpands the random effects and generates a ReMat object
 """
 function StatsModels.modelcols(
     term::TimeExpandedTerm{<:Union{<:RandomEffectsTerm,<:MixedModels.AbstractReTerm}},
-    tbl,
+    tbl
 )
     # exchange this to get ZeroCorr to work
 
@@ -431,10 +431,11 @@ function StatsModels.modelcols(
     tbl = DataFrame(tbl)
     # get the non-timeexpanded reMat
     reMat = modelcols(term.term, tbl)
-
+    
     # Timeexpand the designmatrix
     z = transpose(time_expand(transpose(reMat.z), term, tbl))
-
+    
+    z = disallowmissing(z) # can't have missing in here
 
 
     # First we check if there is overlap in the timeexpanded term. If so, we cannot continue. Later implementations will remedy that

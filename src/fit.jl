@@ -171,7 +171,7 @@ function StatsModels.fit!(
     Xs = (equalizeLengths(Xs[1]),Xs[2:end]...)
     _,data = zeropad(Xs[1],data)
     # get a un-fitted mixed model object
-
+    Xs = disallowmissing.(Xs)
 
     mm = LinearMixedModel_wrapper(formula(uf), firstData, Xs)
     # prepare some variables to be used
