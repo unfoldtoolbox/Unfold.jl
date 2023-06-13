@@ -90,6 +90,9 @@ end
 $(SIGNATURES)
 Generate a sparse FIR basis around the *τ* timevector at sampling rate *sfreq*. This is useful if you cannot make any assumptions on the shape of the event responses. If unrounded events are supplied, they are split between samples. E.g. event-latency = 1.2 will result in a "0.8" and a "0.2" entry.
 
+Advanced: second input can be duration in samples - careful: `times(firbasis)` always assumes duration = 1. Therefore, 
+issues with LMM and predict will appear!
+
 # Examples
 Generate a FIR basis function from -0.1s to 0.3s at 100Hz
 ```julia-repl
@@ -120,26 +123,35 @@ firbasis(τ, sfreq) = firbasis(τ, sfreq, "basis_" * string(rand(1:10000)))
 """
 $(SIGNATURES)
 Calculate a sparse firbasis
+
+second input can be duration in samples - careful: `times(firbasis)` always assumes duration = 1. Therefore, 
+issues with LMM and predict will appear!
+
 # Examples
 
 ```julia-repl
 julia>  f = firkernel(103.3,range(-0.1,step=0.01,stop=0.31))
+julia>  f_dur = firkernel([103.3 4],range(-0.1,step=0.01,stop=0.31))
 ```
 """
 function firkernel(e, times)
     @assert ndims(e) <= 1 #either single onset or a row vector where we will take the first one :)
-    if size(e, 1) > 1
-        # XXX we will soon assume that the second entry would be the duration
-        e = Float64(e[1])
-    end
-    e = [1 .- (e .% 1) e .% 1]
-    e[isapprox.(e, 0, atol = 1e-15)] .= 0
+
+    # duration is 1 for FIR and duration is duration (in samples!) if e is vector
+    dur = size(e, 1) == 1 ? 1 : Int.(ceil(e[2]))
+       
+        
     ksize = length(times) # kernelsize
 
-    kernel =
-        spdiagm(ksize + 1, ksize, 0 => repeat([e[1]], ksize), -1 => repeat([e[2]], ksize))
+    # the first and last entry is split, depending on whether we have "half" events
+    values =[1 .- (e[1] .% 1); repeat([1],dur-1); e[1] .% 1] 
+    values[isapprox.(values, 0, atol = 1e-15)] .= 0 # force to 0 to get sparsity back
 
-    return (kernel)
+    # build the matrix, we define it by diagonals which go from 0, -1, -2 ...
+    pairs = [x => repeat([y],ksize) for (x,y) = zip(.-range(0,dur),values)]
+    kernel = spdiagm(ksize + dur, ksize, pairs...)
+
+    return kernel
 
 end
 
