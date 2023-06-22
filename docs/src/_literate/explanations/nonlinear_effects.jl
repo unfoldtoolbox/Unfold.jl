@@ -10,7 +10,7 @@ using Colors
 
 
 
-# ## Generating a non-linea signal
+# ## Generating a non-linear signal
 # We start with generating 
 rng = MersenneTwister(2) # make repeatable
 n = 20 # datapoints
