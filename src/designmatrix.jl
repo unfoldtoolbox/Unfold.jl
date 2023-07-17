@@ -211,7 +211,10 @@ function designmatrix(
         @debug "checking group sorting"
         r = form.rhs
         ix = findall(isa.(r,MixedModels.AbstractReTerm))
-        groupvars = [map(x->x.term.rhs.sym,r[ix])...]
+
+        rhs(x::RandomEffectsTerm) = x.rhs
+        rhs(x::MixedModels.ZeroCorr) = rhs(x.term)
+        groupvars = [map(x->rhs(x).sym,r[ix])...]
         
 
         @assert groupvars == sort(groupvars) "random effects have to be alphabetically ordered. e.g. (1+a|X) + (1+a|A) is not allowed. Please reorder"
