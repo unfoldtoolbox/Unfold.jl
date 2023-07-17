@@ -11,6 +11,11 @@ end
     include("fit.jl")
 end
 
+@testset "fit LMMs" begin
+    include("fit_LMM.jl")
+end
+
+
 @testset "Designmatrix" begin
     include("designmatrix.jl")
 end
