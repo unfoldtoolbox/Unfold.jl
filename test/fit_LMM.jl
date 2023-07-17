@@ -21,6 +21,7 @@ designList = [Dict(Any=>(@formula(0~1+A+B+zerocorr(1+B+A|subject)+zerocorr(1+B|i
 end
 
 @testset "LMM bug reshape #110" begin
+    des =    Dict(Any=>(@formula(0~1+A+B+zerocorr(1+B+A|item)+zerocorr(1+B|subject)),range(0,1,length=size(data,1))))
     data,evts = UnfoldSim.predef_2x2(;return_epoched=true,n_subjects=10,noiselevel=1)
     uf = fit(UnfoldModel,des,evts,data)
     @test size(coef(uf)) ==(1,100,3)
