@@ -45,12 +45,24 @@ function StatsModels.fit(
     kwargs...,
     )
     detectedType = designToModeltype(design)
-    uf = detectedType(design)
-    fit(uf,design,tbl,data;kwargs...)
+
+    fit(detectedType,design,tbl,data;kwargs...)
 end
 
+
 function StatsModels.fit(
-    uf::Union{UnfoldLinearMixedModel,UnfoldLinearModel,UnfoldLinearMixedModelContinuousTime,UnfoldLinearModelContinuousTime},
+    UnfoldModelType::Type{<:UnfoldModel},
+    design::Dict,
+    tbl::DataFrame,
+    data::AbstractArray;
+    kwargs...,
+)
+fit(UnfoldModelType(design),design,tbl,data;kwargs...)
+end
+
+
+function StatsModels.fit(
+    uf::UnfoldModel,#Union{UnfoldLinearMixedModel,UnfoldLinearModel,UnfoldLinearMixedModelContinuousTime,UnfoldLinearModelContinuousTime},
     design::Dict,
     tbl::DataFrame,
     data::AbstractArray;
