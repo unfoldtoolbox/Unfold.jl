@@ -172,7 +172,10 @@ function StatsModels.fit!(
     kwargs...,
 )
 
-    @assert length(first(values(design(uf)))[2]) == size(data,length(size(data))-1) "Times Vector does not match second last dimension of input data - forgot to epoch, or misspecified 'time' vector?"
+    #@assert length(first(values(design(uf)))[2])
+    if uf isa UnfoldLinearMixedModel
+        @assert length(Unfold.times(Unfold.design(uf))) == size(data,length(size(data))-1) "Times Vector does not match second last dimension of input data - forgot to epoch, or misspecified 'time' vector?"
+    end
     # function content partially taken from MixedModels.jl bootstrap.jl
     df = Array{NamedTuple,1}()
     dataDim = length(size(data)) # surely there is a nicer way to get this but I dont know it
