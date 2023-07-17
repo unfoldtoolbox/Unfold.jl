@@ -205,7 +205,17 @@ function designmatrix(
 
 
     form = apply_schema(f, schema(f, tbl_nomissing, contrasts), MixedModels.LinearMixedModel)
-    
+    @debug "type: $type"
+    if (type== UnfoldLinearMixedModel) || (type == UnfoldLinearMixedModelContinuousTime)
+        # get all random effects
+        @debug "checking group sorting"
+        r = form.rhs
+        ix = findall(isa.(r,MixedModels.AbstractReTerm))
+        groupvars = [map(x->x.term.rhs.sym,r[ix])...]
+        
+
+        @assert groupvars == sort(groupvars) "random effects have to be alphabetically ordered. e.g. (1+a|X) + (1+a|A) is not allowed. Please reorder"
+    end
     form =
         apply_basisfunction(form, basisfunction, get(Dict(kwargs), :eventfields, nothing))
 
