@@ -38,17 +38,25 @@ end
 
 
 function StatsModels.fit(
-    UnfoldModelType::Type{T},
+    UnfoldModelType::Type{UnfoldModel},
     design::Dict,
     tbl::DataFrame,
     data::AbstractArray;
     kwargs...,
-) where {T<:Union{<:UnfoldModel}}
-    if UnfoldModelType == UnfoldModel
-        UnfoldModelType = designToModeltype(design)
-    end
-    uf = UnfoldModelType(design)
+    )
+    detectedType = designToModeltype(design)
+    uf = detectedType(design)
+    fit(uf,design,tbl,data;kwargs...)
+end
 
+function StatsModels.fit(
+    uf::Union{UnfoldLinearMixedModel,UnfoldLinearModel,UnfoldLinearMixedModelContinuousTime,UnfoldLinearModelContinuousTime},
+    design::Dict,
+    tbl::DataFrame,
+    data::AbstractArray;
+    kwargs...,
+    )
+    
     designmatrix!(uf, tbl; kwargs...)
     fit!(uf, data; kwargs...)
 
@@ -107,7 +115,7 @@ end
 
 # helper function for 1 channel data
 function StatsModels.fit(
-    UnfoldModelType::Type{T},
+    ufmodel::T,
     design::Dict,
     tbl::DataFrame,
     data::AbstractVector,
@@ -116,21 +124,20 @@ function StatsModels.fit(
 ) where {T<:Union{<:UnfoldModel}}
     @debug("data array is size (X,), reshaping to (1,X)")
     data = reshape(data, 1, :)
-    return fit(UnfoldModelType, design, tbl, data, args...; kwargs...)
+    return fit(ufmodel, design, tbl, data, args...; kwargs...)
 end
 
 # helper to reshape a 
 function StatsModels.fit(
-    UnfoldModelType::Type{T},
+    ufmodel::T,
     design::Dict,
     tbl::DataFrame,
     data::AbstractMatrix,
     args...;
-    kwargs...)where {T<:UnfoldLinearModel}
-
+    kwargs...)where {T<:Union{UnfoldLinearMixedModel,UnfoldLinearModel}}
     @debug("MassUnivariate data array is size (X,Y), reshaping to (1,X,Y)")
     data = reshape(data, 1, size(data)...)
-    return fit(UnfoldModelType, design, tbl, data, args...; kwargs...)
+    return fit(ufmodel, design, tbl, data, args...; kwargs...)
 end
 
 
@@ -171,6 +178,7 @@ function StatsModels.fit!(
     Xs = (equalizeLengths(Xs[1]),Xs[2:end]...)
     _,data = zeropad(Xs[1],data)
     # get a un-fitted mixed model object
+    
     Xs = disallowmissing.(Xs)
 
     mm = LinearMixedModel_wrapper(formula(uf), firstData, Xs)
