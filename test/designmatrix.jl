@@ -72,7 +72,7 @@ transform!(tbl, :subject => categorical => :subject)
 transform!(tbl2, :itemB => categorical => :itemB)
 transform!(tbl, :item => categorical => :item)
 #tbl.itemB = tbl.item
-f3 = @formula 0 ~ 1 + (1 | subject) + (1 | item)
+f3 = @formula 0 ~ 1 + (1 | item) + (1 | subject)
 f4 = @formula 0 ~ 1 + (1 | itemB)
 f4_wrong = @formula 0 ~ 1 + (1 | item)
 Xdc3 = designmatrix(UnfoldLinearMixedModel, f3, tbl, basisfunction1)
@@ -125,7 +125,7 @@ transform!(tbl1, :subject => categorical => :subject)
 transform!(tbl1, :item => categorical => :item)
 transform!(tbl2, :itemB => categorical => :itemB)
 #tbl.itemB = tbl.item
-f1 = @formula 0 ~ 1 + (1 | subject) + (1 | item)
+f1 = @formula 0 ~ 1 + (1 | item) + (1 | subject)
 f2 = @formula 0 ~ 1 + (1 | itemB)
 
 form = apply_schema(f1, schema(f1, tbl1), MixedModels.LinearMixedModel)
