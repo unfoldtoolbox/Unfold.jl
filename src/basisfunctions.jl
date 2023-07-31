@@ -204,6 +204,8 @@ collabel(term::Array{<:AbstractTerm}) = collabel(term[1].rhs)  # in case of comb
 #collabel(form::MatrixTerm) = collabel(form[1].rhs)
 
 # typical defaults
+
+shiftOnset(basis::BasisFunction) = basis.shiftOnset
 colnames(basis::BasisFunction) = basis.colnames
 kernel(basis::BasisFunction) = basis.kernel
 

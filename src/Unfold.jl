@@ -79,6 +79,11 @@ else
         msg = "MixedModels not loaded. Please use ]add MixedModels, using MixedModels to install it prior to using"
         isnothing(ext) ? throw(msg) : ext.likelihoodratiotest(args...;kwargs...)
     end
+    function check_groupsorting(args...;kwargs...)
+        ext = checkFun(:UnfoldMixedModelsExt) 
+        msg = "MixedModels not loaded. Please use ]add MixedModels, using MixedModels to install it prior to using"
+        isnothing(ext) ? throw(msg) : ext.check_groupsorting(args...;kwargs...)
+    end
     function splinebasis(args...;kwargs...)
         ext = checkFun(:UnfoldBSplineKit) 
         msg = "BSplineKit not loaded. Please use `]add BSplineKit, using BSplineKit` to install/load it, if you want to use splines"

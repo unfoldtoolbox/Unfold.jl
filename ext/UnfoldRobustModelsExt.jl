@@ -2,6 +2,8 @@ module UnfoldRobustModelsExt
 using Unfold
 using RobustModels
 using ProgressMeter
+using Missings
+
 
 function solver_robust(
     X,

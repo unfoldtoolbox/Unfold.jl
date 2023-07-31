@@ -2,7 +2,7 @@
 Unfold.splinebasis(; τ, sfreq, nsplines, name) = Unfold.splinebasis(τ, sfreq, nsplines, name)
 Unfold.splinebasis(τ, sfreq, nsplines) = Unfold.splinebasis(τ, sfreq, nsplines, "basis_" * string(rand(1:10000)))
 
-shiftOnset(basis::Union{SplineBasis,FIRBasis}) = basis.shiftOnset
+
 
 function Unfold.splinebasis(τ, sfreq, nsplines, name::String)
     τ = Unfold.round_times(τ, sfreq)
