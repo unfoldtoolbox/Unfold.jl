@@ -1,7 +1,7 @@
 
 # extracts betas (and sigma's for mixed models) with string grouping indicator
 # returns as a ch x beta, or ch x time x beta (for mass univariate)
-function make_estimate(
+function Unfold.make_estimate(
     m::Union{UnfoldLinearMixedModel,UnfoldLinearMixedModelContinuousTime},
 )
     estimate = cat(coef(m), ranef(m), dims = ndims(coef(m)))
@@ -35,7 +35,7 @@ function make_estimate(
     return Float64.(estimate), stderror, group
 end
 
-function stderror(m::Union{UnfoldLinearMixedModel,UnfoldLinearMixedModelContinuousTime})
+function Unfold.stderror(m::Union{UnfoldLinearMixedModel,UnfoldLinearMixedModelContinuousTime})
     return permutedims(
         reshape(vcat([[b.se...] for b in modelfit(m).fits]...), reverse(size(coef(m)))),
         [3, 2, 1],
@@ -43,7 +43,7 @@ function stderror(m::Union{UnfoldLinearMixedModel,UnfoldLinearMixedModelContinuo
 end
 
 
-function get_coefnames(uf::UnfoldLinearMixedModelContinuousTime)
+function Unfold.get_coefnames(uf::UnfoldLinearMixedModelContinuousTime)
     # special case here, because we have to reorder the random effects to the end, else labels get messed up as we concat (coefs,ranefs)
  #   coefnames = Unfold.coefnames(formula(uf))
 #    coefnames(formula(uf)[1].rhs[1])

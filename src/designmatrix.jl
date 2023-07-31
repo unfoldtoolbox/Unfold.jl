@@ -32,7 +32,7 @@ function combineDesignmatrices(X1::DesignMatrix, X2::DesignMatrix)
     end
 
     if typeof(X1.Xs) <: Tuple
-      Xcomb = lmm_combineMats(Xcomb,X1,X2)
+      Xcomb = lmm_combineMats!(Xcomb,X1,X2)
     end
 
     if X1.formulas isa FormulaTerm
@@ -58,16 +58,6 @@ function combineDesignmatrices(X1::DesignMatrix, X2::DesignMatrix)
     end
 end
 
-function changeMatSize!(m, fe::AbstractSparseMatrix, remats)
-    changeReMatSize!.(remats, Ref(m))
-    fe = SparseMatrixCSC(m, fe.n, fe.colptr, fe.rowval, fe.nzval)
-    return (fe, remats...)
-end
-function changeMatSize!(m, fe::AbstractMatrix, remats)
-    changeReMatSize!.(remats, Ref(m))
-    fe = fe[1:m,:]
-    return (fe, remats...)
-end
 
 
 Base.:+(X1::DesignMatrix, X2::DesignMatrix) = combineDesignmatrices(X1, X2)
@@ -143,14 +133,12 @@ function designmatrix(
         
 
 
-    
-    
     form = unfold_apply_schema(type,f, schema(f, tbl_nomissing, contrasts))
     
     @debug "type: $type"
     if (type== UnfoldLinearMixedModel) || (type == UnfoldLinearMixedModelContinuousTime)
         # get all random effects
-        @show form.rhs
+
         check_groupsorting(form.rhs)
     end
     form =
@@ -358,14 +346,6 @@ end
 
 
 
-
-"""
-$(SIGNATURES)
-Get the timeranges where the random grouping variable was applied
-"""
-function time_expand_getRandomGrouping(tblGroup, tblLatencies, basisfunction)
-    ranges = time_expand_getTimeRange.(tblLatencies, Ref(basisfunction))
-end
 
 # helper function to get the ranges from where to where the basisfunction is added
 function time_expand_getTimeRange(onset, basisfunction)

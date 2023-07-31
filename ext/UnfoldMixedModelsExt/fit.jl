@@ -40,8 +40,8 @@ function StatsModels.fit!(
     end
     nchan = size(data, 1)
 
-    Xs = (equalizeLengths(Xs[1]),Xs[2:end]...)
-    _,data = zeropad(Xs[1],data)
+    Xs = (Unfold.equalizeLengths(Xs[1]),Xs[2:end]...)
+    _,data = Unfold.zeropad(Xs[1],data)
     # get a un-fitted mixed model object
     
     Xs = disallowmissing.(Xs)
@@ -148,14 +148,14 @@ function LinearMixedModel_wrapper(
     wts = [],
 ) where {TData<:Number}
     #    function LinearMixedModel_wrapper(form,data::Array{<:Union{Missing,TData},1},Xs;wts = []) where {TData<:Number}
-    Xs = (equalizeLengths(Xs[1]),Xs[2:end]...)
+    Xs = (Unfold.equalizeLengths(Xs[1]),Xs[2:end]...)
     # XXX Push this to utilities zeropad
     # Make sure X & y are the same size
     m = size(Xs[1])[1]
 
 
     if m != size(data)[1]
-        fe,data = zeropad(Xs[1],data)
+        fe,data = Unfold.zeropad(Xs[1],data)
         
         Xs = changeMatSize!(size(data)[1], fe, Xs[2:end])
     end

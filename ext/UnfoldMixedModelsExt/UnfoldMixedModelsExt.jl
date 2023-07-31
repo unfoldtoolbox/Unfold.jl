@@ -12,6 +12,8 @@ import StatsModels: fit!,coef,coefnames,modelcols
 using SparseArrays
 using DocStringExtensions
 using LinearAlgebra # LowerTriangular
+using DataFrames
+using ProgressMeter
 
 include("condense.jl")
 include("designmatrix.jl")

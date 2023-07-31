@@ -3,10 +3,9 @@ function StatsModels.coefnames(term::RandomEffectsTerm)
     coefnames(term.lhs)
 end
 
-
-function check_groupsorting(r)
+check_groupsorting(r::MatrixTerm) = check_groupsorting(r.terms)
+function check_groupsorting(r::Tuple)
 @debug "checking group sorting"
-@show r
 ix = findall(isa.(r,MixedModels.AbstractReTerm))
 
 rhs(x::RandomEffectsTerm) = x.rhs
@@ -16,7 +15,7 @@ groupvars = [map(x->rhs(x).sym,r[ix])...]
 
 @assert groupvars == sort(groupvars) "random effects have to be alphabetically ordered. e.g. (1+a|X) + (1+a|A) is not allowed. Please reorder"
 end
-Unfold.unfold_apply_schema(type::Union{<:UnfoldLinearMixedModel,<:UnfoldLinearMixedModelContinuousTime},f,schema) = apply_schema(f,schema, MixedModels.LinearMixedModel)
+Unfold.unfold_apply_schema(type::Type{<:Union{<:UnfoldLinearMixedModel,<:UnfoldLinearMixedModelContinuousTime}},f,schema) = apply_schema(f,schema, MixedModels.LinearMixedModel)
 
 
 
@@ -24,7 +23,7 @@ function StatsModels.coefnames(term::MixedModels.ZeroCorr)
     coefnames(term.term)
 end
 
-function lmm_combineMats!(Xcomb,X1,X2)
+function Unfold.lmm_combineMats!(Xcomb,X1,X2)
 # we have random effects                
         # combine REMats in single-eventtpe formulas ala y ~ (1|x) + (a|x)
         Xs1 = MixedModels._amalgamate([X1.Xs[2:end]...], Float64)
@@ -74,6 +73,18 @@ function changeReMatSize!(remat::MixedModels.AbstractReMat, m::Integer)
 
     #ReMat{T,S}(remat.trm, refs, levels, cnames, z, wtz, λ, inds, adjA, scratch)
 end
+
+
+"""
+$(SIGNATURES)
+Get the timeranges where the random grouping variable was applied
+"""
+function time_expand_getRandomGrouping(tblGroup, tblLatencies, basisfunction)
+    ranges = Unfold.time_expand_getTimeRange.(tblLatencies, Ref(basisfunction))
+end
+
+
+
 function equalizeReMatLengths!(remats::NTuple{A,MixedModels.AbstractReMat}) where {A}
     # find max length
     m = maximum([x[1] for x in size.(remats)])
@@ -120,7 +131,7 @@ function StatsModels.modelcols(
     reMat = modelcols(term.term, tbl)
     
     # Timeexpand the designmatrix
-    z = transpose(time_expand(transpose(reMat.z), term, tbl))
+    z = transpose(Unfold.time_expand(transpose(reMat.z), term, tbl))
     
     z = disallowmissing(z) # can't have missing in here
 
@@ -169,13 +180,13 @@ function StatsModels.modelcols(
         else
             time_start = time[ix_start]
             # XXX Replace this functionality by shiftOnset?
-            time_start = time_start - sum(times(term.basisfunction) .<= 0)
+            time_start = time_start - sum(Unfold.times(term.basisfunction) .<= 0)
         end
         if i == length(uGroup)
             time_stop = size(refs, 1)
         else
             time_stop = time[ix_end]
-            time_stop = time_stop + sum(times(term.basisfunction) .> 0)
+            time_stop = time_stop + sum(Unfold.times(term.basisfunction) .> 0)
         end
         if time_start < 0
             time_start = 1
@@ -223,4 +234,14 @@ function StatsModels.modelcols(
 
     # Once MixedModels.jl supports it, can be replaced with: SparseReMat
     ReMat{T,S}(rhs, refs, levels, cnames, z, wtz, λ, inds, adjA, scratch)
+end
+function changeMatSize!(m, fe::AbstractSparseMatrix, remats)
+    changeReMatSize!.(remats, Ref(m))
+    fe = SparseMatrixCSC(m, fe.n, fe.colptr, fe.rowval, fe.nzval)
+    return (fe, remats...)
+end
+function changeMatSize!(m, fe::AbstractMatrix, remats)
+    changeReMatSize!.(remats, Ref(m))
+    fe = fe[1:m,:]
+    return (fe, remats...)
 end
