@@ -95,10 +95,10 @@ function splFunction(x,spl::BSplineTerm)
     splFunction(x,basis)
 end
 #spl(x,df) = Splines2.bs(x,df=df,intercept=true) # assumes intercept
-spl(x, df) = 1 # fallback
+Unfold.spl(x, df) = 1 # fallback
 
 # make a nice call if the function is called via REPL
-spl(t::Symbol, d::Int) = BSplineTerm(term(t), term(d),BSplineBasis,4)
+Unfold.spl(t::Symbol, d::Int) = BSplineTerm(term(t), term(d),BSplineBasis,4)
 circspl(t::Symbol, d::Int,low,high) = PeriodicBSplineTerm(term(t), term(d),4,low,high)
 
 """

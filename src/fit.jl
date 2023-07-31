@@ -96,6 +96,7 @@ end
 isMixedModelFormula(f::FormulaTerm) = isMixedModelFormula(f.rhs)
 isMixedModelFormula(f::Tuple) = any(isMixedModelFormula.(f))
 
+isMixedModelFormula(f::InteractionTerm) = false
 isMixedModelFormula(f::ConstantTerm) = false
 isMixedModelFormula(f::Term) = false
 #isMixedModelFormula(f::FunctionTerm) = false

@@ -94,7 +94,11 @@ else
         msg = "BSplineKit not loaded. Please use `]add BSplineKit, using BSplineKit` to install/load it, if you want to use splines"
         isnothing(ext) ? throw(msg) : ext.splinebasis(args...;kwargs...)
     end
-   
+    function spl(args...;kwargs...)
+        ext = checkFun(:UnfoldBSplineKit) 
+        msg = "BSplineKit not loaded. Please use `]add BSplineKit, using BSplineKit` to install/load it, if you want to use splines"
+        isnothing(ext) ? throw(msg) : ext.spl(args...;kwargs...)
+    end
    
 end
 

@@ -47,7 +47,7 @@ function Unfold.get_coefnames(uf::UnfoldLinearMixedModelContinuousTime)
     # special case here, because we have to reorder the random effects to the end, else labels get messed up as we concat (coefs,ranefs)
  #   coefnames = Unfold.coefnames(formula(uf))
 #    coefnames(formula(uf)[1].rhs[1])
-    formulas = formula(uf)
+    formulas = Unfold.formula(uf)
     if !isa(formulas,AbstractArray) # in case we have only a single basisfunction
         formulas = [formulas]
     end
