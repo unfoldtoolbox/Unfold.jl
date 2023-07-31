@@ -7,7 +7,8 @@
 Toolbox to perform linear regression on biological signals. 
 
 
-[![Docs](https://img.shields.io/badge/docs-dev-blue.svg)](https://unfoldtoolbox.github.io/Unfold.jl/dev)
+[![Docs](https://img.shields.io/badge/docs-main-blue.svg)](https://unfoldtoolbox.github.io/Unfold.jl/dev)
+![semver](https://img.shields.io/badge/semantic-versioning-green)
 ![](https://github.com/unfoldtoolbox/Unfold.jl/workflows/CI/badge.svg)
 
 This tool can model event related time series with mass-univariate linear (mixed) models, with optional non-linear effects and overlap correction.
