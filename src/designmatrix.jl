@@ -150,6 +150,7 @@ function designmatrix(
     @debug "type: $type"
     if (type== UnfoldLinearMixedModel) || (type == UnfoldLinearMixedModelContinuousTime)
         # get all random effects
+        @show form.rhs
         check_groupsorting(form.rhs)
     end
     form =

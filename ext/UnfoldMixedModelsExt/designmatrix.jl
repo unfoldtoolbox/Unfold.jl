@@ -6,6 +6,7 @@ end
 
 function check_groupsorting(r)
 @debug "checking group sorting"
+@show r
 ix = findall(isa.(r,MixedModels.AbstractReTerm))
 
 rhs(x::RandomEffectsTerm) = x.rhs
@@ -15,7 +16,7 @@ groupvars = [map(x->rhs(x).sym,r[ix])...]
 
 @assert groupvars == sort(groupvars) "random effects have to be alphabetically ordered. e.g. (1+a|X) + (1+a|A) is not allowed. Please reorder"
 end
-unfold_apply_schema(type::Union{<:UnfoldLinearMixedModel,<:UnfoldLinearMixedModelContinuousTime},f,schema) = apply_schema(f,schema, MixedModels.LinearMixedModel)
+Unfold.unfold_apply_schema(type::Union{<:UnfoldLinearMixedModel,<:UnfoldLinearMixedModelContinuousTime},f,schema) = apply_schema(f,schema, MixedModels.LinearMixedModel)
 
 
 

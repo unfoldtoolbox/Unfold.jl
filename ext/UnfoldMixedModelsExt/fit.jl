@@ -46,7 +46,7 @@ function StatsModels.fit!(
     
     Xs = disallowmissing.(Xs)
 
-    mm = LinearMixedModel_wrapper(formula(uf), firstData, Xs)
+    mm = LinearMixedModel_wrapper(Unfold.formula(uf), firstData, Xs)
     # prepare some variables to be used
     βsc, θsc = similar(MixedModels.coef(mm)), similar(mm.θ) # pre allocate
     p, k = length(βsc), length(θsc)
