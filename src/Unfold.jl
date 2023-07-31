@@ -63,32 +63,29 @@ if !isdefined(Base, :get_extension)
     pvalues = UnfoldMixedModelsExt.pvalues
     likelihoodratiotest = UnfoldMixedModelsExt.likelihoodratiotest
 else
-
+ checkFun(sym) = Base.get_extension(@__MODULE__(),sym)
     function solver_robust(args...;kwargs...)
-        ext = Base.get_extension(@__MODULE__(),:UnfoldRobustModelsExt)
-        if ext !== nothing
-            return ext.solver_robust(args...;kwargs...)
-        else
-            throw_error("RobustModels not loaded. Please use ]add RobustModels, using RobustModels to install it prior to using")
-        end
+        ext = checkFun(:UnfoldRobustModelsExt) 
+        msg = "RobustModels not loaded. Please use ]add RobustModels, using RobustModels to install it prior to using"
+        isnothing(ext) ? throw(msg) : ext.solver_robust(args...;kwargs...)
     end
     function pvalues(args...;kwargs...)
-        ext = Base.get_extension(@__MODULE__(),:UnfoldMixedModelsExt)
-        if ext !== nothing
-            return ext.pvalues(args...;kwargs...)
-        else
-            throw_error("MixedModels not loaded. Please use ]add MixedModels, using MixedModels to install it prior to using")
-        end
+        ext = checkFun(:UnfoldMixedModelsExt) 
+        msg = "MixedModels not loaded. Please use ]add MixedModels, using MixedModels to install it prior to using"
+        isnothing(ext) ? throw(msg) : ext.pvalues(args...;kwargs...)
     end
-
     function likelihoodratiotest(args...;kwargs...)
-        ext = Base.get_extension(@__MODULE__(),:UnfoldMixedModelsExt)
-        if ext !== nothing
-            return ext.likelihoodratiotest(args...;kwargs...)
-        else
-            throw_error("MixedModels not loaded. Please use ]add MixedModels, using MixedModels to install it prior to using")
-        end
+        ext = checkFun(:UnfoldMixedModelsExt) 
+        msg = "MixedModels not loaded. Please use ]add MixedModels, using MixedModels to install it prior to using"
+        isnothing(ext) ? throw(msg) : ext.likelihoodratiotest(args...;kwargs...)
     end
+    function splinebasis(args...;kwargs...)
+        ext = checkFun(:UnfoldBSplineKit) 
+        msg = "BSplineKit not loaded. Please use `]add BSplineKit, using BSplineKit` to install/load it, if you want to use splines"
+        isnothing(ext) ? throw(msg) : ext.splinebasis(args...;kwargs...)
+    end
+   
+   
 end
 
 
