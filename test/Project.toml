@@ -1,4 +1,5 @@
 [deps]
+BSplineKit = "093aae92-e908-43d7-9660-e50ee39d5a0a"
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
 DSP = "717857b8-e6f2-59f4-9121-6e50c889abd2"
@@ -12,6 +13,7 @@ MixedModelsSim = "d5ae56c5-23ca-4a1f-b505-9fc4796fc1fe"
 Parsers = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
+RobustModels = "d6ea1423-9682-4bbd-952f-b1577cbf8c98"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"

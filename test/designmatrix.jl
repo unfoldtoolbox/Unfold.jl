@@ -14,6 +14,8 @@ shouldBePos[2, :] = [1, 0, 0, 0]
 shouldBePos[3, :] = [0, 1, 0, 0]
 shouldBePos[4, :] = [0, 0, 1, 0]
 
+
+@testset "basic designmat" begin
 ## test negative
 basisfunction = firbasis(τ = (-3, 0), sfreq = 1, name = "testing")
 timeexpandterm = Unfold.TimeExpandedTerm(FormulaTerm(Term, Term), basisfunction, :latency);
@@ -27,8 +29,8 @@ Xdc = Unfold.time_expand(X, timeexpandterm, tbl)
 println(Matrix(Xdc))
 
 @test all(isapprox.(Matrix(Xdc)[1:4, 1:4], shouldBePos, atol = 1e-15))
-
-# customized eventfields
+end
+@testset "customized eventfields" begin
 tbl2 = tbl = DataFrame([1 4]', [:onset])
 
 timeexpandterm_latency = Unfold.TimeExpandedTerm(FormulaTerm(Term, Term), basisfunction);
@@ -36,8 +38,8 @@ timeexpandterm_onset =
     Unfold.TimeExpandedTerm(FormulaTerm(Term, Term), basisfunction, eventfields = [:onset]);
 Xdc = Unfold.time_expand(X, timeexpandterm_onset, tbl)
 @test_throws ArgumentError Unfold.time_expand(X, timeexpandterm_latency, tbl)
-
-## combining designmatrices
+end
+@testset "combining designmatrices" begin
 tbl = DataFrame([1 4]', [:latency])
 X = ones(size(tbl))
 basisfunction1 = firbasis(τ = (0, 1), sfreq = 10, name = "basis1")
@@ -107,8 +109,9 @@ if 1 == 0
 
 end
 
+end
 
-## Test equalizeReMatLengths
+@testset "equalizeReMatLengths" begin
 bf1 = firbasis(τ = (0, 1), sfreq = 10, name = "basis1")
 bf2 = firbasis(τ = (0, 0.5), sfreq = 10, name = "basis2")
 
@@ -138,24 +141,28 @@ X2 = modelcols.(form.rhs, Ref(tbl2))
 
 # no missmatch, shouldnt change anything then
 X = deepcopy(X1[2:end])
-Unfold.equalizeReMatLengths!(X)
+ext = Base.get_extension(Unfold,:UnfoldMixedModelsExt)
+ext.equalizeReMatLengths!(X)
 @test all([x[1] for x in size.(X)] .== 48)
 
 X = (deepcopy(X1[2:end])..., deepcopy(X2[2:end])...)
 @test !all([x[1] for x in size.(X)] .== 48) # not alllenghts the same
-Unfold.equalizeReMatLengths!(X)
+ext.equalizeReMatLengths!(X)
 @test all([x[1] for x in size.(X)] .== 49) # now all lengths the same :-)
 
-# Test  changeReMatSize & changeMatSize
+
+end
+
+@testset "changeReMatSize & changeMatSize" begin
 
 X = deepcopy(X2[2])
 @test size(X)[1] == 49
-Unfold.changeReMatSize!(X, 52)
+ext.changeReMatSize!(X, 52)
 @test size(X)[1] == 52
 
 X = deepcopy(X2[2])
 @test size(X)[1] == 49
-Unfold.changeReMatSize!(X, 40)
+ext.changeReMatSize!(X, 40)
 @test size(X)[1] == 40
 
 
@@ -164,20 +171,20 @@ X = (deepcopy(X1)..., deepcopy(X2[2:end])...)
 @test size(X[2])[1] == 48
 @test size(X[3])[1] == 48
 @test size(X[4])[1] == 49
-XA, XB = Unfold.changeMatSize!(52, X[1], X[2:end])
+XA, XB = ext.changeMatSize!(52, X[1], X[2:end])
 @test size(XA)[1] == 52
 @test size(XB)[1] == 52
 
-XA, XB = Unfold.changeMatSize!(40, X[1], X[2:end])
+XA, XB = ext.changeMatSize!(40, X[1], X[2:end])
 @test size(XA)[1] == 40
 @test size(XB)[1] == 40
 
-XA, XB = Unfold.changeMatSize!(30, Matrix(X[1]), X[2:end])
+XA, XB = ext.changeMatSize!(30, Matrix(X[1]), X[2:end])
 @test size(XA)[1] == 30
 @test size(XB)[1] == 30
+end
 
-
-#----- Some LinearMixedModel tests
+@testset "Some LinearMixedModel tests" begin
 
 data, evts = loadtestdata("testCase3", dataPath = (@__DIR__) * "/data") #
 evts.subject = categorical(evts.subject)
@@ -199,8 +206,9 @@ Xdc_nonseq = designmatrix(UnfoldLinearMixedModel, f_zc, evts_nonseq, basisfuncti
 # This used to lead to problems here:
 fit(UnfoldLinearMixedModel, Xdc_nonseq, data');
 
+end
 
-#---- some missing event testsbasisfunction2 = firbasis(τ = (0, 0.5), sfreq = 10, name = "basis2")
+#basisfunction2 = firbasis(τ = (0, 0.5), sfreq = 10, name = "basis2")
 @testset "Missings in Events" begin
 tbl = DataFrame(
     :a => [1,2,3,4,5,6,7,8],
