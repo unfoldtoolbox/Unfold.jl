@@ -213,7 +213,7 @@ end
 
 # there is only 1 times for Mass Univariate Models possible
 times(model::UnfoldLinearModel) = times(design(model))
-times(d::Dict{<:Union{Any,<:AbstractString,Symbol},<:Tuple{FormulaTerm,<:AbstractVector}}) = first(values(d))[2]#[k[2] for k in values(d)] # probably going for steprange would be better
+times(d::Dict{<:Union{Any,<:AbstractString,Symbol},<:Tuple{<:AbstractTerm,<:AbstractVector}}) = first(values(d))[2]#[k[2] for k in values(d)] # probably going for steprange would be better
 
 
 function gen_timeev(timesVec,nRows)

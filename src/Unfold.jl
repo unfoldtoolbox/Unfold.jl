@@ -5,23 +5,22 @@ using StatsModels
 using StatsBase
 using IterativeSolvers
 using DataFrames
-using MixedModels
+#using MixedModels
 using Missings
 using StatsBase
 using LinearAlgebra
 using Tables # not sure we need it
 using GLM # not sure we need it
-import MixedModels.FeMat # extended for sparse femats, type piracy => issue on MixedModels.jl github
+
 using TimerOutputs # debugging fitting times etc. not strictly needed
 using DSP
 using StatsModels
-using StaticArrays # for MixedModels extraction of parametrs (inherited from MixedModels.jl, not strictly needed )
 using ProgressMeter
 using DocStringExtensions # for Docu
 using MLBase # for crossVal
-using BSplineKit # for spline predictors
+#using BSplineKit # for spline predictors
 
-using RobustModels # for robust modelling
+#using RobustModels # for robust modelling
 #using CategoricalArrays
 import StatsBase: fit
 import StatsBase: coef
@@ -31,7 +30,7 @@ import StatsBase: modelmatrix
 import StatsModels: width
 import StatsModels: terms
 
-import MixedModels.likelihoodratiotest
+
 
 import StatsBase.quantile
 
@@ -52,6 +51,68 @@ include("splinepredictors.jl")
 include("effects.jl")
 include("statistics.jl")
 include("io.jl")
+
+
+## Extension Compatabality with julia  pre 1.9
+
+if !isdefined(Base, :get_extension)
+    include("../ext/UnfoldRobustModelsExt.jl")
+    solver_robust = UnfoldRobustModelsExt.solver_robust
+
+    include("../ext/UnfoldMixedModelsExt.jl")
+    pvalues = UnfoldMixedModelsExt.pvalues
+    likelihoodratiotest = UnfoldMixedModelsExt.likelihoodratiotest
+else
+ checkFun(sym) = Base.get_extension(@__MODULE__(),sym)
+    function solver_robust(args...;kwargs...)
+        ext = checkFun(:UnfoldRobustModelsExt) 
+        msg = "RobustModels not loaded. Please use ]add RobustModels, using RobustModels to install it prior to using"
+        isnothing(ext) ? throw(msg) : ext.solver_robust(args...;kwargs...)
+    end
+    function pvalues(args...;kwargs...)
+        ext = checkFun(:UnfoldMixedModelsExt) 
+        msg = "MixedModels not loaded. Please use ]add MixedModels, using MixedModels to install it prior to using"
+        isnothing(ext) ? throw(msg) : ext.pvalues(args...;kwargs...)
+    end
+    function likelihoodratiotest(args...;kwargs...)
+        ext = checkFun(:UnfoldMixedModelsExt) 
+        msg = "MixedModels not loaded. Please use ]add MixedModels, using MixedModels to install it prior to using"
+        isnothing(ext) ? throw(msg) : ext.likelihoodratiotest(args...;kwargs...)
+    end
+    function check_groupsorting(args...;kwargs...)
+        ext = checkFun(:UnfoldMixedModelsExt) 
+        msg = "MixedModels not loaded. Please use ]add MixedModels, using MixedModels to install it prior to using"
+        isnothing(ext) ? throw(msg) : ext.check_groupsorting(args...;kwargs...)
+    end
+    function lmm_combineMats!(args...;kwargs...)
+        ext = checkFun(:UnfoldMixedModelsExt) 
+        msg = "MixedModels not loaded. Please use ]add MixedModels, using MixedModels to install it prior to using"
+        isnothing(ext) ? throw(msg) : ext.lmm_combineMats!(args...;kwargs...)
+    end
+    function splinebasis(args...;kwargs...)
+        ext = checkFun(:UnfoldBSplineKitExt) 
+        msg = "BSplineKit not loaded. Please use `]add BSplineKit, using BSplineKit` to install/load it, if you want to use splines"
+        isnothing(ext) ? throw(msg) : ext.splinebasis(args...;kwargs...)
+    end
+    
+
+
+    
+    
+    function spl(args...;kwargs...)
+        ext = checkFun(:UnfoldBSplineKitExt) 
+        msg = "BSplineKit not loaded. Please use `]add BSplineKit, using BSplineKit` to install/load it, if you want to use splines"
+        isnothing(ext) ? throw(msg) : ext.spl(args...;kwargs...)
+    end
+    function circspl(args...;kwargs...)
+        ext = checkFun(:UnfoldBSplineKitExt) 
+        msg = "BSplineKit not loaded. Please use `]add BSplineKit, using BSplineKit` to install/load it, if you want to use splines"
+        isnothing(ext) ? throw(msg) : ext.circspl(args...;kwargs...)
+    end
+  
+end
+   
+
 
 #include("plot.jl") # don't include for now
 export fit, fit!, designmatrix!
