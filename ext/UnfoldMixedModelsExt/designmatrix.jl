@@ -15,7 +15,10 @@ groupvars = [map(x->rhs(x).sym,r[ix])...]
 
 @assert groupvars == sort(groupvars) "random effects have to be alphabetically ordered. e.g. (1+a|X) + (1+a|A) is not allowed. Please reorder"
 end
-Unfold.unfold_apply_schema(type::Type{<:Union{<:UnfoldLinearMixedModel,<:UnfoldLinearMixedModelContinuousTime}},f,schema) = apply_schema(f,schema, MixedModels.LinearMixedModel)
+function Unfold.unfold_apply_schema(type::Type{<:Union{<:UnfoldLinearMixedModel,<:UnfoldLinearMixedModelContinuousTime}},f,schema)
+    @debug "LMM apply schema"
+   return  apply_schema(f,schema, MixedModels.LinearMixedModel)
+end
 
 
 

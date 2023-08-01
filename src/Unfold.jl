@@ -90,17 +90,28 @@ else
         isnothing(ext) ? throw(msg) : ext.lmm_combineMats!(args...;kwargs...)
     end
     function splinebasis(args...;kwargs...)
-        ext = checkFun(:UnfoldBSplineKit) 
+        ext = checkFun(:UnfoldBSplineKitExt) 
         msg = "BSplineKit not loaded. Please use `]add BSplineKit, using BSplineKit` to install/load it, if you want to use splines"
         isnothing(ext) ? throw(msg) : ext.splinebasis(args...;kwargs...)
     end
+    
+
+
+    
+    
     function spl(args...;kwargs...)
-        ext = checkFun(:UnfoldBSplineKit) 
+        ext = checkFun(:UnfoldBSplineKitExt) 
         msg = "BSplineKit not loaded. Please use `]add BSplineKit, using BSplineKit` to install/load it, if you want to use splines"
         isnothing(ext) ? throw(msg) : ext.spl(args...;kwargs...)
     end
-   
+    function circspl(args...;kwargs...)
+        ext = checkFun(:UnfoldBSplineKitExt) 
+        msg = "BSplineKit not loaded. Please use `]add BSplineKit, using BSplineKit` to install/load it, if you want to use splines"
+        isnothing(ext) ? throw(msg) : ext.circspl(args...;kwargs...)
+    end
+  
 end
+   
 
 
 #include("plot.jl") # don't include for now

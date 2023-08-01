@@ -1,4 +1,3 @@
-
 const bsPLINE_CONTEXT = Any
 
 mutable struct BSplineTerm{T,D} <: AbstractSplineTerm
@@ -98,8 +97,8 @@ end
 Unfold.spl(x, df) = 1 # fallback
 
 # make a nice call if the function is called via REPL
-Unfold.spl(t::Symbol, d::Int) = BSplineTerm(term(t), term(d),BSplineBasis,4)
-circspl(t::Symbol, d::Int,low,high) = PeriodicBSplineTerm(term(t), term(d),4,low,high)
+Unfold.spl(t::Symbol, d::Int) = BSplineTerm(term(t), d, 4,[])
+Unfold.circspl(t::Symbol, d::Int,low,high) = PeriodicBSplineTerm(term(t), term(d),4,low,high)
 
 """
 Construct a BSplineTerm, if breakpoints/basis are not defined yet, put to `nothing`
@@ -127,15 +126,16 @@ Base.show(io::IO, p::BSplineTerm) = print(io, "spl($(p.term), $(p.df))")
 Base.show(io::IO, p::PeriodicBSplineTerm) = print(io, "circspl($(p.term), $(p.df),$(p.low):$(p.high))")
 
 function StatsModels.apply_schema(
-    t::FunctionTerm{typeof(spl)},
+    t::FunctionTerm{typeof(Unfold.spl)},
     sch::StatsModels.Schema,
     Mod::Type{<:bsPLINE_CONTEXT},
 )
+    @debug "BSpline Unfold.spl Schema"
     apply_schema(BSplineTerm(t.args_parsed...), sch, Mod)
 end
 
 function StatsModels.apply_schema(
-    t::FunctionTerm{typeof(circspl)},
+    t::FunctionTerm{typeof(Unfold.circspl)},
     sch::StatsModels.Schema,
     Mod::Type{<:bsPLINE_CONTEXT},
 )
@@ -146,6 +146,7 @@ function StatsModels.apply_schema(
     sch::StatsModels.Schema,
     Mod::Type{<:bsPLINE_CONTEXT},
 )
+@debug "BSpline Inner schema"
     term = apply_schema(t.term, sch, Mod)
     isa(term, ContinuousTerm) ||
         throw(ArgumentError("BSplineTerm only works with continuous terms (got $term)"))

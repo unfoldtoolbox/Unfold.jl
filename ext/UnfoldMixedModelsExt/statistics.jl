@@ -7,7 +7,7 @@ Returns a partial LMM model (non-functional due to lacking data) to be used in l
 function fake_lmm(m::UnfoldLinearMixedModel,k::Int)
     (feterm,reterm) = Unfold.designmatrix(m).Xs
     fakeY = zeros(size(feterm,1))
-    lmm = Unfold.LinearMixedModel_wrapper(Unfold.formula(m),fakeY,designmatrix(m).Xs)
+    lmm = LinearMixedModel_wrapper(Unfold.formula(m),fakeY,designmatrix(m).Xs)
 
     fcoll = Unfold.modelfit(m)
     #lmm.objective .= fcoll.fits[1].objective

@@ -163,7 +163,7 @@ end
 """
 wrapper to make apply_schema mixed models as extension possible
 """
-unfold_apply_schema(type::Any,f,schema)  = apply_schema(f,schema)
+unfold_apply_schema(type::Any,f,schema) = apply_schema(f,schema,UnfoldModel)
 
 
 # specify for abstract interface
@@ -180,7 +180,7 @@ function designmatrix(
     fDict = design(uf)
     for (eventname, f) in pairs(fDict)
         
-        @debug eventname,X
+        @debug "Eventname, X:",eventname,X
         if eventname == Any
             eventTbl = tbl
         else
