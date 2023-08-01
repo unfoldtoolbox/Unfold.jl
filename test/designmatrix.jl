@@ -151,11 +151,8 @@ ext.equalizeReMatLengths!(X)
 @test all([x[1] for x in size.(X)] .== 49) # now all lengths the same :-)
 
 
-end
-
-@testset "changeReMatSize & changeMatSize" begin
-
 X = deepcopy(X2[2])
+
 @test size(X)[1] == 49
 ext.changeReMatSize!(X, 52)
 @test size(X)[1] == 52
