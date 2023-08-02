@@ -256,12 +256,43 @@ function hrfkernel(e, TR, p)
 
     # hrf = hrf([0:floor(p(7)/RT)]*fMRI_T + 1);
     hrf = hrf ./ sum(hrf)
-    hrf = conv(box_mt, hrf)'
+    hrf = conv1D(box_mt, hrf)'
     #println(box_mt)
     hrf = hrf[((range(0, stop = Int(floor(p[7] ./ TR + duration)))*mt)).+1]
 
 
 
     return (SparseMatrixCSC(sparse(hrf)))
+
+end
+
+
+
+# taken from https://codereview.stackexchange.com/questions/284537/implementing-a-1d-convolution-simd-friendly-in-julia
+# to replace the DSP.conv function
+function conv1D!( vO :: Array{T, 1}, vA :: Array{T, 1}, vB :: Array{T, 1} ) :: Array{T, 1} where {T <: Real}
+
+    lenA = length(vA);
+    lenB = length(vB);
+
+    fill!(vO, zero(T));
+    for idxB in 1:lenB
+        for idxA in 1:lenA
+            @inbounds vO[idxA + idxB - 1] += vA[idxA] * vB[idxB];
+        end
+    end
+
+    return vO;
+
+end
+
+function conv1D( vA :: Array{T, 1}, vB :: Array{T, 1} ) :: Array{T, 1} where {T <: Real}
+
+    lenA = length(vA);
+    lenB = length(vB);
+
+    vO = Array{T, 1}(undef, lenA + lenB - 1);
+
+    return conv1D!(vO, vA, vB);
 
 end
