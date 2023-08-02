@@ -138,7 +138,8 @@ function firkernel(e, times)
 
     kernel =
         spdiagm(ksize + 1, ksize, 0 => repeat([e[1]], ksize), -1 => repeat([e[2]], ksize))
-
+    
+    dropzeros!(kernel) # we often get implicit 0, especially if the latencies are rounded
     return (kernel)
 
 end

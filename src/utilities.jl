@@ -161,3 +161,14 @@ function clean_data(
     end
     return data
 end
+
+
+macro maybe_threads(multithreading,code)
+    return esc(:(
+        if multithreading
+            Threads.@threads($code)
+        else
+            $code
+        end
+    ))
+end
