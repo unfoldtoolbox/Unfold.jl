@@ -13,7 +13,7 @@ using Tables # not sure we need it
 using GLM # not sure we need it
 
 using TimerOutputs # debugging fitting times etc. not strictly needed
-using DSP
+#using DSP
 using StatsModels
 using ProgressMeter
 using DocStringExtensions # for Docu
@@ -108,6 +108,13 @@ else
         ext = checkFun(:UnfoldBSplineKitExt) 
         msg = "BSplineKit not loaded. Please use `]add BSplineKit, using BSplineKit` to install/load it, if you want to use splines"
         isnothing(ext) ? throw(msg) : ext.circspl(args...;kwargs...)
+    end
+  
+
+    function solver_krylov(args...;kwargs...)
+        ext = checkFun(:UnfoldKrylovExt) 
+        msg = "BSplineKit not loaded. Please use `]add Krylov,CUDA, using Krylov,CUDA` to install/load it, if you want to use krylov/GPU"
+        isnothing(ext) ? throw(msg) : ext.solver_krylov(args...;kwargs...)
     end
   
 end

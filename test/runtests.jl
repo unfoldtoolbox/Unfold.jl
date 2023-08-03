@@ -3,6 +3,10 @@ using Unfold
 include("setup.jl")
 
 
+# sanity checks, auto-quality control
+#using Aqua
+#Aqua.test_all(Unfold)
+
 @testset "BasisFunctions" begin
     include("basisfunctions.jl")
 end

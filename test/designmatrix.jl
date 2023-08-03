@@ -146,7 +146,7 @@ ext.equalizeReMatLengths!(X)
 @test all([x[1] for x in size.(X)] .== 48)
 
 X = (deepcopy(X1[2:end])..., deepcopy(X2[2:end])...)
-@test !all([x[1] for x in size.(X)] .== 48) # not alllenghts the same
+@test !all([x[1] for x in size.(X)] .== 49) # not alllenghts the same
 ext.equalizeReMatLengths!(X)
 @test all([x[1] for x in size.(X)] .== 49) # now all lengths the same :-)
 

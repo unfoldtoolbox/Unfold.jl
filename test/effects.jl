@@ -127,14 +127,14 @@ m_mul = fit(Unfold.UnfoldModel, Dict(Any=>(f,times)), evts, data_e)
 m_tul = fit(Unfold.UnfoldModel, Dict(Any=>(f,firbasis([0,.05],10))), evts, data_r)
 @testset "Two channels" begin
 
-# test simple case
-eff_m = Unfold.effects(Dict(:conditionA => [0,1,0,1],:continuousA =>[0]),m_mul)
-eff_t = Unfold.effects(Dict(:conditionA => [0,1,0,1],:continuousA =>[0]),m_tul)
+	# test simple case
+	eff_m = Unfold.effects(Dict(:conditionA => [0,1,0,1],:continuousA =>[0]),m_mul)
+	eff_t = Unfold.effects(Dict(:conditionA => [0,1,0,1],:continuousA =>[0]),m_tul)
 
-@test eff_m.yhat ≈ eff_t.yhat
-@test length(unique(eff_m.channel)) == 3
-@test eff_m[eff_m.channel .==1,:yhat] ≈ eff_m[eff_m.channel .==2,:yhat]./2
-@test eff_m[eff_m.channel .==1,:yhat] ≈ [2,5,2,5.] # these are the perfect predicted values - note that we requested them twice
+	@test eff_m.yhat ≈ eff_t.yhat
+	@test length(unique(eff_m.channel)) == 3
+	@test eff_m[eff_m.channel .==1,:yhat] ≈ eff_m[eff_m.channel .==2,:yhat]./2
+	@test eff_m[eff_m.channel .==1,:yhat] ≈ [2,5,2,5.] # these are the perfect predicted values - note that we requested them twice
 
 end
 

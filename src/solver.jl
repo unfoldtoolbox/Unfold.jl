@@ -3,11 +3,15 @@ function solver_default(
     X,
     data::AbstractArray{T,2};
     stderror = false,
+    multithreading = true,
+    showprogress = true,
 ) where {T<:Union{Missing,<:Number}}
-    minfo = []
-    sizehint!(minfo, size(data,1))
+    minfo = Array{IterativeSolvers.ConvergenceHistory,1}(undef,size(data,1))
+    
     beta = zeros(size(data,1),size(X,2)) # had issues with undef
-    for ch = 1:size(data, 1)
+
+    p = Progress(size(data,1);enabled=showprogress) 
+    @maybe_threads multithreading for ch = 1:size(data, 1)
 	 	dd = view(data, ch, :)
         ix = @. !ismissing(dd)
 	    # use the previous channel as a starting point
@@ -15,36 +19,10 @@ function solver_default(
  
 		beta[ch,:],h = lsmr!(@view(beta[ch, :]), (X[ix,:]), @view(data[ch, ix]),log=true)
 
-        push!(minfo, h)
+        minfo[ch] = h
+        next!(p)
     end
-
-    if stderror
-        stderror = calculate_stderror(X, data, beta) 
-        modelfit = Unfold.LinearModelFit(beta, ["lsmr",minfo], stderror)
-    else
-        modelfit = Unfold.LinearModelFit(beta, ["lsmr",minfo])
-    end
-    return modelfit
-end
-
-function solver_multithreading(
-    X,
-    data::AbstractArray{T,2};
-    stderror = false,
-) where {T<:Union{Missing,<:Number}}
-    minfo = []
-    sizehint!(minfo, size(data,1))
-    beta = zeros(size(data,1),size(X,2)) # had issues with undef
-    Threads.@threads for ch = 1:size(data, 1)
-	 	dd = view(data, ch, :)
-        ix = @. !ismissing(dd)
-	    # use the previous channel as a starting point
-        #ch == 1 || copyto!(view(beta, ch, :), view(beta, ch-1, :))
- 
-		beta[ch,:],h = lsmr!(@view(beta[ch, :]), (X[ix,:]), @view(data[ch, ix]),log=true)
-
-        push!(minfo, h)
-    end
+    finish!(p)
 
     if stderror
         stderror = calculate_stderror(X, data, beta) 
@@ -115,10 +93,13 @@ function solver_default(
     X,
     data::AbstractArray{T,3};
     stderror = false,
+    multithreading=true,
+    showprogress = true,
 ) where {T<:Union{Missing,<:Number}}
     #beta = Array{Union{Missing,Number}}(undef, size(data, 1), size(data, 2), size(X, 2))
     beta = zeros(Union{Missing,Number},size(data, 1), size(data, 2), size(X, 2))
-    @showprogress 0.1 for ch = 1:size(data, 1)
+    p = Progress(size(data,1);enabled=showprogress) 
+    @maybe_threads multithreading for ch = 1:size(data, 1)
         for t = 1:size(data, 2)
 #            @debug("$(ndims(data,)),$t,$ch")
             
@@ -128,8 +109,9 @@ function solver_default(
             beta[ch,t,:] = @view(X[ix,:]) \ @view(data[ch,t,ix]) 
             # qr(X) was slower on Februar 2022
         end
+        next!(p)
     end
-
+    finish!(p)
     if stderror
         stderror = calculate_stderror(X, data, beta)
         modelfit = LinearModelFit(beta, ["solver_default"], stderror)
@@ -144,6 +126,8 @@ function solver_b2b(
     X,
     data::AbstractArray{T,3};
     cross_val_reps = 10,
+    multithreading = true,
+    showprogress=true,
 ) where {T<:Union{Missing,<:Number}}
 
     X, data = dropMissingEpochs(X, data)
@@ -152,15 +136,16 @@ function solver_b2b(
     E = zeros(size(data, 2), size(X, 2), size(X, 2))
     W = Array{Float64}(undef, size(data, 2), size(X, 2), size(data, 1))
 
-    prog = Progress(size(data, 2) * cross_val_reps, 0.1)
-    for t = 1:size(data, 2)
+    prog = Progress(size(data, 2) * cross_val_reps, 0.1;enabled=showprogress)
+    @maybe_threads multithreading for m = 1:cross_val_reps
+        k_ix = collect(Kfold(size(data, 3), 2))
+        X1 = @view X[k_ix[1], :]
+        X2 = @view X[k_ix[2], :]
+            
+        for t = 1:size(data, 2)
 
-        for m = 1:cross_val_reps
-            k_ix = collect(Kfold(size(data, 3), 2))
             Y1 = @view data[:, t, k_ix[1]]
             Y2 = @view data[:, t, k_ix[2]]
-            X1 = @view X[k_ix[1], :]
-            X2 = @view X[k_ix[2], :]
 
 
             G = (Y1' \ X1)
