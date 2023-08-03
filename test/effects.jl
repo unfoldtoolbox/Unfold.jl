@@ -124,7 +124,7 @@ data_e, times = Unfold.epoch(data = data_r, tbl = evts, τ = (0, 0.05), sfreq = 
 #
 f = @formula 0 ~ 1 + conditionA + continuousA # 1
 m_mul = fit(Unfold.UnfoldModel, Dict(Any=>(f,times)), evts, data_e)
-m_tul = fit(Unfold.UnfoldModel, Dict(Any=>(f,firbasis([0,.1],10))), evts, data_r)
+m_tul = fit(Unfold.UnfoldModel, Dict(Any=>(f,firbasis([0,.05],10))), evts, data_r)
 @testset "Two channels" begin
 
 	# test simple case
