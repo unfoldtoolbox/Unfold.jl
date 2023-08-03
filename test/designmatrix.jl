@@ -153,21 +153,21 @@ ext.equalizeReMatLengths!(X)
 
 X = deepcopy(X2[2])
 
-@test size(X)[1] == 48
+@test size(X)[1] == 49
 ext.changeReMatSize!(X, 52)
 @test size(X)[1] == 52
 
 X = deepcopy(X2[2])
-@test size(X)[1] == 48
+@test size(X)[1] == 49
 ext.changeReMatSize!(X, 40)
 @test size(X)[1] == 40
 
 
 X = (deepcopy(X1)..., deepcopy(X2[2:end])...)
-@test size(X[1])[1] == 47
-@test size(X[2])[1] == 47
-@test size(X[3])[1] == 47
-@test size(X[4])[1] == 48
+@test size(X[1])[1] == 48
+@test size(X[2])[1] == 48
+@test size(X[3])[1] == 48
+@test size(X[4])[1] == 49
 XA, XB = ext.changeMatSize!(52, X[1], X[2:end])
 @test size(XA)[1] == 52
 @test size(XB)[1] == 52
