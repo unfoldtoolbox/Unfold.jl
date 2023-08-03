@@ -4,6 +4,7 @@
 using StatsModels, MixedModels, DataFrames,CategoricalArrays
 
 using Unfold
+using MixedModels
 using UnfoldMakie,CairoMakie
 using DataFrames
 using UnfoldSim

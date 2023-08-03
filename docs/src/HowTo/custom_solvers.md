@@ -23,6 +23,19 @@ plot_erp(results;extra=(;stderror=true))
 !!! warning
     Use single-subject SE on your own risk. Because EEG data are autocrrelated YOUR SE WILL BE TOO SMALL!
 
+
+
+
+### Robust Solvers
+Robust solvers automatically account for outlying trials. They come at a severe computational cost though!
+```@Example main
+using RobustSolvers
+se_solver =(x,y)->Unfold.solver_robust(x,y)
+m = Unfold.fit(UnfoldModel,designDict,evts,dat,solver=se_solver)
+results =coeftable(m)
+plot_erp(results;extra=(;stderror=true))
+```
+
 ### Back2Back regression
 ```@Example main
 b2b_solver = (x, y) -> Unfold.solver_b2b(x, y;ross_val_reps = 5)

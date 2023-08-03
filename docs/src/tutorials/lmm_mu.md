@@ -1,9 +1,10 @@
 # Mass Univariate Linear Mixed Models
 
 ```@example Main
-using StatsModels, MixedModels, DataFrames,CategoricalArrays
+using StatsModels, DataFrames,CategoricalArrays
 
 using Unfold
+using MixedModels # important to load to activate the UnfoldMixedModelsExtension
 using UnfoldMakie,CairoMakie
 using DataFrames
 include(joinpath(dirname(pathof(Unfold)), "../test/test_utilities.jl") ) # to load data
