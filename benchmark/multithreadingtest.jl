@@ -7,6 +7,7 @@ using StableRNGs
 using BSplineKit
 
 #--- Generate Data
+
 sfreq = 100
 data,evts = UnfoldSim.predef_eeg(StableRNG(1);n_repeats = 200,sfreq=sfreq)
 evts = evts[1:end-2,:]
@@ -27,7 +28,7 @@ uf = fit(UnfoldModel,dict_lin,evts,data,eventcolumn="type",solver=(x,y)->nothing
 X = modelmatrix(uf)
 
 data_one = data[1:1,1:size(X,1)] # cute the data to have same length
-data20 = repeat(data_one,20)
+data20 = repeat(data_one,50)
 data20 .= data20 .+ rand(StableRNG(1),size(data20)...)
 
 #---
@@ -36,6 +37,7 @@ y = data20
 @time  Unfold.solver_default(X,y;multithreading=false);
 @time  Unfold.solver_default(X,y;multithreading=true);
 
+@time  Unfold.solver_krylov(X,y;multithreading=false);
 @time  Unfold.solver_krylov(X,y);
 @time  Unfold.solver_krylov(X,y;GPU = true);
 

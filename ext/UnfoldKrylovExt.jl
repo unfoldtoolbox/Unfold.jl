@@ -4,7 +4,7 @@ module UnfoldKrylovExt
     using CUDA, CUDA.CUSPARSE, SparseArrays
     using Unfold
     using Missings
-
+    using ProgressMeter
 
     """
     Alternative implementation of LSMR using Krylov.jl
@@ -22,12 +22,14 @@ module UnfoldKrylovExt
         data::AbstractArray{T,2};
         GPU=false,
         history=true,
-        multithreading = true,
+        multithreading = GPU ? false : true,
         showprogress=true,
         stderror=false
     ) where {T<:Union{Missing,<:Number}}
-        minfo = []
-        sizehint!(minfo, size(data, 1))
+
+    @assert !(multithreading && GPU) "currently no support for both GPU and multi-threading"
+        minfo = Array{Any,1}(undef,size(data,1))
+
         ix = any(@. !ismissing(data); dims=1)[1, :]
         X_loop = disallowmissing(X[ix, :])
         data = disallowmissing(view(data, :, ix))
@@ -56,7 +58,7 @@ module UnfoldKrylovExt
             #beta[ch,:],h = Krylov.lsmr(X_loop,data_loop,history=history)
 
 
-            push!(minfo, deepcopy(lsmr_solver.stats))
+            minfo[ch] = deepcopy(lsmr_solver.stats)
             next!(p)
         end
         finish!(p)

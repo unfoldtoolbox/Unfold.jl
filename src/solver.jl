@@ -6,8 +6,8 @@ function solver_default(
     multithreading = true,
     showprogress = true,
 ) where {T<:Union{Missing,<:Number}}
-    minfo = []
-    sizehint!(minfo, size(data,1))
+    minfo = Array{IterativeSolvers.ConvergenceHistory,1}(undef,size(data,1))
+    
     beta = zeros(size(data,1),size(X,2)) # had issues with undef
 
     p = Progress(size(data,1);enabled=showprogress) 
@@ -19,7 +19,7 @@ function solver_default(
  
 		beta[ch,:],h = lsmr!(@view(beta[ch, :]), (X[ix,:]), @view(data[ch, ix]),log=true)
 
-        push!(minfo, h)
+        minfo[ch] = h
         next!(p)
     end
     finish!(p)
