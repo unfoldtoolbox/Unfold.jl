@@ -143,12 +143,12 @@ X2 = modelcols.(form.rhs, Ref(tbl2))
 X = deepcopy(X1[2:end])
 ext = Base.get_extension(Unfold,:UnfoldMixedModelsExt)
 ext.equalizeReMatLengths!(X)
-@test all([x[1] for x in size.(X)] .== 47)
+@test all([x[1] for x in size.(X)] .== 48)
 
 X = (deepcopy(X1[2:end])..., deepcopy(X2[2:end])...)
-@test !all([x[1] for x in size.(X)] .== 47) # not alllenghts the same
+@test !all([x[1] for x in size.(X)] .== 49) # not alllenghts the same
 ext.equalizeReMatLengths!(X)
-@test all([x[1] for x in size.(X)] .== 48) # now all lengths the same :-)
+@test all([x[1] for x in size.(X)] .== 49) # now all lengths the same :-)
 
 
 X = deepcopy(X2[2])
