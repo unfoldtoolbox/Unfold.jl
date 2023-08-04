@@ -2,7 +2,7 @@
 
 
 
-using Unfold
+using BSplineKit,Unfold
 using CairoMakie
 using DataFrames
 using Random
