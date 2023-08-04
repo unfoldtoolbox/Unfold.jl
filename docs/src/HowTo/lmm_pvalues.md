@@ -8,7 +8,7 @@ using DataFrames
 using UnfoldSim
 data_epoch,evts = UnfoldSim.predef_2x2(;n_items=52,n_subjects=40,return_epoched=true)
 data_epoch = reshape(data_epoch,1,size(data_epoch)... )
-times = range(0,1,length=size(data,1))
+times = range(0,1,length=size(data_epochs,1))
 ```
 
 #### Define f0 & f1 and fit!
