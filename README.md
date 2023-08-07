@@ -3,9 +3,7 @@
 <img align="right" width="33%" src="https://www.unfoldtoolbox.org/_images/unfold_800x377.png">
 
 
-
 Toolbox to perform linear regression on biological signals. 
-
 
 [![Docs](https://img.shields.io/badge/docs-main-blue.svg)](https://unfoldtoolbox.github.io/Unfold.jl/dev)
 ![semver](https://img.shields.io/badge/semantic-versioning-green)
@@ -21,23 +19,29 @@ For now, please cite
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6423476.svg)](https://doi.org/10.5281/zenodo.6423476) or [Ehinger & Dimigen](https://peerj.com/articles/7838/)
 
 ## Relation to Unfold (matlab)
-I regularly use Unfold.jl in my research, but there are likely more hard corners there compared to the matlab version (but julia is more flexible and has some unique features)
+The matlab version is still maintained, but active development happens in Julia. 
 
-| Feature                 | Unfold | unmixed | Unfold.jl |
+| Feature                 | Unfold | unmixed (defunct) | Unfold.jl |
 |-------------------------|--------|---------|-----------|
 | overlap correction      | x      | x       | x         |
 | non-linear splines      | x      | x       | x         |
-| plotting tools          | x      |         | UnfoldMakie.jl  |
+| speed |       |  🐌      | ⚡         |
+| GPU support | | | 🚀|
+| plotting tools          | x      |         | [UnfoldMakie.jl](https://unfoldtoolbox.github.io/UnfoldMakie.jl/dev/)  |
+| Interactive plotting  |       |         | stay tuned - coming soon! |
+| simulation tools          | x      |         | [UnfoldSim.jl](https://unfoldtoolbox.github.io/UnfoldSim.jl)  |
+| BIDS support          | x      |         | alpha: [UnfoldBIDS.jl](https://github.com/ReneSkukies/UnfoldBIDS.jl/))  |
 | sanity checks           | x      |         | x         |
 | tutorials               | x      |         | x       |
-| speed                   | x      |         | x         |
 | unittests               | x      |         | x         |
-| HRF (fMRI) basis        |        |         | x         |
+| Alternative bases e.g. HRF (fMRI)        |        |         | x         |
 | mix different basisfunctions      |        |         | x         |
 | different timewindows per event   |        |         | x         |
 | mixed models            |        | x       | x         |
-| item & subject effects  |        | x       | x         |
+| item & subject effects  |        | (x)       | x         |
 | decoding  |        |        | back2back regression         |
+| outlier-robust fits  |        |        |  [many options (but slower)](https://unfoldtoolbox.github.io/Unfold.jl/dev/HowTo/custom_solvers/#Robust-Solvers)   |
+| 🐍Python support | | | [via Pycall, link to notebook](https://github.com/unfoldtoolbox/Unfold.jl/blob/main/docs/src/HowTo/pyjulia_unfold.ipynb)|
 
 ## Install
 ```julia
@@ -45,7 +49,7 @@ I regularly use Unfold.jl in my research, but there are likely more hard corners
 ```
 
 ## Usage
-Please check out [the documentation](https://unfoldtoolbox.github.io/Unfold.jl/dev) for extensive tutorials, explanations...
+Please check out [the documentatio)n](https://unfoldtoolbox.github.io/Unfold.jl/dev) for extensive tutorials, explanations...
 
 Here a quick overview what to expect.
 
