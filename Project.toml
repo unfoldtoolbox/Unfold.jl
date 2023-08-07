@@ -49,6 +49,7 @@ UnfoldKrylovExt = ["Krylov","CUDA"]
 
 [compat]
 BSplineKit = "0.16"
+CUDA = "4"
 DSP = "0.7"
 DataFrames = "1"
 Distributions = "0.25"
@@ -58,6 +59,7 @@ FileIO = "1"
 GLM = "1"
 IterativeSolvers = "0.9"
 JLD2 = "0.4"
+Krylov = "0.9"
 MLBase = "0.9"
 Missings = "1"
 MixedModels = "4"
