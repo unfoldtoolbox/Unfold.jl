@@ -371,7 +371,7 @@ performs the actual time-expansion in a sparse way.
  Returns SparseMatrixCSC 
 """
 function time_expand(X, term, tbl)
-    ncolsBasis = size(kernel(term.basisfunction)(0), 2)
+    ncolsBasis = size(kernel(term.basisfunction)(0.), 2)
     X = reshape(X, size(X, 1), :)
 
     ncolsX = size(X)[2]
@@ -390,6 +390,7 @@ function time_expand(X, term, tbl)
         bases = kernel(term.basisfunction).(eachrow(tbl[!, term.eventfields]))
     end
 
+    
     # generate rowindices
     rows = copy(rowvals.(bases))
     # this shift is necessary as some basisfunction time-points can be negative. But a matrix is always from 1:τ. Thus we have to shift it backwards in time.
@@ -402,19 +403,38 @@ function time_expand(X, term, tbl)
     rows = repeat(rows, ncolsX)
 
     # generate column indices
-    cols = []
-    for Xcol = 1:ncolsX
-        for b = 1:length(bases)
-            for c = 1:ncolsBasis
-                push!(
-                    cols,
-                    repeat([c + (Xcol - 1) * ncolsBasis], length(nzrange(bases[b], c))),
-                )
+    
+
+    # we can generate the columns much faster, if all bases output the same number of columns 
+    fastpath = time_expand_allBasesSameCols(term.basisfunction,bases,ncolsBasis)
+
+    if fastpath
+        #@show fastpath
+        repeatEach = length(nzrange(bases[1], 1))
+        
+        cols = [((1:ncolsBasis) .+ix*ncolsBasis)  for ix in (0:ncolsX-1) for b in 1:length(bases)]
+        cols = repeat(vcat(cols...),inner=repeatEach)
+    
+
+    else
+    
+        # it could happen, e.g. for bases that are duration modulated, that each event has different amount of columns
+        # in that case, we have to go the slow route
+        cols = typeof(rows)[]
+    
+        for Xcol = 1:ncolsX
+            for b = 1:length(bases)
+                coloffset = (Xcol - 1) * ncolsBasis
+                for c = 1:ncolsBasis
+                    push!(cols,
+                        repeat([c + coloffset], length(nzrange(bases[b], c))),
+                    )
+                end
             end
         end
+        cols = vcat(cols...)
     end
-    cols = vcat(cols...)
-
+    
     # generate values
     #vals = []
     vals = Array{Union{Missing,Float64}}(undef,size(cols))
@@ -437,6 +457,20 @@ function time_expand(X, term, tbl)
     dropzeros!(A)
     
     return A
+end
+
+"""
+Helper function to decide whether all bases have the same number of columns per event
+"""
+time_expand_allBasesSameCols(b::FIRBasis,bases,ncolBasis) = true # FIRBasis is always fast!
+function time_expand_allBasesSameCols(basisfunction,bases,ncolsBasis)
+fastpath = true
+for b = eachindex(bases)
+    if length(unique(length.(nzrange.(Ref(bases[b]), 1:ncolsBasis)))) != 1
+        return false
+    end
+end
+return true
 end
 
 """
