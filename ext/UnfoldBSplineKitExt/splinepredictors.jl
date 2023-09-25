@@ -131,7 +131,13 @@ function StatsModels.apply_schema(
     Mod::Type{<:bsPLINE_CONTEXT},
 )
     @debug "BSpline Unfold.spl Schema"
-    apply_schema(BSplineTerm(t.args_parsed...), sch, Mod)
+    ar = nothing
+    try
+        ar = t.args
+    catch
+        ar = t.args_parsed # statsmodels < 0.7
+    end
+    apply_schema(BSplineTerm(ar...), sch, Mod)
 end
 
 function StatsModels.apply_schema(
@@ -139,7 +145,13 @@ function StatsModels.apply_schema(
     sch::StatsModels.Schema,
     Mod::Type{<:bsPLINE_CONTEXT},
 )
-    apply_schema(PeriodicBSplineTerm(t.args_parsed...), sch, Mod)
+ar = nothing
+    try
+        ar = t.args
+    catch
+        ar = t.args_parsed # statsmodels < 0.7
+    end
+    apply_schema(PeriodicBSplineTerm(ar...), sch, Mod)
 end
 function StatsModels.apply_schema(
     t::AbstractSplineTerm,
