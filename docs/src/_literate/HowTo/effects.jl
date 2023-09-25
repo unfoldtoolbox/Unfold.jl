@@ -28,7 +28,7 @@ plot_erp(coeftable(m))
 
 # As expected, we get four lines - the interaction is flat, the slope of the continuous is around 4, the categorical effect is at 3 and the intercept at 0 (everything is dummy coded by default)
 # ### Effects
-# A convenience function is [effects](@ref). It allows to specify effects on specific levels, while setting non-specified ones to a typical value (usually the mean)
+# A convenience function is `effects`. It allows to specify effects on specific levels, while setting non-specified ones to a typical value (usually the mean)
 
 eff = effects(Dict(:condition => ["car","face"]),m)
 plot_erp(eff;mapping=(:color=>:condition,))

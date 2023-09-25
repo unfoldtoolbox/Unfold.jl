@@ -13,7 +13,7 @@ nothing;#hide
 ```
 
 
-This notebook is similar to the [Linear Model with Overlap Correction](@ref) tutorial, but fits **mixed** models with overlap correction
+This notebook is similar to the Linear Model with Overlap Correction tutorial, but fits **mixed** models with overlap correction
 
 !!! warning 
     **Limitation**: This is not production ready at all. Still lot's of things to find out and tinker with. Don't use this if you did not look under the hood of the toolbox!

@@ -105,7 +105,7 @@ weighted = (β .*X')
 
 # Plotting them makes for a nice looking plot!
 ax = Axis(Figure()[1,1])
-[lines!(weighted[k,:]) for k = 1:11]
+[lines!(weighted[k,:]) for k = 1:10]
 current_figure()
 
 

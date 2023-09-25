@@ -1,5 +1,5 @@
 
-## [Installation]((@id install_instruct))
+# [Installation](@id install_instruct)
 
 ### getting into the right environment
 First we have to install some packages. in julia you would do this either by putting a `]` in the REPL ("julia-commandline").
