@@ -33,7 +33,7 @@ end
 		sizehint!(lrt,n)
 		for k = 1:n
 			ms = fake_lmm.(m,k)
-			@info objective.(ms)
+			#@info objective.(ms)
 			lrt[k] = MixedModels.likelihoodratiotest(ms...)
 		end
 		return lrt
