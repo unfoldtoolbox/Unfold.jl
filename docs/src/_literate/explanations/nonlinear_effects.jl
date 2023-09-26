@@ -1,4 +1,4 @@
-# # Non-linear effects
+# # [Non-linear effects]](@id nonlinear)
 
 
 
@@ -72,18 +72,19 @@ typeof(term_spl)
 # a special type generated in Unfold.jl
 #
 # it has a field .fun which is the spline function. We can evaluate it at a point
-term_spl.fun([0.2])
+const splFunction =  Base.get_extension(Unfold,:UnfoldBSplineKitExt).splFunction
+splFunction([0.2],term_spl)
 
 # each column of this 1 row matrix is a coefficient for our regression model.
-lines(disallowmissing(term_spl.fun([0.2]))[1,:])
+lines(disallowmissing(splFunction([0.2],term_spl))[1,:])
 
 # Note: We have to use disallowmissing, because our splines return a `missing` whenever we ask it to return a value outside it's defined range, e.g.:
-term_spl.fun([-0.2])
+splFunction([-0.2],term_spl)
 
 # because it never has seen any data outside and can't extrapolate!
 
 # Okay back to our main issue: Let's plot the whole basis set
-basisSet = term_spl.fun(0.:0.01:1)
+basisSet = splFunction(0.:0.01:1,term_spl)
 basisSet = disallowmissing(basisSet[.!any(ismissing.(basisSet),dims=2)[:,1],:]) # remove missings
 ax = Axis(Figure()[1,1])
 [lines!(ax,basisSet[:,k]) for k in 1:size(basisSet,2)]
@@ -104,7 +105,7 @@ weighted = (β .*X')
 
 # Plotting them makes for a nice looking plot!
 ax = Axis(Figure()[1,1])
-[lines!(weighted[k,:]) for k = 1:11]
+[lines!(weighted[k,:]) for k = 1:10]
 current_figure()
 
 

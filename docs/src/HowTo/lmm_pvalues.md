@@ -6,9 +6,10 @@ There are currently two ways to get p-values for LMMs: Walds t-test & likelihood
 using MixedModels, Unfold # we require to load MixedModels to load the PackageExtension
 using DataFrames
 using UnfoldSim
+using CairoMakie
 data_epoch,evts = UnfoldSim.predef_2x2(;n_items=52,n_subjects=40,return_epoched=true)
-data_epoch = reshape(data_epoch,1,size(data_epoch)... )
 times = range(0,1,length=size(data_epoch,1))
+data_epoch = reshape(data_epoch,1,size(data_epoch)... )
 ```
 
 #### Define f0 & f1 and fit!

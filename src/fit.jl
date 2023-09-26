@@ -100,7 +100,13 @@ isMixedModelFormula(f::InteractionTerm) = false
 isMixedModelFormula(f::ConstantTerm) = false
 isMixedModelFormula(f::Term) = false
 #isMixedModelFormula(f::FunctionTerm) = false
-isMixedModelFormula(f::FunctionTerm) = isMixedModelFormula(f.forig)
+function isMixedModelFormula(f::FunctionTerm) 
+    try 
+        isMixedModelFormula(f.f)
+    catch
+        isMixedModelFormula(f.forig) # StatsMoels  <0.7
+    end
+end
 isMixedModelFormula(f::Function) = false  # catch all
 
 isMixedModelFormula(f::typeof(|)) = true

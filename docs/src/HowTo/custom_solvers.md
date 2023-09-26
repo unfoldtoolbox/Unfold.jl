@@ -26,10 +26,22 @@ plot_erp(results;extra=(;stderror=true))
 
 
 
+
+### GPU Solvers
+GPU solvers can speed up your modelfit drastically! up to factor of 30 has been observed already
+```julia
+using Krylov,CUDA # necessary to load the right package extension
+gpu_solver =(x,y)->Unfold.solver_krylov(x,y;GPU=true)
+m = Unfold.fit(UnfoldModel,designDict,evts,dat,solver=gpu_solver)
+```
+We can't run it on the docs though, so try it yourself! If you need something else than CUDA, write an issue, we cant test it with something else right now...
+
+
 ### Robust Solvers
 Robust solvers automatically account for outlying trials. They come at a severe computational cost though!
 ```@Example main
-using RobustSolvers
+using RobustModels # necessary to load the Unfold st
+package extension
 se_solver =(x,y)->Unfold.solver_robust(x,y)
 m = Unfold.fit(UnfoldModel,designDict,evts,dat,solver=se_solver)
 results =coeftable(m)

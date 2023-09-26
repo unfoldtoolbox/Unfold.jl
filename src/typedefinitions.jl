@@ -80,3 +80,6 @@ function Base.show(io::IO, obj::UnfoldModel)
     coeftable(uf) \t\t(returns tidy result dataframe) \n",
     )
 end
+
+
+abstract type AbstractSplineTerm <:AbstractTerm end

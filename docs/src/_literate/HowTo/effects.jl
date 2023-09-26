@@ -1,4 +1,4 @@
-## Effects
+#  # [Effects](@id effects)
 # Effects are super useful to understand the actual modelfits. If you are an EEG-Researcher, you can think of effects as the "modelled ERPs", and the coefficients as the "difference-waves".
 # In some way, we are fitting a model with coefficients and then try to get back the "original" ERPs - of course typically with some effect adjusted, overlap removed or similar - else why bother ;)
 
@@ -28,7 +28,7 @@ plot_erp(coeftable(m))
 
 # As expected, we get four lines - the interaction is flat, the slope of the continuous is around 4, the categorical effect is at 3 and the intercept at 0 (everything is dummy coded by default)
 # ### Effects
-# A convenience function is [effects](@ref). It allows to specify effects on specific levels, while setting non-specified ones to a typical value (usually the mean)
+# A convenience function is `effects`. It allows to specify effects on specific levels, while setting non-specified ones to a typical value (usually the mean)
 
 eff = effects(Dict(:condition => ["car","face"]),m)
 plot_erp(eff;mapping=(:color=>:condition,))

@@ -1,4 +1,4 @@
-# Mass Univariate Linear Mixed Models
+# [Mass Univariate Linear Mixed Models](@id lmm_massunivariate)
 
 ```@example Main
 using StatsModels, DataFrames,CategoricalArrays

@@ -8,7 +8,7 @@ using Statistics
 using DataFrames
 using Effects
 using SparseArrays
-abstract type AbstractSplineTerm <:AbstractTerm end
+import Unfold: AbstractSplineTerm
 
     include("basisfunctions.jl")
     include("splinepredictors.jl")

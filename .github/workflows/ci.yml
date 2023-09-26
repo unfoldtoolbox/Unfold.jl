@@ -25,12 +25,14 @@ jobs:
         julia-arch: [x64]
         os: [ubuntu-latest]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - run: pwd
       - name: Setup julia
         uses: julia-actions/setup-julia@v1
         with:
           version:  ${{ matrix.julia-version }}
+      - name: cache
+        uses: julia-actions/cache@v1
       - name: Install registered dependencies
         uses: julia-actions/julia-buildpkg@v1
       - name: Run tests
