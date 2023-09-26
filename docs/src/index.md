@@ -1,7 +1,7 @@
 # Unfold Documentation
 Documentation is currently written.
 
-If you want to follow the **tutorials**, stat with the [installation tutorial](@ref install_instruct), else/then go for the [mass-univariate approach](@ref lm_massunivariate), which should be familiar to you if you did ERPs before. Then the [overlap-correction tutorial](@ref lm_overlap), [mixed mass univariate](@ref X), [mixed overlap (tricky!)](@ref Y). If you are then not satisfied, check out more advanced topics: [effects-interface (aka what to do after fitting)](@ref X), or [non-linear effects](@ref Z).
+If you want to follow the **tutorials**, best to start with the [mass-univariate approach](@ref lm_massunivariate), which should be familiar to you if you did ERPs before. Then the [overlap-correction tutorial](@ref lm_overlap), [mixed mass univariate](@ref lmm_massunivariate), [mixed overlap (tricky!)](@ref lmm_overlap). If you are then not satisfied, check out more advanced topics: [effects-interface (aka what to do after fitting)](@ref effects), or [non-linear effects](@ref nonlinear).
 
 In case you want to understand the tools better, check out our **explanations**.
 

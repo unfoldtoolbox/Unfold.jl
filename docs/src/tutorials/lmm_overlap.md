@@ -1,4 +1,4 @@
-# Overlap Correction with Linear Mixed Models
+# [Overlap Correction with Linear Mixed Models](@id lmm_overlap)
 
 ```@example Main
 using StatsModels, MixedModels, DataFrames,CategoricalArrays
@@ -59,8 +59,8 @@ f  = @formula 0~1+A*B+zerocorr(1+A*B|subject);
 ```@example Main
 bfDict = Dict(Any=>(f,basisfunction))
 # for some reason this results in a big error. Skipping this tutorial right now
-m = fit(UnfoldModel,bfDict,evts,dat) 
-evts
+#m = fit(UnfoldModel,bfDict,evts,dat) 
+
 #results = coeftable(m)
 #first(results,6)
 ```
@@ -69,5 +69,5 @@ evts
 #### 4. Visualize results
 
 ```@example Main
-plot_erp(results;mapping=(;col=:group))
+#plot_erp(results;mapping=(;col=:group))
 ```
