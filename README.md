@@ -25,7 +25,7 @@ The matlab version is still maintained, but active development happens in Julia.
 |-------------------------|--------|---------|-----------|
 | overlap correction      | x      | x       | x         |
 | non-linear splines      | x      | x       | x         |
-| speed |       |  🐌      | ⚡         |
+| speed |       |  🐌      | ⚡ 2-100x        |
 | GPU support | | | 🚀|
 | plotting tools          | x      |         | [UnfoldMakie.jl](https://unfoldtoolbox.github.io/UnfoldMakie.jl/dev/)  |
 | Interactive plotting  |       |         | stay tuned - coming soon! |
