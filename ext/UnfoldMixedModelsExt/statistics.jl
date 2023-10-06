@@ -19,14 +19,15 @@ function fake_lmm(m::UnfoldLinearMixedModel,k::Int)
     setθ!(lmm,fcoll.fits[k].θ)
     return lmm
 end
-    fake_lmm(m::UnfoldLinearMixedModel) = fake_lmm.(m,1:length(modelfit(m).fits))
+   
+fake_lmm(m::UnfoldLinearMixedModel) = fake_lmm.(m,1:length(modelfit(m).fits))
 	
     """
     $(SIGNATURES)
 
     Calculate likelihoodratiotest
     """
-	function MixedModels.likelihoodratiotest(m::UnfoldLinearMixedModel...)
+	function MixedModels.likelihoodratiotest(m::UnfoldLinearMixedModel)
 		#@info lrtest(fake_lmm.(m,1)...)
 		n = length(Unfold.modelfit(m[1]).fits)
 		lrt = Array{MixedModels.LikelihoodRatioTest}(undef,n)
@@ -61,3 +62,16 @@ end
 	function pvalues(lrtvec::Vector{MixedModels.LikelihoodRatioTest})
 		[lrt.pvalues for lrt in lrtvec]
 	end
+
+
+
+    function MixedModels.rePCA(m::UnfoldLinearMixedModel)
+        oneresult = MixedModels.rePCA(fake_lmm(m,1))
+        emptyPCA = (;)
+        for s = keys(oneresult)
+            res = hcat([a[s] for a in MixedModels.rePCA.(fake_lmm.(Ref(m),1:length(modelfit(m).fits)))]...)
+                newPCA = NamedTuple{(s,)}([res])
+        emptyPCA = merge(emptyPCA,newPCA)
+        end
+        return emptyPCA
+        end

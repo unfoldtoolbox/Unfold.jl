@@ -12,7 +12,7 @@ import Unfold: AbstractSplineTerm
 
     include("basisfunctions.jl")
     include("splinepredictors.jl")
-@show "test"
+
 
 ## Effects
 Effects._trmequal(t1::AbstractSplineTerm,t2::AbstractTerm) = Effects._symequal(t1.term,t2)
