@@ -122,7 +122,7 @@ Equates the length of data and designmatrix by cutting the shorter one
 
 The reason we need this is because when generating the designmatrix, we do not know how long the data actually are. We only assume that event-latencies are synchronized with the data
 """
-function zeropad(X, data::AbstractArray{T,2}) where {T<:Union{Missing,<:Number}}
+function zeropad(X::AbstractMatrix, data::AbstractArray{T,2}) where {T<:Union{Missing,<:Number}}
     @debug("2d zeropad")
     if size(X, 1) > size(data, 2)
         X = X[1:size(data, 2), :]
@@ -131,7 +131,7 @@ function zeropad(X, data::AbstractArray{T,2}) where {T<:Union{Missing,<:Number}}
     end
     return X, data
 end
-function zeropad(X, data::AbstractVector{T}) where {T<:Union{Missing,<:Number}}
+function zeropad(X::AbstractMatrix, data::AbstractVector{T}) where {T<:Union{Missing,<:Number}}
     @debug("1d zeropad")
     if size(X, 1) > length(data)
         X = X[1:length(data),:]
@@ -141,7 +141,7 @@ function zeropad(X, data::AbstractVector{T}) where {T<:Union{Missing,<:Number}}
     return X, data
 end
 
-function zeropad(X, data::AbstractArray{T,3}) where {T<:Union{Missing,<:Number}}
+function zeropad(X::AbstractMatrix, data::AbstractArray{T,3}) where {T<:Union{Missing,<:Number}}
     @debug("3d zeropad")
     
     @assert size(X, 1) == size(data, 3) "Your events are not of the same size as your last dimension of data"
