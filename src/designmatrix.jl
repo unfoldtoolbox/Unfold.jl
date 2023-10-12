@@ -133,7 +133,7 @@ function designmatrix(
         
 
 
-    form = unfold_apply_schema(type,f, schema(f, tbl_nomissing, contrasts))
+    form = unfold_apply_schema(f, schema(f, tbl_nomissing, contrasts))
     
     @debug "type: $type"
     if (type== UnfoldLinearMixedModel) || (type == UnfoldLinearMixedModelContinuousTime)
@@ -163,7 +163,7 @@ end
 """
 wrapper to make apply_schema mixed models as extension possible
 """
-unfold_apply_schema(type::Any,f,schema) = apply_schema(f,schema,UnfoldModel)
+unfold_apply_schema(f,schema) = apply_schema(f,schema,UnfoldModel)
 
 
 # specify for abstract interface
@@ -256,6 +256,7 @@ end
 function designmatrix!(uf::UnfoldModel, evts; kwargs...)
     X = designmatrix(uf, evts; kwargs...)
     uf.designmatrix = X
+    return uf
 end
 
 function StatsModels.modelmatrix(uf::UnfoldLinearModel,basisfunction)
