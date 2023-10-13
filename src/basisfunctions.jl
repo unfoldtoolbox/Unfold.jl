@@ -33,11 +33,11 @@ struct FIRBasis <: BasisFunction
     kernel::Function
 
     " vector of times along rows of kernel-output (in seconds)"
-    times::AbstractVector
+    times::Vector
     "name of the event, random 1:1000 if unspecified"
     name::String
     "by how many samples do we need to shift the event onsets? This number is determined by how many 'negative' timepoints the basisfunction defines"
-    shiftOnset::Integer
+    shiftOnset::Int64
 end
 
 collabel(basis::FIRBasis) = :time
@@ -52,11 +52,11 @@ struct SplineBasis <: BasisFunction
     "vector of names along columns of kernel-output"
     colnames::AbstractVector
     " vector of times along rows of kernel-output (in seconds)"
-    times::AbstractVector
+    times::Vector
     "name of the event, random 1:1000 if unspecified"
     name::String
     "by how many samples do we need to shift the event onsets? This number is determined by how many 'negative' timepoints the basisfunction defines"
-    shiftOnset::Integer
+    shiftOnset::Int64
 end
 
 
@@ -66,7 +66,7 @@ struct HRFBasis <: BasisFunction
     "vector of names along columns of kernel-output"
     colnames::AbstractVector
     " vector of times along rows of kernel-output (in seconds)"
-    times::AbstractVector
+    times::Vector
     "name of the event, random 1:1000 if unspecified"
     name::String
 end
