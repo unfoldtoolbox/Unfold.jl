@@ -133,7 +133,7 @@ function designmatrix(
         
 
 
-    form = unfold_apply_schema(f, schema(f, tbl_nomissing, contrasts))
+    form = unfold_apply_schema(type,f, schema(f, tbl_nomissing, contrasts))
     
     @debug "type: $type"
     if (type== UnfoldLinearMixedModel) || (type == UnfoldLinearMixedModelContinuousTime)
@@ -162,8 +162,10 @@ end
 
 """
 wrapper to make apply_schema mixed models as extension possible
+
+Note: type is not necessary here, but for LMM it is for multiple dispatch reasons!
 """
-unfold_apply_schema(f,schema) = apply_schema(f,schema,UnfoldModel)
+unfold_apply_schema(type,f,schema) = apply_schema(f,schema,UnfoldModel)
 
 
 # specify for abstract interface
@@ -343,14 +345,17 @@ timeexpand_rows timeexpand_vals
 function timeexpand_rows(onsets,bases,shift,ncolsX)
     # generate rowindices
     rows = copy(rowvals.(bases))
+    
     # this shift is necessary as some basisfunction time-points can be negative. But a matrix is always from 1:τ. Thus we have to shift it backwards in time.
     # The onsets are onsets-1 XXX not sure why.
-    for r = 1:length(rows)
+    for r = eachindex(rows)
         rows[r] .+= floor(onsets[r] - 1) .+ shift
     end
 
-    rows = vcat(rows...)
-    rows = repeat(rows, ncolsX)
+    
+    rows_red = reduce(vcat,rows)
+    rows_red = repeat(rows_red, ncolsX)
+    return rows_red
     end
 
 """
@@ -379,10 +384,12 @@ function time_expand_getTimeRange(onset, basisfunction)
 end
 
 
-function timeexpand_cols_allsamecols(bases,ncolsBasis,ncolsX)
+function timeexpand_cols_allsamecols(bases,ncolsBasis::Int,ncolsX)
     repeatEach = length(nzrange(bases[1], 1))
-    cols = UnitRange[((1:ncolsBasis) .+ix*ncolsBasis)  for ix in (0:ncolsX-1) for b in 1:length(bases)]
-    cols = vcat(cols...)::Vector{Int64}
+    cols_r = UnitRange{Int64}[((1:ncolsBasis) .+ix*ncolsBasis)  for ix in (0:ncolsX-1) for b in 1:length(bases)]
+    
+    cols = reduce(vcat,cols_r)
+    
     cols = repeat(cols,inner=repeatEach)
     return cols
 end
@@ -421,9 +428,9 @@ function timeexpand_cols_generic(bases,ncolsBasis,ncolsX)
                 end
             end
         end
-        cols = vcat(cols...)::Vector{Int64}
+        return reduce(vcat,cols)
     
-    return cols
+
 end
 
 function  timeexpand_vals(bases,X,nTotal,ncolsX)
@@ -454,21 +461,30 @@ performs the actual time-expansion in a sparse way.
  - calculate the necessary rows, cols and values for the sparse matrix
  Returns SparseMatrixCSC 
 """
-function time_expand(X, term, tbl)
-    ncolsBasis = size(kernel(term.basisfunction)(0.), 2)
-    X = reshape(X, size(X, 1), :) # why is this necessary?
-    ncolsX = size(X)[2]
 
+function time_expand(Xorg,term,tbl)
     # this is the predefined eventfield, usually "latency"
     tbl = DataFrame(tbl)
-    onsets = tbl[!, term.eventfields[1]]
+    onsets = Float64.(tbl[:, term.eventfields[1]])::Vector{Float64} # XXX if we have integer onsets, we could directly speed up matrix generation maybe?
 
     if typeof(term.eventfields) <: Array && length(term.eventfields) == 1
-        bases = kernel(term.basisfunction).(tbl[!, term.eventfields[1]])
+        bases = kernel.(Ref(term.basisfunction),onsets)
     else
-        bases = kernel(term.basisfunction).(eachrow(tbl[!, term.eventfields]))
+        bases = kernel.(Ref(term.basisfunction),eachrow(tbl[!, term.eventfields]))
     end
 
+    return time_expand(Xorg,term,onsets, bases)
+end
+function time_expand(Xorg, term, onsets, bases)
+    ncolsBasis = size(kernel(term.basisfunction,0), 2)::Int64
+    X = reshape(Xorg, size(Xorg, 1), :) # why is this necessary?
+    ncolsX = size(X)[2]::Int64
+
+    
+
+    
+    
+    
     rows = timeexpand_rows(onsets,bases,shiftOnset(term.basisfunction),ncolsX)
     cols = timeexpand_cols(term,bases,ncolsBasis,ncolsX)
 
@@ -476,7 +492,7 @@ function time_expand(X, term, tbl)
     
     #vals = vcat(vals...)
     ix = rows .> 0 #.&& vals .!= 0.
-    A = sparse(rows[ix], cols[ix], vals[ix])
+    A = @views sparse(rows[ix], cols[ix], vals[ix])
     dropzeros!(A)
     
     return A
