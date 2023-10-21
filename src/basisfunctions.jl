@@ -25,7 +25,7 @@ $(FIELDS)
 (tipp: most users would you want to call firbasis, not generate it manually)
 # Examples
 ```julia-repl
-julia>  b = FIRBasis("derivative",["f(x)"],range(0,(length(kernelfunction([0, 1]))-1)*TR,step=TR),"hrf_kernel","basis_A",0)
+julia>  b = FIRBasis(range(0,1,length=10),"basisA",-1)
 ```
 """
 struct FIRBasis <: BasisFunction
@@ -37,6 +37,7 @@ struct FIRBasis <: BasisFunction
     shiftOnset::Int64
 end
 
+@deprecate FIRBasis(kernel::Function,times,name,shiftOnset) FIRBasis(times,name,shiftOnset)
 collabel(basis::FIRBasis) = :time
 colnames(basis::FIRBasis) = basis.times[1:end-1]
 
