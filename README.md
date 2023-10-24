@@ -4,7 +4,7 @@ Toolbox to perform linear regression on biological signals.
 
 | **Documentation**                                                               | **Build Status**                                                                                |
 |:-------------------------------------------------------------------------------:|:-----------------------------------------------------------------------------------------------:|
-| [![Docs][Doc-img]][Doc-url] | ![semver][semver-img] [![Build Status][build-img]][build-url] |
+| [![Docs][Doc-img]][Doc-url] ![semver][semver-img]  | [![Build Status][build-img]][build-url] |
 
 [Doc-img]: https://img.shields.io/badge/docs-main-blue.svg
 [Doc-url]: https://unfoldtoolbox.github.io/Unfold.jl/dev
@@ -33,8 +33,29 @@ Julia interface to MNE-Python via PythonCall | [PyMNE.jl](https://github.com/bea
 
 ## Install
 
+### Installing Julia
+<details>
+<summary>Click to expand</summary>
+
+The recommended way to install julia is [juliaup](https://github.com/JuliaLang/juliaup).
+It allows you to, e.g., easily update Julia at a later point, but also test out alpha/beta versions etc.
+
+TL:DR; If you dont want to read the explicit instructions, just copy the following command
+
+#### Windows
+
+AppStore -> JuliaUp,  or `winget install julia -s msstore` in CMD
+
+#### Mac & Linux
+
+`curl -fsSL https://install.julialang.org | sh` in any shell
+</details>
+
+### Installing Unfold
+
 ```julia
-]add Unfold
+using Pkg
+Pkg.add("Unfold")
 ```
 
 ## Usage
@@ -70,7 +91,9 @@ To fit any of the models, Unfold.jl offers a unified syntax:
 |  | x | `fit(UnfoldModel,Dict(Any=>(fLMM,times)),evts,data_epoch)` |
 | x | x | `fit(UnfoldModel,Dict(Any=>(fLMM,basis)),evts,data)` |
 
-## Relation to Unfold (matlab)
+## Comparison to Unfold (matlab)
+<details>
+<summary>Click to expand</summary>
 
 The matlab version is still maintained, but active development happens in Julia.
 
@@ -95,6 +118,7 @@ The matlab version is still maintained, but active development happens in Julia.
 | decoding  |        |        | back2back regression         |
 | outlier-robust fits  |        |        |  [many options (but slower)](https://unfoldtoolbox.github.io/Unfold.jl/dev/HowTo/custom_solvers/#Robust-Solvers)   |
 | 🐍Python support | | | [via Pycall, link to notebook](https://github.com/unfoldtoolbox/Unfold.jl/blob/main/docs/src/HowTo/pyjulia_unfold.ipynb)|
+</details>
 
 ## Contributions
 
