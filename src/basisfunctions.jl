@@ -45,8 +45,6 @@ colnames(basis::FIRBasis) = basis.times[1:end-1]
 struct SplineBasis <: BasisFunction
     kernel::Function
 
-    "name of column dimension (e.g 'time' for FIR, 'derivative', for HRF etc.)"
-
     "vector of names along columns of kernel-output"
     colnames::AbstractVector
     " vector of times along rows of kernel-output (in seconds)"
@@ -205,7 +203,8 @@ collabel(term::Array{<:AbstractTerm}) = collabel(term[1].rhs)  # in case of comb
 
 shiftOnset(basis::BasisFunction) = basis.shiftOnset
 colnames(basis::BasisFunction) = basis.colnames
-kernel(basis::BasisFunction,e) = basis.kernel(e) # need to deprecate for non-FIR kernels...
+kernel(basis::BasisFunction,e) = basis.kernel(e) 
+@deprecate kernel(basis::BasisFunction) basis.kernel
 
 kernel(basis::FIRBasis,e) = firkernel(e,basis.times[1:end-1])
 
