@@ -25,48 +25,43 @@ $(FIELDS)
 (tipp: most users would you want to call firbasis, not generate it manually)
 # Examples
 ```julia-repl
-julia>  b = FIRBasis(kernelfunction,"derivative",["f(x)"],range(0,(length(kernelfunction([0, 1]))-1)*TR,step=TR),"hrf_kernel","basis_A",0)
+julia>  b = FIRBasis(range(0,1,length=10),"basisA",-1)
 ```
 """
 struct FIRBasis <: BasisFunction
-    "a design-matrix kernel function used to timeexpand, given a timepoint in 'sample' timeunits"
-    kernel::Function
-
     " vector of times along rows of kernel-output (in seconds)"
-    times::AbstractVector
+    times::Vector
     "name of the event, random 1:1000 if unspecified"
     name::String
     "by how many samples do we need to shift the event onsets? This number is determined by how many 'negative' timepoints the basisfunction defines"
-    shiftOnset::Integer
+    shiftOnset::Int64
 end
 
+@deprecate FIRBasis(kernel::Function,times,name,shiftOnset) FIRBasis(times,name,shiftOnset)
 collabel(basis::FIRBasis) = :time
 colnames(basis::FIRBasis) = basis.times[1:end-1]
 
 
 struct SplineBasis <: BasisFunction
-    "a design-matrix kernel function used to timeexpand, given a timepoint in 'sample' timeunits"
     kernel::Function
-    "name of column dimension (e.g 'time' for FIR, 'derivative', for HRF etc.)"
 
     "vector of names along columns of kernel-output"
     colnames::AbstractVector
     " vector of times along rows of kernel-output (in seconds)"
-    times::AbstractVector
+    times::Vector
     "name of the event, random 1:1000 if unspecified"
     name::String
     "by how many samples do we need to shift the event onsets? This number is determined by how many 'negative' timepoints the basisfunction defines"
-    shiftOnset::Integer
+    shiftOnset::Int64
 end
 
 
 struct HRFBasis <: BasisFunction
-    "a design-matrix kernel function used to timeexpand, given a timepoint in 'sample' timeunits"
     kernel::Function
     "vector of names along columns of kernel-output"
     colnames::AbstractVector
     " vector of times along rows of kernel-output (in seconds)"
-    times::AbstractVector
+    times::Vector
     "name of the event, random 1:1000 if unspecified"
     name::String
 end
@@ -105,12 +100,12 @@ function firbasis(τ, sfreq, name::String)
     τ = round_times(τ, sfreq)
     times = range(τ[1], stop = τ[2]+1 ./ sfreq, step = 1 ./ sfreq) # stop + 1 step, because we support fractional event-timings
 
-    kernel = e -> firkernel(e, times[1:end-1])
+
 
 
     shiftOnset = Int64(floor(τ[1] * sfreq))
 
-    return FIRBasis(kernel, times, name, shiftOnset)
+    return FIRBasis(times, name, shiftOnset)
 end
 # cant multiple dispatch on optional arguments
 #firbasis(;τ,sfreq)           = firbasis(τ,sfreq)
@@ -132,12 +127,12 @@ function firkernel(e, times)
         # XXX we will soon assume that the second entry would be the duration
         e = Float64(e[1])
     end
-    e = [1 .- (e .% 1) e .% 1]
-    e[isapprox.(e, 0, atol = 1e-15)] .= 0
+    eboth = [1 .- (e .% 1) e .% 1]
+    eboth[isapprox.(eboth, 0, atol = 1e-15)] .= 0
     ksize = length(times) # kernelsize
 
     kernel =
-        spdiagm(ksize + 1, ksize, 0 => repeat([e[1]], ksize), -1 => repeat([e[2]], ksize))
+        spdiagm(ksize + 1, ksize, 0 => repeat([eboth[1]], ksize), -1 => repeat([eboth[2]], ksize))
     
     #    dropzeros!(kernel) # we often get implicit 0, especially if the latencies are rounded
     return (kernel)
@@ -208,7 +203,10 @@ collabel(term::Array{<:AbstractTerm}) = collabel(term[1].rhs)  # in case of comb
 
 shiftOnset(basis::BasisFunction) = basis.shiftOnset
 colnames(basis::BasisFunction) = basis.colnames
-kernel(basis::BasisFunction) = basis.kernel
+kernel(basis::BasisFunction,e) = basis.kernel(e) 
+@deprecate kernel(basis::BasisFunction) basis.kernel
+
+kernel(basis::FIRBasis,e) = firkernel(e,basis.times[1:end-1])
 
 times(basis::BasisFunction) = basis.times
 name(basis::BasisFunction) = basis.name

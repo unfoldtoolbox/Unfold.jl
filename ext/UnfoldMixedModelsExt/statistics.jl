@@ -27,7 +27,7 @@ fake_lmm(m::UnfoldLinearMixedModel) = fake_lmm.(m,1:length(modelfit(m).fits))
 
     Calculate likelihoodratiotest
     """
-	function MixedModels.likelihoodratiotest(m::UnfoldLinearMixedModel)
+	function MixedModels.likelihoodratiotest(m::UnfoldLinearMixedModel...)
 		#@info lrtest(fake_lmm.(m,1)...)
 		n = length(Unfold.modelfit(m[1]).fits)
 		lrt = Array{MixedModels.LikelihoodRatioTest}(undef,n)

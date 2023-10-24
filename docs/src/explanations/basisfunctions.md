@@ -16,7 +16,7 @@ using Unfold,DSP
 TR = 1.5
 bold = hrfbasis(TR) # using default SPM parameters
 eventonset = 1.3
-bold_kernel = Unfold.kernel(bold)
+bold_kernel = e->Unfold.kernel(bold,e)
 lines(bold_kernel(eventonset)[:,1]) # (returns a matrix, thus [:,1])
 ```
 This is the shape that is assumed to reflect activity to an event. Generally, we would like to know how much to scale this response-shape per condition, e.g. in `condA` we might scale it by 0.7, in `condB` by 1.2.
@@ -60,7 +60,7 @@ Okay, let's have a look at a different basis function: The FIR basisfunction.
 using Unfold #hide
 
 basisfunction = firbasis(τ=(-0.4,.8),sfreq=50,name="myFIRbasis")
-fir_kernel = Unfold.kernel(basisfunction)
+fir_kernel = e->Unfold.kernel(basisfunction,e)
 m = fir_kernel(0)
 f = Figure()
 f[1,1] = Axis(f)

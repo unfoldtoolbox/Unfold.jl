@@ -120,7 +120,7 @@ else
 
     function solver_krylov(args...;kwargs...)
         ext = checkFun(:UnfoldKrylovExt) 
-        msg = "BSplineKit not loaded. Please use `]add Krylov,CUDA, using Krylov,CUDA` to install/load it, if you want to use krylov/GPU"
+        msg = "Krylov or CUDA not loaded. Please use `]add Krylov,CUDA, using Krylov,CUDA` to install/load it, if you want to use GPU-fitting"
         isnothing(ext) ? throw(msg) : ext.solver_krylov(args...;kwargs...)
     end
   
