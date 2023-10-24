@@ -67,6 +67,8 @@ Here a quick overview what to expect.
 ### What you need
 
 ```julia
+using Unfold
+
 events::DataFrame
 
 # formula with or without random effects
