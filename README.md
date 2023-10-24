@@ -1,9 +1,6 @@
-# ![Unfold.jl EEG toolbox](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/3cbe57c1-e1a7-4150-817a-ce3dcc844485)
+# ![[Unfold.jl EEG toolbox](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/3cbe57c1-e1a7-4150-817a-ce3dcc844485)](https://github.com/unfoldtoolbox/Unfold.jl)
 
-
-| **Documentation**                                                               | **Build Status**                                                                                |
-|:-------------------------------------------------------------------------------:|:-----------------------------------------------------------------------------------------------:|
-| [![Docs][Doc-img]][Doc-url] ![semver][semver-img]  | [![Build Status][build-img]][build-url] |
+[![Docs][Doc-img]][Doc-url] ![semver][semver-img] [![Build Status][build-img]][build-url]
 
 [Doc-img]: https://img.shields.io/badge/docs-main-blue.svg
 [Doc-url]: https://unfoldtoolbox.github.io/Unfold.jl/dev
@@ -21,10 +18,10 @@ This kind of modelling is also known as encoding modeling, linear deconvolution,
   
 | | Link to Toolbox|
 |---|---|
-You are here | ![[Unfold.jl](https://github.com/unfoldtoolbox/Unfold.jl/tree/main)](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/757575d0-aeb9-4d94-a5f8-832f13dcd2dd)
-Simulate your own EEG data! | ![[UnfoldSim.jl](https://github.com/unfoldtoolbox/UnfoldSim.jl)](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/328a4ccd-8860-4b13-9fb6-64d3df9e2091)
-Easily load BIDS formatted EEG Data! |![[UnfoldBIDS.jl](https://github.com/ReneSkukies/UnfoldBIDS.jl)](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/2956ca20-9c48-4066-9e50-c5d25c50f0d1)
-Decoding of EEG data made easy  | ![[UnfoldDecode.jl](unfoldbids.com)](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/802002c0-a1f2-4236-9123-562684d39dcf)
+You are here | ![[Unfold.jl](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/757575d0-aeb9-4d94-a5f8-832f13dcd2dd)](https://github.com/unfoldtoolbox/Unfold.jl/tree/main)
+Simulate your own EEG data! | ![[UnfoldSim.jl](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/328a4ccd-8860-4b13-9fb6-64d3df9e2091)](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/328a4ccd-8860-4b13-9fb6-64d3df9e2091)
+Easily load BIDS formatted EEG Data! |![[UnfoldBIDS.jl](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/2956ca20-9c48-4066-9e50-c5d25c50f0d1)](https://github.com/ReneSkukies/UnfoldBIDS.jl)
+Decoding of EEG data made easy  | ![[UnfoldDecode.jl](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/802002c0-a1f2-4236-9123-562684d39dcf)](unfoldbids.com)]
 Statistically test your models! | ![[UnfoldStats.jl](unfoldstats.com)](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/4c8f2b5a-ea84-4ee3-82f9-01ef05b4f4c6)
 Visualise your results! | ![[UnfoldMakie.jl](unfoldmakie.com)](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/37af35a0-c99c-4374-827b-40fc37de7c2b)
 Julia interface to MNE-Python via PythonCall | [PyMNE.jl](https://github.com/beacon-biosignals/PyMNE.jl/tree/main)
