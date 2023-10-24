@@ -1,6 +1,5 @@
 # ![Unfold.jl EEG toolbox](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/3cbe57c1-e1a7-4150-817a-ce3dcc844485)
 
-Toolbox to perform linear regression on biological signals. 
 
 | **Documentation**                                                               | **Build Status**                                                                                |
 |:-------------------------------------------------------------------------------:|:-----------------------------------------------------------------------------------------------:|
@@ -12,9 +11,9 @@ Toolbox to perform linear regression on biological signals.
 [build-img]: https://github.com/unfoldtoolbox/UnfoldSim.jl/workflows/CI/badge.svg
 [build-url]: https://github.com/unfoldtoolbox/UnfoldSim.jl/workflows/CI.yml
 
-This tool can model event related time series with mass-univariate linear (mixed) models, with optional non-linear effects and overlap correction.
+Toolbox to perform linear / GAM / hierarchical / deconvolution regression on biological signals.
 
-This kind of modelling is also known as encoding modeling, linear deconvolution, Temporal Response Functions (TRFs), linear system identification, and probably under other names. fMRI models with HRF-basis functions are also supported.
+This kind of modelling is also known as encoding modeling, linear deconvolution, Temporal Response Functions (TRFs), linear system identification, and probably under other names. fMRI models with HRF-basis functions and pupil-dilation bases are also supported.
 
 ## Discover the Unfold-Family & Friends
 <details>
@@ -33,7 +32,7 @@ Julia interface to MNE-Python via PythonCall | [PyMNE.jl](https://github.com/bea
 
 ## Install
 
-### Installing Julia
+### Julia
 <details>
 <summary>Click to expand</summary>
 
@@ -51,7 +50,7 @@ AppStore -> JuliaUp,  or `winget install julia -s msstore` in CMD
 `curl -fsSL https://install.julialang.org | sh` in any shell
 </details>
 
-### Installing Unfold
+### Unfold.jl
 
 ```julia
 using Pkg
@@ -60,9 +59,9 @@ Pkg.add("Unfold")
 
 ## Usage
 
-Please check out [the documentatio)n](https://unfoldtoolbox.github.io/Unfold.jl/dev) for extensive tutorials, explanations...
+Please check out [the documentation](https://unfoldtoolbox.github.io/Unfold.jl/dev) for extensive tutorials, explanations and more!
 
-Here a quick overview what to expect.
+Here is a quick overview on what to expect.
 
 ### What you need
 
@@ -153,6 +152,6 @@ For now, please cite
 
 ## Acknowledgements
 
-This work was supported by the Center for Interdisciplinary Research, Bielefeld (ZiF) Cooperation Group "Statistical models for psychological and linguistic data".
+This work was initially supported by the Center for Interdisciplinary Research, Bielefeld (ZiF) Cooperation Group "Statistical models for psychological and linguistic data".
 
 Funded by Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) under Germany´s Excellence Strategy – EXC 2075 – 390740016
