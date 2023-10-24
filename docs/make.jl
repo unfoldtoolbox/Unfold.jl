@@ -18,6 +18,7 @@ end
 makedocs(sitename="Unfold.jl Timeseries Analysis & Deconvolution",
         #root = joinpath(dirname(pathof(Unfold)), "..", "docs"),
         #prettyurls = get(ENV, "CI", nothing) == "true",
+        repo = Documenter.Remotes.GitHub("unfoldtoolbox", "Unfold.jl"),
         pages = [
             "index.md",
             "Tutorials"=>[
