@@ -1,7 +1,4 @@
-# Unfold.jl
-
-<img align="right" width="33%" src="https://www.unfoldtoolbox.org/_images/unfold_800x377.png">
-
+# ![Unfold.jl EEG toolbox](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/3cbe57c1-e1a7-4150-817a-ce3dcc844485)
 
 Toolbox to perform linear regression on biological signals. 
 
@@ -12,6 +9,22 @@ Toolbox to perform linear regression on biological signals.
 This tool can model event related time series with mass-univariate linear (mixed) models, with optional non-linear effects and overlap correction.
 
 This kind of modelling is also known as encoding modeling, linear deconvolution, Temporal Response Functions (TRFs), linear system identification, and probably under other names. fMRI models with HRF-basis functions are also supported.
+
+## Discover the Unfold-Family & Friends
+<details>
+<summary>Click to expand</summary>
+  
+| | Link to Toolbox|
+|---|---|
+You are here | ![logo_Unfold jl_30px](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/757575d0-aeb9-4d94-a5f8-832f13dcd2dd)
+Pipeline |![[](unfoldbids.com)](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/2956ca20-9c48-4066-9e50-c5d25c50f0d1)
+Decode | ![logo_UnfoldDecode jl_30px](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/802002c0-a1f2-4236-9123-562684d39dcf)
+![logo_UnfoldStats jl_30px](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/4c8f2b5a-ea84-4ee3-82f9-01ef05b4f4c6)
+![logo_UnfoldSim jl_30px](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/328a4ccd-8860-4b13-9fb6-64d3df9e2091)
+![logo_UnfoldMakie jl_30px](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/37af35a0-c99c-4374-827b-40fc37de7c2b)
+PyMNE.jl
+</details>
+
 
 ## Citation
 For now, please cite
