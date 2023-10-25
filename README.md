@@ -19,11 +19,11 @@ This kind of modelling is also known as encoding modeling, linear deconvolution,
 | | Link to Toolbox|
 |---|---|
 You are here | ![[Unfold.jl](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/757575d0-aeb9-4d94-a5f8-832f13dcd2dd)](https://github.com/unfoldtoolbox/Unfold.jl/tree/main)
-Simulate your own EEG data! | ![[UnfoldSim.jl](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/328a4ccd-8860-4b13-9fb6-64d3df9e2091)](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/328a4ccd-8860-4b13-9fb6-64d3df9e2091)
-Easily load BIDS formatted EEG Data! |![[UnfoldBIDS.jl](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/2956ca20-9c48-4066-9e50-c5d25c50f0d1)](https://github.com/ReneSkukies/UnfoldBIDS.jl)
-Decoding of EEG data made easy  | ![[UnfoldDecode.jl](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/802002c0-a1f2-4236-9123-562684d39dcf)](unfoldbids.com)]
-Statistically test your models! | ![[UnfoldStats.jl](unfoldstats.com)](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/4c8f2b5a-ea84-4ee3-82f9-01ef05b4f4c6)
-Visualise your results! | ![[UnfoldMakie.jl](unfoldmakie.com)](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/37af35a0-c99c-4374-827b-40fc37de7c2b)
+Simulate your own EEG data! | ![[UnfoldSim.jl](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/328a4ccd-8860-4b13-9fb6-64d3df9e2091)](https://github.com/unfoldtoolbox/UnfoldSim.jl)
+Easily load BIDS formatted EEG Data! |![[UnfoldBIDS.jl](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/2956ca20-9c48-4066-9e50-c5d25c50f0d1)](https://github.com/unfoldtoolbox/UnfoldBIDS.jl)
+Decoding of EEG data made easy  | ![[UnfoldDecode.jl](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/802002c0-a1f2-4236-9123-562684d39dcf)](https://github.com/unfoldtoolbox/UnfoldDecode.jl)
+Statistically test your models! | ![[UnfoldStats.jl](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/4c8f2b5a-ea84-4ee3-82f9-01ef05b4f4c6)](unfoldstats.com)
+Visualise your results! | ![[UnfoldMakie.jl](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/37af35a0-c99c-4374-827b-40fc37de7c2b)](https://github.com/unfoldtoolbox/UnfoldMakie.jl)
 Julia interface to MNE-Python via PythonCall | [PyMNE.jl](https://github.com/beacon-biosignals/PyMNE.jl/tree/main)
 </details>
 
