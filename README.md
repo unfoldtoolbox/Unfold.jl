@@ -7,6 +7,12 @@
 [semver-img]: https://img.shields.io/badge/semantic-versioning-green
 [build-img]: https://github.com/unfoldtoolbox/UnfoldSim.jl/workflows/CI/badge.svg
 [build-url]: https://github.com/unfoldtoolbox/UnfoldSim.jl/workflows/CI.yml
+![logo_UnfoldSim jl_samewidth](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/6118c597-08cc-405e-aa94-17f517e7d7ff)
+![logo_UnfoldMakie jl_samewidth](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/aeb7b3aa-458f-4596-8328-9c84f0f653c2)
+![logo_UnfoldDecode jl_samewidth](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/84b759b4-ff11-4eae-88a1-97e2f310ead1)
+![logo_UnfoldBIDS jl_samewidth](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/1e45f9ad-d99b-4ecf-9528-c03048e730aa)
+![logo_Unfold jl_samewidth](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/4b64ce48-2098-4509-b965-6be82976eea5)
+![logo_UnfoldStats jl_samewidth](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/0691711c-be60-4ff0-ab8c-4086d2ef9b73)
 
 |rERP|EEG visualisation|EEG Simulations|BIDS pipeline|Decode EEG data|Statistical testing|
 |---|---|---|---|---|---|
