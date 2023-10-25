@@ -6,14 +6,9 @@ title: Unfold
 message: 'If you use this page, please cite it as below.'
 type: software
 authors:
-  - given-names: Phillip
-    family-names: Alday
-    orcid: 'https://orcid.org/0000-0002-9984-5745'
   - given-names: Benedikt
     family-names: Ehinger
     orcid: 'https://orcid.org/0000-0002-6276-3332'
-  - given-names: Dave
-    family-names: Kleinschmidt
   - given-names: Judith
     family-names: Schepers
   - given-names: Felix
