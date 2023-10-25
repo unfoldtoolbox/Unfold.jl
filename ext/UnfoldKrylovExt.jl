@@ -17,7 +17,7 @@ module UnfoldKrylovExt
     Difference to solver_default: No suport for per-channel missings. If one sample is missing in any channel, whole channel is removed due a lack of support for Missings in Krylov.
 
     """
-    function Unfold.solver_krylov(
+    function solver_krylov(
         X,
         data::AbstractArray{T,2};
         GPU=false,

@@ -26,7 +26,7 @@ function StatsModels.coefnames(term::MixedModels.ZeroCorr)
     coefnames(term.term)
 end
 
-function Unfold.lmm_combineMats!(Xcomb,X1,X2)
+function lmm_combineMats!(Xcomb,X1,X2)
 # we have random effects                
         # combine REMats in single-eventtpe formulas ala y ~ (1|x) + (a|x)
         Xs1 = MixedModels._amalgamate([X1.Xs[2:end]...], Float64)

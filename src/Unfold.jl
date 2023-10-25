@@ -53,16 +53,49 @@ include("statistics.jl")
 include("io.jl")
 
 
-## Extension Compatabality with julia  pre 1.9
+
+#include("plot.jl") # don't include for now
+export fit, fit!, designmatrix!
+export firbasis, hrfbasis
+export UnfoldLinearModel,
+    UnfoldLinearMixedModel,
+    UnfoldModel,
+    UnfoldLinearMixedModelContinuousTime,
+    UnfoldLinearModelContinuousTime
+export FIRBasis, HRFBasis, SplineBasis
+export modelmatrix
+export formula, design, designmatrix, coef
+export coeftable
+export modelfit
+export predict
+
 
 if !isdefined(Base, :get_extension)
+    ## Extension Compatabality with julia  pre 1.9
     include("../ext/UnfoldRobustModelsExt.jl")
     solver_robust = UnfoldRobustModelsExt.solver_robust
 
-    include("../ext/UnfoldMixedModelsExt.jl")
+    include("../ext/UnfoldMixedModelsExt/UnfoldMixedModelsExt.jl")
     pvalues = UnfoldMixedModelsExt.pvalues
+    using MixedModels
+    rePCA = MixedModels.rePCA
+    lmm_combineMats! = UnfoldMixedModelsExt.lmm_combineMats!
     likelihoodratiotest = UnfoldMixedModelsExt.likelihoodratiotest
+    check_groupsorting = UnfoldMixedModelsExt.check_groupsorting
+
+    spl() = error("dummy / undefined")
+    circspl() = error("dummy / undefined")
+
+    include("../ext/UnfoldBSplineKitExt/UnfoldBSplineKitExt.jl")
+    splinebasis = UnfoldBSplineKitExt.splinebasis
+    # need this definition unfortunatly
+    #circspl = UnfoldBSplineKitExt.circspl
+    #spl = UnfoldBSplineKitExt.spl
+
+    include("../ext/UnfoldKrylovExt.jl")
+    solver_krylov = UnfoldKrylovExt.solver_krylov
 else
+    # Jl 1.9+: we need dummy functions, in case the extension was not activated to warn the user if they try to use a functionality that is not yet defined
  checkFun(sym) = Base.get_extension(@__MODULE__(),sym)
     function solver_robust(args...;kwargs...)
         ext = checkFun(:UnfoldRobustModelsExt) 
@@ -128,20 +161,7 @@ end
    
 
 
-#include("plot.jl") # don't include for now
-export fit, fit!, designmatrix!
-export firbasis, hrfbasis
-export UnfoldLinearModel,
-    UnfoldLinearMixedModel,
-    UnfoldModel,
-    UnfoldLinearMixedModelContinuousTime,
-    UnfoldLinearModelContinuousTime
-export FIRBasis, HRFBasis, SplineBasis
-export modelmatrix
-export formula, design, designmatrix, coef
-export coeftable
-export modelfit
-export predict
+
 export spl,circspl
 
 export likelihoodratiotest # statistics.jl

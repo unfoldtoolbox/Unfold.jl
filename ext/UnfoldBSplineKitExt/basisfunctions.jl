@@ -1,10 +1,10 @@
 
-Unfold.splinebasis(; τ, sfreq, nsplines, name) = Unfold.splinebasis(τ, sfreq, nsplines, name)
-Unfold.splinebasis(τ, sfreq, nsplines) = Unfold.splinebasis(τ, sfreq, nsplines, "basis_" * string(rand(1:10000)))
+splinebasis(; τ, sfreq, nsplines, name) = Unfold.splinebasis(τ, sfreq, nsplines, name)
+splinebasis(τ, sfreq, nsplines) = Unfold.splinebasis(τ, sfreq, nsplines, "basis_" * string(rand(1:10000)))
 
 
 
-function Unfold.splinebasis(τ, sfreq, nsplines, name::String)
+function splinebasis(τ, sfreq, nsplines, name::String)
     τ = Unfold.round_times(τ, sfreq)
     times = range(τ[1], stop = τ[2], step = 1 ./ sfreq)
     kernel = e -> splinekernel(e, times, nsplines - 2)

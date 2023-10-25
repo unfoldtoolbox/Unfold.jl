@@ -20,4 +20,5 @@ Effects._trmequal(t1::AbstractSplineTerm,t2::AbstractSplineTerm) = Effects._syme
 
 Effects._trmequal(t1::AbstractTerm,t2::AbstractSplineTerm) = Effects._symequal(t1,t2.term)
 Effects._symequal(t1::AbstractTerm,t2::AbstractSplineTerm) = Effects._symequal(t1,t2.term)
+
 end

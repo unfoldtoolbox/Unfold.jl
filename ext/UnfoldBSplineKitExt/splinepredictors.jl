@@ -94,7 +94,7 @@ function splFunction(x,spl::BSplineTerm)
     splFunction(x,basis)
 end
 #spl(x,df) = Splines2.bs(x,df=df,intercept=true) # assumes intercept
-Unfold.spl(x, df) = 1 # fallback
+Unfold.spl(x, df) = 0 # fallback
 
 # make a nice call if the function is called via REPL
 Unfold.spl(t::Symbol, d::Int) = BSplineTerm(term(t), d, 4,[])
@@ -130,7 +130,7 @@ function StatsModels.apply_schema(
     sch::StatsModels.Schema,
     Mod::Type{<:bsPLINE_CONTEXT},
 )
-    @debug "BSpline Unfold.spl Schema"
+    @debug "BSpline spl Schema"
     ar = nothing
     try
         ar = t.args

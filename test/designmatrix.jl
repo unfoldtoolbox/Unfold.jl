@@ -141,7 +141,12 @@ X2 = modelcols.(form.rhs, Ref(tbl2))
 
 # no missmatch, shouldnt change anything then
 X = deepcopy(X1[2:end])
-ext = Base.get_extension(Unfold,:UnfoldMixedModelsExt)
+if !isdefined(Base, :get_extension)
+    include("../ext/UnfoldMixedModelsExt/UnfoldMixedModelsExt.jl")
+    ext = UnfoldMixedModelsExt
+else
+    ext = Base.get_extension(Unfold,:UnfoldMixedModelsExt)
+end
 ext.equalizeReMatLengths!(X)
 @test all([x[1] for x in size.(X)] .== 48)
 
