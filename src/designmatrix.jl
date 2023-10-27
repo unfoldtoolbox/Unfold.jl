@@ -133,7 +133,7 @@ function designmatrix(
         
 
 
-    form = unfold_apply_schema(f, schema(f, tbl_nomissing, contrasts))
+    form = unfold_apply_schema(type,f, schema(f, tbl_nomissing, contrasts))
     
     @debug "type: $type"
     if (type== UnfoldLinearMixedModel) || (type == UnfoldLinearMixedModelContinuousTime)
@@ -162,8 +162,10 @@ end
 
 """
 wrapper to make apply_schema mixed models as extension possible
+
+Note: type is not necessary here, but for LMM it is for multiple dispatch reasons!
 """
-unfold_apply_schema(f,schema) = apply_schema(f,schema,UnfoldModel)
+unfold_apply_schema(type,f,schema) = apply_schema(f,schema,UnfoldModel)
 
 
 # specify for abstract interface
@@ -336,6 +338,28 @@ end
 
 """
 $(SIGNATURES)
+calculates in which rows the individual event-basisfunctions should go in Xdc
+
+timeexpand_rows timeexpand_vals
+"""
+function timeexpand_rows(onsets,bases,shift,ncolsX)
+    # generate rowindices
+    rows = copy(rowvals.(bases))
+    
+    # this shift is necessary as some basisfunction time-points can be negative. But a matrix is always from 1:τ. Thus we have to shift it backwards in time.
+    # The onsets are onsets-1 XXX not sure why.
+    for r = eachindex(rows)
+        rows[r] .+= floor(onsets[r] - 1) .+ shift
+    end
+
+    
+    rows_red = reduce(vcat,rows)
+    rows_red = repeat(rows_red, ncolsX)
+    return rows_red
+    end
+
+"""
+$(SIGNATURES)
 calculates the actual designmatrix for a timeexpandedterm. Multiple dispatch on StatsModels.modelcols
 """
 function StatsModels.modelcols(term::TimeExpandedTerm, tbl)
@@ -344,8 +368,6 @@ function StatsModels.modelcols(term::TimeExpandedTerm, tbl)
 
     time_expand(X, term, tbl)
 end
-
-
 
 
 # helper function to get the ranges from where to where the basisfunction is added
@@ -362,66 +384,39 @@ function time_expand_getTimeRange(onset, basisfunction)
 end
 
 
+function timeexpand_cols_allsamecols(bases,ncolsBasis::Int,ncolsX)
+    repeatEach = length(nzrange(bases[1], 1))
+    cols_r = UnitRange{Int64}[((1:ncolsBasis) .+ix*ncolsBasis)  for ix in (0:ncolsX-1) for b in 1:length(bases)]
+    
+    cols = reduce(vcat,cols_r)
+    
+    cols = repeat(cols,inner=repeatEach)
+    return cols
+end
+
 """
 $(SIGNATURES)
-performs the actual time-expansion in a sparse way.
 
- - Get the non-timeexpanded designmatrix X from StatsModels.
- - evaluate the basisfunction kernel at each event
- - calculate the necessary rows, cols and values for the sparse matrix
- Returns SparseMatrixCSC 
+
+calculates in which rows the individual event-basisfunctions should go in Xdc
+
+see also timeexpand_rows timeexpand_vals
 """
-function time_expand(X, term, tbl)
-    ncolsBasis = size(kernel(term.basisfunction)(0.), 2)
-    X = reshape(X, size(X, 1), :)
-
-    ncolsX = size(X)[2]
-    nrowsX = size(X)[1]
-    ncolsXdc = ncolsBasis * ncolsX
-
-    # this is the predefined eventfield, usually "latency"
-    #println(term.eventfields)
-    #println(tbl[term.eventfields[1]][1:10])
-    tbl = DataFrame(tbl)
-    onsets = tbl[!, term.eventfields[1]]
-
-    if typeof(term.eventfields) <: Array && length(term.eventfields) == 1
-        bases = kernel(term.basisfunction).(tbl[!, term.eventfields[1]])
-    else
-        bases = kernel(term.basisfunction).(eachrow(tbl[!, term.eventfields]))
-    end
-
-    
-    # generate rowindices
-    rows = copy(rowvals.(bases))
-    # this shift is necessary as some basisfunction time-points can be negative. But a matrix is always from 1:τ. Thus we have to shift it backwards in time.
-    # The onsets are onsets-1 XXX not sure why.
-    for r = 1:length(rows)
-        rows[r] .+= floor(onsets[r] - 1) + shiftOnset(term.basisfunction)
-    end
-
-    rows = vcat(rows...)
-    rows = repeat(rows, ncolsX)
-
-    # generate column indices
-    
-
+function timeexpand_cols(term,bases,ncolsBasis,ncolsX)
     # we can generate the columns much faster, if all bases output the same number of columns 
     fastpath = time_expand_allBasesSameCols(term.basisfunction,bases,ncolsBasis)
 
     if fastpath
-        #@show fastpath
-        repeatEach = length(nzrange(bases[1], 1))
-        
-        cols = [((1:ncolsBasis) .+ix*ncolsBasis)  for ix in (0:ncolsX-1) for b in 1:length(bases)]
-        cols = repeat(vcat(cols...),inner=repeatEach)
-    
-
+        return timeexpand_cols_allsamecols(bases,ncolsBasis,ncolsX)
     else
-    
+        return timeexpand_cols_generic(bases,ncolsBasis,ncolsX)
+    end
+end
+
+function timeexpand_cols_generic(bases,ncolsBasis,ncolsX)
         # it could happen, e.g. for bases that are duration modulated, that each event has different amount of columns
         # in that case, we have to go the slow route
-        cols = typeof(rows)[]
+        cols = Vector{Int64}[]
     
         for Xcol = 1:ncolsX
             for b = 1:length(bases)
@@ -433,28 +428,71 @@ function time_expand(X, term, tbl)
                 end
             end
         end
-        cols = vcat(cols...)
-    end
+        return reduce(vcat,cols)
     
-    # generate values
-    #vals = []
-    vals = Array{Union{Missing,Float64}}(undef,size(cols))
-    ix = 1
-    
-    for Xcol = 1:ncolsX
-        for (i,b) = enumerate(bases)
-            b_nz = nonzeros(b)
-            l = length(b_nz)
-            
-            vals[ix:ix+l-1] .= b_nz .* @view X[i, Xcol]
-            ix = ix+l
-        #push!(vals, )
+
+end
+
+function  timeexpand_vals(bases,X,nTotal,ncolsX)
+        # generate values
+        #vals = []
+        vals = Array{Union{Missing,Float64}}(undef,nTotal)
+        ix = 1
+        
+        for Xcol = 1:ncolsX
+            for (i,b) = enumerate(bases)
+                b_nz = nonzeros(b)
+                l = length(b_nz)
+                
+                vals[ix:ix+l-1] .= b_nz .* @view X[i, Xcol]
+                ix = ix+l
+            #push!(vals, )
+            end
         end
+    return vals
+        
+end
+"""
+$(SIGNATURES)
+performs the actual time-expansion in a sparse way.
+
+ - Get the non-timeexpanded designmatrix X from StatsModels.
+ - evaluate the basisfunction kernel at each event
+ - calculate the necessary rows, cols and values for the sparse matrix
+ Returns SparseMatrixCSC 
+"""
+
+function time_expand(Xorg,term,tbl)
+    # this is the predefined eventfield, usually "latency"
+    tbl = DataFrame(tbl)
+    onsets = Float64.(tbl[:, term.eventfields[1]])::Vector{Float64} # XXX if we have integer onsets, we could directly speed up matrix generation maybe?
+
+    if typeof(term.eventfields) <: Array && length(term.eventfields) == 1
+        bases = kernel.(Ref(term.basisfunction),onsets)
+    else
+        bases = kernel.(Ref(term.basisfunction),eachrow(tbl[!, term.eventfields]))
     end
 
+    return time_expand(Xorg,term,onsets, bases)
+end
+function time_expand(Xorg, term, onsets, bases)
+    ncolsBasis = size(kernel(term.basisfunction,0), 2)::Int64
+    X = reshape(Xorg, size(Xorg, 1), :) # why is this necessary?
+    ncolsX = size(X)[2]::Int64
+
+    
+
+    
+    
+    
+    rows = timeexpand_rows(onsets,bases,shiftOnset(term.basisfunction),ncolsX)
+    cols = timeexpand_cols(term,bases,ncolsBasis,ncolsX)
+
+    vals = timeexpand_vals(bases,X,size(cols),ncolsX)
+    
     #vals = vcat(vals...)
     ix = rows .> 0 #.&& vals .!= 0.
-    A = sparse(rows[ix], cols[ix], vals[ix])
+    A = @views sparse(rows[ix], cols[ix], vals[ix])
     dropzeros!(A)
     
     return A

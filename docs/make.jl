@@ -6,9 +6,10 @@ using DocStringExtensions
 using Literate
 using Glob
 
-GENERATED = joinpath(@__DIR__, "src", "_literate")
+GENERATED = joinpath(@__DIR__, "src", "generated")
+SOURCE = joinpath(@__DIR__,"literate")
 for subfolder ∈ ["explanations","HowTo","tutorials"]
-    local SOURCE_FILES = Glob.glob(subfolder*"/*.jl", GENERATED)
+    local SOURCE_FILES = Glob.glob(subfolder*"/*.jl", SOURCE)
     foreach(fn -> Literate.markdown(fn, GENERATED*"/"*subfolder), SOURCE_FILES)
 
 end
@@ -18,6 +19,7 @@ end
 makedocs(sitename="Unfold.jl Timeseries Analysis & Deconvolution",
         #root = joinpath(dirname(pathof(Unfold)), "..", "docs"),
         #prettyurls = get(ENV, "CI", nothing) == "true",
+        repo = Documenter.Remotes.GitHub("unfoldtoolbox", "Unfold.jl"),
         pages = [
             "index.md",
             "Tutorials"=>[
@@ -31,14 +33,14 @@ makedocs(sitename="Unfold.jl Timeseries Analysis & Deconvolution",
 		            "Overlap: Different events"=>"HowTo/multiple_events.md",
                     "Load Existing Dataset with PyMNE.jl"=>"HowTo/pymne.md" ,
                     "Custom Solvers / StandardErrors / B2B"=>"HowTo/custom_solvers.md",
-                    "Unfold.jl directly from Python" => "_literate/HowTo/pyjulia_unfold.md",
+                    "Unfold.jl directly from Python" => "generated/HowTo/pyjulia_unfold.md",
                     "P-values in Mass Univariate MixedModels" => "HowTo/lmm_pvalues.md",
-		            "marginal effects (what to do with non-linear predictors)" =>"_literate/HowTo/effects.md",
-		            "Time Basis Functions"=>"_literate/HowTo/timesplines.md",
+		            "marginal effects (what to do with non-linear predictors)" =>"generated/HowTo/effects.md",
+		            "Time Basis Functions"=>"generated/HowTo/timesplines.md",
                       ],
             "Explanations"=>[
 		            "Temporal Basisfunctions" => "./explanations/basisfunctions.md",
-		            "Non-Linear Effects" => "./_literate/explanations/nonlinear_effects.md",],
+		            "Non-Linear Effects" => "./generated/explanations/nonlinear_effects.md",],
             "Reference"=>["Types" => "references/types.md",
             "Functions" => "references/functions.md"],
             
