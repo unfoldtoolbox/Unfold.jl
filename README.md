@@ -16,9 +16,12 @@ Toolbox to perform linear / GAM / hierarchical / deconvolution regression on bio
 
 This kind of modelling is also known as encoding modeling, linear deconvolution, Temporal Response Functions (TRFs), linear system identification, and probably under other names. fMRI models with HRF-basis functions and pupil-dilation bases are also supported.
 
-## Install
+## Getting started
 
-### Julia
+### 🐍Python User?
+We clearly recommend Julia 😉 - but [Python users can use juliacall/Unfold directly from python!](https://unfoldtoolbox.github.io/Unfold.jl/dev/generated/HowTo/pyjulia_unfold/)
+
+### Julia installation
 <details>
 <summary>Click to expand</summary>
 
@@ -36,7 +39,7 @@ AppStore -> JuliaUp,  or `winget install julia -s msstore` in CMD
 `curl -fsSL https://install.julialang.org | sh` in any shell
 </details>
 
-### Unfold.jl
+### Unfold.jl installation
 
 ```julia
 using Pkg
@@ -104,7 +107,7 @@ The matlab version is still maintained, but active development happens in Julia.
 | item & subject effects  |        | (x)       | x         |
 | decoding  |        |        | back2back regression         |
 | outlier-robust fits  |        |        |  [many options (but slower)](https://unfoldtoolbox.github.io/Unfold.jl/dev/HowTo/custom_solvers/#Robust-Solvers)   |
-| 🐍Python support | | | [via Pycall, link to notebook](https://github.com/unfoldtoolbox/Unfold.jl/blob/main/docs/src/HowTo/pyjulia_unfold.ipynb)|
+| 🐍Python support | | | [via juliacall](https://unfoldtoolbox.github.io/Unfold.jl/dev/generated/HowTo/pyjulia_unfold/)|
 </details>
 
 ## Contributions
