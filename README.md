@@ -121,8 +121,8 @@ You are very welcome to raise issues and start pull requests!
 ### Adding Documentation
 
 1. We recommend to write a Literate.jl document and place it in `docs/literate/FOLDER/FILENAME.jl` with `FOLDER` being `HowTo`, `Explanation`, `Tutorial` or `Reference` ([recommended reading on the 4 categories](https://documentation.divio.com/)).
-2. Literate.jl converts the `.jl` file to a `.md` automatically and places it in `doc/src/generated/FILENAME.jl`.
-3. Edit [make.jl](https://github.com/unfoldtoolbox/Unfold.jl/blob/main/docs/make.jl) with a reference to `doc/src/literate/FILENAME.jl`
+2. Literate.jl converts the `.jl` file to a `.md` automatically and places it in `docs/src/generated/FOLDER/FILENAME.md`.
+3. Edit [make.jl](https://github.com/unfoldtoolbox/Unfold.jl/blob/main/docs/make.jl) with a reference to `docs/src/generated/FOLDER/FILENAME.md`.
 
 ## Contributors (alphabetically)
 
