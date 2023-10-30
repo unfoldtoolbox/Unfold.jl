@@ -28,11 +28,12 @@
 # # Import Unfold
 # # The function seval() can be used to evaluate a piece of Julia code given as a string
 # jl.seval("using Unfold")
+# Unfold = jl.Unfold # simplify name
 # ```
 
 # Now you can use all Unfold functions as for example
 # ```python
-# dummy_model = jl.Unfold.UnfoldLinearModel(jl.Dict())
+# dummy_model = Unfold.UnfoldLinearModel(jl.Dict())
 # ```
 
 # ## Example: Unfold model fitting from Python
