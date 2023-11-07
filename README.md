@@ -19,7 +19,7 @@ This kind of modelling is also known as encoding modeling, linear deconvolution,
 ## Getting started
 
 ### 🐍Python User?
-We clearly recommend Julia 😉 - but [Python users can use juliacall/Unfold directly from python!](https://unfoldtoolbox.github.io/Unfold.jl/dev/generated/HowTo/pyjulia_unfold/)
+We clearly recommend Julia 😉 - but [Python users can use juliacall/Unfold directly from python!](https://unfoldtoolbox.github.io/Unfold.jl/dev/generated/HowTo/juliacall_unfold/)
 
 ### Julia installation
 <details>
