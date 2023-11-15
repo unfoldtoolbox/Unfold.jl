@@ -43,10 +43,16 @@ makedocs(sitename="Unfold.jl Timeseries Analysis & Deconvolution",
 		            "Temporal Basisfunctions" => "./explanations/basisfunctions.md",
 		            "Non-Linear Effects" => "./generated/explanations/nonlinear_effects.md",
                     "Window Length Effect" => "./generated/explanations/window_length.md",],
+<<<<<<< HEAD
             "Reference"=>[
                     "Development Environment" => "explanations/development.md",
                     "Types" => "references/types.md",
                     "Functions" => "references/functions.md"],
+=======
+            "Reference"=>["Types" => "references/types.md",
+            "Functions" => "references/functions.md"],
+            
+>>>>>>> 77c5486c3076e17c0c7a3aa9583353281d0c6830
         ])
 
 deploydocs(; repo = "github.com/unfoldtoolbox/Unfold.jl", push_preview = true,        devbranch = "main")
