@@ -28,17 +28,17 @@
       "avatar_url": "https://avatars.githubusercontent.com/u/10183650?v=4",
       "profile": "http://www.benediktehinger.de",
       "contributions": [
-         "bug",
-         "code",
-         "doc",
-         "tutorial",
-         "ideas",
-         "test",
-          "infra",
-          "test",
-          "maintenance",
-          "review",
-          "question"
+        "bug",
+        "code",
+        "doc",
+        "tutorial",
+        "ideas",
+        "test",
+        "infra",
+        "test",
+        "maintenance",
+        "review",
+        "question"
       ]
     },
     {
@@ -51,14 +51,23 @@
         "doc"
       ]
     },
-    {  
+    {
       "login": "ReboreExplore",
       "name": "Manpa Barman",
       "avatar_url": "https://avatars.githubusercontent.com/u/43548330?v=4",
       "profile": "https://reboreexplore.github.io/",
       "contributions": [
         "infra"
-        ]
+      ]
+    },
+    {
+      "login": "kleinschmidt",
+      "name": "Dave Kleinschmidt",
+      "avatar_url": "https://avatars.githubusercontent.com/u/135920?v=4",
+      "profile": "http://davekleinschmidt.com",
+      "contributions": [
+        "doc"
+      ]
     }
   ]
 }
