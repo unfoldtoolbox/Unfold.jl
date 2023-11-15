@@ -135,7 +135,7 @@ You are very welcome to raise issues and start pull requests!
 
 ## Citation
 
-For now, please cite
+For now, please cite:
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6423476.svg)](https://doi.org/10.5281/zenodo.6423476) or [Ehinger & Dimigen](https://peerj.com/articles/7838/)
 
