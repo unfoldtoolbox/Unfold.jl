@@ -40,7 +40,8 @@ makedocs(sitename="Unfold.jl Timeseries Analysis & Deconvolution",
                       ],
             "Explanations"=>[
 		            "Temporal Basisfunctions" => "./explanations/basisfunctions.md",
-		            "Non-Linear Effects" => "./generated/explanations/nonlinear_effects.md",],
+		            "Non-Linear Effects" => "./generated/explanations/nonlinear_effects.md",
+                    "Window Length Effect" => "./generated/explanations/window_length.md",],
             "Reference"=>["Types" => "references/types.md",
             "Functions" => "references/functions.md"],
             
