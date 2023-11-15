@@ -1,3 +1,7 @@
 using LiveServer
-servedocs(skip_dir=joinpath("src","generated"),literate_dir=joinpath("literate"),foldername=".")
+
+dr = filter(isdir,readdir(joinpath("src","generated"),join=true))
+push!(dr,"./build")
+servedocs(skip_dirs=dr,literate_dir=joinpath("literate"),foldername=".",host="0.0.0.0")
+
 
