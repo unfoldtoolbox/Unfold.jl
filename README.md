@@ -124,7 +124,7 @@ You are very welcome to raise issues and start pull requests!
 2. Literate.jl converts the `.jl` file to a `.md` automatically and places it in `docs/src/generated/FOLDER/FILENAME.md`.
 3. Edit [make.jl](https://github.com/unfoldtoolbox/Unfold.jl/blob/main/docs/make.jl) with a reference to `docs/src/generated/FOLDER/FILENAME.md`.
 
-## Contributors (alphabetically)
+## Contributors List(alphabetically)
 
 - **Phillip Alday**
 - **Benedikt Ehinger**
@@ -132,6 +132,22 @@ You are very welcome to raise issues and start pull requests!
 - **Judith Schepers**
 - **Felix Schröder**
 - **René Skukies**
+
+## Contributors 
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+
+
+This project follows the [all-contributors](https://allcontributors.org/docs/en/specification) specification. 
+
+Contributions of any kind welcome!
 
 ## Citation
 
