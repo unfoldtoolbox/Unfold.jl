@@ -139,6 +139,9 @@ You are very welcome to raise issues and start pull requests!
       <td align="center" valign="top" width="14.28%"><a href="http://davekleinschmidt.com"><img src="https://avatars.githubusercontent.com/u/135920?v=4?s=100" width="100px;" alt="Dave Kleinschmidt"/><br /><sub><b>Dave Kleinschmidt</b></sub></a><br /><a href="#doc-kleinschmidt" title="Documentation">📖</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/ssaket"><img src="https://avatars.githubusercontent.com/u/27828189?v=4?s=100" width="100px;" alt="Saket Saurabh"/><br /><sub><b>Saket Saurabh</b></sub></a><br /><a href="#bug-ssaket" title="Bug reports">🐛</a></td>
     </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/suddha-bpn"><img src="https://avatars.githubusercontent.com/u/7974144?v=4?s=100" width="100px;" alt="suddha-bpn"/><br /><sub><b>suddha-bpn</b></sub></a><br /><a href="#bug-suddha-bpn" title="Bug reports">🐛</a></td>
+    </tr>
   </tbody>
 </table>
 
