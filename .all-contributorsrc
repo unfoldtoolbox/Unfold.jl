@@ -1,4 +1,21 @@
 {
   "projectName": "Unfold.jl",
-  "projectOwner": "unfoldtoolbox"
+  "projectOwner": "unfoldtoolbox",
+  "files": [
+    "README.md"
+  ],
+  "commitType": "docs",
+  "commitConvention": "angular",
+  "contributorsPerLine": 7,
+  "contributors": [
+    {
+      "login": "ReboreExplore",
+      "name": "Manpa Barman",
+      "avatar_url": "https://avatars.githubusercontent.com/u/43548330?v=4",
+      "profile": "https://reboreexplore.github.io/",
+      "contributions": [
+        "infra"
+      ]
+    }
+  ]
 }
