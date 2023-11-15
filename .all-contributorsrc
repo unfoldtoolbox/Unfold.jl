@@ -68,15 +68,24 @@
       "contributions": [
         "code",
         "infra"
-
       ]
     },
-    {      "login": "kleinschmidt",
+    {
+      "login": "kleinschmidt",
       "name": "Dave Kleinschmidt",
       "avatar_url": "https://avatars.githubusercontent.com/u/135920?v=4",
       "profile": "http://davekleinschmidt.com",
       "contributions": [
         "doc"
+      ]
+    },
+    {
+      "login": "ssaket",
+      "name": "Saket Saurabh",
+      "avatar_url": "https://avatars.githubusercontent.com/u/27828189?v=4",
+      "profile": "https://github.com/ssaket",
+      "contributions": [
+        "bug"
       ]
     }
   ]
