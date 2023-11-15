@@ -28,7 +28,7 @@ function gen_data(rng,noiselevel,sfreq)
         p3 = (p300(;sfreq=sfreq), @formula(0~1+continuous),[5,0],Dict()),
         n_repeats=20,noise=noise)
     return dat,evts
-end
+end;
 
 # Next a convience function to calculate the estimates
 function calc_time_models(evts,dat,tWinList,sfreq)
@@ -39,21 +39,26 @@ function calc_time_models(evts,dat,tWinList,sfreq)
 		push!(mList,res)
 	end
 	return vcat(mList...)
-end
+end;
 
 # This is a convience function for plotting further down
 function basisToWin(basisname)
 	return parse.(Float64,[s[2] for s in split.(replace.(basisname,"("=>"",")"=>""),',')])
-end
+end;
 
 # # Init variables
-tWinList = [(-0.1,3),(-0.1,0.5),(-0.1,0.45),(-0.1,0.4),(-0.1,0.35),(-0.1,0.30),(-0.1,0.25),(-0.1,0.2),(-0.1,0.15)]
+tWinList = [(-0.1,x) for x in [3,2.5,2,1.5,1,0.5]]
 noiselevel = 8.5
-sfreq = 100
+sfreq = 250;
 
-# # Generate data
+# # Generate data and calculate estimates
 
 dat,evts = gen_data(MersenneTwister(2),noiselevel,sfreq);
+
+res = calc_time_models(evts,dat,tWinList,sfreq);
+
+# We also append some additional information to the results dataframe
+res.tWin .= basisToWin(res.basisname);
 
 # For comparison lets also generate the ground truth of our data; this is a bit cumbersome and you don't have to care (too much) about it
 dat_gt,evts_gt = UnfoldSim.predef_eeg(;
@@ -71,29 +76,21 @@ df_gt = DataFrame(
     group = reduce(vcat,fill(nothing, length(dat_gt[:,1])*length(unique(res.basisname)))),
     stderror = reduce(vcat,fill(nothing, length(dat_gt[:,1])*length(unique(res.basisname)))),
     time = repeat(time_gt, length(unique(res.basisname))),
-        )
+        );
 
+df_gt.tWin .= basisToWin(df_gt.basisname);
 
-df_gt.tWin .= basisToWin(df_gt.basisname)
-
-# # Calculate all models
-# Using our function from above
-res = calc_time_models(evts,dat,tWinList,sfreq);
-
-# We also append some additional information to the results dataframe
-res.tWin .= 	basisToWin(res.basisname)
-	
-# And append the ground truth to it	
+# And append ground truth to our results df	
 res_gt = vcat(res, df_gt);
 
 
 # # Plot results
 
 # Plot figure
-f = Figure()
+f = Figure();
 	
 # Choose which data to plot
-h_t = data(@subset(res,:basisname .!= "(-0.1, 3)")) * mapping(:time,:estimate,color=:tWin,group=(:tWin,:coefname)=>(x,y)->string(x)*y)
+h_t = data(res) * mapping(:time,:estimate,color=:tWin,group=(:tWin,:coefname)=>(x,y)->string(x)*y);
 
 # We use the following to plot some length indicator lines
 untWin = unique(res_gt.tWin)
@@ -103,29 +100,29 @@ segDF = 	DataFrame(
 segDF.tWin .= 0.
 segDF.tWin[1:2:end] .= segDF.x[2:2:end]
 segDF.tWin[2:2:end] .= segDF.x[2:2:end]
-segDF.y = segDF.y .* 0.2 .+ 7.5
+segDF.y = segDF.y .* 0.2 .+ 6;
 
 # Layer for indicator lines
-h_l = data(@subset(segDF,:tWin .!=3.0))* mapping(:x,:y,color=:tWin,group=:tWin=>x->string.(x))
+h_l = data(@subset(segDF,:tWin .!=3.0))* mapping(:x,:y,color=:tWin,group=:tWin=>x->string.(x));
 
 # Ground truth Layer
-h_gt = data(df_gt) * mapping(:time,:estimate,group=(:tWin,:coefname)=>(x,y)->string(x)*y)*visual(Lines,linewidth=5,color=Colors.Gray(0.6))
+h_gt = data(df_gt) * mapping(:time,:estimate,group=(:tWin,:coefname)=>(x,y)->string(x)*y)*visual(Lines,linewidth=5,color=Colors.Gray(0.6));
 
 # Add all visuals together and draw
-h1 = h_gt + visual(Lines,colormap=get(ColorSchemes.Reds,0.3:0.01:1)) * (h_l + h_t) |> x->draw!(f[1,1],x,axis=(;xlabel="time [s]",ylabel="estimate [a.u.]"))
+h1 = h_gt + visual(Lines,colormap=get(ColorSchemes.Blues,0.3:0.01:1.2)) * (h_l + h_t) |> x->draw!(f[1,1],x,axis=(;xlabel="time [s]",ylabel="estimate [a.u.]"));
 
 # Add zero grid lines
-h1 = hlines!(current_axis(),[0],color=Colors.Gray(0.8))
-h2 = vlines!(current_axis(),[0],color=Colors.Gray(0.8))
-translate!(h1, 0, 0, -1)
-translate!(h2, 0, 0, -1)
+h1 = hlines!(current_axis(),[0],color=Colors.Gray(0.8));
+h2 = vlines!(current_axis(),[0],color=Colors.Gray(0.8));
+translate!(h1, 0, 0, -1);
+translate!(h2, 0, 0, -1);
 
 # Plot figure
 current_figure()
 
 # # Conclusion & further information
 #
-#For analyzing real-world EEG data we recommend that researchers should — a priori — make an educated guess about the length of the underlying EEG activity and select this as their EW. This also suggests to use event windows with different sizes between events (As is possible with Unfold).
-# Further, while it is not shown here, generally when choosing longer time-windows the overfit is only of moderate size, thus we additionally recommend to generally err on the longer side.
+# For analyzing real-world EEG data we recommend that researchers should — a priori — make an educated guess about the length of the underlying EEG activity and select this as their EW. This also suggests to use event windows with different sizes between events (as is possible with Unfold).
+# Further, as can be seen above, when choosing longer time-windows the overfit is only of moderate size, thus we additionally recommend to generally err on the longer side, to not miss any important activity.
 #
 # For a more in depth explanation on this, you can read our 2023 CCN paper: [Skukies & Ehinger, 2023](https://www.biorxiv.org/content/10.1101/2023.06.05.543689v1)
