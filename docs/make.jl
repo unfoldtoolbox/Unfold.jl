@@ -37,6 +37,7 @@ makedocs(sitename="Unfold.jl Timeseries Analysis & Deconvolution",
                     "P-values in Mass Univariate MixedModels" => "HowTo/lmm_pvalues.md",
 		            "Marginal effects (what to do with non-linear predictors)" =>"generated/HowTo/effects.md",
 		            "Time Basis Functions"=>"generated/HowTo/timesplines.md",
+                    "Save and load Unfold models" => "generated/HowTo/unfold_io.md",
                       ],
             "Explanations"=>[
 		            "Temporal Basisfunctions" => "./explanations/basisfunctions.md",
