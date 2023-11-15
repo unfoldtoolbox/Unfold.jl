@@ -3,17 +3,15 @@
 In this notebook we will fit regression models to (simulated) EEG data. We will see that we need some type of overlap correction, as the events are close in time to each other, so that the respective brain responses overlap.
 If you want more detailed introduction to this topic check out [our paper](https://peerj.com/articles/7838/).
 
-## Installation
-See the [installation instructions](@ref install_instruct).
+
 
 ## Setting up & loading the data
 ```@example Main
-using StatsModels, MixedModels, DataFrames
-import DSP.conv
-using Unfold
-using UnfoldMakie,CairoMakie
 using DataFrames
-include(joinpath(dirname(pathof(Unfold)), "../test/test_utilities.jl") ) # to load data
+using Unfold
+using UnfoldMakie,CairoMakie # for plotting
+using UnfoldSim
+
 
 nothing # hide
 ```
@@ -21,11 +19,11 @@ nothing # hide
 
 ## Load Data
 ```@example Main
-data, evts = loadtestdata("testCase2",dataPath="../../../test/data/");
+data, evts = UnfoldSim.predef_eeg()
 nothing # hide
 ```
 ## Inspection
-The data has little noise and the underlying signal is a pos-neg spike pattern
+The data has little noise and the underlying signal is a pos-neg-pos spike pattern
 ```@example Main
 times = range(1/50,length=200,step=1/50)
 plot(times,data[1:200])
@@ -65,14 +63,14 @@ size(data_epochs)
 typeof(data_epochs)
 ```
 !!! note
-        In julia, `missing` is supported throughout the ecosystem. Thus, we can have partial trials and they will be incorporated / ignored at the respective functions.
+    In julia, `missing` is supported throughout the ecosystem. Thus, we can have partial trials and they will be incorporated / ignored at the respective functions. Helpful functions are the julia-base `disallowmissing` and the internal `Unfold.dropMissingEpochs` functions
 
 
 
 #### 2. Specify a formula
 We define a formula that we want to apply to each point in time
 ```@example Main
-f  = @formula 0~1+conditionA+conditionB # 0 as a dummy, we will combine wit data later
+f  = @formula 0~1+condition+continuous # 0 as a dummy, we will combine wit data later
 nothing # hide
 ```
 
@@ -89,7 +87,7 @@ Alternatively, we could also call it using:
 m = fit(UnfoldModel,Dict(Any=>(f,times)),evts,data_epochs); 
 nothing #hide
 ```
-Which (will soon) allow for fitting multiple events at the same time
+A syntax which allows for fitting multiple events at the same time (by replacing Any with e.g. `:fixation =>...` it will fit that model specifically to the fixation event type)
 
 We can inspect the object
 ```@example Main

@@ -22,8 +22,9 @@ makedocs(sitename="Unfold.jl Timeseries Analysis & Deconvolution",
         repo = Documenter.Remotes.GitHub("unfoldtoolbox", "Unfold.jl"),
         pages = [
             "index.md",
+            "Installing Julia + Unfold.jl" => "installation.md",
             "Tutorials"=>[
-                "Running these tutorials" => "tutorials/installation.md",
+
                 "Mass Univariate" =>"tutorials/lm_mu.md",
                 "LM Overlap correction" =>"tutorials/lm_overlap.md",
                 "Mass Univariate Mixed Model" =>"tutorials/lmm_mu.md",
@@ -33,7 +34,7 @@ makedocs(sitename="Unfold.jl Timeseries Analysis & Deconvolution",
 		            "Overlap: Different events"=>"HowTo/multiple_events.md",
                     "Load Existing Dataset with PyMNE.jl"=>"HowTo/pymne.md" ,
                     "Custom Solvers / StandardErrors / B2B"=>"HowTo/custom_solvers.md",
-                    "Calling Unfold.jl directly from Python" => "generated/HowTo/juliacall_unfold.md",
+                    "🐍 Calling Unfold.jl directly from Python" => "generated/HowTo/juliacall_unfold.md",
                     "P-values in Mass Univariate MixedModels" => "HowTo/lmm_pvalues.md",
 		            "Marginal effects (what to do with non-linear predictors)" =>"generated/HowTo/effects.md",
 		            "Time Basis Functions"=>"generated/HowTo/timesplines.md",
@@ -41,8 +42,10 @@ makedocs(sitename="Unfold.jl Timeseries Analysis & Deconvolution",
             "Explanations"=>[
 		            "Temporal Basisfunctions" => "./explanations/basisfunctions.md",
 		            "Non-Linear Effects" => "./generated/explanations/nonlinear_effects.md",],
-            "Reference"=>["Types" => "references/types.md",
-            "Functions" => "references/functions.md"],
+            "Reference"=>[
+                    "Development Environment" => "explanations/development.md",
+                    "Types" => "references/types.md",
+                    "Functions" => "references/functions.md"],
             
         ])
 
