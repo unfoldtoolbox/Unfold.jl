@@ -45,7 +45,8 @@ function StatsModels.fit!(
     # get a un-fitted mixed model object
     
     Xs = disallowmissing.(Xs)
-
+    #Xs = (Matrix(Xs[1]),Xs[2:end]...)
+    
     mm = LinearMixedModel_wrapper(Unfold.formula(uf), firstData, Xs)
     # prepare some variables to be used
     βsc, θsc = similar(MixedModels.coef(mm)), similar(mm.θ) # pre allocate
@@ -160,7 +161,8 @@ function LinearMixedModel_wrapper(
         Xs = changeMatSize!(size(data)[1], fe, Xs[2:end])
     end
 
-    y = (reshape(float(data), (:, 1)))
+    #y = (reshape(float(data), (:, 1)))
+    y = data
     
     MixedModels.LinearMixedModel(y, Xs, form, wts)
 end
