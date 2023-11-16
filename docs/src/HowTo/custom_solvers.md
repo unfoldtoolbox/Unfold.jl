@@ -1,4 +1,4 @@
-# Custom Solvers
+# [Custom Solvers](@id custom_solvers)
 
 ### Setup some data
 
