@@ -11,8 +11,6 @@ authors:
     orcid: 'https://orcid.org/0000-0002-6276-3332'
   - given-names: Judith
     family-names: Schepers
-  - given-names: Felix
-    family-names: Schröder
   - given-names: René
     family-names: Skukies
     orcid: 'https://orcid.org/0000-0002-4124-4584'
@@ -29,12 +27,6 @@ preferred-citation:
   - given-names: Benedikt
     family-names: Ehinger
     orcid: 'https://orcid.org/0000-0002-6276-3332'
-  doi: "10.1167/jov.21.9.2497"
-  journal: "Journal of Vision"
-  month: 9
-  start: 2497 # First page number
-  end: 2497 # Last page number
-  title: "Unfold. jl: Leveraging Julia to fit fast and flexible Linear (Mixed) Models to EEG data with optional overlap correction or spline regression"
-  issue: 1
-  volume: 21
-  year: 2021
+  doi: "https://doi.org/10.7717/peerj.7838"
+  journal: "PeerJ"
+  title: "Unfold: an integrated toolbox for overlap correction, non-linear modeling, and regression-based EEG analysis"
