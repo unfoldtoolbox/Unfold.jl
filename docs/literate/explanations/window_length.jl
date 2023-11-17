@@ -6,6 +6,11 @@ using Random
 using DataFrames, DataFramesMeta
 using ColorSchemes, Colors
 
+# !!! important
+#     For analyzing real-world EEG data we recommend that researchers should — a priori — make an educated guess about the length of the underlying EEG activity and select this as their EW. This also suggests to use event windows with different sizes between events (as is possible with Unfold).
+#     Further, as can be seen below, when choosing longer time-windows the overfit is only of moderate size, thus we additionally recommend to generally err on the longer side, to not miss any important activity. \
+#     For a more in depth explanation on this, you can read our 2023 CCN paper: [Skukies & Ehinger, 2023](https://www.biorxiv.org/content/10.1101/2023.06.05.543689v1)
+
 set_theme!(theme_ggthemr(:fresh))
 
 # As opposed to classical averaged ERPs overlap corrected regression ERPs can be influenced by the chosen window length:
@@ -119,10 +124,3 @@ translate!(h2, 0, 0, -1);
 
 # Plot figure
 current_figure()
-
-# # Conclusion & further information
-#
-# For analyzing real-world EEG data we recommend that researchers should — a priori — make an educated guess about the length of the underlying EEG activity and select this as their EW. This also suggests to use event windows with different sizes between events (as is possible with Unfold).
-# Further, as can be seen above, when choosing longer time-windows the overfit is only of moderate size, thus we additionally recommend to generally err on the longer side, to not miss any important activity.
-#
-# For a more in depth explanation on this, you can read our 2023 CCN paper: [Skukies & Ehinger, 2023](https://www.biorxiv.org/content/10.1101/2023.06.05.543689v1)
