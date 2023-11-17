@@ -1,4 +1,4 @@
-# Custom Solvers
+# [Custom Solvers](@id custom_solvers)
 
 ### Setup some data
 
@@ -12,20 +12,6 @@ f  = @formula 0~1+condition+continuous
 designDict = Dict(Any=>(f,range(0,1,length=size(dat,1))))
 
 ```
-
-### Custom Solver with standard error
-```@Example main
-se_solver =(x,y)->Unfold.solver_default(x,y,stderror=true)
-m = Unfold.fit(UnfoldModel,designDict,evts,dat,solver=se_solver)
-results =coeftable(m)
-plot_erp(results;extra=(;stderror=true))
-```
-!!! warning
-    Use single-subject SE on your own risk. Because EEG data are autocrrelated YOUR SE WILL BE TOO SMALL!
-
-
-
-
 
 ### GPU Solvers
 GPU solvers can speed up your modelfit drastically! up to factor of 30 has been observed already

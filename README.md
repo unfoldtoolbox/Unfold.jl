@@ -124,14 +124,37 @@ You are very welcome to raise issues and start pull requests!
 2. Literate.jl converts the `.jl` file to a `.md` automatically and places it in `docs/src/generated/FOLDER/FILENAME.md`.
 3. Edit [make.jl](https://github.com/unfoldtoolbox/Unfold.jl/blob/main/docs/make.jl) with a reference to `docs/src/generated/FOLDER/FILENAME.md`.
 
-## Contributors (alphabetically)
+## Contributors 
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/jschepers"><img src="https://avatars.githubusercontent.com/u/22366977?v=4?s=100" width="100px;" alt="Judith Schepers"/><br /><sub><b>Judith Schepers</b></sub></a><br /><a href="#bug-jschepers" title="Bug reports">🐛</a> <a href="#code-jschepers" title="Code">💻</a> <a href="#doc-jschepers" title="Documentation">📖</a> <a href="#tutorial-jschepers" title="Tutorials">✅</a> <a href="#ideas-jschepers" title="Ideas, Planning, & Feedback">🤔</a> <a href="#test-jschepers" title="Tests">⚠️</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://www.benediktehinger.de"><img src="https://avatars.githubusercontent.com/u/10183650?v=4?s=100" width="100px;" alt="Benedikt Ehinger"/><br /><sub><b>Benedikt Ehinger</b></sub></a><br /><a href="#bug-behinger" title="Bug reports">🐛</a> <a href="#code-behinger" title="Code">💻</a> <a href="#doc-behinger" title="Documentation">📖</a> <a href="#tutorial-behinger" title="Tutorials">✅</a> <a href="#ideas-behinger" title="Ideas, Planning, & Feedback">🤔</a> <a href="#test-behinger" title="Tests">⚠️</a> <a href="#infra-behinger" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="#test-behinger" title="Tests">⚠️</a> <a href="#maintenance-behinger" title="Maintenance">🚧</a> <a href="#review-behinger" title="Reviewed Pull Requests">👀</a> <a href="#question-behinger" title="Answering Questions">💬</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://reneskukies.de/"><img src="https://avatars.githubusercontent.com/u/57703446?v=4?s=100" width="100px;" alt="René Skukies"/><br /><sub><b>René Skukies</b></sub></a><br /><a href="#bug-ReneSkukies" title="Bug reports">🐛</a> <a href="#doc-ReneSkukies" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://reboreexplore.github.io/"><img src="https://avatars.githubusercontent.com/u/43548330?v=4?s=100" width="100px;" alt="Manpa Barman"/><br /><sub><b>Manpa Barman</b></sub></a><br /><a href="#infra-ReboreExplore" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://www.phillipalday.com"><img src="https://avatars.githubusercontent.com/u/1677783?v=4?s=100" width="100px;" alt="Phillip Alday"/><br /><sub><b>Phillip Alday</b></sub></a><br /><a href="#code-palday" title="Code">💻</a> <a href="#infra-palday" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://davekleinschmidt.com"><img src="https://avatars.githubusercontent.com/u/135920?v=4?s=100" width="100px;" alt="Dave Kleinschmidt"/><br /><sub><b>Dave Kleinschmidt</b></sub></a><br /><a href="#doc-kleinschmidt" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ssaket"><img src="https://avatars.githubusercontent.com/u/27828189?v=4?s=100" width="100px;" alt="Saket Saurabh"/><br /><sub><b>Saket Saurabh</b></sub></a><br /><a href="#bug-ssaket" title="Bug reports">🐛</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/suddha-bpn"><img src="https://avatars.githubusercontent.com/u/7974144?v=4?s=100" width="100px;" alt="suddha-bpn"/><br /><sub><b>suddha-bpn</b></sub></a><br /><a href="#bug-suddha-bpn" title="Bug reports">🐛</a></td>
+    </tr>
+  </tbody>
+</table>
 
-- **Phillip Alday**
-- **Benedikt Ehinger**
-- **Dave Kleinschmidt**
-- **Judith Schepers**
-- **Felix Schröder**
-- **René Skukies**
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+
+
+This project follows the [all-contributors](https://allcontributors.org/docs/en/specification) specification. 
+
+Contributions of any kind welcome!
 
 ## Citation
 

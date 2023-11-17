@@ -1,18 +1,19 @@
 # [Mass Univariate Linear Mixed Models](@id lmm_massunivariate)
 
 ```@example Main
-using StatsModels, DataFrames,CategoricalArrays
 
 using Unfold
+using UnfoldSim
 using MixedModels # important to load to activate the UnfoldMixedModelsExtension
-using UnfoldMakie,CairoMakie
+using UnfoldMakie,CairoMakie # plotting
 using DataFrames
-include(joinpath(dirname(pathof(Unfold)), "../test/test_utilities.jl") ) # to load data
+using CategoricalArrays
 nothing;#hide
 ```
+!!! important
+    You have to run `using MixedModels` before or after loading Unfold to activate the MixedModels abilities!
 
-
-This notebook is similar to the [Mass Univariate Linear Models (no overlap correction) tutorial](@ref lm_massunivariate) , but fits mass-univariate *mixed* models 
+This notebook is similar to the [Mass Univariate Linear Models (no overlap correction) tutorial](@ref lm_massunivariate) , but fits mass-univariate *mixed* models - that is, one model over all subjects, instead one model per subject. This allows to incorporate e.g. Item-effects.
 
 
 
@@ -25,12 +26,10 @@ Again we have 4 steps:
 
 
 #### 1. Epoching
-The data were simulated in MatLab using the `unmixed toolbox (www.unfoldtoolbox.org)` with the function`EEG_to_csv.m`.
+
 ```@example Main
 
-data, evts = loadtestdata("testCase3",dataPath = "../../../test/data/")
-data = data.+ 0.1*randn(size(data)) # we have to add minimal noise, else mixed models crashes.
-
+data, evts = UnfoldSim.predef_eeg(10)
 transform!(evts,:subject=>categorical=>:subject); # has to be categorical, else MixedModels.jl complains
 nothing #hide
 ```
@@ -38,29 +37,25 @@ nothing #hide
 The `events` dataFrame has an additional column (besides being much taller): `subject`
 ```@example Main
 first(evts,6)
-```
+```        
 
-!!! note 
-        Note how small the data is! Only 12k samples, that is only ~5minutes of recording in total for 25 subjects. More realistic samples quickly take hours to fit.
-        
-        ```@example Main
-        size(data)
-        ```
 
-Now we are ready to epoch the data - same as for the mass univariate, but we have more trials (nsubject more)
+Now we are ready to epoch the data - same as for the mass univariate, but we have more trials (times `nsubject` more)
 ```@example Main
 data_r = reshape(data,(1,:))
 # cut the data into epochs
 data_epochs,times = Unfold.epoch(data=data_r,tbl=evts,τ=(-0.4,0.8),sfreq=50);
 # missing or partially missing epochs are currenlty _only_ supported for non-mixed models!
 evts,data_epochs = Unfold.dropMissingEpochs(evts,data_epochs);
+
 nothing #hide
 ```
 
 #### 2. Specify the formula
 We define the formula. Importantly we need to specify a random effect. We are using `zerocorr` to speed up the calculation and show off that we can use it.
+
 ```@example Main
-f  = @formula 0~1+condA*condB+zerocorr(1+condA*condB|subject);
+f  = @formula 0~1+condition*continuous+zerocorr(1+condition*continuous|subject);
 nothing #hide
 ```
 
@@ -93,8 +88,6 @@ res_ranef = results[results.group.==:subject,:]
 plot_erp(res_ranef)
 ```
 
-
-The random effects are very high in areas where we simulated overlap. (i.e. <-0.1 and >0.2)
 
 ### Statistics
 Check out the [LMM p-value tutorial](@ref lmm_pvalues)

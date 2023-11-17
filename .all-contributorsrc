@@ -1,0 +1,101 @@
+{
+  "projectName": "Unfold.jl",
+  "projectOwner": "unfoldtoolbox",
+  "files": [
+    "README.md"
+  ],
+  "commitType": "docs",
+  "commitConvention": "angular",
+  "contributorsPerLine": 7,
+  "contributors": [
+    {
+      "login": "jschepers",
+      "name": "Judith Schepers",
+      "avatar_url": "https://avatars.githubusercontent.com/u/22366977?v=4",
+      "profile": "https://github.com/jschepers",
+      "contributions": [
+        "bug",
+        "code",
+        "doc",
+        "tutorial",
+        "ideas",
+        "test"
+      ]
+    },
+    {
+      "login": "behinger",
+      "name": "Benedikt Ehinger",
+      "avatar_url": "https://avatars.githubusercontent.com/u/10183650?v=4",
+      "profile": "http://www.benediktehinger.de",
+      "contributions": [
+        "bug",
+        "code",
+        "doc",
+        "tutorial",
+        "ideas",
+        "test",
+        "infra",
+        "test",
+        "maintenance",
+        "review",
+        "question"
+      ]
+    },
+    {
+      "login": "ReneSkukies",
+      "name": "René Skukies",
+      "avatar_url": "https://avatars.githubusercontent.com/u/57703446?v=4",
+      "profile": "https://reneskukies.de/",
+      "contributions": [
+        "bug",
+        "doc"
+      ]
+    },
+    {
+      "login": "ReboreExplore",
+      "name": "Manpa Barman",
+      "avatar_url": "https://avatars.githubusercontent.com/u/43548330?v=4",
+      "profile": "https://reboreexplore.github.io/",
+      "contributions": [
+        "infra"
+      ]
+    },
+    {
+      "login": "palday",
+      "name": "Phillip Alday",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1677783?v=4",
+      "profile": "https://www.phillipalday.com",
+      "contributions": [
+        "code",
+        "infra"
+      ]
+    },
+    {
+      "login": "kleinschmidt",
+      "name": "Dave Kleinschmidt",
+      "avatar_url": "https://avatars.githubusercontent.com/u/135920?v=4",
+      "profile": "http://davekleinschmidt.com",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "ssaket",
+      "name": "Saket Saurabh",
+      "avatar_url": "https://avatars.githubusercontent.com/u/27828189?v=4",
+      "profile": "https://github.com/ssaket",
+      "contributions": [
+        "bug"
+      ]
+    },
+    {
+      "login": "suddha-bpn",
+      "name": "suddha-bpn",
+      "avatar_url": "https://avatars.githubusercontent.com/u/7974144?v=4",
+      "profile": "https://github.com/suddha-bpn",
+      "contributions": [
+        "bug"
+      ]
+    }
+  ]
+}

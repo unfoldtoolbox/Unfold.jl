@@ -1,13 +1,14 @@
 # [Overlap Correction with Linear Mixed Models](@id lmm_overlap)
 
 ```@example Main
-using StatsModels, MixedModels, DataFrames,CategoricalArrays
 
 using Unfold
+using UnfoldSim
+
+using CategoricalArrays
 using MixedModels
 using UnfoldMakie,CairoMakie
 using DataFrames
-using UnfoldSim
 
 nothing;#hide
 ```
@@ -18,11 +19,14 @@ This notebook is similar to the Linear Model with Overlap Correction tutorial, b
 !!! warning 
     **Limitation**: This is not production ready at all. Still lot's of things to find out and tinker with. Don't use this if you did not look under the hood of the toolbox!
 
+!!! important
+    Even worse - it is right now not working. Some new bug appeared
+
 ## Get some  data
 
 ```@example Main
-dat,evts = UnfoldSim.predef_2x2(;n_items=52,n_subjects=40)
-#evts.subject  = categorical(Array(evts.subject))
+dat,evts = UnfoldSim.predef_2x2(;signalsize=20,n_items=16,n_subjects=16)
+evts.subject  = categorical(Array(evts.subject))
 nothing #hide
 ```
 
@@ -37,7 +41,7 @@ Again we have 4 steps:
 #### 1. specify a temporal basisfunction
 By default, we would want to use a FIR basisfunction. See [Basis Functions](@ref) for more details.
 ```@example Main
-basisfunction = firbasis(τ=(-0.4,.8),sfreq=50,name="stimulus")
+basisfunction = firbasis(τ=(-0.4,.8),sfreq=20,name="stimulus")
 nothing #hide
 ```
 
@@ -59,15 +63,16 @@ f  = @formula 0~1+A*B+zerocorr(1+A*B|subject);
 ```@example Main
 bfDict = Dict(Any=>(f,basisfunction))
 # for some reason this results in a big error. Skipping this tutorial right now
-#m = fit(UnfoldModel,bfDict,evts,dat) 
+m = fit(UnfoldModel,bfDict,evts,dat) 
 
-#results = coeftable(m)
-#first(results,6)
+results = coeftable(m)
+first(results,6)
 ```
 
 
 #### 4. Visualize results
 
 ```@example Main
-#plot_erp(results;mapping=(;col=:group))
+results.group = string.(results.group) # this will not be necessary in future versions
+plot_erp(results;mapping=(;col=:group))
 ```

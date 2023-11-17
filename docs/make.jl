@@ -25,28 +25,32 @@ makedocs(sitename="Unfold.jl Timeseries Analysis & Deconvolution",
             "Installing Julia + Unfold.jl" => "installation.md",
             "Tutorials"=>[
 
-                "Mass Univariate" =>"tutorials/lm_mu.md",
-                "LM Overlap correction" =>"tutorials/lm_overlap.md",
-                "Mass Univariate Mixed Model" =>"tutorials/lmm_mu.md",
-                "LMM + Overlap correction" =>"tutorials/lmm_overlap.md",
+                "Mass univariate LM" =>"tutorials/lm_mu.md",
+                "LM overlap correction" =>"tutorials/lm_overlap.md",
+                "Mass univariate Mixed Model" =>"tutorials/lmm_mu.md",
+                "LMM + overlap correction" =>"tutorials/lmm_overlap.md",
             ],
             "HowTo"=>[
-		            "Overlap: Different events"=>"HowTo/multiple_events.md",
-                    "Load Existing Dataset with PyMNE.jl"=>"HowTo/pymne.md" ,
-                    "Custom Solvers / StandardErrors / B2B"=>"HowTo/custom_solvers.md",
+		            "Overlap: Multiple events"=>"HowTo/multiple_events.md",
+                    "Import EEG with 🐍 PyMNE.jl"=>"HowTo/pymne.md" ,
+                    "Standard errors"=>"HowTo/standarderrors.md",
+                    "Alternative Solvers (Robust, GPU, B2B)"=>"HowTo/custom_solvers.md",
                     "🐍 Calling Unfold.jl directly from Python" => "generated/HowTo/juliacall_unfold.md",
-                    "P-values in Mass Univariate MixedModels" => "HowTo/lmm_pvalues.md",
-		            "Marginal effects (what to do with non-linear predictors)" =>"generated/HowTo/effects.md",
-		            "Time Basis Functions"=>"generated/HowTo/timesplines.md",
+                    "P-values for mixedModels" => "HowTo/lmm_pvalues.md",
+		            "Marginal effects (focus on non-linear predictors)" =>"generated/HowTo/effects.md",
+		            #"Time domain basis functions"=>"generated/HowTo/timesplines.md",
+                    "Save and load Unfold models" => "generated/HowTo/unfold_io.md",
                       ],
             "Explanations"=>[
-		            "Temporal Basisfunctions" => "./explanations/basisfunctions.md",
-		            "Non-Linear Effects" => "./generated/explanations/nonlinear_effects.md",
-                    "Window Length Effect" => "./generated/explanations/window_length.md",],
+
+		            "About basisfunctions" => "./explanations/basisfunctions.md",
+		            "Non-Linear effects" => "./generated/explanations/nonlinear_effects.md",
+                "Window Length Effect" => "./generated/explanations/window_length.md",],
             "Reference"=>[
-                    "Development Environment" => "explanations/development.md",
-                    "Types" => "references/types.md",
-                    "Functions" => "references/functions.md"],
+                    "Overview of package extensions" => "references/extensions.md",
+                    "Development environment" => "explanations/development.md",
+                    "API: Types" => "references/types.md",
+                    "API: Functions" => "references/functions.md"],
         ])
 
 deploydocs(; repo = "github.com/unfoldtoolbox/Unfold.jl", push_preview = true,        devbranch = "main")
