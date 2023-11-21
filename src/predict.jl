@@ -15,7 +15,9 @@ function StatsBase.predict(model::UnfoldModel, events)
         eff = yhat(model,formulas[1],newevents)
         timesVec = gen_timeev(times(model),size(newevents, 1)) 
     else
-        fromTo,timesVec,eff = yhat(model,formulas,newevents) 
+        eff = yhat(model,formulas,newevents) 
+        timesVec = yhat_timevec(model,formulas,newevents)
+        fromTo = yhat_nranges(model,formulas,newevents) # formerly fromTo == n_ranges
     end
 
    
@@ -42,12 +44,13 @@ function StatsBase.predict(model::UnfoldModel, events)
         shift = 0
         # for each basis function
         
-        for (bIx, basisfun) in enumerate(fromTo)
+        for (bIx, n_range) in enumerate(fromTo)
+            basistime = range(1,step = n_range,length=size(events,1))
         
             # go through all predictors
-            for (i, fstart) in enumerate(basisfun[1:end])
+            for (i, fstart) in enumerate(basistime[1:end])
                 
-                fend = basisfun[i] + basisfun.step-1
+                fend = fstart + basistime.step-1
         
                 # couldn't figure out how to broadcast everything directly (i.e out[fstart:fend,names(newevents)] .= newevents[i,:])
                 # copy the correct metadata
@@ -108,23 +111,77 @@ end
 
 yhat(model::UnfoldLinearModelContinuousTime,formulas::MatrixTerm,events) = yhat(model,formulas.terms,events)
 
+"# replaces f in formulas"
+yhat(m::UnfoldLinearModelContinuousTime,formulas::AbstractArray,events)::Array = yhat(m,blockdiag(yhat.(Ref(m),formulas,Ref(events))...))  #  blockdiag([Xsingle1,Xsingle2,Xsingle3]...)
+
+yhat(m::UnfoldLinearModelContinuousTime,f::MatrixTerm,events) = yhat(m,f.terms[1],events)
+yhat(m::UnfoldLinearModelContinuousTime,f,events) = yhat(m,f.rhs,events)
+
+
+function yhat(m::UnfoldLinearModelContinuousTime,f::TimeExpandedTerm,events)
+        # find out how long each designmatrix is
+        n_range = length(times(f.basisfunction))
+        # find out how much to shift so that X[1,:] is the the first "sample"
+        n_negative = f.basisfunction.shiftOnset
+        # generate the correct eventfields (default: latencies)
+        events = deepcopy(events)
+    
+        events[:, f.eventfields[1]] =
+            range(-n_negative + 1, step = n_range, length = size(events, 1))            
+        # get the model
+        Xsingle = modelcols(f, events)
+        
+        timesSingle = times(f.basisfunction)
+
+        # this pertains only to FIR-models
+
+        # remove the last time-point because it is attached due to non-integer latency/eventonsets.
+        # e.g. x denotes a sample
+        # x- - -x- - -x- - -x
+        # e- - - -f- - - -g-
+        # 
+        # e is aligned (integer) with the sample
+        # f&g are between two samples, thus the design matrix would interpolate between them. Thus has as a result, that the designmatrix is +1 longer than what would naively be expected
+        #
+        # because in "predict" we define where samples onset, we can remove the last sample, it s always 0 anyway, but to be sure we test it
+        
+        if typeof(f.basisfunction) <: FIRBasis
+            keep = ones(size(Xsingle,1))
+            keep[range(length(timesSingle), size(Xsingle,1),step=length(timesSingle))] .= 0
+            Xsingle = Xsingle[keep.==1, :]
+        end
+    return Xsingle
+        # don't include, via broadcast: append!(X, [Xsingle])
+end
+
+
+yhat_timevec(m::UnfoldLinearModelContinuousTime, formulas::Array{Formula},events)   = v/hcat(yhat_timevec(Ref(m), formulas,Ref(events))...)
+function yhat_timevec(m::UnfoldLinearModelContinuousTime, f::Formula,events) 
+        # keep track of the times
+         timesSingle = times(f.basisfunction)
+        # see yhat blabla why this is necessary
+        if typeof(f.basisfunction) <: FIRBasis
+            timesSingle = timesSingle[1:end-1]
+        end
+        return repeat(timesSingle, size(events, 1))
+end
+
+
+yhat_fromto(m::UnfoldLinearModelContinuousTime, formulas::Array{Formula},events)  = yhat_fromto.(Ref(m),formulas,Ref(events)) # todo: add hcat? vcat? who knows
+function yhat_fromto(m::UnfoldLinearModelContinuousTime, f::Formula,events) 
+        n_range = length(times(f.basisfunction))
+        if typeof(f.basisfunction) <: FIRBasis
+            n_range = n_range - 1
+        end
+        return [range(1, step = n_range, length = size(events, 1))]
+end
+
 function yhat(model::UnfoldLinearModelContinuousTime,formulas,events)#::AbstractArray{AbstractTerm})
     X = []
     fromTo = []
     timesVec = []
     for f in formulas
 
-        # due to many reasons, there can be several different options of how formula arrives here - not easy to catch via multiple dispatch
-        if !(isa(f,TimeExpandedTerm))
-            if !(isa(f,MatrixTerm))
-            f = f.rhs
-            #elseif !(isa(f,Effects.TypicalTerm))
-                
-            else
-                f = f.terms[1]
-            end
-            
-        end
         # find out how long each designmatrix is
         n_range = length(times(f.basisfunction))
         # find out how much to shift so that X[1,:] is the the first "sample"
@@ -164,7 +221,7 @@ function yhat(model::UnfoldLinearModelContinuousTime,formulas,events)#::Abstract
         append!(X, [Xsingle])
         
         # keep track of how long each event is
-        append!(fromTo, [range(1, step = n_range, length = size(events, 1))])
+        append!(fromTo, n_range)
         # keep track of the times
         append!(timesVec, repeat(timesSingle, size(events, 1)))
 
