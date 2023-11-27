@@ -66,18 +66,18 @@ n1 =  LinearModelComponent(;
         β = [5,-3]
         );
         
-        p3 =  LinearModelComponent(;
+p3 =  LinearModelComponent(;
         basis = p300(),
         formula = @formula(0~1+continuous),
         β = [5,1]
         );
         
 components = [p1,n1,p3]
-data,events = simulate(MersenneTwister(1),design,components,UniformOnset(;width=500,offset=200),PinkNoise());
+data,events = simulate(MersenneTwister(1),design,components,UniformOnset(;width=50,offset=20),PinkNoise());
 
 # Run fit two times; once for compilation and once for actual timing
-m = fit(UnfoldModel,Dict(Any=>(@formula(0~1+condition+continuous),firbasis(τ=[-0.1,1],sfreq=100,name="basis"))),events,data);
-@time m = fit(UnfoldModel,Dict(Any=>(@formula(0~1+condition+spl(continuous,5)),firbasis(τ=[-0.1,1],sfreq=100,name="basis"))),events,data);
+m = fit(UnfoldModel,Dict(Any=>(@formula(0~1+condition+continuous),firbasis(τ=[-1,1],sfreq=100,name="basis"))),events,data);
+@time m = fit(UnfoldModel,Dict(Any=>(@formula(0~1+condition+spl(continuous,5)),firbasis(τ=[-1,1],sfreq=100,name="basis"))),events,data);
 
 ## Matlab part
 
@@ -94,12 +94,12 @@ hart = headmodel(type="hartmut")
 mc = UnfoldSim.MultichannelComponent(c, hart=>"Left Postcentral Gyrus")
 mc2 = UnfoldSim.MultichannelComponent(c2, hart=>"Right Occipital Pole")
 
-onset = UniformOnset(;width=500,offset=200);
+onset = UniformOnset(;width=50,offset=20);
 
 data_mc,events_mc = simulate(MersenneTwister(1),design, [mc,mc2],  onset, PinkNoise())
 
 # Fit Unfold.jl
-@time m = fit(UnfoldModel,Dict(Any=>(@formula(0~1+condition+spl(continuous,5)),firbasis(τ=[-0.1,1],sfreq=100,name="basis"))),events_mc,data_mc);
+@time m = fit(UnfoldModel,Dict(Any=>(@formula(0~1+condition+spl(continuous,5)),firbasis(τ=[-1,1],sfreq=100,name="basis"))),events_mc,data_mc);
 
 # Fit Matlab
 calc_matlab(data_mc, events_mc)
