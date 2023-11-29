@@ -45,10 +45,18 @@ end
 
 # run Matlab code
 function calc_matlab(datajl, eventsjl)
+    
+    if length(size(datajl))==1
+        data = mxarray(datajl);
+        mat"$data = $data'";
+    else
+        data = datajl;
+    end
+    
     mat"
         EEG = eeg_emptyset();
         
-        EEG.data = $datajl;
+        EEG.data = $data;
         EEG.srate = 100;
     "
 
