@@ -1,0 +1,19 @@
+name: DARUS dataverse sync
+
+on:
+  pull_request:
+    types: [labeled, opened, synchronize, reopened]
+
+
+jobs:
+  dv-sync:
+    runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.labels.*.name, 'sync darus')
+    steps:
+    - uses: actions/checkout@v2
+    - name: Synchronize to DV
+      uses: SimTech-Research-Data-Management/dataverse-sync@main
+      with:
+        dataverse_url: "https://darus.uni-stuttgart.de/"
+        api_token: ${{ secrets.DV_API_TOKEN }}
+        persistent_id: "doi:10.18419/darus-3804"
