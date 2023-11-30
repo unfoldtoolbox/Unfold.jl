@@ -2,7 +2,7 @@
 # Effects are super useful to understand the actual modelfits. If you are an EEG-Researcher, you can think of effects as the "modelled ERPs", and the coefficients as the "difference-waves".
 # In some way, we are fitting a model with coefficients and then try to get back the "original" ERPs - of course typically with some effect adjusted, overlap removed or similar - else why bother ;)
 
-# Define some packages
+# Setup some packages
 
 using Unfold
 using DataFrames
@@ -31,15 +31,15 @@ plot_erp(coeftable(m))
 # A convenience function is `effects`. It allows to specify effects on specific levels, while setting non-specified ones to a typical value (usually the mean)
 
 eff = effects(Dict(:condition => ["car","face"]),m)
-plot_erp(eff;mapping=(:color=>:condition,))
+plot_erp(eff;mapping=(;color=:condition,))
 
 # We can also generate continuous predictions
 eff = effects(Dict(:continuous => -5:0.5:5),m)
-plot_erp(eff;mapping=(:color=>:continuous,:group=>:continuous=>nonnumeric),setExtraValues=(categoricalColor=false,categoricalGroup=false))
+plot_erp(eff;mapping=(;color=:continuous,group=:continuous=>nonnumeric),categoricalColor=false,categoricalGroup=false)
 
 # or split it up by condition
 eff = effects(Dict(:condition=>["car","face"],:continuous => -5:2:5),m)
-plot_erp(eff;mapping=(:color=>:condition,:col=>:continuous=>nonnumeric))
+plot_erp(eff;mapping=(;color=:condition,col=:continuous=>nonnumeric))
 
 # ## What is typical anyway?
 # The user can specify the typical function applied to the covariates/factors that are marginalized over. This offers even greater flexibility.
