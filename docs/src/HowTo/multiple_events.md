@@ -40,5 +40,5 @@ Finally, fitting & plotting works the same way as always
 
 m = Unfold.fit(UnfoldModel,bfDict,evts,dat,solver=(x,y) -> Unfold.solver_default(x,y;stderror=true),eventcolumn="type")
 results = coeftable(m)
-plot_erp(results;setExtraValues=(;stderror=true),setMappingValues=(;col=:group))
+plot_erp(results;stderror=true,mapping=(;col=:group))
 ``` 

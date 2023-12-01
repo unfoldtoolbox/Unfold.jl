@@ -19,7 +19,7 @@ Similar to @Ref(custom_solver), it is possible to specify a solver than also cal
 se_solver =(x,y)->Unfold.solver_default(x,y,stderror=true)
 m = Unfold.fit(UnfoldModel,designDict,evts,dat,solver=se_solver)
 results =coeftable(m)
-plot_erp(results;extra=(;stderror=true))
+plot_erp(results;stderror=true)
 ```
 !!! warning
     **In case of overlap-correction:** Use single-subject SE on your own risk. Because EEG data are autocorrelated your standarderrors will be typically too small.
