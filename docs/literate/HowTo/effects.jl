@@ -35,7 +35,7 @@ plot_erp(eff;mapping=(;color=:condition,))
 
 # We can also generate continuous predictions
 eff = effects(Dict(:continuous => -5:0.5:5),m)
-plot_erp(eff;mapping=(;color=:continuous,group=:continuous=>nonnumeric),categoricalColor=false,categoricalGroup=false)
+plot_erp(eff;mapping=(;color=:continuous,group=:continuous=>nonnumeric),categorical_color=false,categorical_group=false)
 
 # or split it up by condition
 eff = effects(Dict(:condition=>["car","face"],:continuous => -5:2:5),m)
