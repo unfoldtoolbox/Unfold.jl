@@ -31,7 +31,7 @@ package extension
 se_solver =(x,y)->Unfold.solver_robust(x,y)
 m = Unfold.fit(UnfoldModel,designDict,evts,dat,solver=se_solver)
 results =coeftable(m)
-plot_erp(results;extra=(;stderror=true))
+plot_erp(results;stderror=true)
 ```
 
 ### Back2Back regression
