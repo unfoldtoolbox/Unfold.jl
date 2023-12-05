@@ -8,7 +8,7 @@ using MixedModels
 using StaticArrays # for MixedModels extraction of parametrs (inherited from MixedModels.jl, not strictly needed )
 import MixedModels: likelihoodratiotest,ranef
 using StatsModels
-import StatsModels: fit!,coef,coefnames,modelcols
+import StatsModels: fit!,coef,coefnames,modelcols,modelmatrix
 using SparseArrays
 using DocStringExtensions
 using LinearAlgebra # LowerTriangular
@@ -21,5 +21,6 @@ include("fit.jl")
 include("statistics.jl")
 include("timeexpandedterm.jl")
 include("typedefinitions.jl")
+include("effects.jl")
 
 end

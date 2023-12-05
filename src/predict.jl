@@ -79,7 +79,7 @@ end
 #yhat(model::UnfoldModel,formulas::AbstractTerm) = yhat(model,[formulas])
 
 # special case if one formula is defined but in an array => multiple events
-function yhat(model::UnfoldLinearModel,formulas::AbstractArray,newevents::DataFrame)
+function yhat(model::Union{<:UnfoldLinearMixedModel,<:UnfoldLinearModel},formulas::AbstractArray,newevents::DataFrame)
     X = modelcols.(formulas,Ref(newevents))
     
     co = coef(model)
@@ -100,7 +100,7 @@ end
 yhat(model::UnfoldLinearModel,formulas::FormulaTerm,newevents) = yhat(model,formulas.rhs,newevents)
 yhat(model::UnfoldLinearModelContinuousTime,formulas::FormulaTerm,newevents) = yhat(model,formulas.rhs,newevents)
 
-function yhat(model::UnfoldLinearModel,formulas::AbstractTerm,newevents)#::AbstractArray{AbstractTerm})
+function yhat(model::Union{<:UnfoldLinearMixedModel,<:UnfoldLinearModel},formulas::AbstractTerm,newevents)#::AbstractArray{AbstractTerm})
     X = modelcols(formulas,newevents)
     return yhat(model,X)
 end
@@ -188,7 +188,7 @@ function yhat(model::UnfoldLinearModelContinuousTime,X::AbstractArray{T,2};times
 end
 
 # kept for backwards compatability
-yhat(model::UnfoldLinearModel,X::AbstractArray{T,2};kwargs...) where {T<:Union{Missing, <:Number}} = yhat(coef(model),X;kwargs...)
+yhat(model::Union{<:UnfoldLinearMixedModel,<:UnfoldLinearModel},X::AbstractArray{T,2};kwargs...) where {T<:Union{Missing, <:Number}} = yhat(coef(model),X;kwargs...)
 
 
 function yhat(coef::AbstractArray,X::AbstractArray{T,2};kwargs...) where {T<:Union{Missing, <:Number}}
@@ -212,7 +212,7 @@ function yhat(coef::AbstractArray,X::AbstractArray{T,2};kwargs...) where {T<:Uni
 end
 
 # there is only 1 times for Mass Univariate Models possible
-times(model::UnfoldLinearModel) = times(design(model))
+times(model::Union{<:UnfoldLinearMixedModel,<:UnfoldLinearModel}) = times(design(model))
 times(d::Dict{<:Union{Any,<:AbstractString,Symbol},<:Tuple{<:AbstractTerm,<:AbstractVector}}) = first(values(d))[2]#[k[2] for k in values(d)] # probably going for steprange would be better
 
 
