@@ -34,7 +34,10 @@ end
 @testset "safe prediction outside bounds" begin
     # test safe predict
     m = fit(UnfoldModel, f_spl, evts, data_r, basisfunction)
-    @test_broken predict(m, DataFrame(conditionA=[0, 0, 0], continuousA=[0.9, 0.9, 1.9]))
+
+    p = predict(m, DataFrame(conditionA=[0, 0, 0], continuousA=[0.9, 0.9, 1.9]))
+    @test all(ismissing.(p[p.continuousA.==1.9, :yhat]))
+
 end
 #@test_broken all(ismissing.)
 
@@ -69,9 +72,11 @@ end
     @test tmp.yhat[tmp.continuousA.==-1.1] ≈ tmp.yhat[tmp.continuousA.==0.9]
     @test tmp.yhat[tmp.continuousA.==-1.0] ≈ tmp.yhat[tmp.continuousA.==1]
     @test tmp.yhat[tmp.continuousA.==-0.9] ≈ tmp.yhat[tmp.continuousA.==1.1]
+
 end
 
 @testset "minimal number of splines" begin
     f_spl = @formula 0 ~ 1 + conditionA + spl(continuousA, 3) # 1
     @test_throws AssertionError fit(UnfoldModel, f_spl, evts, data_e, times)
+
 end
