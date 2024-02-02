@@ -23,8 +23,8 @@ minus one due to the intercept.
 Note: that due to the boundary condition (`natural`) spline, we repeat the boundary knots to each side `order` times, enforcing smoothness there - this is done within BSplineKit
 
 """
-function genSpl_breakpoints(p::AbstractSplineTerm,x)
-    p = range(0.0, length = p.df-2, stop = 1.0) 
+function genSpl_breakpoints(p::AbstractSplineTerm, x)
+    p = range(0.0, length=p.df - 2, stop=1.0)
     breakpoints = quantile(x, p)
     return breakpoints
 end
@@ -32,9 +32,9 @@ end
 """
 In the circular case, we do not use quantiles, (circular quantiles are difficult)
 """
-function genSpl_breakpoints(p::PeriodicBSplineTerm,x)
+function genSpl_breakpoints(p::PeriodicBSplineTerm, x)
     # periodic case - 
-    return range(p.low,p.high,length=p.df+2)
+    return range(p.low, p.high, length=p.df + 2)
 end
 
 """
@@ -42,33 +42,33 @@ function that fills in an Matrix `large` according to the evaluated values in `x
 
     Two separate functions are needed here, as the periodicBSplineBasis implemented in BSplineKits is a bit weird, that it requires to evalute "negative" knots + knots above the top-boundary and fold them down
 """
-function spl_fillMat!(bs::PeriodicBSplineBasis,large::Matrix,x::AbstractVector)
+function spl_fillMat!(bs::PeriodicBSplineBasis, large::Matrix, x::AbstractVector)
     # wrap values around the boundaries
     bnds = boundaries(bs)
     x = deepcopy(x)
-    x = mod.(x .- bnds[1],period(bs)) .+ bnds[1]
+    x = mod.(x .- bnds[1], period(bs)) .+ bnds[1]
 
     for k = -1:length(bs)+2
-        ix = basis_to_array_index(bs,axes(large,2),k)
-        large[:,ix] .+= bs[k](x)
+        ix = basis_to_array_index(bs, axes(large, 2), k)
+        large[:, ix] .+= bs[k](x)
     end
 end
-function spl_fillMat!(bs::BSplineBasis,large::Matrix,x::AbstractVector)
+function spl_fillMat!(bs::BSplineBasis, large::Matrix, x::AbstractVector)
     for k = 1:length(bs)
-        
-        large[:,k] .+= bs[k](x)
+
+        large[:, k] .+= bs[k](x)
     end
-     
+
     bnds = boundaries(bs)
-    ix = x .< bnds[1] .|| x .>bnds[2]
-    
+    ix = x .< bnds[1] .|| x .> bnds[2]
+
     if sum(ix) != 0
         @warn("spline prediction outside of possible range  putting those values to missing.\n `findfirst(Out-Of-Bound-value)` is x=$(x[findfirst(ix)]), with bounds: $bnds")
-        large[ix,:] .= missing
+        large[ix, :] .= missing
     end
 
 end
-    
+
 """
 evaluate a spline basisset `basis` at `x`
 
@@ -76,50 +76,51 @@ returns `Missing` if x is outside of the basis set
 """
 function splFunction(x, bs)
     # init array
-    large = zeros(Union{Missing,Float64},length(x), length(bs))
-    
+    large = zeros(Union{Missing,Float64}, length(x), length(bs))
+
     # fill it with spline values
-    spl_fillMat!(bs,large,x)
-    
+    spl_fillMat!(bs, large, x)
+
     return large
 end
 
-function splFunction(x,spl::PeriodicBSplineTerm)
-    basis = PeriodicBSplineBasis(BSplineOrder(spl.order),deepcopy(spl.breakpoints))
-    splFunction(x,basis)
+function splFunction(x, spl::PeriodicBSplineTerm)
+    basis = PeriodicBSplineBasis(BSplineOrder(spl.order), deepcopy(spl.breakpoints))
+    splFunction(x, basis)
 end
 
-function splFunction(x,spl::BSplineTerm)
-    basis = BSplineKit.BSplineBasis(BSplineOrder(spl.order),deepcopy(spl.breakpoints))
-    splFunction(x,basis)
+function splFunction(x, spl::BSplineTerm)
+    basis = BSplineKit.BSplineBasis(BSplineOrder(spl.order), deepcopy(spl.breakpoints))
+    splFunction(x, basis)
 end
 #spl(x,df) = Splines2.bs(x,df=df,intercept=true) # assumes intercept
 Unfold.spl(x, df) = 0 # fallback
 
 # make a nice call if the function is called via REPL
-Unfold.spl(t::Symbol, d::Int) = BSplineTerm(term(t), d, 4,[])
-Unfold.circspl(t::Symbol, d::Int,low,high) = PeriodicBSplineTerm(term(t), term(d),4,low,high)
+Unfold.spl(t::Symbol, d::Int) = BSplineTerm(term(t), d, 4, [])
+Unfold.circspl(t::Symbol, d::Int, low, high) = PeriodicBSplineTerm(term(t), term(d), 4, low, high)
 
 """
 Construct a BSplineTerm, if breakpoints/basis are not defined yet, put to `nothing`
 """
-function BSplineTerm(term, df,order=4)
-    BSplineTerm(term, df,order,[])
+function BSplineTerm(term, df, order=4)
+    @assert df > 3 "Minimal degrees of freedom has to be 4"
+    BSplineTerm(term, df, order, [])
 end
 
-function BSplineTerm(term, df::ConstantTerm,order=4)
-    BSplineTerm(term, df.n,order,[])
+function BSplineTerm(term, df::ConstantTerm, order=4)
+    BSplineTerm(term, df.n, order, [])
 end
 
 
-function PeriodicBSplineTerm(term, df,low,high)
-    PeriodicBSplineTerm(term, df,4,low,high)
+function PeriodicBSplineTerm(term, df, low, high)
+    PeriodicBSplineTerm(term, df, 4, low, high)
 end
-function PeriodicBSplineTerm(term::AbstractTerm, df::ConstantTerm,order,low::ConstantTerm,high::ConstantTerm,breakvec)
-     PeriodicBSplineTerm(term, df.n,order,low.n,high.n,breakvec)
+function PeriodicBSplineTerm(term::AbstractTerm, df::ConstantTerm, order, low::ConstantTerm, high::ConstantTerm, breakvec)
+    PeriodicBSplineTerm(term, df.n, order, low.n, high.n, breakvec)
 end
-function PeriodicBSplineTerm(term, df,order,low,high)
-    PeriodicBSplineTerm(term, df,order,low,high,[])
+function PeriodicBSplineTerm(term, df, order, low, high)
+    PeriodicBSplineTerm(term, df, order, low, high, [])
 end
 
 Base.show(io::IO, p::BSplineTerm) = print(io, "spl($(p.term), $(p.df))")
@@ -145,7 +146,7 @@ function StatsModels.apply_schema(
     sch::StatsModels.Schema,
     Mod::Type{<:bsPLINE_CONTEXT},
 )
-ar = nothing
+    ar = nothing
     try
         ar = t.args
     catch
@@ -158,7 +159,7 @@ function StatsModels.apply_schema(
     sch::StatsModels.Schema,
     Mod::Type{<:bsPLINE_CONTEXT},
 )
-@debug "BSpline Inner schema"
+    @debug "BSpline Inner schema"
     term = apply_schema(t.term, sch, Mod)
     isa(term, ContinuousTerm) ||
         throw(ArgumentError("BSplineTerm only works with continuous terms (got $term)"))
@@ -168,26 +169,26 @@ function StatsModels.apply_schema(
             # in case of ConstantTerm of Èffects.jl``
             t.df.n
         catch
-        throw(ArgumentError("BSplineTerm df must be a number (got $(t.df))"))
+            throw(ArgumentError("BSplineTerm df must be a number (got $(t.df))"))
         end
     end
-    return construct_spline(t,term)
-    end
-construct_spline(t::BSplineTerm,term)=BSplineTerm(term, t.df,t.order)
-construct_spline(t::PeriodicBSplineTerm,term)=PeriodicBSplineTerm(term, t.df,t.order,t.low,t.high)
+    return construct_spline(t, term)
+end
+construct_spline(t::BSplineTerm, term) = BSplineTerm(term, t.df, t.order)
+construct_spline(t::PeriodicBSplineTerm, term) = PeriodicBSplineTerm(term, t.df, t.order, t.low, t.high)
 
 function StatsModels.modelcols(p::AbstractSplineTerm, d::NamedTuple)
 
     col = modelcols(p.term, d)
 
     if isempty(p.breakpoints)
-        p.breakpoints = genSpl_breakpoints(p,col)
+        p.breakpoints = genSpl_breakpoints(p, col)
     end
-    
+
     #basis = genSpl_basis(pp.breakpoints,p.order)#Splines2.bs_(col,df=p.df+1,intercept=true)
-    
+
     #X = Splines2.bs(col, df=p.df+1,intercept=true)
-    X = splFunction(col,p)
+    X = splFunction(col, p)
 
     # remove middle X to negate intercept = true, generating a pseudo effect code 
     return X[:, Not(Int(ceil(end / 2)))]
@@ -195,7 +196,7 @@ end
 
 #StatsModels.terms(p::BSplineTerm) = terms(p.term)
 StatsModels.termvars(p::AbstractSplineTerm) = StatsModels.termvars(p.term)
-StatsModels.width(p::AbstractSplineTerm) = p.df-1
+StatsModels.width(p::AbstractSplineTerm) = p.df - 1
 StatsModels.coefnames(p::BSplineTerm) =
     "spl(" .* coefnames(p.term) .* "," .* string.(1:p.df-1) .* ")"
 StatsModels.coefnames(p::PeriodicBSplineTerm) =
