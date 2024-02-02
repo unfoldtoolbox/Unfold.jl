@@ -43,10 +43,10 @@ function StatsModels.fit(
     tbl::DataFrame,
     data::AbstractArray;
     kwargs...,
-    )
+)
     detectedType = designToModeltype(design)
 
-    fit(detectedType,design,tbl,data;kwargs...)
+    fit(detectedType, design, tbl, data; kwargs...)
 end
 
 
@@ -57,7 +57,7 @@ function StatsModels.fit(
     data::AbstractArray;
     kwargs...,
 )
-fit(UnfoldModelType(design),design,tbl,data;kwargs...)
+    fit(UnfoldModelType(design), design, tbl, data; kwargs...)
 end
 
 
@@ -67,8 +67,8 @@ function StatsModels.fit(
     tbl::DataFrame,
     data::AbstractArray;
     kwargs...,
-    )
-    
+)
+
     designmatrix!(uf, tbl; kwargs...)
     fit!(uf, data; kwargs...)
 
@@ -100,8 +100,8 @@ isMixedModelFormula(f::InteractionTerm) = false
 isMixedModelFormula(f::ConstantTerm) = false
 isMixedModelFormula(f::Term) = false
 #isMixedModelFormula(f::FunctionTerm) = false
-function isMixedModelFormula(f::FunctionTerm) 
-    try 
+function isMixedModelFormula(f::FunctionTerm)
+    try
         isMixedModelFormula(f.f)
     catch
         isMixedModelFormula(f.forig) # StatsMoels  <0.7
@@ -157,7 +157,8 @@ function StatsModels.fit(
     tbl::DataFrame,
     data::AbstractMatrix,
     args...;
-    kwargs...)where {T<:Union{UnfoldLinearMixedModel,UnfoldLinearModel}}
+    kwargs...,
+) where {T<:Union{UnfoldLinearMixedModel,UnfoldLinearModel}}
     @debug("MassUnivariate data array is size (X,Y), reshaping to (1,X,Y)")
     data = reshape(data, 1, size(data)...)
     return fit(ufmodel, design, tbl, data, args...; kwargs...)
@@ -175,49 +176,48 @@ function StatsModels.fit!(
 
     @assert ~isempty(designmatrix(uf))
     @assert typeof(first(values(design(uf)))[1]) <: FormulaTerm "InputError in design(uf) - :key=>(FORMULA,basis/times), formula not found. Maybe formula wasn't at the first place?"
-    @assert (typeof(first(values(design(uf)))[2]) <: AbstractVector) ⊻ (typeof(uf) <: UnfoldLinearModelContinuousTime) "InputError: Either a basis function was declared, but a UnfoldLinearModel was built, or a times-vector (and no basis function) was given, but a UnfoldLinearModelContinuousTime was asked for."
-    if isa(uf,UnfoldLinearModel)
-        @assert length(first(values(design(uf)))[2]) == size(data,length(size(data))-1) "Times Vector does not match second last dimension of input data - forgot to epoch?"
+    @assert (typeof(first(values(design(uf)))[2]) <: AbstractVector) ⊻
+            (typeof(uf) <: UnfoldLinearModelContinuousTime) "InputError: Either a basis function was declared, but a UnfoldLinearModel was built, or a times-vector (and no basis function) was given, but a UnfoldLinearModelContinuousTime was asked for."
+    if isa(uf, UnfoldLinearModel)
+        @assert length(first(values(design(uf)))[2]) == size(data, length(size(data)) - 1) "Times Vector does not match second last dimension of input data - forgot to epoch?"
     end
-   
+
     X = modelmatrix(uf)
 
     @debug "UnfoldLinearModel(ContinuousTime), datasize: $(size(data))"
-    
-    if isa(uf,UnfoldLinearModel)
+
+    if isa(uf, UnfoldLinearModel)
         d = designmatrix(uf)
 
-        if isa(X,Vector)
-        # mass univariate with multiple events fitted at the same time
-        
-        coefs = []
-        for m = 1:length(X)
-            # the main issue is, that the designmatrices are subsets of the event table - we have 
-            # to do the same for the data, but data and designmatrix dont know much about each other.
-            # Thus we use parentindices() to get the original indices of the @view events[...] from desigmatrix.jl
-            push!(coefs,solver(X[m], @view data[:,:,parentindices(d.events[m])[1]]))
-        end
-        @debug @show [size(c.estimate) for c in coefs]
-        uf.modelfit = LinearModelFit(
-            cat([c.estimate for c in coefs]...,dims=3),
-            [c.info for c in coefs],
-            cat([c.standarderror for c in coefs]...,dims=3)
-        )
-        return # we are done here
-   
-        elseif isa(d.events,SubDataFrame)
+        if isa(X, Vector)
+            # mass univariate with multiple events fitted at the same time
+
+            coefs = []
+            for m = 1:length(X)
+                # the main issue is, that the designmatrices are subsets of the event table - we have 
+                # to do the same for the data, but data and designmatrix dont know much about each other.
+                # Thus we use parentindices() to get the original indices of the @view events[...] from desigmatrix.jl
+                push!(coefs, solver(X[m], @view data[:, :, parentindices(d.events[m])[1]]))
+            end
+            @debug @show [size(c.estimate) for c in coefs]
+            uf.modelfit = LinearModelFit(
+                cat([c.estimate for c in coefs]..., dims = 3),
+                [c.info for c in coefs],
+                cat([c.standarderror for c in coefs]..., dims = 3),
+            )
+            return # we are done here
+
+        elseif isa(d.events, SubDataFrame)
             # in case the user specified an event to subset (and not any) we have to use the view from now on
-            data = @view data[:,:,parentindices(d.events)[1]]
+            data = @view data[:, :, parentindices(d.events)[1]]
         end
     end
 
 
-        # mass univariate, data = ch x times x epochs
-        X, data = zeropad(X, data)
+    # mass univariate, data = ch x times x epochs
+    X, data = zeropad(X, data)
 
-        uf.modelfit = solver(X, data)
-        return
+    uf.modelfit = solver(X, data)
+    return
 
 end
-
-

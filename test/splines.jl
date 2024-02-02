@@ -4,7 +4,7 @@ data, evts = loadtestdata("test_case_3a") #
 f_spl = @formula 0 ~ 1 + conditionA + spl(continuousA, 4) # 1
 f = @formula 0 ~ 1 + conditionA + continuousA # 1
 data_r = reshape(data, (1, :))
-data_e, times = Unfold.epoch(data=data_r, tbl=evts, τ=(-1.0, 1.0), sfreq=10) # cut the data into epochs
+data_e, times = Unfold.epoch(data = data_r, tbl = evts, τ = (-1.0, 1.0), sfreq = 10) # cut the data into epochs
 
 m_mul = coeftable(fit(UnfoldModel, f, evts, data_e, times))
 m_mul_spl = coeftable(fit(UnfoldModel, f_spl, evts, data_e, times))
@@ -20,12 +20,12 @@ s = Unfold.formula(fit(UnfoldModel, f_spl, evts, data_e, times)).rhs.terms[3]
 @testset "outside bounds" begin
     # test safe prediction
     m = fit(UnfoldModel, f_spl, evts, data_e, times)
-    r = predict(m, DataFrame(conditionA=[0, 0], continuousA=[0.9, 1.9]))
+    r = predict(m, DataFrame(conditionA = [0, 0], continuousA = [0.9, 1.9]))
     @test all(ismissing.(r.yhat[r.continuousA.==1.9]))
     @test !any(ismissing.(r.yhat[r.continuousA.==0.9]))
 end
 
-basisfunction = firbasis(τ=(-1, 1), sfreq=10, name="A")
+basisfunction = firbasis(τ = (-1, 1), sfreq = 10, name = "A")
 @testset "timeexpanded" begin
     # test time expanded
     m_tul = coeftable(fit(UnfoldModel, f, evts, data_r, basisfunction))
@@ -35,7 +35,7 @@ end
     # test safe predict
     m = fit(UnfoldModel, f_spl, evts, data_r, basisfunction)
 
-    p = predict(m, DataFrame(conditionA=[0, 0, 0], continuousA=[0.9, 0.9, 1.9]))
+    p = predict(m, DataFrame(conditionA = [0, 0, 0], continuousA = [0.9, 0.9, 1.9]))
     @test all(ismissing.(p[p.continuousA.==1.9, :yhat]))
 
 end
@@ -49,7 +49,7 @@ if 1 == 0
     using AlgebraOfGraphics
     yhat_mul.conditionA = categorical(yhat_mul.conditionA)
     yhat_mul.continuousA = categorical(yhat_mul.continuousA)
-    m = mapping(:times, :yhat, color=:continuousA, linestyle=:conditionA)
+    m = mapping(:times, :yhat, color = :continuousA, linestyle = :conditionA)
     df = yhat_mul
     AlgebraOfGraphics.data(df) * visual(Lines) * m |> draw
 end
@@ -66,7 +66,7 @@ end
     f_evaluated = Unfold.formula(m)
 
     effValues = [-1, -0.99, 0, 0.99, 1]
-    effValues = range(-1.1, 1.1, step=0.1)
+    effValues = range(-1.1, 1.1, step = 0.1)
     effSingle = effects(Dict(:continuousA => effValues), m)
     tmp = subset(effSingle, :time => x -> x .== -1.0)
     @test tmp.yhat[tmp.continuousA.==-1.1] ≈ tmp.yhat[tmp.continuousA.==0.9]

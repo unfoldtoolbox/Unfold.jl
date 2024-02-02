@@ -37,7 +37,11 @@ struct FIRBasis <: BasisFunction
     shiftOnset::Int64
 end
 
-@deprecate FIRBasis(kernel::Function,times,name,shiftOnset) FIRBasis(times,name,shiftOnset)
+@deprecate FIRBasis(kernel::Function, times, name, shiftOnset) FIRBasis(
+    times,
+    name,
+    shiftOnset,
+)
 collabel(basis::FIRBasis) = :time
 colnames(basis::FIRBasis) = basis.times[1:end-1]
 
@@ -98,7 +102,7 @@ julia>  f(103.3)
 """
 function firbasis(τ, sfreq, name::String)
     τ = round_times(τ, sfreq)
-    times = range(τ[1], stop = τ[2]+1 ./ sfreq, step = 1 ./ sfreq) # stop + 1 step, because we support fractional event-timings
+    times = range(τ[1], stop = τ[2] + 1 ./ sfreq, step = 1 ./ sfreq) # stop + 1 step, because we support fractional event-timings
 
 
 
@@ -131,9 +135,13 @@ function firkernel(e, times)
     eboth[isapprox.(eboth, 0, atol = 1e-15)] .= 0
     ksize = length(times) # kernelsize
 
-    kernel =
-        spdiagm(ksize + 1, ksize, 0 => repeat([eboth[1]], ksize), -1 => repeat([eboth[2]], ksize))
-    
+    kernel = spdiagm(
+        ksize + 1,
+        ksize,
+        0 => repeat([eboth[1]], ksize),
+        -1 => repeat([eboth[2]], ksize),
+    )
+
     #    dropzeros!(kernel) # we often get implicit 0, especially if the latencies are rounded
     return (kernel)
 
@@ -185,7 +193,12 @@ function hrfbasis(
     #        p(6) - onset {seconds}                                0
     #        p(7) - length of kernel {seconds}                    32
     kernel = e -> hrfkernel(e, TR, parameters)
-    return HRFBasis(kernel,["f(x)"],range(0, (length(kernel([0, 1])) - 1) * TR, step = TR),name)
+    return HRFBasis(
+        kernel,
+        ["f(x)"],
+        range(0, (length(kernel([0, 1])) - 1) * TR, step = TR),
+        name,
+    )
 end
 
 shiftOnset(basis::HRFBasis) = 0
@@ -203,10 +216,10 @@ collabel(term::Array{<:AbstractTerm}) = collabel(term[1].rhs)  # in case of comb
 
 shiftOnset(basis::BasisFunction) = basis.shiftOnset
 colnames(basis::BasisFunction) = basis.colnames
-kernel(basis::BasisFunction,e) = basis.kernel(e) 
+kernel(basis::BasisFunction, e) = basis.kernel(e)
 @deprecate kernel(basis::BasisFunction) basis.kernel
 
-kernel(basis::FIRBasis,e) = firkernel(e,basis.times[1:end-1])
+kernel(basis::FIRBasis, e) = firkernel(e, basis.times[1:end-1])
 
 times(basis::BasisFunction) = basis.times
 name(basis::BasisFunction) = basis.name
@@ -268,29 +281,29 @@ end
 
 # taken from https://codereview.stackexchange.com/questions/284537/implementing-a-1d-convolution-simd-friendly-in-julia
 # to replace the DSP.conv function
-function conv1D!( vO :: Array{T, 1}, vA :: Array{T, 1}, vB :: Array{T, 1} ) :: Array{T, 1} where {T <: Real}
+function conv1D!(vO::Array{T,1}, vA::Array{T,1}, vB::Array{T,1})::Array{T,1} where {T<:Real}
 
-    lenA = length(vA);
-    lenB = length(vB);
+    lenA = length(vA)
+    lenB = length(vB)
 
-    fill!(vO, zero(T));
-    for idxB in 1:lenB
-        for idxA in 1:lenA
-            @inbounds vO[idxA + idxB - 1] += vA[idxA] * vB[idxB];
+    fill!(vO, zero(T))
+    for idxB = 1:lenB
+        for idxA = 1:lenA
+            @inbounds vO[idxA+idxB-1] += vA[idxA] * vB[idxB]
         end
     end
 
-    return vO;
+    return vO
 
 end
 
-function conv1D( vA :: Array{T, 1}, vB :: Array{T, 1} ) :: Array{T, 1} where {T <: Real}
+function conv1D(vA::Array{T,1}, vB::Array{T,1})::Array{T,1} where {T<:Real}
 
-    lenA = length(vA);
-    lenB = length(vB);
+    lenA = length(vA)
+    lenB = length(vB)
 
-    vO = Array{T, 1}(undef, lenA + lenB - 1);
+    vO = Array{T,1}(undef, lenA + lenB - 1)
 
-    return conv1D!(vO, vA, vB);
+    return conv1D!(vO, vA, vB)
 
 end

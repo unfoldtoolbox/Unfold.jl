@@ -1,6 +1,7 @@
 
 splinebasis(; τ, sfreq, nsplines, name) = Unfold.splinebasis(τ, sfreq, nsplines, name)
-splinebasis(τ, sfreq, nsplines) = Unfold.splinebasis(τ, sfreq, nsplines, "basis_" * string(rand(1:10000)))
+splinebasis(τ, sfreq, nsplines) =
+    Unfold.splinebasis(τ, sfreq, nsplines, "basis_" * string(rand(1:10000)))
 
 
 

@@ -23,7 +23,8 @@
     # cut the data into epochs
     # TODO This ignores subject bounds
     data_e, times = Unfold.epoch(data = data, tbl = evts, τ = (-1.0, 1.9), sfreq = 10)
-    data_missing_e, times =        Unfold.epoch(data = data_missing, tbl = evts, τ = (-1.0, 1.9), sfreq = 10)
+    data_missing_e, times =
+        Unfold.epoch(data = data_missing, tbl = evts, τ = (-1.0, 1.9), sfreq = 10)
     evts_e, data_e = Unfold.dropMissingEpochs(copy(evts), data_e)
     evts_missing_e, data_missing_e = Unfold.dropMissingEpochs(copy(evts), data_missing_e)
 
@@ -44,7 +45,7 @@
         rtol = 0.1,
     )
 
-    
+
     # with missing
     @time m_mum = fit(
         UnfoldModel,
@@ -93,7 +94,7 @@
     )
 
 
-    evts.subjectB = evts.subject;
+    evts.subjectB = evts.subject
     evts1 = evts[evts.condA.==0, :]
     evts2 = evts[evts.condA.==1, :]
 
@@ -111,7 +112,7 @@
     X1_lmm = designmatrix(UnfoldLinearMixedModel, f1_lmm, evts1, b1)
     X2_lmm = designmatrix(UnfoldLinearMixedModel, f2_lmm, evts2, b2)
 
-    r = fit(UnfoldLinearMixedModelContinuousTime, X1_lmm + X2_lmm, data);
+    r = fit(UnfoldLinearMixedModelContinuousTime, X1_lmm + X2_lmm, data)
     df = coeftable(r)
 
     @test isapprox(
@@ -134,51 +135,98 @@
 end
 ## Condense check for multi channel, multi 
 @testset "LMM multi channel, multi basisfunction" begin
-    data,evts = loadtestdata("testCase3", dataPath = (@__DIR__) * "/data")
-    transform!(evts,:subject=>categorical=>:subject);
-    data = vcat(data',data')
+    data, evts = loadtestdata("testCase3", dataPath = (@__DIR__) * "/data")
+    transform!(evts, :subject => categorical => :subject)
+    data = vcat(data', data')
 
-	bA0 = firbasis(τ=(-0.0,0.1),sfreq=10,name="bA0")
-	bA1 = firbasis(τ=(0.1,0.2),sfreq=10,name="bA1")
-	evts.subject2 = evts.subject
-	fA0 = @formula 0~1+condB + zerocorr(1|subject)
-	fA1  =@formula 0~1+condB + zerocorr(1|subject2)
-	m = fit(UnfoldModel,
-		Dict(0=>(fA0,bA0),
-			 1=>(fA1,bA1)),
-		evts,data,eventcolumn="condA")
+    bA0 = firbasis(τ = (-0.0, 0.1), sfreq = 10, name = "bA0")
+    bA1 = firbasis(τ = (0.1, 0.2), sfreq = 10, name = "bA1")
+    evts.subject2 = evts.subject
+    fA0 = @formula 0 ~ 1 + condB + zerocorr(1 | subject)
+    fA1 = @formula 0 ~ 1 + condB + zerocorr(1 | subject2)
+    m = fit(
+        UnfoldModel,
+        Dict(0 => (fA0, bA0), 1 => (fA1, bA1)),
+        evts,
+        data,
+        eventcolumn = "condA",
+    )
 
-	res = coeftable(m)
+    res = coeftable(m)
 
-    @test all(last(.!isnothing.(res.group),8))
-    @test all(last(res.coefname,8).=="(Intercept)")
+    @test all(last(.!isnothing.(res.group), 8))
+    @test all(last(res.coefname, 8) .== "(Intercept)")
 end
 
 
 @testset "LMM bug reorder #115" begin
-        
-    data,evts = UnfoldSim.predef_2x2(;return_epoched=true,n_subjects=10,noiselevel=1)
 
-designList = [Dict(Any=>(@formula(0~1+A+B+zerocorr(1+B+A|subject)+zerocorr(1+B|item)),range(0,1,length=size(data,1)))),
-              Dict(Any=>(@formula(0~1+A+B+zerocorr(1+A+B|subject)+zerocorr(1+B|item)),range(0,1,length=size(data,1)))),
-              Dict(Any=>(@formula(0~1+zerocorr(1+A+B|subject)+zerocorr(1|item)),range(0,1,length=size(data,1))))]
-#des = designList[1]
-#des = designList[2]
-    for des = designList
-        @test_throws AssertionError fit(UnfoldModel,des,evts,data)
+    data, evts =
+        UnfoldSim.predef_2x2(; return_epoched = true, n_subjects = 10, noiselevel = 1)
+
+    designList = [
+        Dict(
+            Any => (
+                @formula(
+                    0 ~
+                        1 + A + B + zerocorr(1 + B + A | subject) + zerocorr(1 + B | item)
+                ),
+                range(0, 1, length = size(data, 1)),
+            ),
+        ),
+        Dict(
+            Any => (
+                @formula(
+                    0 ~
+                        1 + A + B + zerocorr(1 + A + B | subject) + zerocorr(1 + B | item)
+                ),
+                range(0, 1, length = size(data, 1)),
+            ),
+        ),
+        Dict(
+            Any => (
+                @formula(0 ~ 1 + zerocorr(1 + A + B | subject) + zerocorr(1 | item)),
+                range(0, 1, length = size(data, 1)),
+            ),
+        ),
+    ]
+    #des = designList[1]
+    #des = designList[2]
+    for des in designList
+        @test_throws AssertionError fit(UnfoldModel, des, evts, data)
         #
     end
 
     #counter check
 
-    des = Dict(Any=>(@formula(0~1+zerocorr(1|item)+zerocorr(1+A+B|subject)),range(0,1,length=size(data,1))))
-    uf = fit(UnfoldModel,des,evts,data)
-    @test 3 == unique(@subset(coeftable(uf),@byrow(:group == Symbol("subject")),@byrow :time == 0.0).coefname) |> length
+    des = Dict(
+        Any => (
+            @formula(0 ~ 1 + zerocorr(1 | item) + zerocorr(1 + A + B | subject)),
+            range(0, 1, length = size(data, 1)),
+        ),
+    )
+    uf = fit(UnfoldModel, des, evts, data)
+    @test 3 ==
+          unique(
+        @subset(
+            coeftable(uf),
+            @byrow(:group == Symbol("subject")),
+            @byrow :time == 0.0
+        ).coefname,
+    ) |> length
 end
 
 @testset "LMM bug reshape #110" begin
-    data,evts = UnfoldSim.predef_2x2(;return_epoched=true,n_subjects=10,noiselevel=1)
-    des =    Dict(Any=>(@formula(0~1+A+B+zerocorr(1+B+A|item)+zerocorr(1+B|subject)),range(0,1,length=size(data,1))))
-    uf = fit(UnfoldModel,des,evts,data)
-    @test size(coef(uf)) ==(1,100,3)
+    data, evts =
+        UnfoldSim.predef_2x2(; return_epoched = true, n_subjects = 10, noiselevel = 1)
+    des = Dict(
+        Any => (
+            @formula(
+                0 ~ 1 + A + B + zerocorr(1 + B + A | item) + zerocorr(1 + B | subject)
+            ),
+            range(0, 1, length = size(data, 1)),
+        ),
+    )
+    uf = fit(UnfoldModel, des, evts, data)
+    @test size(coef(uf)) == (1, 100, 3)
 end

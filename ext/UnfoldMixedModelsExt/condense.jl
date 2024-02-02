@@ -14,7 +14,7 @@ function Unfold.make_estimate(
         )
 
         ranef_group = [x.group for x in MixedModels.tidyσs(modelfit(m))]
-        
+
         # reshape to pred x time x chan and then invert to chan x time x pred
         ranef_group = permutedims(
             reshape(ranef_group, :, size(coef(m), 2), size(coef(m), 1)),
@@ -35,7 +35,9 @@ function Unfold.make_estimate(
     return Float64.(estimate), stderror, group
 end
 
-function Unfold.stderror(m::Union{UnfoldLinearMixedModel,UnfoldLinearMixedModelContinuousTime})
+function Unfold.stderror(
+    m::Union{UnfoldLinearMixedModel,UnfoldLinearMixedModelContinuousTime},
+)
     return permutedims(
         reshape(vcat([[b.se...] for b in modelfit(m).fits]...), reverse(size(coef(m)))),
         [3, 2, 1],
@@ -45,13 +47,13 @@ end
 
 function Unfold.get_coefnames(uf::UnfoldLinearMixedModelContinuousTime)
     # special case here, because we have to reorder the random effects to the end, else labels get messed up as we concat (coefs,ranefs)
- #   coefnames = Unfold.coefnames(formula(uf))
-#    coefnames(formula(uf)[1].rhs[1])
+    #   coefnames = Unfold.coefnames(formula(uf))
+    #    coefnames(formula(uf)[1].rhs[1])
     formulas = Unfold.formula(uf)
-    if !isa(formulas,AbstractArray) # in case we have only a single basisfunction
+    if !isa(formulas, AbstractArray) # in case we have only a single basisfunction
         formulas = [formulas]
     end
     fe_coefnames = vcat([coefnames(f.rhs[1]) for f in formulas]...)
     re_coefnames = vcat([coefnames(f.rhs[2:end]) for f in formulas]...)
-    return vcat(fe_coefnames,re_coefnames)
+    return vcat(fe_coefnames, re_coefnames)
 end

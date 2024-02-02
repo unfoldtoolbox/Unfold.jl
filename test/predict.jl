@@ -69,13 +69,19 @@ data, evts = loadtestdata("test_case_4a") #
 b1 = firbasis(τ = (0.0, 0.95), sfreq = 20, name = "basisA")
 b2 = firbasis(τ = (0.0, 0.95), sfreq = 20, name = "basisB")
 f = @formula 0 ~ 1 # 1
-m_tul = fit(UnfoldModel, Dict("eventA"=>(f,b1),"eventB"=>(f,b2)), evts, data,eventcolumn="type")
+m_tul = fit(
+    UnfoldModel,
+    Dict("eventA" => (f, b1), "eventB" => (f, b2)),
+    evts,
+    data,
+    eventcolumn = "type",
+)
 
-p = predict(m_tul,DataFrame(:Cond => [1]))
+p = predict(m_tul, DataFrame(:Cond => [1]))
 
-@test size(p,1) == 40
-@test length(unique(p.time)) ==20
-@test unique(p.basisname) == ["basisA","basisB"]
+@test size(p, 1) == 40
+@test length(unique(p.time)) == 20
+@test unique(p.basisname) == ["basisA", "basisB"]
 
 
 

@@ -2,7 +2,7 @@ module UnfoldMixedModelsExt
 
 using Unfold
 
-import Unfold: isMixedModelFormula,make_estimate
+import Unfold: isMixedModelFormula, make_estimate
 using MixedModels
 #import MixedModels.FeMat # extended for sparse femats, type piracy => issue on MixedModels.jl github
 using StaticArrays # for MixedModels extraction of parametrs (inherited from MixedModels.jl, not strictly needed )

@@ -2,22 +2,23 @@ using StatsBase: var
 function solver_default(
     X,
     data::AbstractArray{T,2};
-    stderror=false,
-    multithreading=true,
-    showprogress=true,
+    stderror = false,
+    multithreading = true,
+    showprogress = true,
 ) where {T<:Union{Missing,<:Number}}
     minfo = Array{IterativeSolvers.ConvergenceHistory,1}(undef, size(data, 1))
 
     beta = zeros(size(data, 1), size(X, 2)) # had issues with undef
 
-    p = Progress(size(data, 1); enabled=showprogress)
+    p = Progress(size(data, 1); enabled = showprogress)
     @maybe_threads multithreading for ch = 1:size(data, 1)
         dd = view(data, ch, :)
         ix = @. !ismissing(dd)
         # use the previous channel as a starting point
         ch == 1 || copyto!(view(beta, ch, :), view(beta, ch - 1, :))
 
-        beta[ch, :], h = lsmr!(@view(beta[ch, :]), (X[ix, :]), @view(data[ch, ix]), log=true)
+        beta[ch, :], h =
+            lsmr!(@view(beta[ch, :]), (X[ix, :]), @view(data[ch, ix]), log = true)
 
         minfo[ch] = h
         next!(p)
@@ -36,7 +37,7 @@ end
 function calculate_stderror(Xdc, data::Matrix{T}, beta) where {T<:Union{Missing,<:Number}}
 
     # remove missings
-    ix = any(.!ismissing.(data), dims=1)[1, :]
+    ix = any(.!ismissing.(data), dims = 1)[1, :]
     if length(ix) != size(data, 2)
         @warn(
             "Limitation: Missing data are calculated over all channels for standard error"
@@ -93,13 +94,13 @@ end
 function solver_default(
     X,
     data::AbstractArray{T,3};
-    stderror=false,
-    multithreading=true,
-    showprogress=true,
+    stderror = false,
+    multithreading = true,
+    showprogress = true,
 ) where {T<:Union{Missing,<:Number}}
     #beta = Array{Union{Missing,Number}}(undef, size(data, 1), size(data, 2), size(X, 2))
     beta = zeros(Union{Missing,Number}, size(data, 1), size(data, 2), size(X, 2))
-    p = Progress(size(data, 1); enabled=showprogress)
+    p = Progress(size(data, 1); enabled = showprogress)
     @maybe_threads multithreading for ch = 1:size(data, 1)
         for t = 1:size(data, 2)
             #            @debug("$(ndims(data,)),$t,$ch")
@@ -122,13 +123,13 @@ function solver_default(
     return modelfit
 end
 
-solver_b2b(X, data, cross_val_reps) = solver_b2b(X, data, cross_val_reps=cross_val_reps)
+solver_b2b(X, data, cross_val_reps) = solver_b2b(X, data, cross_val_reps = cross_val_reps)
 function solver_b2b(
     X,
     data::AbstractArray{T,3};
-    cross_val_reps=10,
-    multithreading=true,
-    showprogress=true,
+    cross_val_reps = 10,
+    multithreading = true,
+    showprogress = true,
 ) where {T<:Union{Missing,<:Number}}
 
     X, data = dropMissingEpochs(X, data)
@@ -137,7 +138,7 @@ function solver_b2b(
     E = zeros(size(data, 2), size(X, 2), size(X, 2))
     W = Array{Float64}(undef, size(data, 2), size(X, 2), size(data, 1))
 
-    prog = Progress(size(data, 2) * cross_val_reps, 0.1; enabled=showprogress)
+    prog = Progress(size(data, 2) * cross_val_reps, 0.1; enabled = showprogress)
     @maybe_threads multithreading for m = 1:cross_val_reps
         k_ix = collect(Kfold(size(data, 3), 2))
         X1 = @view X[k_ix[1], :]
@@ -153,7 +154,7 @@ function solver_b2b(
             H = X2 \ (Y2' * G)
 
             E[t, :, :] += Diagonal(H[diagind(H)])
-            ProgressMeter.next!(prog; showvalues=[(:time, t), (:cross_val_rep, m)])
+            ProgressMeter.next!(prog; showvalues = [(:time, t), (:cross_val_rep, m)])
         end
         E[t, :, :] = E[t, :, :] ./ cross_val_reps
         W[t, :, :] = (X * E[t, :, :])' / data[:, t, :]
@@ -161,10 +162,9 @@ function solver_b2b(
     end
 
     # extract diagonal
-    beta = mapslices(diag, E, dims=[2, 3])
+    beta = mapslices(diag, E, dims = [2, 3])
     # reshape to conform to ch x time x pred
     beta = permutedims(beta, [3 1 2])
     modelinfo = Dict("W" => W, "E" => E, "cross_val_reps" => cross_val_reps) # no history implemented (yet?)
     return LinearModelFit(beta, modelinfo)
 end
-

@@ -9,7 +9,7 @@ $(FIELDS)
 julia>  b = TimeExpandedTerm(term,kernel,[:latencyTR,:durationTR])
 ```
 """
-struct TimeExpandedTerm{T<:AbstractTerm} <: AbstractTerm 
+struct TimeExpandedTerm{T<:AbstractTerm} <: AbstractTerm
     "Term that the basis function is applied to. This is regularly called in other functions to get e.g. term-coefnames and timeexpand those"
     term::T
     "Kernel that determines what should happen to the designmatrix of the term"
@@ -39,8 +39,10 @@ StatsModels.width(term::TimeExpandedTerm) = width(term.basisfunction)
 StatsModels.terms(t::TimeExpandedTerm) = terms(t.term)
 
 function Base.show(io::IO, p::TimeExpandedTerm)
-    print(io, "$(p.basisfunction.name): timeexpand($(p.term)) for times $(times(p.basisfunction))")
-    
+    print(
+        io,
+        "$(p.basisfunction.name): timeexpand($(p.term)) for times $(times(p.basisfunction))",
+    )
+
     #println(io, "$(coefnames(p))")
 end
-

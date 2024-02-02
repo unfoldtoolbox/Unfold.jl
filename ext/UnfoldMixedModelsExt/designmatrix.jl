@@ -5,19 +5,23 @@ end
 
 check_groupsorting(r::MatrixTerm) = check_groupsorting(r.terms)
 function check_groupsorting(r::Tuple)
-@debug "checking group sorting"
-ix = findall(isa.(r,MixedModels.AbstractReTerm))
+    @debug "checking group sorting"
+    ix = findall(isa.(r, MixedModels.AbstractReTerm))
 
-rhs(x::RandomEffectsTerm) = x.rhs
-rhs(x::MixedModels.ZeroCorr) = rhs(x.term)
-groupvars = [map(x->rhs(x).sym,r[ix])...]
+    rhs(x::RandomEffectsTerm) = x.rhs
+    rhs(x::MixedModels.ZeroCorr) = rhs(x.term)
+    groupvars = [map(x -> rhs(x).sym, r[ix])...]
 
 
-@assert groupvars == sort(groupvars) "random effects have to be alphabetically ordered. e.g. (1+a|X) + (1+a|A) is not allowed. Please reorder"
+    @assert groupvars == sort(groupvars) "random effects have to be alphabetically ordered. e.g. (1+a|X) + (1+a|A) is not allowed. Please reorder"
 end
-function Unfold.unfold_apply_schema(type::Type{<:Union{<:UnfoldLinearMixedModel,<:UnfoldLinearMixedModelContinuousTime}},f,schema)
+function Unfold.unfold_apply_schema(
+    type::Type{<:Union{<:UnfoldLinearMixedModel,<:UnfoldLinearMixedModelContinuousTime}},
+    f,
+    schema,
+)
     @debug "LMM apply schema"
-   return  apply_schema(f,schema, MixedModels.LinearMixedModel)
+    return apply_schema(f, schema, MixedModels.LinearMixedModel)
 end
 
 
@@ -26,38 +30,38 @@ function StatsModels.coefnames(term::MixedModels.ZeroCorr)
     coefnames(term.term)
 end
 
-function lmm_combineMats!(Xcomb,X1,X2)
-# we have random effects                
-        # combine REMats in single-eventtpe formulas ala y ~ (1|x) + (a|x)
-        Xs1 = MixedModels._amalgamate([X1.Xs[2:end]...], Float64)
-        Xs2 = MixedModels._amalgamate([X2.Xs[2:end]...], Float64)
+function lmm_combineMats!(Xcomb, X1, X2)
+    # we have random effects                
+    # combine REMats in single-eventtpe formulas ala y ~ (1|x) + (a|x)
+    Xs1 = MixedModels._amalgamate([X1.Xs[2:end]...], Float64)
+    Xs2 = MixedModels._amalgamate([X2.Xs[2:end]...], Float64)
 
-        Xcomb = (Xcomb, Xs1..., Xs2...)
+    Xcomb = (Xcomb, Xs1..., Xs2...)
 
-        # Next we make the ranefs all equal size
-        equalizeReMatLengths!(Xcomb[2:end])
+    # Next we make the ranefs all equal size
+    equalizeReMatLengths!(Xcomb[2:end])
 
-        # check if ranefs can be amalgamated. If this fails, then MixedModels tried to amalgamate over different eventtypes and we should throw the warning
-        # if it success, we have to check if the size before and after is identical. If it is not, it tried to amalgamize over different eventtypes which were of the same length
+    # check if ranefs can be amalgamated. If this fails, then MixedModels tried to amalgamate over different eventtypes and we should throw the warning
+    # if it success, we have to check if the size before and after is identical. If it is not, it tried to amalgamize over different eventtypes which were of the same length
 
-        try
-            reterms = MixedModels._amalgamate([Xcomb[2:end]...], Float64)
-            if length(reterms) != length(Xcomb[2:end])
-                throw("IncompatibleRandomGroupings")
-            end
-        catch e
-            @error "Error, you seem to have two different eventtypes with the same random-effect grouping variable. \n
-            This is not allowed, you have to rename one. Example:\n
-            eventA: y~1+(1|item) \n
-            eventB: y~1+(1|item)  \n
-            This leads to this error. Rename the later one\n
-            eventB: y~1+(1|itemB) "
+    try
+        reterms = MixedModels._amalgamate([Xcomb[2:end]...], Float64)
+        if length(reterms) != length(Xcomb[2:end])
             throw("IncompatibleRandomGroupings")
         end
+    catch e
+        @error "Error, you seem to have two different eventtypes with the same random-effect grouping variable. \n
+        This is not allowed, you have to rename one. Example:\n
+        eventA: y~1+(1|item) \n
+        eventB: y~1+(1|item)  \n
+        This leads to this error. Rename the later one\n
+        eventB: y~1+(1|itemB) "
+        throw("IncompatibleRandomGroupings")
+    end
 
-        return Xcomb
+    return Xcomb
 end
-    
+
 
 function changeReMatSize!(remat::MixedModels.AbstractReMat, m::Integer)
 
@@ -123,8 +127,10 @@ $(SIGNATURES)
 This function timeexpands the random effects and generates a ReMat object
 """
 function StatsModels.modelcols(
-    term::Unfold.TimeExpandedTerm{<:Union{<:RandomEffectsTerm,<:MixedModels.AbstractReTerm}},
-    tbl
+    term::Unfold.TimeExpandedTerm{
+        <:Union{<:RandomEffectsTerm,<:MixedModels.AbstractReTerm},
+    },
+    tbl,
 )
     # exchange this to get ZeroCorr to work
 
@@ -132,10 +138,10 @@ function StatsModels.modelcols(
     tbl = DataFrame(tbl)
     # get the non-timeexpanded reMat
     reMat = modelcols(term.term, tbl)
-    
+
     # Timeexpand the designmatrix
     z = transpose(Unfold.time_expand(transpose(reMat.z), term, tbl))
-    
+
     z = disallowmissing(z) # can't have missing in here
 
 
@@ -245,6 +251,6 @@ function changeMatSize!(m, fe::AbstractSparseMatrix, remats)
 end
 function changeMatSize!(m, fe::AbstractMatrix, remats)
     changeReMatSize!.(remats, Ref(m))
-    fe = fe[1:m,:]
+    fe = fe[1:m, :]
     return (fe, remats...)
 end

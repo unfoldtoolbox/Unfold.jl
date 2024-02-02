@@ -82,4 +82,4 @@ function Base.show(io::IO, obj::UnfoldModel)
 end
 
 
-abstract type AbstractSplineTerm <:AbstractTerm end
+abstract type AbstractSplineTerm <: AbstractTerm end

@@ -21,7 +21,8 @@ function StatsModels.fit!(
     #@assert length(first(values(design(uf)))[2])
     if uf isa UnfoldLinearMixedModel
         if ~isempty(Unfold.design(uf))
-        @assert length(Unfold.times(Unfold.design(uf))) == size(data,length(size(data))-1) "Times Vector does not match second last dimension of input data - forgot to epoch, or misspecified 'time' vector?"
+            @assert length(Unfold.times(Unfold.design(uf))) ==
+                    size(data, length(size(data)) - 1) "Times Vector does not match second last dimension of input data - forgot to epoch, or misspecified 'time' vector?"
         end
     end
     # function content partially taken from MixedModels.jl bootstrap.jl
@@ -40,13 +41,13 @@ function StatsModels.fit!(
     end
     nchan = size(data, 1)
 
-    Xs = (Unfold.equalizeLengths(Xs[1]),Xs[2:end]...)
-    _,data = Unfold.zeropad(Xs[1],data)
+    Xs = (Unfold.equalizeLengths(Xs[1]), Xs[2:end]...)
+    _, data = Unfold.zeropad(Xs[1], data)
     # get a un-fitted mixed model object
-    
+
     Xs = disallowmissing.(Xs)
     #Xs = (Matrix(Xs[1]),Xs[2:end]...)
-    
+
     mm = LinearMixedModel_wrapper(Unfold.formula(uf), firstData, Xs)
     # prepare some variables to be used
     βsc, θsc = similar(MixedModels.coef(mm)), similar(mm.θ) # pre allocate
@@ -134,7 +135,13 @@ function reshape_lmm(uf::UnfoldLinearMixedModelContinuousTime, est)
 end
 
 
-LinearMixedModel_wrapper(form,data::Array{<:Union{TData},1},Xs;wts = []) where {TData<:Union{Missing,Number}}= @error("currently no support for missing values in MixedModels.jl")
+LinearMixedModel_wrapper(
+    form,
+    data::Array{<:Union{TData},1},
+    Xs;
+    wts = [],
+) where {TData<:Union{Missing,Number}} =
+    @error("currently no support for missing values in MixedModels.jl")
 
 """
 $(SIGNATURES)
@@ -149,21 +156,21 @@ function LinearMixedModel_wrapper(
     wts = [],
 ) where {TData<:Number}
     #    function LinearMixedModel_wrapper(form,data::Array{<:Union{Missing,TData},1},Xs;wts = []) where {TData<:Number}
-    Xs = (Unfold.equalizeLengths(Xs[1]),Xs[2:end]...)
+    Xs = (Unfold.equalizeLengths(Xs[1]), Xs[2:end]...)
     # XXX Push this to utilities zeropad
     # Make sure X & y are the same size
     m = size(Xs[1])[1]
 
 
     if m != size(data)[1]
-        fe,data = Unfold.zeropad(Xs[1],data)
-        
+        fe, data = Unfold.zeropad(Xs[1], data)
+
         Xs = changeMatSize!(size(data)[1], fe, Xs[2:end])
     end
 
     #y = (reshape(float(data), (:, 1)))
     y = data
-    
+
     MixedModels.LinearMixedModel(y, Xs, form, wts)
 end
 
