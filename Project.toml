@@ -48,7 +48,7 @@ UnfoldRobustModelsExt = "RobustModels"
 UnfoldKrylovExt = ["Krylov","CUDA"]
 
 [compat]
-BSplineKit = "0.16"
+BSplineKit = "0.16,0.17"
 CUDA = "4,5"
 DSP = "0.7"
 DataFrames = "1"
