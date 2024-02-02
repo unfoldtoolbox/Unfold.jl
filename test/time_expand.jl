@@ -8,7 +8,7 @@ term = Unfold.TimeExpandedTerm(FormulaTerm(Term, Term), basisfunction, :latency)
 Xdc = Unfold.time_expand(X, term, tbl)
 
 kernel = Unfold.kernel
-ncolsBasis = size(kernel(term.basisfunction)(0.), 2)
+ncolsBasis = size(kernel(term.basisfunction)(0.0), 2)
 X = reshape(X, size(X, 1), :)
 
 ncolsX = size(X)[2]
@@ -22,8 +22,9 @@ else
     bases = kernel(term.basisfunction).(eachrow(tbl[!, term.eventfields]))
 end
 
-rows = Unfold.timeexpand_rows(onsets,bases,Unfold.shiftOnset(term.basisfunction),ncolsX)
-cols = Unfold.timeexpand_cols(term,bases,ncolsBasis,ncolsX)
-vals = Unfold.timeexpand_vals(bases,X,size(cols),ncolsX)
+rows = Unfold.timeexpand_rows(onsets, bases, Unfold.shiftOnset(term.basisfunction), ncolsX)
+cols = Unfold.timeexpand_cols(term, bases, ncolsBasis, ncolsX)
+vals = Unfold.timeexpand_vals(bases, X, size(cols), ncolsX)
 
-@test Unfold.timeexpand_cols_allsamecols(bases,ncolsBasis,ncolsX) == Unfold.timeexpand_cols_generic(bases,ncolsBasis,ncolsX)
+@test Unfold.timeexpand_cols_allsamecols(bases, ncolsBasis, ncolsX) ==
+      Unfold.timeexpand_cols_generic(bases, ncolsBasis, ncolsX)

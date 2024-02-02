@@ -24,7 +24,7 @@ Note: that due to the boundary condition (`natural`) spline, we repeat the bound
 
 """
 function genSpl_breakpoints(p::AbstractSplineTerm, x)
-    p = range(0.0, length=p.df - 2, stop=1.0)
+    p = range(0.0, length = p.df - 2, stop = 1.0)
     breakpoints = quantile(x, p)
     return breakpoints
 end
@@ -34,7 +34,7 @@ In the circular case, we do not use quantiles, (circular quantiles are difficult
 """
 function genSpl_breakpoints(p::PeriodicBSplineTerm, x)
     # periodic case - 
-    return range(p.low, p.high, length=p.df + 2)
+    return range(p.low, p.high, length = p.df + 2)
 end
 
 """
@@ -63,7 +63,9 @@ function spl_fillMat!(bs::BSplineBasis, large::Matrix, x::AbstractVector)
     ix = x .< bnds[1] .|| x .> bnds[2]
 
     if sum(ix) != 0
-        @warn("spline prediction outside of possible range  putting those values to missing.\n `findfirst(Out-Of-Bound-value)` is x=$(x[findfirst(ix)]), with bounds: $bnds")
+        @warn(
+            "spline prediction outside of possible range  putting those values to missing.\n `findfirst(Out-Of-Bound-value)` is x=$(x[findfirst(ix)]), with bounds: $bnds"
+        )
         large[ix, :] .= missing
     end
 
@@ -98,17 +100,18 @@ Unfold.spl(x, df) = 0 # fallback
 
 # make a nice call if the function is called via REPL
 Unfold.spl(t::Symbol, d::Int) = BSplineTerm(term(t), d, 4, [])
-Unfold.circspl(t::Symbol, d::Int, low, high) = PeriodicBSplineTerm(term(t), term(d), 4, low, high)
+Unfold.circspl(t::Symbol, d::Int, low, high) =
+    PeriodicBSplineTerm(term(t), term(d), 4, low, high)
 
 """
 Construct a BSplineTerm, if breakpoints/basis are not defined yet, put to `nothing`
 """
-function BSplineTerm(term, df, order=4)
+function BSplineTerm(term, df, order = 4)
     @assert df > 3 "Minimal degrees of freedom has to be 4"
     BSplineTerm(term, df, order, [])
 end
 
-function BSplineTerm(term, df::ConstantTerm, order=4)
+function BSplineTerm(term, df::ConstantTerm, order = 4)
     BSplineTerm(term, df.n, order, [])
 end
 
@@ -116,7 +119,14 @@ end
 function PeriodicBSplineTerm(term, df, low, high)
     PeriodicBSplineTerm(term, df, 4, low, high)
 end
-function PeriodicBSplineTerm(term::AbstractTerm, df::ConstantTerm, order, low::ConstantTerm, high::ConstantTerm, breakvec)
+function PeriodicBSplineTerm(
+    term::AbstractTerm,
+    df::ConstantTerm,
+    order,
+    low::ConstantTerm,
+    high::ConstantTerm,
+    breakvec,
+)
     PeriodicBSplineTerm(term, df.n, order, low.n, high.n, breakvec)
 end
 function PeriodicBSplineTerm(term, df, order, low, high)
@@ -124,7 +134,8 @@ function PeriodicBSplineTerm(term, df, order, low, high)
 end
 
 Base.show(io::IO, p::BSplineTerm) = print(io, "spl($(p.term), $(p.df))")
-Base.show(io::IO, p::PeriodicBSplineTerm) = print(io, "circspl($(p.term), $(p.df),$(p.low):$(p.high))")
+Base.show(io::IO, p::PeriodicBSplineTerm) =
+    print(io, "circspl($(p.term), $(p.df),$(p.low):$(p.high))")
 
 function StatsModels.apply_schema(
     t::FunctionTerm{typeof(Unfold.spl)},
@@ -175,7 +186,8 @@ function StatsModels.apply_schema(
     return construct_spline(t, term)
 end
 construct_spline(t::BSplineTerm, term) = BSplineTerm(term, t.df, t.order)
-construct_spline(t::PeriodicBSplineTerm, term) = PeriodicBSplineTerm(term, t.df, t.order, t.low, t.high)
+construct_spline(t::PeriodicBSplineTerm, term) =
+    PeriodicBSplineTerm(term, t.df, t.order, t.low, t.high)
 
 function StatsModels.modelcols(p::AbstractSplineTerm, d::NamedTuple)
 

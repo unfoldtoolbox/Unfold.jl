@@ -8,7 +8,7 @@ using Random
 using CategoricalArrays
 using StatsBase
 
-using MixedModels, RobustModels,BSplineKit # extensionTriggers
+using MixedModels, RobustModels, BSplineKit # extensionTriggers
 using SparseArrays
 using UnfoldSim
 

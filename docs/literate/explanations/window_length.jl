@@ -23,65 +23,88 @@ set_theme!(theme_ggthemr(:fresh))
 # # Init functions
 
 # First we need a function that simulates some continous data; conviently we can use UnfoldSim for this 
-function gen_data(rng,noiselevel,sfreq)
-    noise = PinkNoise(;noiselevel=noiselevel);
-    
-    dat,evts = UnfoldSim.predef_eeg(rng;
+function gen_data(rng, noiselevel, sfreq)
+    noise = PinkNoise(; noiselevel = noiselevel)
+
+    dat, evts = UnfoldSim.predef_eeg(
+        rng;
         sfreq = sfreq,
-        p1 = (p100(;sfreq=sfreq), @formula(0~1+condition),[5,0],Dict()),
-        n1 = (n170(;sfreq=sfreq), @formula(0~1+condition),[5,0],Dict()),
-        p3 = (p300(;sfreq=sfreq), @formula(0~1+continuous),[5,0],Dict()),
-        n_repeats=20,noise=noise)
-    return dat,evts
+        p1 = (p100(; sfreq = sfreq), @formula(0 ~ 1 + condition), [5, 0], Dict()),
+        n1 = (n170(; sfreq = sfreq), @formula(0 ~ 1 + condition), [5, 0], Dict()),
+        p3 = (p300(; sfreq = sfreq), @formula(0 ~ 1 + continuous), [5, 0], Dict()),
+        n_repeats = 20,
+        noise = noise,
+    )
+    return dat, evts
 end;
 
 # Next a convience function to calculate the estimates
-function calc_time_models(evts,dat,tWinList,sfreq)
-	mList = []
-	for twindow = tWinList  
-		m = fit(UnfoldModel,Dict(Any=>(@formula(0~1),firbasis(twindow,sfreq,string(twindow)))),evts,dat);
-		res = coeftable(m)
-		push!(mList,res)
-	end
-	return vcat(mList...)
+function calc_time_models(evts, dat, tWinList, sfreq)
+    mList = []
+    for twindow in tWinList
+        m = fit(
+            UnfoldModel,
+            Dict(Any => (@formula(0 ~ 1), firbasis(twindow, sfreq, string(twindow)))),
+            evts,
+            dat,
+        )
+        res = coeftable(m)
+        push!(mList, res)
+    end
+    return vcat(mList...)
 end;
 
 # This is a convience function for plotting further down
 function basisToWin(basisname)
-	return parse.(Float64,[s[2] for s in split.(replace.(basisname,"("=>"",")"=>""),',')])
+    return parse.(
+        Float64,
+        [s[2] for s in split.(replace.(basisname, "(" => "", ")" => ""), ',')],
+    )
 end;
 
 # # Init variables
-tWinList = [(-0.1,x) for x in [3,2.5,2,1.5,1,0.5]]
+tWinList = [(-0.1, x) for x in [3, 2.5, 2, 1.5, 1, 0.5]]
 noiselevel = 8.5
 sfreq = 250;
 
 # # Generate data and calculate estimates
 
-dat,evts = gen_data(MersenneTwister(2),noiselevel,sfreq);
+dat, evts = gen_data(MersenneTwister(2), noiselevel, sfreq);
 
-res = calc_time_models(evts,dat,tWinList,sfreq);
+res = calc_time_models(evts, dat, tWinList, sfreq);
 
 # We also append some additional information to the results dataframe
 res.tWin .= basisToWin(res.basisname);
 
 # For comparison lets also generate the ground truth of our data; this is a bit cumbersome and you don't have to care (too much) about it
-dat_gt,evts_gt = UnfoldSim.predef_eeg(;
-		p1 = (p100(;sfreq=sfreq), @formula(0~1),[5],Dict()),
-		sfreq = sfreq,
-		n1 = (n170(;sfreq=sfreq), @formula(0~1),[5],Dict()),
-		p3 = (p300(;sfreq=sfreq), @formula(0~1),[5],Dict()),
-		n_repeats=1,noiselevel=0, return_epoched=true);
-time_gt = range(0,length = length(dat_gt[:,1]),step=1/sfreq)
+dat_gt, evts_gt = UnfoldSim.predef_eeg(;
+    p1 = (p100(; sfreq = sfreq), @formula(0 ~ 1), [5], Dict()),
+    sfreq = sfreq,
+    n1 = (n170(; sfreq = sfreq), @formula(0 ~ 1), [5], Dict()),
+    p3 = (p300(; sfreq = sfreq), @formula(0 ~ 1), [5], Dict()),
+    n_repeats = 1,
+    noiselevel = 0,
+    return_epoched = true,
+);
+time_gt = range(0, length = length(dat_gt[:, 1]), step = 1 / sfreq)
 df_gt = DataFrame(
-    basisname = reduce(vcat,fill.(unique(res.basisname), length(dat_gt[:,1]))),
-    channel = repeat([1], length(dat_gt[:,1])*length(unique(res.basisname))),
-    coefname = reduce(vcat,fill("GroundTruth", length(dat_gt[:,1])*length(unique(res.basisname)))),
-    estimate = repeat(dat_gt[:,1], length(unique(res.basisname))),
-    group = reduce(vcat,fill(nothing, length(dat_gt[:,1])*length(unique(res.basisname)))),
-    stderror = reduce(vcat,fill(nothing, length(dat_gt[:,1])*length(unique(res.basisname)))),
+    basisname = reduce(vcat, fill.(unique(res.basisname), length(dat_gt[:, 1]))),
+    channel = repeat([1], length(dat_gt[:, 1]) * length(unique(res.basisname))),
+    coefname = reduce(
+        vcat,
+        fill("GroundTruth", length(dat_gt[:, 1]) * length(unique(res.basisname))),
+    ),
+    estimate = repeat(dat_gt[:, 1], length(unique(res.basisname))),
+    group = reduce(
+        vcat,
+        fill(nothing, length(dat_gt[:, 1]) * length(unique(res.basisname))),
+    ),
+    stderror = reduce(
+        vcat,
+        fill(nothing, length(dat_gt[:, 1]) * length(unique(res.basisname))),
+    ),
     time = repeat(time_gt, length(unique(res.basisname))),
-        );
+);
 
 df_gt.tWin .= basisToWin(df_gt.basisname);
 
@@ -93,32 +116,46 @@ res_gt = vcat(res, df_gt);
 
 # Plot figure
 f = Figure();
-	
+
 # Choose which data to plot
-h_t = data(res) * mapping(:time,:estimate,color=:tWin,group=(:tWin,:coefname)=>(x,y)->string(x)*y);
+h_t =
+    data(res) * mapping(
+        :time,
+        :estimate,
+        color = :tWin,
+        group = (:tWin, :coefname) => (x, y) -> string(x) * y,
+    );
 
 # We use the following to plot some length indicator lines
 untWin = unique(res_gt.tWin)
-segDF = 	DataFrame(
-    :x=>hcat(repeat([-0.1],length(untWin)),untWin)'[:],
-    :y=>repeat(reverse(1:length(untWin)),inner=2))
-segDF.tWin .= 0.
+segDF = DataFrame(
+    :x => hcat(repeat([-0.1], length(untWin)), untWin)'[:],
+    :y => repeat(reverse(1:length(untWin)), inner = 2),
+)
+segDF.tWin .= 0.0
 segDF.tWin[1:2:end] .= segDF.x[2:2:end]
 segDF.tWin[2:2:end] .= segDF.x[2:2:end]
 segDF.y = segDF.y .* 0.2 .+ 6;
 
 # Layer for indicator lines
-h_l = data(@subset(segDF,:tWin .!=3.0))* mapping(:x,:y,color=:tWin,group=:tWin=>x->string.(x));
+h_l =
+    data(@subset(segDF, :tWin .!= 3.0)) *
+    mapping(:x, :y, color = :tWin, group = :tWin => x -> string.(x));
 
 # Ground truth Layer
-h_gt = data(df_gt) * mapping(:time,:estimate,group=(:tWin,:coefname)=>(x,y)->string(x)*y)*visual(Lines,linewidth=5,color=Colors.Gray(0.6));
+h_gt =
+    data(df_gt) *
+    mapping(:time, :estimate, group = (:tWin, :coefname) => (x, y) -> string(x) * y) *
+    visual(Lines, linewidth = 5, color = Colors.Gray(0.6));
 
 # Add all visuals together and draw
-h1 = h_gt + visual(Lines,colormap=get(ColorSchemes.Blues,0.3:0.01:1.2)) * (h_l + h_t) |> x->draw!(f[1,1],x,axis=(;xlabel="time [s]",ylabel="estimate [a.u.]"));
+h1 =
+    h_gt + visual(Lines, colormap = get(ColorSchemes.Blues, 0.3:0.01:1.2)) * (h_l + h_t) |>
+    x -> draw!(f[1, 1], x, axis = (; xlabel = "time [s]", ylabel = "estimate [a.u.]"));
 
 # Add zero grid lines
-h1 = hlines!(current_axis(),[0],color=Colors.Gray(0.8));
-h2 = vlines!(current_axis(),[0],color=Colors.Gray(0.8));
+h1 = hlines!(current_axis(), [0], color = Colors.Gray(0.8));
+h2 = vlines!(current_axis(), [0], color = Colors.Gray(0.8));
 translate!(h1, 0, 0, -1);
 translate!(h2, 0, 0, -1);
 

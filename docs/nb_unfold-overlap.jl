@@ -15,16 +15,16 @@ end
 
 # ╔═╡ 65edde2e-d03e-11eb-300b-897bdc66d875
 begin
-	using Unfold
-	using PlutoUI
-	using StatsPlots
-	using DataFrames
-	using StatsModels
+    using Unfold
+    using PlutoUI
+    using StatsPlots
+    using DataFrames
+    using StatsModels
 end
 
 # ╔═╡ 0a821c04-1aff-4fca-aab8-07a4d450838c
 begin
-	using Random
+    using Random
 end
 
 # ╔═╡ bec07615-8ca3-4251-9e44-bf5044828274
@@ -42,10 +42,10 @@ Setup might take a while because the libraries are very large. It might be bette
 md"""### Loading Data & Setting up Unfold"""
 
 # ╔═╡ 76afd758-ac50-4f3c-a484-7f268ab059ef
-data,evts = loadtestdata("test_case_3b");
+data, evts = loadtestdata("test_case_3b");
 
 # ╔═╡ c7fb216e-d177-4623-a135-db4cd856d4ad
-f = @formula 0~1+conditionA+continuousA
+f = @formula 0 ~ 1 + conditionA + continuousA
 
 # ╔═╡ a55058c9-3b56-447b-8f1a-f7319a29f478
 md"""### Fitting the models"""
@@ -54,24 +54,24 @@ md"""### Fitting the models"""
 md"""### Plotting the results"""
 
 # ╔═╡ 9a4c715a-7a51-411d-a354-f79ec2369cb7
-let	
-	md"""change window size τ = (-0.3, $(@bind τ2 Slider(0:0.1:5,default=2, show_value=true))) 
-	"""
+let
+    md"""change window size τ = (-0.3, $(@bind τ2 Slider(0:0.1:5,default=2, show_value=true))) 
+    """
 end
 
 # ╔═╡ ba2f0c48-f5f8-40eb-a45b-441b8134ffb1
-τ = (-0.3,τ2)
+τ = (-0.3, τ2)
 
 # ╔═╡ f99efde3-bd34-46e2-ad1c-1a97ad866b79
-fir = firbasis(τ=τ,sfreq=20,name="basisA");
+fir = firbasis(τ = τ, sfreq = 20, name = "basisA");
 
 # ╔═╡ dcbdef13-675e-47f7-b484-d340f0e55934
-f_dict = Dict("eventA"=>(f,fir)) # combine eventname, formula & basis
+f_dict = Dict("eventA" => (f, fir)) # combine eventname, formula & basis
 
 # ╔═╡ ed61f099-343c-47d4-9af4-c4486c93fd4a
-let	
-	md"""change noise: σ = $(@bind σ Slider(0:0.1:5,default=0, show_value=true))
-	"""
+let
+    md"""change noise: σ = $(@bind σ Slider(0:0.1:5,default=0, show_value=true))
+    """
 end
 
 # ╔═╡ 09705728-c6e5-41a5-9859-2c7e28828d5b
@@ -80,28 +80,44 @@ data_noise = data .+ σ .* randn(size(data));
 
 # ╔═╡ b31a80a5-cca2-4c69-82f5-2b477f5b62be
 begin
-	plot(data_noise[1:600],title="Simulated Data with overlap")
-	vline!(evts.latency[1:20],legend=false)
+    plot(data_noise[1:600], title = "Simulated Data with overlap")
+    vline!(evts.latency[1:20], legend = false)
 end
 
 # ╔═╡ 3f4dd059-e275-483d-af42-a09a2795fca4
-data_e,times = Unfold.epoch(data=data_noise,tbl=evts,τ=τ,sfreq=10);
+data_e, times = Unfold.epoch(data = data_noise, tbl = evts, τ = τ, sfreq = 10);
 
 # ╔═╡ 9aa42667-2629-48e1-b7fe-979dabc28f96
 # non-overlapping (mass univariate)
-m_e,res_e = fit(UnfoldLinearModel,f,evts,data_e,times);
+m_e, res_e = fit(UnfoldLinearModel, f, evts, data_e, times);
 
 # ╔═╡ bce42119-33d7-4e10-ac5e-b37028381b09
 # overlap-corrected
-m,res = fit(UnfoldLinearModel,f_dict,evts,data_noise,eventcolumn="type");
+m, res = fit(UnfoldLinearModel, f_dict, evts, data_noise, eventcolumn = "type");
 
 # ╔═╡ de267143-c029-4103-9fd7-ada153588ab6
 begin
-	
-	
-p1 = @df res_e plot(:colname_basis,:estimate,group=:coefname,title="Without ...",ylims=(-3,5),legend=false,xlims=(-0.3,3))
-	p2 = @df res plot(:colname_basis,:estimate,group=:coefname,title="... with overlap correction",ylims=(-3,5),xlims=(-0.3,3),legend=:bottomright)
-	plot(p1,p2,layout=(1,2))
+
+
+    p1 = @df res_e plot(
+        :colname_basis,
+        :estimate,
+        group = :coefname,
+        title = "Without ...",
+        ylims = (-3, 5),
+        legend = false,
+        xlims = (-0.3, 3),
+    )
+    p2 = @df res plot(
+        :colname_basis,
+        :estimate,
+        group = :coefname,
+        title = "... with overlap correction",
+        ylims = (-3, 5),
+        xlims = (-0.3, 3),
+        legend = :bottomright,
+    )
+    plot(p1, p2, layout = (1, 2))
 end
 
 # ╔═╡ Cell order:

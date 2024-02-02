@@ -14,14 +14,14 @@ using UnfoldMakie
 
 # # Setup things
 # Let's generate some data and fit a model of a 2-level categorical and a continuous predictor with interaction.
-data,evts = UnfoldSim.predef_eeg(;noiselevel=8)
+data, evts = UnfoldSim.predef_eeg(; noiselevel = 8)
 
 basisfunction = firbasis(τ = (-0.1, 0.5), sfreq = 100, name = "basisA")
 
 
-f = @formula 0 ~ 1+condition+continuous # 1
+f = @formula 0 ~ 1 + condition + continuous # 1
 
-m = fit(UnfoldModel, Dict(Any=>(f,basisfunction)), evts, data,eventcolumn="type")
+m = fit(UnfoldModel, Dict(Any => (f, basisfunction)), evts, data, eventcolumn = "type")
 
 # Plot the results
 plot_erp(coeftable(m))
@@ -30,23 +30,28 @@ plot_erp(coeftable(m))
 # ### Effects
 # A convenience function is `effects`. It allows to specify effects on specific levels, while setting non-specified ones to a typical value (usually the mean)
 
-eff = effects(Dict(:condition => ["car","face"]),m)
-plot_erp(eff;mapping=(;color=:condition,))
+eff = effects(Dict(:condition => ["car", "face"]), m)
+plot_erp(eff; mapping = (; color = :condition,))
 
 # We can also generate continuous predictions
-eff = effects(Dict(:continuous => -5:0.5:5),m)
-plot_erp(eff;mapping=(;color=:continuous,group=:continuous=>nonnumeric),categorical_color=false,categorical_group=false)
+eff = effects(Dict(:continuous => -5:0.5:5), m)
+plot_erp(
+    eff;
+    mapping = (; color = :continuous, group = :continuous => nonnumeric),
+    categorical_color = false,
+    categorical_group = false,
+)
 
 # or split it up by condition
-eff = effects(Dict(:condition=>["car","face"],:continuous => -5:2:5),m)
-plot_erp(eff;mapping=(;color=:condition,col=:continuous=>nonnumeric))
+eff = effects(Dict(:condition => ["car", "face"], :continuous => -5:2:5), m)
+plot_erp(eff; mapping = (; color = :condition, col = :continuous => nonnumeric))
 
 # ## What is typical anyway?
 # The user can specify the typical function applied to the covariates/factors that are marginalized over. This offers even greater flexibility.
 # Note that this is rarely necessary, in most applications the mean will be assumed.
-eff_max = effects(Dict(:condition=>["car","face"]),m;typical=maximum) # typical continuous value fixed to 1
+eff_max = effects(Dict(:condition => ["car", "face"]), m; typical = maximum) # typical continuous value fixed to 1
 eff_max.typical .= :maximum
-eff = effects(Dict(:condition=>["car","face"]),m)
+eff = effects(Dict(:condition => ["car", "face"]), m)
 eff.typical .= :mean # mean is the default
 
-plot_erp(vcat(eff,eff_max);mapping=(;color=:condition,col=:typical))
+plot_erp(vcat(eff, eff_max); mapping = (; color = :condition, col = :typical))

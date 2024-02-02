@@ -124,7 +124,7 @@ end
 
 """
 Abstract non-linear spline term.
-
 Implemented in `UnfoldBSplineKitExt`
 """
+
 abstract type AbstractSplineTerm <: AbstractTerm end

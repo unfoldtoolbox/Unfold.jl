@@ -28,7 +28,7 @@ end
     include("splines.jl")
 end
 
-@testset "Predict" begin 
+@testset "Predict" begin
     include("predict.jl")
 end
 

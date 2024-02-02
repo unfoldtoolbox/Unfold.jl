@@ -6,57 +6,57 @@ using InteractiveUtils
 
 # ╔═╡ 1eec25bc-8040-11ec-024c-c54939c335ac
 begin
-	
-	using CairoMakie
-	using DataFrames
-	using Random
-using Unfold
-using Colors
+
+    using CairoMakie
+    using DataFrames
+    using Random
+    using Unfold
+    using Colors
 end
 
 # ╔═╡ f926f2a9-d188-4c65-80c7-0e500d9c3b9a
 begin
-	rng = MersenneTwister(2)
-n = 20
-evts = DataFrame(:x=>rand(rng,n))
-signal = -(3*(evts.x .-0.5)).^2 .+ 0.5 .* rand(rng,n)
-	signal = reshape(signal,length(signal),1,1)
-	signal = permutedims(signal,[3,2,1])
+    rng = MersenneTwister(2)
+    n = 20
+    evts = DataFrame(:x => rand(rng, n))
+    signal = -(3 * (evts.x .- 0.5)) .^ 2 .+ 0.5 .* rand(rng, n)
+    signal = reshape(signal, length(signal), 1, 1)
+    signal = permutedims(signal, [3, 2, 1])
 end;
 
 # ╔═╡ 248e07ea-bf5b-4c88-97c6-e29d0576bdaa
 begin
-	design_spl3 = Dict(Any=>	(@formula(0~1+spl(x,3)),[0]))
-	uf_spl3 = fit(UnfoldModel,design_spl3,evts,signal);
+    design_spl3 = Dict(Any => (@formula(0 ~ 1 + spl(x, 3)), [0]))
+    uf_spl3 = fit(UnfoldModel, design_spl3, evts, signal)
 end;
 
 # ╔═╡ fea2e408-baa5-426c-a125-6ef68953abce
 begin
-	design_lin = Dict(Any=>	(@formula(0~1+x),[0]))
-	uf_lin = fit(UnfoldModel,design_lin,evts,signal);
+    design_lin = Dict(Any => (@formula(0 ~ 1 + x), [0]))
+    uf_lin = fit(UnfoldModel, design_lin, evts, signal)
 end;
 
 # ╔═╡ f30a9476-b884-44e4-b2e9-b6ca722e52da
 begin
-	design_spl10 = Dict(Any=>	(@formula(0~1+spl(x,10)),[0]))
-	uf_spl10 = fit(UnfoldModel,design_spl10,evts,signal);
+    design_spl10 = Dict(Any => (@formula(0 ~ 1 + spl(x, 10)), [0]))
+    uf_spl10 = fit(UnfoldModel, design_spl10, evts, signal)
 end;
 
 # ╔═╡ 144b86fc-b860-4f12-9250-0d7926e68cc5
 begin
-	p_3 = Unfold.effects(Dict(:x => range(0,stop=1,length=100)),uf_spl3);
-	p_10 = Unfold.effects(Dict(:x => range(0,stop=1,length=100)),uf_spl10);
-	p_l = Unfold.effects(Dict(:x => range(0,stop=1,length=100)),uf_lin);
+    p_3 = Unfold.effects(Dict(:x => range(0, stop = 1, length = 100)), uf_spl3)
+    p_10 = Unfold.effects(Dict(:x => range(0, stop = 1, length = 100)), uf_spl10)
+    p_l = Unfold.effects(Dict(:x => range(0, stop = 1, length = 100)), uf_lin)
 end;
 
 # ╔═╡ 8633dc2f-cde4-45ca-8378-d4703804d02f
 begin
-	pl = plot(evts.x,signal[1,1,:])
-	lines!(p_l.x,p_l.yhat)
-	lines!(p_3.x,p_3.yhat)
-	lines!(p_10.x,p_10.yhat)
+    pl = plot(evts.x, signal[1, 1, :])
+    lines!(p_l.x, p_l.yhat)
+    lines!(p_3.x, p_3.yhat)
+    lines!(p_10.x, p_10.yhat)
 
-	pl
+    pl
 end
 
 # ╔═╡ 71e73918-f6c5-4f48-adf2-74875c32833c

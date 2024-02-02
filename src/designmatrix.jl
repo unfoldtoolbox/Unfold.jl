@@ -19,28 +19,28 @@ julia>  Xdc = Xdc1+Xdc2
 function combineDesignmatrices(X1::DesignMatrix, X2::DesignMatrix)
 
     # the reason for the assertion is simply that I found it too difficult to concatenate the formulas down below ;) should be easy to implement hough
-    @assert !(isa(X1.formulas,AbstractArray) && isa(X2.formulas,AbstractArray)) "it is currently not possible to combine desigmatrices from two already concatenated designs - please concatenate one after the other"
+    @assert !(isa(X1.formulas, AbstractArray) && isa(X2.formulas, AbstractArray)) "it is currently not possible to combine desigmatrices from two already concatenated designs - please concatenate one after the other"
 
     X1 = deepcopy(X1)
     X2 = deepcopy(X2)
     Xs1 = get_Xs(X1)
     Xs2 = get_Xs(X2)
-    if typeof(Xs1) <:Vector
-        Xcomb = [Xs1...,Xs2]
+    if typeof(Xs1) <: Vector
+        Xcomb = [Xs1..., Xs2]
     else
-        Xcomb = [Xs1,Xs2]
+        Xcomb = [Xs1, Xs2]
     end
 
     if typeof(X1.Xs) <: Tuple
-      Xcomb = lmm_combineMats!(Xcomb,X1,X2)
+        Xcomb = lmm_combineMats!(Xcomb, X1, X2)
     end
 
     if X1.formulas isa FormulaTerm
         # due to the assertion above, we can assume we have only 2 formulas here
         if X1.formulas.rhs isa Unfold.TimeExpandedTerm
-            fcomb = Vector{FormulaTerm{<:InterceptTerm, <:TimeExpandedTerm}}(undef,2)
+            fcomb = Vector{FormulaTerm{<:InterceptTerm,<:TimeExpandedTerm}}(undef, 2)
         else
-            fcomb = Vector{FormulaTerm}(undef,2) # mass univariate case
+            fcomb = Vector{FormulaTerm}(undef, 2) # mass univariate case
         end
         fcomb[1] = X1.formulas
         fcomb[2] = X2.formulas
@@ -48,9 +48,12 @@ function combineDesignmatrices(X1::DesignMatrix, X2::DesignMatrix)
     else
         if X1.formulas[1].rhs isa Unfold.TimeExpandedTerm
             # we can ignore length of X2, as it has to be a single formula due to the assertion above
-            fcomb = Vector{FormulaTerm{<:InterceptTerm, <:TimeExpandedTerm}}(undef,length(X1.formulas)+1)
+            fcomb = Vector{FormulaTerm{<:InterceptTerm,<:TimeExpandedTerm}}(
+                undef,
+                length(X1.formulas) + 1,
+            )
         else
-            fcomb = Vector{FormulaTerm}(undef,length(X1.formulas)+1) # mass univariate case
+            fcomb = Vector{FormulaTerm}(undef, length(X1.formulas) + 1) # mass univariate case
         end
         fcomb[1:end-1] = X1.formulas
         fcomb[end] = X2.formulas
@@ -115,28 +118,31 @@ function designmatrix(
     @debug("generating DesignMatrix")
 
     # check for missings-columns - currently missings not really supported in StatsModels
-    s_tmp = schema(f,tbl,contrasts) # temporary scheme to get necessary terms
+    s_tmp = schema(f, tbl, contrasts) # temporary scheme to get necessary terms
     neededCols = [v.sym for v in values(s_tmp.schema)]
 
     tbl_nomissing = DataFrame(tbl) # tbl might be a SubDataFrame due to a view - but we can't modify a subdataframe, can we?
-    try 
-        disallowmissing!(tbl_nomissing,neededCols) # if this fails, it means we have a missing value in a column we need. We do not support this
+    try
+        disallowmissing!(tbl_nomissing, neededCols) # if this fails, it means we have a missing value in a column we need. We do not support this
     catch e
         if e isa ArgumentError
-            error(e.msg*"\n we tried to get rid of a event-column declared as type Union{Missing,T}. But there seems to be some actual missing values in there. 
-            You have to replace them yourself (e.g. replace(tbl.colWithMissingValue,missing=>0)) or impute them otherwise.")
+            error(
+                e.msg *
+                "\n we tried to get rid of a event-column declared as type Union{Missing,T}. But there seems to be some actual missing values in there. 
+    You have to replace them yourself (e.g. replace(tbl.colWithMissingValue,missing=>0)) or impute them otherwise.",
+            )
         else
-           rethrow()
+            rethrow()
         end
     end
 
-        
 
 
-    form = unfold_apply_schema(type,f, schema(f, tbl_nomissing, contrasts))
-    
+
+    form = unfold_apply_schema(type, f, schema(f, tbl_nomissing, contrasts))
+
     @debug "type: $type"
-    if (type== UnfoldLinearMixedModel) || (type == UnfoldLinearMixedModelContinuousTime)
+    if (type == UnfoldLinearMixedModel) || (type == UnfoldLinearMixedModelContinuousTime)
         # get all random effects
 
         check_groupsorting(form.rhs)
@@ -145,7 +151,7 @@ function designmatrix(
         apply_basisfunction(form, basisfunction, get(Dict(kwargs), :eventfields, nothing))
 
     # Evaluate the designmatrix
-    
+
     #note that we use tbl again, not tbl_nomissing.
     @debug typeof(form)
     if (!isnothing(basisfunction)) & (type <: UnfoldLinearMixedModel)
@@ -165,7 +171,7 @@ wrapper to make apply_schema mixed models as extension possible
 
 Note: type is not necessary here, but for LMM it is for multiple dispatch reasons!
 """
-unfold_apply_schema(type,f,schema) = apply_schema(f,schema,UnfoldModel)
+unfold_apply_schema(type, f, schema) = apply_schema(f, schema, UnfoldModel)
 
 
 # specify for abstract interface
@@ -181,8 +187,8 @@ function designmatrix(
     X = nothing
     fDict = design(uf)
     for (eventname, f) in pairs(fDict)
-        
-        @debug "Eventname, X:",eventname,X
+
+        @debug "Eventname, X:", eventname, X
         if eventname == Any
             eventTbl = tbl
         else
@@ -261,7 +267,7 @@ function designmatrix!(uf::UnfoldModel, evts; kwargs...)
     return uf
 end
 
-function StatsModels.modelmatrix(uf::UnfoldLinearModel,basisfunction)
+function StatsModels.modelmatrix(uf::UnfoldLinearModel, basisfunction)
     if basisfunction
         @warn("basisfunction not defined for this kind of model")
     else
@@ -273,15 +279,16 @@ end
 equalizeLengths(Xs::AbstractMatrix) = Xs
 
 # UnfoldLinearMixedModelContinuousTime case
-equalizeLengths(Xs::Tuple) = (equalizeLengths(Xs[1]),Xs[2:end]...)
+equalizeLengths(Xs::Tuple) = (equalizeLengths(Xs[1]), Xs[2:end]...)
 
 # UnfoldLinearModel - they have to be equal already
-equalizeLengths(Xs::Vector{<:AbstractMatrix}) = Xs 
+equalizeLengths(Xs::Vector{<:AbstractMatrix}) = Xs
 
 #UnfoldLinearModelContinuousTime
-equalizeLengths(Xs::Vector{<:SparseMatrixCSC}) = equalizeLengths(Xs...) 
-equalizeLengths(Xs1::SparseMatrixCSC,Xs2::SparseMatrixCSC,args...) = equalizeLengths(equalizeLengths(Xs1,Xs2),args...)
-function equalizeLengths(Xs1::SparseMatrixCSC,Xs2::SparseMatrixCSC)
+equalizeLengths(Xs::Vector{<:SparseMatrixCSC}) = equalizeLengths(Xs...)
+equalizeLengths(Xs1::SparseMatrixCSC, Xs2::SparseMatrixCSC, args...) =
+    equalizeLengths(equalizeLengths(Xs1, Xs2), args...)
+function equalizeLengths(Xs1::SparseMatrixCSC, Xs2::SparseMatrixCSC)
     sX1 = size(Xs1, 1)
     sX2 = size(Xs2, 1)
 
@@ -291,27 +298,27 @@ function equalizeLengths(Xs1::SparseMatrixCSC,Xs2::SparseMatrixCSC)
     elseif sX2 < sX1
         Xs2 = SparseMatrixCSC(sX1, Xs2.n, Xs2.colptr, Xs2.rowval, Xs2.nzval)
     end
-    return hcat(Xs1,Xs2)
+    return hcat(Xs1, Xs2)
 end
-function StatsModels.modelmatrix(uf::UnfoldLinearModelContinuousTime,basisfunction = true)
+function StatsModels.modelmatrix(uf::UnfoldLinearModelContinuousTime, basisfunction = true)
     if basisfunction
         return modelmatrix(designmatrix(uf))
         #return hcat(modelmatrix(designmatrix(uf))...)
     else
         # replace basisfunction with non-timeexpanded one
         f = formula(uf)
-        
+
         # probably a more julian way to do this...
-        if isa(f,AbstractArray)
-            return modelcols_nobasis.(f,events(uf))
+        if isa(f, AbstractArray)
+            return modelcols_nobasis.(f, events(uf))
         else
-            return modelcols_nobasis(f,events(uf))
+            return modelcols_nobasis(f, events(uf))
         end
-        
+
     end
 end
 
-modelcols_nobasis(f::FormulaTerm,tbl::AbstractDataFrame) = modelcols(f.rhs.term,tbl)
+modelcols_nobasis(f::FormulaTerm, tbl::AbstractDataFrame) = modelcols(f.rhs.term, tbl)
 StatsModels.modelmatrix(uf::UnfoldModel) = modelmatrix(designmatrix(uf))#modelmatrix(uf.design,uf.designmatrix.events)
 StatsModels.modelmatrix(d::DesignMatrix) = equalizeLengths(d.Xs)
 
@@ -333,7 +340,7 @@ function formula(d::Dict) #TODO Specify Dict better
     else
         return [c[1] for c in collect(values(d))]
     end
-    
+
 end
 
 """
@@ -342,28 +349,28 @@ calculates in which rows the individual event-basisfunctions should go in Xdc
 
 timeexpand_rows timeexpand_vals
 """
-function timeexpand_rows(onsets,bases,shift,ncolsX)
+function timeexpand_rows(onsets, bases, shift, ncolsX)
     # generate rowindices
     rows = copy(rowvals.(bases))
-    
+
     # this shift is necessary as some basisfunction time-points can be negative. But a matrix is always from 1:τ. Thus we have to shift it backwards in time.
     # The onsets are onsets-1 XXX not sure why.
-    for r = eachindex(rows)
+    for r in eachindex(rows)
         rows[r] .+= floor(onsets[r] - 1) .+ shift
     end
 
-    
-    rows_red = reduce(vcat,rows)
+
+    rows_red = reduce(vcat, rows)
     rows_red = repeat(rows_red, ncolsX)
     return rows_red
-    end
+end
 
 """
 $(SIGNATURES)
 calculates the actual designmatrix for a timeexpandedterm. Multiple dispatch on StatsModels.modelcols
 """
 function StatsModels.modelcols(term::TimeExpandedTerm, tbl)
-    @debug term.term , first(tbl)
+    @debug term.term, first(tbl)
     X = modelcols(term.term, tbl)
 
     time_expand(X, term, tbl)
@@ -384,13 +391,15 @@ function time_expand_getTimeRange(onset, basisfunction)
 end
 
 
-function timeexpand_cols_allsamecols(bases,ncolsBasis::Int,ncolsX)
+function timeexpand_cols_allsamecols(bases, ncolsBasis::Int, ncolsX)
     repeatEach = length(nzrange(bases[1], 1))
-    cols_r = UnitRange{Int64}[((1:ncolsBasis) .+ix*ncolsBasis)  for ix in (0:ncolsX-1) for b in 1:length(bases)]
-    
-    cols = reduce(vcat,cols_r)
-    
-    cols = repeat(cols,inner=repeatEach)
+    cols_r = UnitRange{Int64}[
+        ((1:ncolsBasis) .+ ix * ncolsBasis) for ix in (0:ncolsX-1) for b = 1:length(bases)
+    ]
+
+    cols = reduce(vcat, cols_r)
+
+    cols = repeat(cols, inner = repeatEach)
     return cols
 end
 
@@ -402,55 +411,53 @@ calculates in which rows the individual event-basisfunctions should go in Xdc
 
 see also timeexpand_rows timeexpand_vals
 """
-function timeexpand_cols(term,bases,ncolsBasis,ncolsX)
+function timeexpand_cols(term, bases, ncolsBasis, ncolsX)
     # we can generate the columns much faster, if all bases output the same number of columns 
-    fastpath = time_expand_allBasesSameCols(term.basisfunction,bases,ncolsBasis)
+    fastpath = time_expand_allBasesSameCols(term.basisfunction, bases, ncolsBasis)
 
     if fastpath
-        return timeexpand_cols_allsamecols(bases,ncolsBasis,ncolsX)
+        return timeexpand_cols_allsamecols(bases, ncolsBasis, ncolsX)
     else
-        return timeexpand_cols_generic(bases,ncolsBasis,ncolsX)
+        return timeexpand_cols_generic(bases, ncolsBasis, ncolsX)
     end
 end
 
-function timeexpand_cols_generic(bases,ncolsBasis,ncolsX)
-        # it could happen, e.g. for bases that are duration modulated, that each event has different amount of columns
-        # in that case, we have to go the slow route
-        cols = Vector{Int64}[]
-    
-        for Xcol = 1:ncolsX
-            for b = 1:length(bases)
-                coloffset = (Xcol - 1) * ncolsBasis
-                for c = 1:ncolsBasis
-                    push!(cols,
-                        repeat([c + coloffset], length(nzrange(bases[b], c))),
-                    )
-                end
+function timeexpand_cols_generic(bases, ncolsBasis, ncolsX)
+    # it could happen, e.g. for bases that are duration modulated, that each event has different amount of columns
+    # in that case, we have to go the slow route
+    cols = Vector{Int64}[]
+
+    for Xcol = 1:ncolsX
+        for b = 1:length(bases)
+            coloffset = (Xcol - 1) * ncolsBasis
+            for c = 1:ncolsBasis
+                push!(cols, repeat([c + coloffset], length(nzrange(bases[b], c))))
             end
         end
-        return reduce(vcat,cols)
-    
+    end
+    return reduce(vcat, cols)
+
 
 end
 
-function  timeexpand_vals(bases,X,nTotal,ncolsX)
-        # generate values
-        #vals = []
-        vals = Array{Union{Missing,Float64}}(undef,nTotal)
-        ix = 1
-        
-        for Xcol = 1:ncolsX
-            for (i,b) = enumerate(bases)
-                b_nz = nonzeros(b)
-                l = length(b_nz)
-                
-                vals[ix:ix+l-1] .= b_nz .* @view X[i, Xcol]
-                ix = ix+l
+function timeexpand_vals(bases, X, nTotal, ncolsX)
+    # generate values
+    #vals = []
+    vals = Array{Union{Missing,Float64}}(undef, nTotal)
+    ix = 1
+
+    for Xcol = 1:ncolsX
+        for (i, b) in enumerate(bases)
+            b_nz = nonzeros(b)
+            l = length(b_nz)
+
+            vals[ix:ix+l-1] .= b_nz .* @view X[i, Xcol]
+            ix = ix + l
             #push!(vals, )
-            end
         end
+    end
     return vals
-        
+
 end
 """
 $(SIGNATURES)
@@ -462,54 +469,54 @@ performs the actual time-expansion in a sparse way.
  Returns SparseMatrixCSC 
 """
 
-function time_expand(Xorg,term,tbl)
+function time_expand(Xorg, term, tbl)
     # this is the predefined eventfield, usually "latency"
     tbl = DataFrame(tbl)
     onsets = Float64.(tbl[:, term.eventfields[1]])::Vector{Float64} # XXX if we have integer onsets, we could directly speed up matrix generation maybe?
 
     if typeof(term.eventfields) <: Array && length(term.eventfields) == 1
-        bases = kernel.(Ref(term.basisfunction),onsets)
+        bases = kernel.(Ref(term.basisfunction), onsets)
     else
-        bases = kernel.(Ref(term.basisfunction),eachrow(tbl[!, term.eventfields]))
+        bases = kernel.(Ref(term.basisfunction), eachrow(tbl[!, term.eventfields]))
     end
 
-    return time_expand(Xorg,term,onsets, bases)
+    return time_expand(Xorg, term, onsets, bases)
 end
 function time_expand(Xorg, term, onsets, bases)
-    ncolsBasis = size(kernel(term.basisfunction,0), 2)::Int64
+    ncolsBasis = size(kernel(term.basisfunction, 0), 2)::Int64
     X = reshape(Xorg, size(Xorg, 1), :) # why is this necessary?
     ncolsX = size(X)[2]::Int64
 
-    
 
-    
-    
-    
-    rows = timeexpand_rows(onsets,bases,shiftOnset(term.basisfunction),ncolsX)
-    cols = timeexpand_cols(term,bases,ncolsBasis,ncolsX)
 
-    vals = timeexpand_vals(bases,X,size(cols),ncolsX)
-    
+
+
+
+    rows = timeexpand_rows(onsets, bases, shiftOnset(term.basisfunction), ncolsX)
+    cols = timeexpand_cols(term, bases, ncolsBasis, ncolsX)
+
+    vals = timeexpand_vals(bases, X, size(cols), ncolsX)
+
     #vals = vcat(vals...)
     ix = rows .> 0 #.&& vals .!= 0.
     A = @views sparse(rows[ix], cols[ix], vals[ix])
     dropzeros!(A)
-    
+
     return A
 end
 
 """
 Helper function to decide whether all bases have the same number of columns per event
 """
-time_expand_allBasesSameCols(b::FIRBasis,bases,ncolBasis) = true # FIRBasis is always fast!
-function time_expand_allBasesSameCols(basisfunction,bases,ncolsBasis)
-fastpath = true
-for b = eachindex(bases)
-    if length(unique(length.(nzrange.(Ref(bases[b]), 1:ncolsBasis)))) != 1
-        return false
+time_expand_allBasesSameCols(b::FIRBasis, bases, ncolBasis) = true # FIRBasis is always fast!
+function time_expand_allBasesSameCols(basisfunction, bases, ncolsBasis)
+    fastpath = true
+    for b in eachindex(bases)
+        if length(unique(length.(nzrange.(Ref(bases[b]), 1:ncolsBasis)))) != 1
+            return false
+        end
     end
-end
-return true
+    return true
 end
 
 """
@@ -558,14 +565,14 @@ end
 
 
 
-function Base.show(io::IO,d::DesignMatrix)
-    println(io,"Unfold.DesignMatrix")
-    println(io,"Formulas: $(d.formulas)")
+function Base.show(io::IO, d::DesignMatrix)
+    println(io, "Unfold.DesignMatrix")
+    println(io, "Formulas: $(d.formulas)")
     #display(io,d.formulas)
-    sz_evts =  isa(d.events,Vector) ? size.(d.events) : size(d.events)
-    sz_Xs =  (isa(d.Xs,Vector) | isa(d.Xs,Tuple)) ? size.(d.Xs) : size(d.Xs)
-    
-    println(io,"\nSizes: Xs: $sz_Xs, events: $sz_evts")
-    println(io,"\nuseful functions: formula(d),modelmatrix(d)")
-    println(io,"Fields: .formulas, .Xs, .events")
+    sz_evts = isa(d.events, Vector) ? size.(d.events) : size(d.events)
+    sz_Xs = (isa(d.Xs, Vector) | isa(d.Xs, Tuple)) ? size.(d.Xs) : size(d.Xs)
+
+    println(io, "\nSizes: Xs: $sz_Xs, events: $sz_evts")
+    println(io, "\nuseful functions: formula(d),modelmatrix(d)")
+    println(io, "Fields: .formulas, .Xs, .events")
 end
