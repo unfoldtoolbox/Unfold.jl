@@ -215,3 +215,33 @@ end
 		end
 
 end
+
+
+@testset "MixedModel" begin
+    data, evts = UnfoldSim.predef_eeg(10; return_epoched = true)
+    m = fit(
+        UnfoldModel,
+        @formula(0 ~ 1 + condition + (1 + condition | subject)),
+        evts,
+        data,
+        1:size(data, 1),
+    )
+    eff = effects(Dict(:condition => ["car", "face"]), m)
+end
+
+
+@testset "MixedModelContinuousTime" begin
+    data, evts = UnfoldSim.predef_eeg(10; sfreq = 10, return_epoched = false)
+    m = fit(
+        UnfoldModel,
+        Dict(
+            Any => (
+                @formula(0 ~ 1 + condition + zerocorr(1 + condition | subject)),
+                firbasis([0, 1], 10),
+            ),
+        ),
+        evts,
+        data,
+    )
+    @test_broken eff = effects(Dict(:condition => ["car", "face"]), m)
+end
