@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>P-values for mixedModels · Unfold.jl Timeseries Analysis &amp; Deconvolution</title><meta name="title" content="P-values for mixedModels · Unfold.jl Timeseries Analysis &amp; Deconvolution"/><meta property="og:title" content="P-values for mixedModels · Unfold.jl Timeseries Analysis &amp; Deconvolution"/><meta property="twitter:title" content="P-values for mixedModels · Unfold.jl Timeseries Analysis &amp; Deconvolution"/><meta name="description" content="Documentation for Unfold.jl Timeseries Analysis &amp; Deconvolution."/><meta property="og:description" content="Documentation for Unfold.jl Timeseries Analysis &amp; Deconvolution."/><meta property="twitter:description" content="Documentation for Unfold.jl Timeseries Analysis &amp; Deconvolution."/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">Unfold.jl Timeseries Analysis &amp; Deconvolution</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Unfold Documentation</a></li><li><a class="tocitem" href="../../installation/">Installing Julia + Unfold.jl</a></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="../../tutorials/lm_mu/">Mass univariate LM</a></li><li><a class="tocitem" href="../../tutorials/lm_overlap/">LM overlap correction</a></li><li><a class="tocitem" href="../../tutorials/lmm_mu/">Mass univariate Mixed Model</a></li><li><a class="tocitem" href="../../tutorials/lmm_overlap/">LMM + overlap correction</a></li></ul></li><li><span class="tocitem">HowTo</span><ul><li><a class="tocitem" href="../multiple_events/">Overlap: Multiple events</a></li><li><a class="tocitem" href="../pymne/">Import EEG with 🐍 PyMNE.jl</a></li><li><a class="tocitem" href="../standarderrors/">Standard errors</a></li><li><a class="tocitem" href="../custom_solvers/">Alternative Solvers (Robust, GPU, B2B)</a></li><li><a class="tocitem" href="../../generated/HowTo/juliacall_unfold/">🐍 Calling Unfold.jl directly from Python</a></li><li class="is-active"><a class="tocitem" href>P-values for mixedModels</a><ul class="internal"><li><a class="tocitem" href="#lmm_pvalues"><span>How To get P-Values for Mass-Univariate LMM</span></a></li><li><a class="tocitem" href="#Likelihoodratio"><span>Likelihoodratio</span></a></li><li><a class="tocitem" href="#Walds-T-Test"><span>Walds T-Test</span></a></li></ul></li><li><a class="tocitem" href="../../generated/HowTo/effects/">Marginal effects (focus on non-linear predictors)</a></li><li><a class="tocitem" href="../../generated/HowTo/unfold_io/">Save and load Unfold models</a></li></ul></li><li><span class="tocitem">Explanations</span><ul><li><a class="tocitem" href="../../explanations/basisfunctions/">About basisfunctions</a></li><li><a class="tocitem" href="../../generated/explanations/nonlinear_effects/">Non-Linear effects</a></li><li><a class="tocitem" href="../../generated/explanations/window_length/">Window Length Effect</a></li></ul></li><li><span class="tocitem">Reference</span><ul><li><a class="tocitem" href="../../references/extensions/">Overview of package extensions</a></li><li><a class="tocitem" href="../../explanations/development/">Development environment</a></li><li><a class="tocitem" href="../../references/types/">API: Types</a></li><li><a class="tocitem" href="../../references/functions/">API: Functions</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">HowTo</a></li><li class="is-active"><a href>P-values for mixedModels</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>P-values for mixedModels</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/unfoldtoolbox/Unfold.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/unfoldtoolbox/Unfold.jl/blob/main/docs/src/HowTo/lmm_pvalues.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h2 id="lmm_pvalues"><a class="docs-heading-anchor" href="#lmm_pvalues">How To get P-Values for Mass-Univariate LMM</a><a id="lmm_pvalues-1"></a><a class="docs-heading-anchor-permalink" href="#lmm_pvalues" title="Permalink"></a></h2><p>There are currently two ways to get p-values for LMMs: Walds t-test &amp; likelihood ratio tests (mass univariate only).</p><h4 id="Setup"><a class="docs-heading-anchor" href="#Setup">Setup</a><a id="Setup-1"></a><a class="docs-heading-anchor-permalink" href="#Setup" title="Permalink"></a></h4><pre><code class="language-julia hljs">using MixedModels, Unfold # we require to load MixedModels to load the PackageExtension
+using DataFrames
+using UnfoldSim
+using CairoMakie
+data_epoch,evts = UnfoldSim.predef_2x2(;n_items=52,n_subjects=40,return_epoched=true)
+times = range(0,1,length=size(data_epoch,1))
+data_epoch = reshape(data_epoch,1,size(data_epoch)... )</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1×100×2080 Array{Float64, 3}:
+[:, :, 1] =
+ -0.0422591  0.163505  0.0251434  0.0505568  …  0.0282885  0.166572  0.107687
+
+[:, :, 2] =
+ 0.0784877  0.0990349  0.249225  0.189711  …  -0.195781  -0.119751  -0.26862
+
+[:, :, 3] =
+ -0.0463742  -0.062112  -0.108857  …  0.222862  0.321086  0.364384
+
+;;; … 
+
+[:, :, 2078] =
+ 0.0605727  0.0496292  0.275691  0.180509  …  0.193072  -0.0103233  0.0781043
+
+[:, :, 2079] =
+ -0.126834  -0.11557  -0.00551515  0.11077  …  -0.11527  -0.31419  -0.322491
+
+[:, :, 2080] =
+ -0.393527  -0.222007  -0.384468  …  0.03596  -0.0351981  0.0673718</code></pre><h4 id="Define-f0-and-f1-and-fit!"><a class="docs-heading-anchor" href="#Define-f0-and-f1-and-fit!">Define f0 &amp; f1 and fit!</a><a id="Define-f0-and-f1-and-fit!-1"></a><a class="docs-heading-anchor-permalink" href="#Define-f0-and-f1-and-fit!" title="Permalink"></a></h4><pre><code class="language-julia hljs">        f0  = @formula 0~1+A + (1+A|subject);
+        f1  = @formula 0~1+A+B + (1+A|subject); # could also differ in random effects
+
+        m0 = fit(UnfoldModel,Dict(Any=&gt;(f0,times)),evts,data_epoch);
+        m1 = fit(UnfoldModel,Dict(Any=&gt;(f1,times)),evts,data_epoch);</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Unfold-Type: UnfoldLinearMixedModel 
+
+formula: Dict{DataType, Tuple{StatsModels.FormulaTerm{StatsModels.ConstantTerm{Int64}, Tuple{StatsModels.ConstantTerm{Int64}, StatsModels.Term, StatsModels.Term, StatsModels.FunctionTerm{typeof(|), Vector{StatsModels.AbstractTerm}}}}, StepRangeLen{Float64, Base.TwicePrecision{Float64}, Base.TwicePrecision{Float64}, Int64}}}(Any =&gt; (0 ~ 1 + A + B + :((1 + A) | subject), 0.0:0.010101010101010102:1.0))
+Useful functions:
+ 
+    design(uf) 		(returns Dict of event =&gt; (formula,times/basis))  
+
+    designmatrix(uf) 	(returns DesignMatrix with events) 
+
+    modelfit(uf) 		(returns modelfit object) 
+
+    coeftable(uf) 		(returns tidy result dataframe) 
+
+</code></pre><h2 id="Likelihoodratio"><a class="docs-heading-anchor" href="#Likelihoodratio">Likelihoodratio</a><a id="Likelihoodratio-1"></a><a class="docs-heading-anchor-permalink" href="#Likelihoodratio" title="Permalink"></a></h2><pre><code class="language-julia hljs">        uf_lrt = likelihoodratiotest(m0,m1)
+        uf_lrt[1]</code></pre><table><tr><th align="left"></th><th align="right">model-dof</th><th align="right">deviance</th><th align="right">χ²</th><th align="right">χ²-dof</th><th align="left">P&#40;&gt;χ²&#41;</th></tr><tr><td align="left">0 ~ 1 &#43; A &#43; &#40;1 &#43; A | subject&#41;</td><td align="right">6</td><td align="right">-2380</td><td align="right"> </td><td align="right"> </td><td align="left"> </td></tr><tr><td align="left">0 ~ 1 &#43; A &#43; B &#43; &#40;1 &#43; A | subject&#41;</td><td align="right">7</td><td align="right">-2381</td><td align="right">1</td><td align="right">1</td><td align="left">0.3166</td></tr></table>
+<p>As you can see, we have some lrts, exciting!</p><h4 id="extract-pvalues"><a class="docs-heading-anchor" href="#extract-pvalues">extract pvalues</a><a id="extract-pvalues-1"></a><a class="docs-heading-anchor-permalink" href="#extract-pvalues" title="Permalink"></a></h4><pre><code class="language-julia hljs">    pvalues(uf_lrt)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">100-element Vector{Vector{Float64}}:
+ [0.3166282025344268]
+ [0.3697201746322033]
+ [0.793211989526972]
+ [0.7734388865510438]
+ [0.17149046517504948]
+ [0.0009710381564563409]
+ [0.0009191903830201123]
+ [2.1964727515333907e-5]
+ [2.1602621161374485e-10]
+ [7.72541158314499e-14]
+ ⋮
+ [7.643921364688316e-15]
+ [2.2824571468070695e-7]
+ [3.5392795397641485e-5]
+ [0.008705151987997112]
+ [0.13432695344848625]
+ [0.47369044951540545]
+ [0.34820250853405843]
+ [0.27344864890935183]
+ [0.16205080820194917]</code></pre><p>Now we extracted the p-values. </p><p>Let&#39;s look at the structure. How do we get them to something usable? The solution is in the docs <code>?pvalues</code></p><pre><code class="language-julia hljs">    pvals_lrt = vcat(pvalues(uf_lrt)...)
+    nchan = 1
+    ntime = length(times)
+    reshape(pvals_lrt,ntime,nchan)&#39; # note the last transpose via &#39; !</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1×100 adjoint(::Matrix{Float64}) with eltype Float64:
+ 0.316628  0.36972  0.793212  0.773439  …  0.348203  0.273449  0.162051</code></pre><p>Perfecto, these are the LRT pvalues of a model <code>condA</code> vs. <code>condA+condB</code> with same random effect structure.</p><h2 id="Walds-T-Test"><a class="docs-heading-anchor" href="#Walds-T-Test">Walds T-Test</a><a id="Walds-T-Test-1"></a><a class="docs-heading-anchor-permalink" href="#Walds-T-Test" title="Permalink"></a></h2><p>This method is easier to calculate, but more limited and likely less accurate (due to degrees of freedom estimation, but that is a discussion for a proper LMM package). It is further limited, as e.g. random effects cannot be tested, and you can only test single predictors, which might make no sense for e.g. spline-effects</p><pre><code class="language-julia hljs">res = coeftable(m1)
+# only fixef (what is not in a ranef group is a fixef)
+res = res[isnothing.(res.group),:]
+#calculate t-value
+res[:,:tvalue] = res.estimate ./ res.stderror</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">300-element Vector{Float64}:
+ -0.217778785660272
+ -0.10060026304520087
+  0.2248636222635371
+  0.9330583294727515
+  0.845348890521249
+  1.254122593967945
+  3.103270366255714
+  3.4548003882192635
+  3.9099551492458158
+  4.251378077288928
+  ⋮
+  7.678056777024454
+  5.090557203979353
+  4.064613671118169
+  2.6002566404328546
+  1.4685192380745167
+  0.709724916282632
+  0.9291138771752091
+  1.0847319450614274
+  1.3848783645402283</code></pre><p>Okay cool, we have walds-t, but how to translate to a p-value?</p><p>This is by no means trivial, as the necessary degrees of freedom of the t-distribution are not well specified. There is a huge debate how to do it. One simple way is to simply assume the number of subjects as an upper bound to your p-value (your df will be between <span>$n_{subject}$</span> and <span>$\sum{n_{trials}}$</span>)</p><pre><code class="language-julia hljs">    df = length(unique(evts.subject))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">40</code></pre><p>Plug it into the t-distribution</p><pre><code class="language-julia hljs">    using Distributions
+    res.pvalue = pdf.(TDist(df),res.tvalue)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">300-element Vector{Float64}:
+ 0.38694213128618277
+ 0.394406199233635
+ 0.3863214872606669
+ 0.25497671662326965
+ 0.2757681277446173
+ 0.17981695704671896
+ 0.0047601069476487495
+ 0.0018766459663518947
+ 0.00052063476711606
+ 0.0001900059098896939
+ ⋮
+ 3.42114906986444e-9
+ 1.4171452054234234e-5
+ 0.00033121568367157193
+ 0.01613408822600158
+ 0.13511150251264673
+ 0.3067485007553027
+ 0.25591793265302454
+ 0.21881723952792592
+ 0.15178828597465072</code></pre><p>Cool! Let&#39;s compare!</p><pre><code class="language-julia hljs">df = DataFrame(:walds=&gt;res[res.coefname .== &quot;B: b_tiny&quot;,:pvalue],:lrt=&gt;pvals_lrt)
+f = Figure()
+scatter(f[1,1],times,res[res.coefname .== &quot;B: b_tiny&quot;,:estimate])
+scatter(f[1,2],df.walds,df.lrt)
+scatter(f[2,1],times,df.walds)
+scatter(f[2,2],times,df.lrt)
+
+f</code></pre><img src="d6795bbb.png" alt="Example block output"/><p>Look pretty similar! note that the Walds-T is typically too liberal (LRT also, but to a lesser exted). Best is to use the forthcoming MixedModelsPermutations.jl or go the route via R and use KenwardRoger (data not yet published)</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../generated/HowTo/juliacall_unfold/">« 🐍 Calling Unfold.jl directly from Python</a><a class="docs-footer-nextpage" href="../../generated/HowTo/effects/">Marginal effects (focus on non-linear predictors) »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="auto">Automatic (OS)</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.2.1 on <span class="colophon-date" title="Friday 2 February 2024 12:31">Friday 2 February 2024</span>. Using Julia version 1.10.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
