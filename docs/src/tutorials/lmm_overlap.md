@@ -26,6 +26,7 @@ This notebook is similar to the Linear Model with Overlap Correction tutorial, b
 
 ```@example Main
 dat,evts = UnfoldSim.predef_2x2(;signalsize=20,n_items=16,n_subjects=16)
+dat = dat[:] # we need all data concatenated over subjects
 evts.subject  = categorical(Array(evts.subject))
 nothing #hide
 ```

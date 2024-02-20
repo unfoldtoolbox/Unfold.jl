@@ -30,6 +30,8 @@ Again we have 4 steps:
 ```@example Main
 
 data, evts = UnfoldSim.predef_eeg(10)
+data = reshape(data, size(data, 1), :) # we need to concatenate the data to one long EEG dataset
+
 transform!(evts,:subject=>categorical=>:subject); # has to be categorical, else MixedModels.jl complains
 nothing #hide
 ```
@@ -42,7 +44,6 @@ first(evts,6)
 
 Now we are ready to epoch the data - same as for the mass univariate, but we have more trials (times `nsubject` more)
 ```@example Main
-data_r = reshape(data,(1,:))
 # cut the data into epochs
 data_epochs,times = Unfold.epoch(data=data_r,tbl=evts,τ=(-0.4,0.8),sfreq=50);
 # missing or partially missing epochs are currenlty _only_ supported for non-mixed models!
