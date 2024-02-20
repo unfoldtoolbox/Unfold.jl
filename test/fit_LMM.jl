@@ -3,7 +3,7 @@
     ###############################
     ##  Mixed Model tests
     ###############################
-    data, evts = loadtestdata("testCase3", dataPath = (@__DIR__) * "/data") #
+    data, evts = loadtestdata("testCase3", dataPath=(@__DIR__) * "/data") #
     append!(data, zeros(1000))
     data = reshape(data, 1, :)
     data = vcat(data, data)
@@ -22,9 +22,9 @@
 
     # cut the data into epochs
     # TODO This ignores subject bounds
-    data_e, times = Unfold.epoch(data = data, tbl = evts, τ = (-1.0, 1.9), sfreq = 10)
+    data_e, times = Unfold.epoch(data=data, tbl=evts, τ=(-1.0, 1.9), sfreq=10)
     data_missing_e, times =
-        Unfold.epoch(data = data_missing, tbl = evts, τ = (-1.0, 1.9), sfreq = 10)
+        Unfold.epoch(data=data_missing, tbl=evts, τ=(-1.0, 1.9), sfreq=10)
     evts_e, data_e = Unfold.dropMissingEpochs(copy(evts), data_e)
     evts_missing_e, data_missing_e = Unfold.dropMissingEpochs(copy(evts), data_missing_e)
 
@@ -36,13 +36,13 @@
         evts_e,
         data_e,
         times,
-        contrasts = Dict(:condA => EffectsCoding(), :condB => EffectsCoding()),
+        contrasts=Dict(:condA => EffectsCoding(), :condB => EffectsCoding()),
     )
     df = Unfold.coeftable(m_mum)
     @test isapprox(
         df[(df.channel.==1).&(df.coefname.=="condA: 1").&(df.time.==0.0), :estimate],
         [5.618, 9.175],
-        rtol = 0.1,
+        rtol=0.1,
     )
 
 
@@ -53,32 +53,32 @@
         evts_missing_e,
         data_missing_e,
         times,
-        contrasts = Dict(:condA => EffectsCoding(), :condB => EffectsCoding()),
+        contrasts=Dict(:condA => EffectsCoding(), :condB => EffectsCoding()),
     )
     df = coeftable(m_mum)
     @test isapprox(
         df[(df.channel.==1).&(df.coefname.=="condA: 1").&(df.time.==0.0), :estimate],
         [5.618, 9.175],
-        rtol = 0.1,
+        rtol=0.1,
     )
 
 
     # Timexpanded Univariate Mixed
     f = @formula 0 ~ 1 + condA + condB + (1 + condA | subject)
-    basisfunction = firbasis(τ = (-0.2, 0.3), sfreq = 10, name = "ABC")
+    basisfunction = firbasis(τ=(-0.2, 0.3), sfreq=10, name="ABC")
     @time m_tum = fit(
         UnfoldModel,
         f,
         evts,
         data,
         basisfunction,
-        contrasts = Dict(:condA => EffectsCoding(), :condB => EffectsCoding()),
+        contrasts=Dict(:condA => EffectsCoding(), :condB => EffectsCoding()),
     )
     df = coeftable(m_tum)
     @test isapprox(
         df[(df.channel.==1).&(df.coefname.=="condA: 1").&(df.time.==0.0), :estimate],
         [5.618, 9.175],
-        rtol = 0.1,
+        rtol=0.1,
     )
 
 
@@ -90,7 +90,7 @@
         evts,
         data_missing,
         basisfunction,
-        contrasts = Dict(:condA => EffectsCoding(), :condB => EffectsCoding()),
+        contrasts=Dict(:condA => EffectsCoding(), :condB => EffectsCoding()),
     )
 
 
@@ -105,8 +105,8 @@
     f1_lmm = @formula 0 ~ 1 + condB + (1 | subject)
     f2_lmm = @formula 0 ~ 1 + condB + (1 | subjectB)
 
-    b1 = firbasis(τ = (-0.2, 0.3), sfreq = 10, name = "A")
-    b2 = firbasis(τ = (-0.1, 0.3), sfreq = 10, name = "B")
+    b1 = firbasis(τ=(-0.2, 0.3), sfreq=10, name="A")
+    b2 = firbasis(τ=(-0.1, 0.3), sfreq=10, name="B")
 
 
     X1_lmm = designmatrix(UnfoldLinearMixedModel, f1_lmm, evts1, b1)
@@ -118,7 +118,7 @@
     @test isapprox(
         df[(df.channel.==1).&(df.coefname.=="condB").&(df.time.==0.0), :estimate],
         [18.21, 17.69],
-        rtol = 0.1,
+        rtol=0.1,
     )
 
     # Fast-lane new implementation
@@ -128,19 +128,19 @@
             Dict(0 => (f1_lmm, b1), 1 => (f2_lmm, b2)),
             evts,
             data,
-            eventcolumn = "condA",
+            eventcolumn="condA",
         ),
     )
 
 end
 ## Condense check for multi channel, multi 
 @testset "LMM multi channel, multi basisfunction" begin
-    data, evts = loadtestdata("testCase3", dataPath = (@__DIR__) * "/data")
+    data, evts = loadtestdata("testCase3", dataPath=(@__DIR__) * "/data")
     transform!(evts, :subject => categorical => :subject)
     data = vcat(data', data')
 
-    bA0 = firbasis(τ = (-0.0, 0.1), sfreq = 10, name = "bA0")
-    bA1 = firbasis(τ = (0.1, 0.2), sfreq = 10, name = "bA1")
+    bA0 = firbasis(τ=(-0.0, 0.1), sfreq=10, name="bA0")
+    bA1 = firbasis(τ=(0.1, 0.2), sfreq=10, name="bA1")
     evts.subject2 = evts.subject
     fA0 = @formula 0 ~ 1 + condB + zerocorr(1 | subject)
     fA1 = @formula 0 ~ 1 + condB + zerocorr(1 | subject2)
@@ -149,7 +149,7 @@ end
         Dict(0 => (fA0, bA0), 1 => (fA1, bA1)),
         evts,
         data,
-        eventcolumn = "condA",
+        eventcolumn="condA",
     )
 
     res = coeftable(m)
@@ -162,7 +162,9 @@ end
 @testset "LMM bug reorder #115" begin
 
     data, evts =
-        UnfoldSim.predef_2x2(; return_epoched = true, n_subjects = 10, noiselevel = 1)
+        UnfoldSim.predef_2x2(; return_epoched=true, n_subjects=10, noiselevel=1, onset=NoOnset())
+
+    data = reshape(data, size(data, 1), :)
 
     designList = [
         Dict(
@@ -171,7 +173,7 @@ end
                     0 ~
                         1 + A + B + zerocorr(1 + B + A | subject) + zerocorr(1 + B | item)
                 ),
-                range(0, 1, length = size(data, 1)),
+                range(0, 1, length=size(data, 1)),
             ),
         ),
         Dict(
@@ -180,13 +182,13 @@ end
                     0 ~
                         1 + A + B + zerocorr(1 + A + B | subject) + zerocorr(1 + B | item)
                 ),
-                range(0, 1, length = size(data, 1)),
+                range(0, 1, length=size(data, 1)),
             ),
         ),
         Dict(
             Any => (
                 @formula(0 ~ 1 + zerocorr(1 + A + B | subject) + zerocorr(1 | item)),
-                range(0, 1, length = size(data, 1)),
+                range(0, 1, length=size(data, 1)),
             ),
         ),
     ]
@@ -202,7 +204,7 @@ end
     des = Dict(
         Any => (
             @formula(0 ~ 1 + zerocorr(1 | item) + zerocorr(1 + A + B | subject)),
-            range(0, 1, length = size(data, 1)),
+            range(0, 1, length=size(data, 1)),
         ),
     )
     uf = fit(UnfoldModel, des, evts, data)
@@ -218,13 +220,15 @@ end
 
 @testset "LMM bug reshape #110" begin
     data, evts =
-        UnfoldSim.predef_2x2(; return_epoched = true, n_subjects = 10, noiselevel = 1)
+        UnfoldSim.predef_2x2(; return_epoched=true, n_subjects=10, noiselevel=1)
+    data = reshape(data, size(data, 1), :)
+
     des = Dict(
         Any => (
             @formula(
                 0 ~ 1 + A + B + zerocorr(1 + B + A | item) + zerocorr(1 + B | subject)
             ),
-            range(0, 1, length = size(data, 1)),
+            range(0, 1, length=size(data, 1)),
         ),
     )
     uf = fit(UnfoldModel, des, evts, data)
