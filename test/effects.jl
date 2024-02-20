@@ -1,7 +1,7 @@
 data, evts = loadtestdata("test_case_3a") #
 
 data_r = reshape(data, (1, :))
-data_e, times = Unfold.epoch(data = data_r, tbl = evts, τ = (0, 0.05), sfreq = 10) # cut the data into epochs
+data_e, times = Unfold.epoch(data=data_r, tbl=evts, τ=(0, 0.05), sfreq=10) # cut the data into epochs
 
 f = @formula 0 ~ 1 + conditionA + continuousA # 1
 m_mul = fit(Unfold.UnfoldModel, Dict(Any => (f, times)), evts, data_e)
@@ -72,16 +72,16 @@ f = @formula 0 ~ 1 + conditionA + continuousA # 1
 end
 
 data, evts = loadtestdata("test_case_4a") #
-b1 = firbasis(τ = (0.0, 0.95), sfreq = 20, name = "basisA")
-b2 = firbasis(τ = (0.0, 0.95), sfreq = 20, name = "basisB")
-b3 = firbasis(τ = (0.0, 0.95), sfreq = 20, name = "basisC")
+b1 = firbasis(τ=(0.0, 0.95), sfreq=20, name="basisA")
+b2 = firbasis(τ=(0.0, 0.95), sfreq=20, name="basisB")
+b3 = firbasis(τ=(0.0, 0.95), sfreq=20, name="basisC")
 f = @formula 0 ~ 1 # 1
 m_tul = fit(
     UnfoldModel,
     Dict("eventA" => (f, b1), "eventB" => (f, b2)),
     evts,
     data,
-    eventcolumn = "type",
+    eventcolumn="type",
 )
 
 @testset "Time Expansion, two events" begin
@@ -104,7 +104,7 @@ end
         Dict("eventA" => (f, b1), "eventB" => (f, b2), "eventC" => (f, b3)),
         evts_3,
         data,
-        eventcolumn = "type",
+        eventcolumn="type",
     )
 
     eff = Unfold.effects(Dict(:conditionA => [0, 1], :continuousA => [0]), m_tul_3)
@@ -118,8 +118,8 @@ end
     ## Different sized events + different Formulas
     data, evts = loadtestdata("test_case_4a") #
     evts[!, :continuousA] = rand(MersenneTwister(42), nrow(evts))
-    b1 = firbasis(τ = (0.0, 0.95), sfreq = 20, name = "basisA")
-    b2 = firbasis(τ = (0.0, 0.5), sfreq = 20, name = "basisB")
+    b1 = firbasis(τ=(0.0, 0.95), sfreq=20, name="basisA")
+    b2 = firbasis(τ=(0.0, 0.5), sfreq=20, name="basisB")
     f1 = @formula 0 ~ 1 # 1
     f2 = @formula 0 ~ 1 + continuousA # 1
     m_tul = fit(
@@ -127,7 +127,7 @@ end
         Dict("eventA" => (f1, b1), "eventB" => (f2, b2)),
         evts,
         data,
-        eventcolumn = "type",
+        eventcolumn="type",
     )
     eff = Unfold.effects(Dict(:conditionA => [0, 1], :continuousA => [-1, 0, 1]), m_tul)
     @test nrow(eff) == (length(Unfold.times(b1)) - 1 + length(Unfold.times(b2)) - 1) * 6
@@ -143,7 +143,7 @@ data_r = repeat(reshape(data, (1, :)), 3, 1)
 data_r[2, :] = data_r[2, :] .* 2
 
 
-data_e, times = Unfold.epoch(data = data_r, tbl = evts, τ = (0, 0.05), sfreq = 10) # cut the data into epochs
+data_e, times = Unfold.epoch(data=data_r, tbl=evts, τ=(0, 0.05), sfreq=10) # cut the data into epochs
 
 #
 f = @formula 0 ~ 1 + conditionA + continuousA # 1
@@ -171,8 +171,8 @@ end
     evts.continuousB[ixA] = evts.continuousB[ixA] .- mean(evts.continuousB[ixA]) .- 5
     evts.continuousB[.!ixA] =
         evts.continuousB[.!ixA] .- mean(evts.continuousB[.!ixA]) .+ 0.5
-    b1 = firbasis(τ = (0.0, 0.02), sfreq = 20, name = "basisA")
-    b2 = firbasis(τ = (1.0, 1.02), sfreq = 20, name = "basisB")
+    b1 = firbasis(τ=(0.0, 0.02), sfreq=20, name="basisA")
+    b2 = firbasis(τ=(1.0, 1.02), sfreq=20, name="basisB")
     f1 = @formula 0 ~ 1 + continuousA # 1
     f2 = @formula 0 ~ 1 + continuousB # 1
     m_tul = fit(
@@ -180,7 +180,7 @@ end
         Dict("eventA" => (f1, b1), "eventB" => (f2, b2)),
         evts,
         data,
-        eventcolumn = "type",
+        eventcolumn="type",
     )
 
     m_tul.modelfit.estimate .= [0 -1 0 6]
@@ -202,8 +202,8 @@ end
         ["m", "x"][Int.(1 .+ round.(rand(MersenneTwister(43), nrow(evts))))]
 
 
-    b1 = firbasis(τ = (0.0, 0.02), sfreq = 20, name = "basisA")
-    b2 = firbasis(τ = (1.0, 1.02), sfreq = 20, name = "basisB")
+    b1 = firbasis(τ=(0.0, 0.02), sfreq=20, name="basisA")
+    b2 = firbasis(τ=(1.0, 1.02), sfreq=20, name="basisB")
     f1 = @formula 0 ~ 1 + continuousA * continuousB # 1
     f2 = @formula 0 ~ 1 + continuousB # 1
     m_tul = fit(
@@ -211,7 +211,7 @@ end
         Dict("eventA" => (f1, b1), "eventB" => (f2, b2)),
         evts,
         data,
-        eventcolumn = "type",
+        eventcolumn="type",
     )
 
     m_tul.modelfit.estimate .= [0, -1, 0, 2.0, 0.0, 0.0]'
@@ -266,7 +266,9 @@ end
 
 
 @testset "MixedModel" begin
-    data, evts = UnfoldSim.predef_eeg(10; return_epoched = true)
+    data, evts = UnfoldSim.predef_eeg(10; return_epoched=true)
+    data = reshape(data, size(data, 1), :)
+
     m = fit(
         UnfoldModel,
         @formula(0 ~ 1 + condition + (1 + condition | subject)),
@@ -279,7 +281,9 @@ end
 
 
 @testset "MixedModelContinuousTime" begin
-    data, evts = UnfoldSim.predef_eeg(10; sfreq = 10, return_epoched = false)
+    data, evts = UnfoldSim.predef_eeg(10; sfreq=10, return_epoched=false)
+    data = data[:]
+
     m = fit(
         UnfoldModel,
         Dict(
