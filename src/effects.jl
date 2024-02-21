@@ -59,7 +59,7 @@ function effects(design::AbstractDict, model::UnfoldModel; typical = mean)
             DataFrame.(cast_referenceGrid.(Ref(reference_grid), eff, Ref(times(model))))
         names = collect(keys(Unfold.design(model)))
         [df.basisname .= n for (df, n) in zip(results_tmp, names)]
-        result = vcat(results_tmp...)
+        result = reduce(vcat, results_tmp)
     else
         # normal mass univariate model
         result = DataFrame(cast_referenceGrid(reference_grid, eff, times(model)))
