@@ -33,9 +33,9 @@ function effects(design::AbstractDict, model::UnfoldModel; typical = mean)
 
     # replace non-specified fields with "constants"
     m = modelmatrix(model, false) # get the modelmatrix without timeexpansion
-    @debug "type form[1]", typeof(form[1])
+    #@debug "type form[1]", typeof(form[1])
     form_typical = _typify(reference_grid, form, m, typical)
-    @debug "type form_typical[1]", typeof(form_typical[1])
+    #@debug "type form_typical[1]", typeof(form_typical[1])
     eff = yhat(model, form_typical, reference_grid)
 
     # because coefficients are 2D/3D arry, we have to cast it correctly to one big dataframe
@@ -131,7 +131,8 @@ function _typify(
 
 end
 
-function cast_referenceGrid(r, eff, times; basisname = nothing)
+function cast_referenceGrid(r, eff::AbstractArray{T}, times; basisname = nothing) where {T}
+    @debug typeof(eff), typeof(r)
     nchan = size(eff, 2) # correct
     neff = size(r, 1) # how many effects requested
     neffCol = size(r, 2) # how many predictors

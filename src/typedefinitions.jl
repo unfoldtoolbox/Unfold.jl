@@ -99,15 +99,18 @@ UnfoldLinearMixedModelContinuousTime(d::Dict, X::DesignMatrix) =
 """
 Contains the results of linearmodels (continuous and not)
 """
-struct LinearModelFit <: ModelFit
-    estimate::Any
+struct LinearModelFit{T,N} <: ModelFit
+    estimate::Array{T,N}
     info::Any
-    standarderror::Any
+    standarderror::Array{T,N}
 end
 
-LinearModelFit() = LinearModelFit([], [], [])
-LinearModelFit(estimate) = LinearModelFit(estimate, [], [])
-LinearModelFit(estimate, info) = LinearModelFit(estimate, info, [])
+LinearModelFit() = LinearModelFit(Float64[], [], Float64[])
+LinearModelFit(estimate) = LinearModelFit(estimate, [])
+LinearModelFit(estimate::Array{T,2}, info) where {T} =
+    LinearModelFit(estimate, info, similar(Array{T}, 0, 0))
+LinearModelFit(estimate::Array{T,3}, info) where {T} =
+    LinearModelFit(estimate, info, similar(Array{T}, 0, 0, 0))
 
 function Base.show(io::IO, obj::UnfoldModel)
     println(io, "Unfold-Type: $(typeof(obj)) \n")

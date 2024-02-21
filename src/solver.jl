@@ -99,7 +99,7 @@ function solver_default(
     showprogress = true,
 ) where {T<:Union{Missing,<:Number}}
     #beta = Array{Union{Missing,Number}}(undef, size(data, 1), size(data, 2), size(X, 2))
-    beta = zeros(Union{Missing,Number}, size(data, 1), size(data, 2), size(X, 2))
+    beta = zeros(Union{Missing,T}, size(data, 1), size(data, 2), size(X, 2))
     p = Progress(size(data, 1); enabled = showprogress)
     @maybe_threads multithreading for ch = 1:size(data, 1)
         for t = 1:size(data, 2)
