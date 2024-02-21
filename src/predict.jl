@@ -217,11 +217,12 @@ yhat(
 
 
 function yhat_mult(X::AbstractArray{T,2}, coef) where {T<:Number}
-    @tullio yhat[ch, a, b] := X[a, trial] * coef[ch, b, pred]
+
+    @tullio yhat[ch, a, b] := X[a, trial] * coef[ch, b, trial]
     return yhat
 end
 function yhat_mult(X::AbstractArray{T,2}, coef) where {T<:Union{Missing,<:Number}}
-    yhat = Array{T}(missing, size(coef, 1), size(X, 1), size(coef, 2))
+    yhat = Array{T}(undef, size(coef, 1), size(X, 1), size(coef, 2))
     for ch = 1:size(coef, 1)
         yhat[ch, :, :] = X * permutedims(coef[ch, :, :], (2, 1))
     end
