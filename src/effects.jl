@@ -201,10 +201,10 @@ function cast_referenceGrid(r, eff::AbstractArray{T}, times; basisname = nothing
         :channel => linearize(chan_rep),
         :basisname => linearize(basisname_rep),
     )
-    @debug size(coefs_rep), typeof(coefs_rep), size(coefs_rep[1, 1])
-    @debug coefs_rep[1, 2][1:2]
+    #@debug size(coefs_rep), typeof(coefs_rep), size(coefs_rep[1, 1])
+    #@debug coefs_rep[1, 2][1:2]
     for k = 1:neffCol
-        @debug names(r)[k]
+        #@debug names(r)[k]
         push!(result, Symbol(names(r)[k]) => reduce(vcat, coefs_rep[:, k]))
     end
 

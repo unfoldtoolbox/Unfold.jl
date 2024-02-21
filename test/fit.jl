@@ -16,7 +16,7 @@ data_e, times = Unfold.epoch(data = data_r, tbl = evts, τ = (-1.0, 1.9), sfreq 
     fit!(uf, data_e)
 
 
-    @test typeof(uf.modelfit) == Unfold.LinearModelFit
+    @test typeof(uf.modelfit) == Unfold.LinearModelFit{Union{Missing,Float64},3}
     @test !isempty(coef(uf.modelfit))
 
 end

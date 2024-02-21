@@ -214,6 +214,19 @@ yhat(
 ) where {T<:Union{Missing,<:Number}} = yhat(coef(model), X; kwargs...)
 
 
+
+
+function yhat_mult(X::AbstractArray{T,2}, coef) where {T<:Number}
+    @tullio yhat[ch, a, b] := X[a, trial] * coef[ch, b, pred]
+    return yhat
+end
+function yhat_mult(X::AbstractArray{T,2}, coef) where {T<:Union{Missing,<:Number}}
+    yhat = Array{T}(missing, size(coef, 1), size(X, 1), size(coef, 2))
+    for ch = 1:size(coef, 1)
+        yhat[ch, :, :] = X * permutedims(coef[ch, :, :], (2, 1))
+    end
+    return yhat
+end
 function yhat(
     coef::AbstractArray{T1,3},
     X::AbstractArray{T2,2};
@@ -222,12 +235,16 @@ function yhat(
     # function that calculates coef*designmat, but in the ch x times x coef vector
     # setup the output matrix, has to be a matrix
     # then transforms it back to 2D matrix times/coef x ch to be compatible with the timecontinuous format
-    # yhat = Array{Union{Missing,T}}(missing, size(coef, 1), size(X, 1), size(coef, 2))
-    #for ch = 1:size(coef, 1)
-    @debug size(X), size(coef)
-    @tullio yhat[ch, a, b] := X[a, trial] * coef[ch, b, pred]
-    #yhat[ch, :, :] = X * permutedims(coef[ch, :, :], (2, 1))
-    #end
+    @debug "type X", typeof(X)
+
+    try
+
+        X = disallowmissing(X)
+
+    catch
+    end
+    yhat = yhat_mult(X, coef)
+
 
     # bring the yhat into a ch x yhat format
     yhat = reshape(permutedims(yhat, (1, 3, 2)), size(yhat, 1), :)
