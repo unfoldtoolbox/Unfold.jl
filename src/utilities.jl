@@ -102,7 +102,7 @@ Flatten a 1D array from of a 2D/3D array. Also drops the empty dimension
 """
 function linearize(x::AbstractArray{T,N}) where {T,N}
     # used in condense_long to generate the long format
-    return dropdims(reshape(x, :, 1), dims = 2)::AbstractArray{T,1}
+    return x[:] #dropdims(reshape(x, :, 1), dims = 2)::AbstractArray{T,1}
 end
 function linearize(x::String)
     return x
