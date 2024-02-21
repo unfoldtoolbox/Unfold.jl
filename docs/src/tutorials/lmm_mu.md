@@ -29,9 +29,9 @@ Again we have 4 steps:
 
 ```@example Main
 
-data, evts = UnfoldSim.predef_eeg(10)
-data = reshape(data, size(data, 1), :) # we need to concatenate the data to one long EEG dataset
-
+data, evts = UnfoldSim.predef_eeg(10;return_epoched=true) # simulate 10 subjects
+data = reshape(data,1,size(data, 1), :) # we need to concatenate the data to one long EEG dataset
+times = range(0,length=size(data,2),step=1/100)
 transform!(evts,:subject=>categorical=>:subject); # has to be categorical, else MixedModels.jl complains
 nothing #hide
 ```
@@ -40,17 +40,6 @@ The `events` dataFrame has an additional column (besides being much taller): `su
 ```@example Main
 first(evts,6)
 ```        
-
-
-Now we are ready to epoch the data - same as for the mass univariate, but we have more trials (times `nsubject` more)
-```@example Main
-# cut the data into epochs
-data_epochs,times = Unfold.epoch(data=data_r,tbl=evts,τ=(-0.4,0.8),sfreq=50);
-# missing or partially missing epochs are currenlty _only_ supported for non-mixed models!
-evts,data_epochs = Unfold.dropMissingEpochs(evts,data_epochs);
-
-nothing #hide
-```
 
 #### 2. Specify the formula
 We define the formula. Importantly we need to specify a random effect. We are using `zerocorr` to speed up the calculation and show off that we can use it.
@@ -64,7 +53,8 @@ nothing #hide
 #### 3. Fit the model
 We can now run the LinearMixedModel on each time point
 ```@example Main
-m = fit(UnfoldModel,f,evts,data_epochs,times)
+
+m = fit(UnfoldModel,f,evts,data,times)
 nothing #hide
 ```
 
