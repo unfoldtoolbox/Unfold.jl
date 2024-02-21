@@ -1,6 +1,6 @@
 using UnfoldSim
 using DataFrames
-save_path = mktempdir(; cleanup = false)#tempdir()
+save_path = mktempdir(; cleanup=false)#tempdir()
 
 ## 1. Test data set:
 # - Generate a P1/N1/P3 complex for one subject (using UnfoldSim)
@@ -9,12 +9,12 @@ save_path = mktempdir(; cleanup = false)#tempdir()
 
 
 
-data1, evts1 = UnfoldSim.predef_eeg(; n_repeats = 100, noiselevel = 0.8);
+data1, evts1 = UnfoldSim.predef_eeg(; n_repeats=100, noiselevel=0.8);
 # Assume that the data is from two different events
 evts1[!, :type] = repeat(["event_A", "event_B"], nrow(evts1) ÷ 2);
 
-bf1_A = firbasis(τ = [-0.1, 1], sfreq = 100, name = "event_A");
-bf1_B = firbasis(τ = [-0.1, 1], sfreq = 100, name = "event_B");
+bf1_A = firbasis(τ=[-0.1, 1], sfreq=100, name="event_A");
+bf1_B = firbasis(τ=[-0.1, 1], sfreq=100, name="event_B");
 
 f1_A = @formula 0 ~ 1;
 f1_B = @formula 0 ~ 1 + condition + spl(continuous, 4);
@@ -29,16 +29,16 @@ for deconv in [false, true]
 
     if deconv
 
-        m1 = Unfold.fit(UnfoldModel, bfDict1, evts1, data1, eventcolumn = "type")
+        m1 = Unfold.fit(UnfoldModel, bfDict1, evts1, data1, eventcolumn="type")
     else
-        m1 = Unfold.fit(UnfoldLinearModel, bfDict1_e, evts1, data1_e; eventcolumn = "type")
+        m1 = Unfold.fit(UnfoldLinearModel, bfDict1_e, evts1, data1_e; eventcolumn="type")
     end
     @testset "SingleSubjectDesign with two event types and splines" begin
         # save the model to a compressed .jld2 file and load it again
 
-        save(joinpath(save_path, "m1_compressed.jld2"), m1; compress = true)
+        save(joinpath(save_path, "m1_compressed.jld2"), m1; compress=true)
         m1_loaded =
-            load(joinpath(save_path, "m1_compressed.jld2"), UnfoldModel, generate_Xs = true)
+            load(joinpath(save_path, "m1_compressed.jld2"), UnfoldModel, generate_Xs=true)
 
         @test ismissing(m1_loaded.designmatrix.Xs) == false
         @test typeof(m1) == typeof(m1_loaded)
@@ -62,7 +62,7 @@ for deconv in [false, true]
         m1_loaded_without_dm = load(
             joinpath(save_path, "m1_compressed.jld2"),
             UnfoldModel,
-            generate_Xs = false,
+            generate_Xs=false,
         )
 
 
@@ -76,13 +76,14 @@ end
 # - Generate a 2x2 design with Hanning window for multiple subjects (using UnfoldSim)
 # - Use a Mixed-effects Unfold model
 
-data2, evts2 = UnfoldSim.predef_2x2(; n_subjects = 5, return_epoched = true);
+data2, evts2 = UnfoldSim.predef_2x2(; n_subjects=5, return_epoched=true);
+data2 = reshape(data2, size(data2, 1), :)
 
 # Define a model formula with interaction term and random effects for subjects
 f2 = @formula(0 ~ 1 + A * B + (1 | subject));
 τ2 = [-0.1, 1];
 sfreq2 = 100;
-times2 = range(τ2[1], length = size(data2, 1), step = 1 ./ sfreq2);
+times2 = range(τ2[1], length=size(data2, 1), step=1 ./ sfreq2);
 
 m2 = Unfold.fit(
     UnfoldModel,
@@ -91,14 +92,14 @@ m2 = Unfold.fit(
     reshape(data2, 1, size(data2)...),
 );
 
-save(joinpath(save_path, "m2_compressed.jld2"), m2; compress = true)
-m2_loaded = load(joinpath(save_path, "m2_compressed.jld2"), UnfoldModel, generate_Xs = true)
+save(joinpath(save_path, "m2_compressed.jld2"), m2; compress=true)
+m2_loaded = load(joinpath(save_path, "m2_compressed.jld2"), UnfoldModel, generate_Xs=true)
 
 @testset "2x2 MultiSubjectDesign Mixed-effects model" begin
     # save the model to a compressed .jld2 file and load it again
-    save(joinpath(save_path, "m2_compressed.jld2"), m2; compress = true)
+    save(joinpath(save_path, "m2_compressed.jld2"), m2; compress=true)
     m2_loaded =
-        load(joinpath(save_path, "m2_compressed.jld2"), UnfoldModel, generate_Xs = true)
+        load(joinpath(save_path, "m2_compressed.jld2"), UnfoldModel, generate_Xs=true)
 
     @test ismissing(m2_loaded.designmatrix.Xs) == false
     @test typeof(m2) == typeof(m2_loaded)
@@ -119,7 +120,7 @@ m2_loaded = load(joinpath(save_path, "m2_compressed.jld2"), UnfoldModel, generat
 
     # load the model without reconstructing the designmatrix
     m2_loaded_without_dm =
-        load(joinpath(save_path, "m2_compressed.jld2"), UnfoldModel, generate_Xs = false)
+        load(joinpath(save_path, "m2_compressed.jld2"), UnfoldModel, generate_Xs=false)
 
     @test ismissing(m2_loaded_without_dm.designmatrix.Xs) == true
 end

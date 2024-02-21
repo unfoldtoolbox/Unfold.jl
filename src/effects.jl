@@ -26,7 +26,7 @@ Calculates marginal effects for all term-combinations in `design`.
 """
 
 
-function effects(design::AbstractDict, model::UnfoldModel; typical = mean)
+function effects(design::AbstractDict, model::UnfoldModel; typical=mean)
     reference_grid = expand_grid(design)
     form = Unfold.formula(model) # get formula
 
@@ -49,7 +49,7 @@ function effects(design::AbstractDict, model::UnfoldModel; typical = mean)
         bnames = repeat.(bnames, [e.stop + e.step - 1 for e in eff[1]])
 
         result = DataFrame(
-            cast_referenceGrid(reference_grid, eff[3], eff[2]; basisname = vcat(bnames...)),
+            cast_referenceGrid(reference_grid, eff[3], eff[2]; basisname=vcat(bnames...)),
         )
         select!(result, Not(:latency)) # remove the latency column if it was added
     elseif isa(eff, Vector)
@@ -96,13 +96,13 @@ function _typify(
         tmpf = FormulaTerm(tmpf.lhs, tmpf.rhs.term)
 
         # typify that
-        tmpf = typify(reference_grid, tmpf, m[f]; typical = typical)
+        tmpf = typify(reference_grid, tmpf, m[f]; typical=typical)
 
         # regenerate TimeExpansion
         tmpf = Unfold.TimeExpandedTerm(
             tmpf,
             form[f].rhs.basisfunction;
-            eventfields = form[f].rhs.eventfields,
+            eventfields=form[f].rhs.eventfields,
         )
         form_typical[f] = tmpf
     end
@@ -110,7 +110,7 @@ function _typify(
 end
 function _typify(reference_grid, form::FormulaTerm, m, typical)
 
-    return [typify(reference_grid, form, m; typical = typical)]
+    return [typify(reference_grid, form, m; typical=typical)]
 
 end
 
@@ -124,13 +124,13 @@ function _typify(
     @debug "_typify going the mass univariate route"
     out = []
     for k = 1:length(form)
-        push!(out, typify(reference_grid, form[k], m[k]; typical = typical))
+        push!(out, typify(reference_grid, form[k], m[k]; typical=typical))
     end
     return out
 
 end
 
-function cast_referenceGrid(r, eff, times; basisname = nothing)
+function cast_referenceGrid(r, eff, times; basisname=nothing)
     nchan = size(eff, 2) # correct
     neff = size(r, 1) # how many effects requested
     neffCol = size(r, 2) # how many predictors
@@ -166,7 +166,7 @@ function cast_referenceGrid(r, eff, times; basisname = nothing)
 
             coefs_rep[i_ix, k] = linearize(
                 permutedims(
-                    repeat(r[:, k], outer = [1, nchan, sum(ixList[i_ix])]),
+                    repeat(r[:, k], outer=[1, nchan, sum(ixList[i_ix])]),
                     [2, 3, 1],
                 ),
             )
@@ -199,9 +199,11 @@ function cast_referenceGrid(r, eff, times; basisname = nothing)
         :channel => linearize(chan_rep),
         :basisname => linearize(basisname_rep),
     )
-
+    @debug size(coefs_rep), typeof(coefs_rep), size(coefs_rep[1, 1])
+    @debug coefs_rep[1, 2][1:2]
     for k = 1:neffCol
-        push!(result, Symbol(names(r)[k]) => vcat(vcat(coefs_rep[:, k]...)...))
+        @debug names(r)[k]
+        push!(result, Symbol(names(r)[k]) => reduce(vcat, coefs_rep[:, k]))
     end
 
     return result
