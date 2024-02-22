@@ -54,7 +54,7 @@ function calculate_stderror(Xdc, data::Matrix{T}, beta) where {T<:Union{Missing,
         "Autocorrelation was NOT taken into account. Therefore SE are UNRELIABLE. Use at your own discretion"
     )
 
-    se = Array{Float64}(undef, size(data, 1), size(Xdc, 2))
+    se = Array{T}(undef, size(data, 1), size(Xdc, 2))
     for ch = 1:size(data, 1)
         residualVar = var(data[ch, :] .- Xdc * beta[ch, :])
         @assert(!isnan(residualVar), "residual Variance was NaN")
@@ -78,7 +78,7 @@ function calculate_stderror(
         "Autocorrelation was NOT taken into account. Therefore SE are UNRELIABLE. Use at your own discretion"
     )
 
-    se = Array{Float64}(undef, size(data, 1), size(data, 2), size(X, 2))
+    se = Array{T}(undef, size(data, 1), size(data, 2), size(X, 2))
     for ch = 1:size(data, 1)
         for t = 1:size(data, 2)
             ix = .!ismissing.(data[ch, t, :])
@@ -99,7 +99,7 @@ function solver_default(
     showprogress = true,
 ) where {T<:Union{Missing,<:Number}}
     #beta = Array{Union{Missing,Number}}(undef, size(data, 1), size(data, 2), size(X, 2))
-    beta = zeros(Union{Missing,Number}, size(data, 1), size(data, 2), size(X, 2))
+    beta = zeros(Union{Missing,T}, size(data, 1), size(data, 2), size(X, 2))
     p = Progress(size(data, 1); enabled = showprogress)
     @maybe_threads multithreading for ch = 1:size(data, 1)
         for t = 1:size(data, 2)

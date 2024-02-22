@@ -33,9 +33,9 @@ function effects(design::AbstractDict, model::UnfoldModel; typical = mean)
 
     # replace non-specified fields with "constants"
     m = modelmatrix(model, false) # get the modelmatrix without timeexpansion
-    @debug "type form[1]", typeof(form[1])
+    #@debug "type form[1]", typeof(form[1])
     form_typical = _typify(reference_grid, form, m, typical)
-    @debug "type form_typical[1]", typeof(form_typical[1])
+    #@debug "type form_typical[1]", typeof(form_typical[1])
     eff = yhat(model, form_typical, reference_grid)
 
     # because coefficients are 2D/3D arry, we have to cast it correctly to one big dataframe
@@ -59,7 +59,7 @@ function effects(design::AbstractDict, model::UnfoldModel; typical = mean)
             DataFrame.(cast_referenceGrid.(Ref(reference_grid), eff, Ref(times(model))))
         names = collect(keys(Unfold.design(model)))
         [df.basisname .= n for (df, n) in zip(results_tmp, names)]
-        result = vcat(results_tmp...)
+        result = reduce(vcat, results_tmp)
     else
         # normal mass univariate model
         result = DataFrame(cast_referenceGrid(reference_grid, eff, times(model)))
@@ -131,7 +131,8 @@ function _typify(
 
 end
 
-function cast_referenceGrid(r, eff, times; basisname = nothing)
+function cast_referenceGrid(r, eff::AbstractArray{T}, times; basisname = nothing) where {T}
+    @debug typeof(eff), typeof(r)
     nchan = size(eff, 2) # correct
     neff = size(r, 1) # how many effects requested
     neffCol = size(r, 2) # how many predictors
@@ -200,10 +201,10 @@ function cast_referenceGrid(r, eff, times; basisname = nothing)
         :channel => linearize(chan_rep),
         :basisname => linearize(basisname_rep),
     )
-    @debug size(coefs_rep), typeof(coefs_rep), size(coefs_rep[1, 1])
-    @debug coefs_rep[1, 2][1:2]
+    #@debug size(coefs_rep), typeof(coefs_rep), size(coefs_rep[1, 1])
+    #@debug coefs_rep[1, 2][1:2]
     for k = 1:neffCol
-        @debug names(r)[k]
+        #@debug names(r)[k]
         push!(result, Symbol(names(r)[k]) => reduce(vcat, coefs_rep[:, k]))
     end
 
