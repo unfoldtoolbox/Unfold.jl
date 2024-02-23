@@ -120,7 +120,7 @@ yhat(model::UnfoldLinearModelContinuousTime, formulas::MatrixTerm, events) =
     yhat(model, formulas.terms, events)
 
 function yhat(model::UnfoldLinearModelContinuousTime, formulas, events)#::AbstractArray{AbstractTerm})
-    X = []
+    X = AbstractArray[]
     fromTo = []
     timesVec = []
     for f in formulas
@@ -165,13 +165,14 @@ function yhat(model::UnfoldLinearModelContinuousTime, formulas, events)#::Abstra
 
         if typeof(f.basisfunction) <: FIRBasis
 
-            keep = ones(size(Xsingle, 1))
+            keep = fill(true, size(Xsingle, 1))
             keep[range(
                 length(timesSingle),
                 size(Xsingle, 1),
                 step = length(timesSingle),
-            )] .= 0
-            Xsingle = Xsingle[keep.==1, :]
+            )] .= false
+
+            Xsingle = Xsingle[keep, :] # unfortunately @view is not compatible with blockdiag of SparseArrays.
             timesSingle = timesSingle[1:end-1]
             n_range = n_range - 1
         end
