@@ -68,9 +68,9 @@ SUITE["fit"] = BenchmarkGroup(["fit"])
 SUITE["effects"] = BenchmarkGroup(["effects"])
 
 # designmatrix generation
-SUITE["designmat"]["X_gen_lin"] =
+SUITE["designmat"]["lin"] =
     @benchmarkable designmatrix(UnfoldLinearModelContinuousTime, $f1, $evts, $ba1)
-SUITE["designmat"]["X_gen_lmm"] =
+SUITE["designmat"]["lmm"] =
     @benchmarkable designmatrix(UnfoldLinearMixedModelContinuousTime, $f1_lmm, $evts, $ba1)
 
 # Model Fit
@@ -82,3 +82,11 @@ SUITE["fit"]["lin_deconv"] =
     @benchmarkable fit(UnfoldModel, $dict_lin, $evts, $data, eventcolumn = "type");
 SUITE["fit"]["lmm_deconv"] =
     @benchmarkable fit(UnfoldModel, $dict_lmm, $evts, $data, eventcolumn = "type");
+
+
+SUITE["effects"]["lin"] =
+    @benchmarkable effects($(Dict(:A => [:a_small, :a_big])), $m_lin_f1)
+SUITE["effects"]["lin_spl"] = @benchmarkable effects(
+    $(Dict(:continuousA => collect(range(0.1, 0.9, length = 15)))),
+    $m_lin_f1_spl,
+)
