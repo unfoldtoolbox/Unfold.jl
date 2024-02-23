@@ -5,7 +5,9 @@ using UnfoldSim
 using Unfold
 using DataFrames
 using CategoricalArrays
-const SUITE = BenchmarkGroup()
+using MixedModels
+using BSplineKit
+#const SUITE = BenchmarkGroup()
 Random.seed!(3)
 
 
