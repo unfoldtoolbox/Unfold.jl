@@ -53,6 +53,7 @@ dict_lin = Dict(0 => (f1, ba1), 1 => (f2, ba2))
 dict_spl = Dict(0 => (f1_spl, ba1), 1 => (f1_spl, ba2))
 dict_lmm = Dict(0 => (f1_lmm, ba1), 1 => (f2_lmm, ba2))
 
+times = 1:size(data_epochs, 1)
 
 m_epoch_lin_f1 = fit(UnfoldModel, f1, evts_epochs, data_epochs, times)
 m_epoch_lin_f1_spl = fit(UnfoldModel, f1_spl, evts_epochs, data_epochs, times)
@@ -60,7 +61,6 @@ m_epoch_lin_f1_spl = fit(UnfoldModel, f1_spl, evts_epochs, data_epochs, times)
 m_lin_f1 = fit(UnfoldModel, dict_lin, evts, data, eventcolumn = "type")
 m_lin_f1_spl = fit(UnfoldModel, dict_spl, evts, data, eventcolumn = "type")
 
-times = 1:size(data_epochs, 1)
 
 SUITE = BenchmarkGroup()
 SUITE["designmat"] = BenchmarkGroup(["designmat"])
