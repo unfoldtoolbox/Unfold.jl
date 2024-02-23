@@ -1,5 +1,6 @@
 using BenchmarkTools
 using Random
+using StableRNGs
 using UnfoldSim
 using Unfold
 using DataFrames
@@ -8,58 +9,76 @@ const SUITE = BenchmarkGroup()
 Random.seed!(3)
 
 
+#---
 
-
-
-## Preparatory code
-#include("../test/test_utilities.jl"); # to load the simulated data
-
-#data,evts = loadtestdata("testCase6",dataPath=(@__DIR__)*"/../test/data") #
 
 sfreq = 100
-data,evts = UnfoldSim.predef_2x2(;n_subjects=20,signalsize=sfreq)
-data_epochs,evts_epochs = UnfoldSim.predef_2x2(;n_subjects=20,signalsize=sfreq,return_epoched=true)
+data, evts = UnfoldSim.predef_2x2(StableRNG(1); n_subjects = 20, signalsize = sfreq)
+data_epochs, evts_epochs = UnfoldSim.predef_2x2(
+    StableRNG(1);
+    n_subjects = 20,
+    signalsize = sfreq,
+    return_epoched = true,
+)
+data = data[:]
+data_epochs = reshape(data_epochs, size(data_epochs, 1), :)
 transform!(evts, :subject => categorical => :subject)
 transform!(evts, :item => categorical => :item)
-evts.type = rand(MersenneTwister(1),[0,1],nrow(evts))
+evts.type = rand(StableRNG(1), [0, 1], nrow(evts))
 
-ba1 = firbasis(τ=(0,1),sfreq = sfreq,name="evts1")
-ba2 = firbasis(τ=(0,1),sfreq = sfreq,name="evts2")
+for (ix, k) in
+    enumerate([:continuousA, :continuousB, :continuousC, :continuousD, :continuousE])
+    evts[!, k] = rand(StableRNG(ix), size(evts, 1))
+    evts_epochs[!, k] = rand(StableRNG(ix), size(evts_epochs, 1))
+end
 
-f1_lmm  = @formula 0~1+A+(1+A|subject)
-f2_lmm  = @formula 0~1+A+(1+A|item)
+ba1 = firbasis(τ = (0, 1), sfreq = sfreq, name = "evts1")
+ba2 = firbasis(τ = (0, 1), sfreq = sfreq, name = "evts2")
 
-f1  = @formula 0~1+A
-f2  = @formula 0~1+B
+f1_lmm = @formula 0 ~ 1 + A + (1 + A | subject)
+f2_lmm = @formula 0 ~ 1 + A + (1 + A | item)
 
-dict_lin = Dict(0 => (f1,ba1),1 => (f2,ba2))
-dict_lmm = Dict(0 => (f1_lmm,ba1),1 => (f2_lmm,ba2))
+f1 = @formula 0 ~ 1 + A
+f1_spl = @formula 0 ~
+    1 +
+    A +
+    spl(continuousA, 5) +
+    spl(continuousB, 5) +
+    spl(continuousC, 5) +
+    spl(continuousD, 5) +
+    spl(continuousE, 5)
+f2 = @formula 0 ~ 1 + B
+
+dict_lin = Dict(0 => (f1, ba1), 1 => (f2, ba2))
+dict_spl = Dict(0 => (f1_spl, ba1), 1 => (f1_spl, ba2))
+dict_lmm = Dict(0 => (f1_lmm, ba1), 1 => (f2_lmm, ba2))
 
 
-X1_lmm  = designmatrix(UnfoldLinearMixedModel,f1_lmm,evts,ba1)
-X2_lmm  = designmatrix(UnfoldLinearMixedModel,f2_lmm,evts,ba2)
+m_epoch_lin_f1 = fit(UnfoldModel, f1, evts_epochs, data_epochs, times)
+m_epoch_lin_f1_spl = fit(UnfoldModel, f1_spl, evts_epochs, data_epochs, times)
 
-X1   = designmatrix(UnfoldLinearModelContinuousTime,f1,evts,ba1)
-X2   = designmatrix(UnfoldLinearModelContinuousTime,f2,evts,ba2)
+m_lin_f1 = fit(UnfoldModel, dict_lin, evts, data, eventcolumn = "type")
+m_lin_f1_spl = fit(UnfoldModel, dict_spl, evts, data, eventcolumn = "type")
 
-
-times = 1:size(data_epochs,1)
+times = 1:size(data_epochs, 1)
 
 SUITE = BenchmarkGroup()
-SUITE["nodc"] = BenchmarkGroup(
-    ["nodc"])
-SUITE["dc"] = BenchmarkGroup(["dc"])
+SUITE["designmat"] = BenchmarkGroup(["designmat"])
+SUITE["fit"] = BenchmarkGroup(["fit"])
+SUITE["effects"] = BenchmarkGroup(["effects"])
 
 # designmatrix generation
-SUITE["dc"]["X_gen_lin"] = @benchmarkable designmatrix(UnfoldLinearModelContinuousTime,$f1,$evts,$ba1)
-SUITE["dc"]["X_gen_lmm"] = @benchmarkable designmatrix(UnfoldLinearMixedModelContinuousTime,$f1_lmm,$evts,$ba1)
-
-# designmat concatination
-SUITE["dc"]["X_cat_lin"] = @benchmarkable $X1+$X2
-SUITE["dc"]["X_cat_lmm"] = @benchmarkable $X1_lmm+$X2_lmm
+SUITE["designmat"]["X_gen_lin"] =
+    @benchmarkable designmatrix(UnfoldLinearModelContinuousTime, $f1, $evts, $ba1)
+SUITE["designmat"]["X_gen_lmm"] =
+    @benchmarkable designmatrix(UnfoldLinearMixedModelContinuousTime, $f1_lmm, $evts, $ba1)
 
 # Model Fit
-SUITE["nodc"]["fit_lin"] = @benchmarkable fit(UnfoldModel,$f1,$evts_epochs,$data_epochs,$times)
-SUITE["nodc"]["fit_lmm"] = @benchmarkable fit(UnfoldModel,$f1_lmm,$evts_epochs,$data_epochs,$times)
-SUITE["dc"]["fit_lin"]   = @benchmarkable fit(UnfoldModel,$dict_lin,$evts,$data,eventcolumn="condA");
-SUITE["dc"]["fit_lmm"] = @benchmarkable   fit(UnfoldModel,$dict_lmm,$evts,$data,eventcolumn="condA");
+SUITE["fit"]["lin"] =
+    @benchmarkable fit(UnfoldModel, $f1, $evts_epochs, $data_epochs, $times)
+SUITE["fit"]["lmm"] =
+    @benchmarkable fit(UnfoldModel, $f1_lmm, $evts_epochs, $data_epochs, $times)
+SUITE["fit"]["lin_deconv"] =
+    @benchmarkable fit(UnfoldModel, $dict_lin, $evts, $data, eventcolumn = "type");
+SUITE["fit"]["lmm_deconv"] =
+    @benchmarkable fit(UnfoldModel, $dict_lmm, $evts, $data, eventcolumn = "type");
