@@ -85,7 +85,7 @@ SUITE["fit"]["lmm_deconv"] =
 
 
 SUITE["effects"]["lin"] =
-    @benchmarkable effects($(Dict(:A => [:a_small, :a_big])), $m_lin_f1)
+    @benchmarkable effects($(Dict(:A => ["a_small", "a_big"])), $m_lin_f1)
 SUITE["effects"]["lin_spl"] = @benchmarkable effects(
     $(Dict(:continuousA => collect(range(0.1, 0.9, length = 15)))),
     $m_lin_f1_spl,
