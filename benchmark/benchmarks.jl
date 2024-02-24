@@ -93,4 +93,4 @@ SUITE["effects"]["lin_spl"] = @benchmarkable effects(
     $m_lin_f1_spl,
 )
 
-SUITE["fit"]["debugging"] = @benchmarkable read(run(`git status`))
+SUITE["fit"]["debugging"] = @benchmarkable read(run(`git diff Project.toml`))
