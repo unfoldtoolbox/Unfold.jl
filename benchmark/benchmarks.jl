@@ -62,7 +62,7 @@ m_epoch_lin_f1_spl = fit(UnfoldModel, f1_spl, evts_epochs, data_epochs, times)
 
 m_lin_f1 = fit(UnfoldModel, dict_lin, evts, data, eventcolumn = "type")
 m_lin_f1_spl = fit(UnfoldModel, dict_spl, evts, data, eventcolumn = "type")
-
+#---
 
 SUITE = BenchmarkGroup()
 SUITE["designmat"] = BenchmarkGroup(["designmat"])
@@ -82,8 +82,8 @@ SUITE["fit"]["lmm"] =
     @benchmarkable fit(UnfoldModel, $f1_lmm, $evts_epochs, $data_epochs, $times)
 SUITE["fit"]["lin_deconv"] =
     @benchmarkable fit(UnfoldModel, $dict_lin, $evts, $data, eventcolumn = "type");
-SUITE["fit"]["lmm_deconv"] =
-    @benchmarkable fit(UnfoldModel, $dict_lmm, $evts, $data, eventcolumn = "type");
+#SUITE["fit"]["lmm_deconv"] =
+#    @benchmarkable fit(UnfoldModel, $dict_lmm, $evts, $data, eventcolumn = "type");
 
 
 SUITE["effects"]["lin"] =
