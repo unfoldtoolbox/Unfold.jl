@@ -92,3 +92,5 @@ SUITE["effects"]["lin_spl"] = @benchmarkable effects(
     $(Dict(:continuousA => collect(range(0.1, 0.9, length = 15)))),
     $m_lin_f1_spl,
 )
+
+#SUITE["fit"]["debugging"] = @benchmarkable read(run(`git diff Project.toml`))

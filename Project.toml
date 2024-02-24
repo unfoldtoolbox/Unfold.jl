@@ -5,6 +5,7 @@ version = "0.6.7"
 
 [deps]
 BSplineKit = "093aae92-e908-43d7-9660-e50ee39d5a0a"
+BenchmarkCI = "20533458-34a3-403d-a444-e18f38190b5b"
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 DSP = "717857b8-e6f2-59f4-9121-6e50c889abd2"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
@@ -50,6 +51,7 @@ UnfoldRobustModelsExt = "RobustModels"
 
 [compat]
 BSplineKit = "0.16,0.17"
+BenchmarkCI = "0.1"
 CUDA = "4,5"
 DSP = "0.7"
 DataFrames = "1"
@@ -61,6 +63,7 @@ GLM = "1"
 IterativeSolvers = "0.9"
 JLD2 = "0.4"
 Krylov = "0.9"
+LinearAlgebra = "1"
 MLBase = "0.9"
 Missings = "1"
 MixedModels = "4"
