@@ -20,17 +20,21 @@ randomeffectgroupings(t::Unfold.TimeExpandedTerm) =
 randomeffectgroupings(t::MixedModels.AbstractReTerm) =
     repeat([t.rhs.sym], length(t.lhs.terms))
 
+randomeffectgroupings(f::FormulaTerm) = vcat(randomeffectgroupings.(f.rhs)...)
+randomeffectgroupings(t::Vector) = vcat(randomeffectgroupings.(t)...)
+
 """
     reorder_tidyσs(t, f)
 This function reorders a MixedModels.tidyσs output, according to the formula and not according to the largest RandomGrouping.
 
 """
 function reorder_tidyσs(t, f)
-
+    @debug typeof(f)
     # get the order from the formula, this is the target
-    f_order = randomeffectgroupings.(f.rhs) # formula order
+    f_order = randomeffectgroupings(f) # formula order
+    @debug f_order
     f_order = vcat(f_order...)
-
+    @debug f_order
 
     # find the fixefs
     fixef_ix = isnothing.(f_order)
@@ -38,13 +42,16 @@ function reorder_tidyσs(t, f)
 
 
     f_order = string.(f_order[.!fixef_ix])
-    f_name = coefnames(f.rhs)[.!fixef_ix]
+    @show coefnames(f)
+    f_name = vcat(coefnames(f)...)[.!fixef_ix]
 
     # get order from tidy object
     t_order = [string(i.group) for i in t if i.iter == 1]
     t_name = [string(i.column) for i in t if i.iter == 1]
 
     # combine for formula and tidy output the group + the coefname
+    @debug f_order
+    @debug f_name
     f_comb = f_order .* f_name
     t_comb = t_order .* t_name
 
