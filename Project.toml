@@ -1,7 +1,7 @@
 name = "Unfold"
 uuid = "181c99d8-e21b-4ff3-b70b-c233eddec679"
 authors = ["Benedikt Ehinger <science@benediktehinger.de>"]
-version = "0.6.7"
+version = "0.6.8"
 
 [deps]
 BSplineKit = "093aae92-e908-43d7-9660-e50ee39d5a0a"
@@ -61,6 +61,7 @@ GLM = "1"
 IterativeSolvers = "0.9"
 JLD2 = "0.4"
 Krylov = "0.9"
+LinearAlgebra = "1"
 MLBase = "0.9"
 Missings = "1"
 MixedModels = "4"
