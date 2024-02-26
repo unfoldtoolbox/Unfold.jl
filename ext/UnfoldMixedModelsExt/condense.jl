@@ -1,6 +1,74 @@
 
-# extracts betas (and sigma's for mixed models) with string grouping indicator
-# returns as a ch x beta, or ch x time x beta (for mass univariate)
+function MixedModels.tidyσs(m::UnfoldLinearMixedModel)
+    #    using MixedModels: AbstractReTerm
+    t = MixedModels.tidyσs(modelfit(m))
+    reorder_tidyσs(t, Unfold.formula(m))
+end
+
+MixedModels.tidyβ(m::UnfoldLinearMixedModel) = MixedModels.tidyβ(modelfit(m))
+
+"""
+    randomeffectgroupings(t::MixedModels.AbstractReTerm)
+Returns the random effect grouping term (rhs), similar to coefnames, which returns the left hand sides
+"""
+randomeffectgroupings(t::AbstractTerm) = repeat([nothing], length(t.terms))
+randomeffectgroupings(t::MixedModels.AbstractReTerm) =
+    repeat([t.rhs.sym], length(t.lhs.terms))
+
+"""
+    reorder_tidyσs(t, f)
+This function reorders a MixedModels.tidyσs output, according to the formula and not according to the largest RandomGrouping.
+
+"""
+function reorder_tidyσs(t, f)
+
+    # get the order from the formula, this is the target
+    f_order = randomeffectgroupings.(f.rhs) # formula order
+    f_order = vcat(f_order...)
+
+    # find the fixefs
+    fixef_ix = isnothing.(f_order)
+
+
+
+    f_order = string.(f_order[.!fixef_ix])
+    f_name = coefnames(f.rhs)[.!fixef_ix]
+
+    # get order from tidy object
+    t_order = [string(i.group) for i in t if i.iter == 1]
+    t_name = [string(i.column) for i in t if i.iter == 1]
+
+    # combine for formula and tidy output the group + the coefname
+    f_comb = f_order .* f_name
+    t_comb = t_order .* t_name
+
+    # find for each formula output, the fitting tidy permutation
+    reorder_ix = Int[]
+    for f_coef in f_comb
+        ix = findall(t_comb .== f_coef)
+        @assert length(ix) == 1 "error in reordering of MixedModels - please file a bugreport!"
+        push!(reorder_ix, ix[1])
+    end
+    @assert length(reorder_ix) == length(t_comb)
+
+    # repeat and build the index for all timepoints
+    reorder_ix_all = repeat(reorder_ix, length(t) ÷ length(reorder_ix))
+    for k = 1:length(reorder_ix):length(t)
+        reorder_ix_all[k:k+length(reorder_ix)-1] .+= (k - 1)
+    end
+
+    return t[reorder_ix_all]
+
+
+end
+
+"""
+    Unfold.make_estimate(m::Union{UnfoldLinearMixedModel,UnfoldLinearMixedModelContinuousTime},
+)
+extracts betas (and sigma's for mixed models) with string grouping indicator
+
+returns as a ch x beta, or ch x time x beta (for mass univariate)
+"""
 function Unfold.make_estimate(
     m::Union{UnfoldLinearMixedModel,UnfoldLinearMixedModelContinuousTime},
 )
@@ -13,7 +81,7 @@ function Unfold.make_estimate(
             size(coef(m), ndims(coef(m))),
         )
 
-        ranef_group = [x.group for x in MixedModels.tidyσs(modelfit(m))]
+        ranef_group = [x.group for x in MixedModels.tidyσs(m)]
 
         # reshape to pred x time x chan and then invert to chan x time x pred
         ranef_group = permutedims(
