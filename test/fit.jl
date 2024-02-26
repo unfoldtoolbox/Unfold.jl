@@ -142,6 +142,22 @@ end
     m_mul_outlier = coeftable(Unfold.fit(UnfoldModel, f, evts, data_outlier, times))
 end
 
+@testset "standard-errors solver" begin
+    data, evts = UnfoldSim.predef_eeg(; noiselevel = 10, return_epoched = true)
+    data = reshape(data, 1, size(data)...)
+    f = @formula 0 ~ 1 + condition + continuous
+    # generate ModelStruct
+    se_solver = (x, y) -> Unfold.solver_default(x, y, stderror = true)
+    fit(
+        UnfoldModel,
+        (Dict(Any => (f, range(0, length = size(data, 2), step = 1 / 100)))),
+        evts,
+        data;
+        solver = se_solver,
+    )
+end
+
+
 #---------------------------------#
 ## Timexpanded Univariate Linear ##
 #---------------------------------#

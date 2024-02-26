@@ -112,14 +112,14 @@ end
 function StatsModels.coef(
     uf::Union{UnfoldLinearMixedModel,UnfoldLinearMixedModelContinuousTime},
 )
-    beta = [x.β for x in MixedModels.tidyβ(modelfit(uf))]
+    beta = [x.β for x in MixedModels.tidyβ(uf)]
     return reshape_lmm(uf, beta)
 end
 
 function MixedModels.ranef(
     uf::Union{UnfoldLinearMixedModel,UnfoldLinearMixedModelContinuousTime},
 )
-    sigma = [x.σ for x in MixedModels.tidyσs(modelfit(uf))]
+    sigma = [x.σ for x in MixedModels.tidyσs(uf)]
     return reshape_lmm(uf, sigma)
 end
 

@@ -26,6 +26,11 @@ This notebook is similar to the Linear Model with Overlap Correction tutorial, b
 
 ```@example Main
 dat,evts = UnfoldSim.predef_2x2(;signalsize=20,n_items=16,n_subjects=16)
+
+# we have to fix the latencies as well, they are now relative to 1:size(data,1), but we want one continuous long EEG
+subj_idx = [parse(Int,split(string(s),'S')[2]) for s in evts.subject]
+evts.latency .+= size(dat,1) .* (subj_idx.-1)
+
 dat = dat[:] # we need all data concatenated over subjects
 evts.subject  = categorical(Array(evts.subject))
 nothing #hide
@@ -74,6 +79,5 @@ first(results,6)
 #### 4. Visualize results
 
 ```@example Main
-results.group = string.(results.group) # this will not be necessary in future versions
 plot_erp(results;mapping=(;col=:group))
 ```
