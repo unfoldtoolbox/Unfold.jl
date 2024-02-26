@@ -34,7 +34,11 @@ function solver_default(
     return modelfit
 end
 
-function calculate_stderror(Xdc, data::Matrix{T}, beta) where {T<:Union{Missing,<:Number}}
+function calculate_stderror(
+    Xdc,
+    data::Matrix,
+    beta::AbstractArray{T},
+) where {T<:Union{Missing,<:Number}}
 
     # remove missings
     ix = any(.!ismissing.(data), dims = 1)[1, :]
@@ -66,9 +70,9 @@ function calculate_stderror(Xdc, data::Matrix{T}, beta) where {T<:Union{Missing,
 end
 function calculate_stderror(
     X,
-    data::AbstractArray{T,3},
-    beta,
-) where {T<:Union{Missing,<:Number}}
+    data::AbstractArray{T1,3},
+    beta::AbstractArray{T2},
+) where {T1<:Union{Missing,<:Number},T2<:Union{Missing,<:Number}}
     #function calculate_stderror(Xdc,data::AbstractArray{T,2},beta) where {T<:Union{Missing, <:Number}}  
 
     # Hat matrix
@@ -78,7 +82,7 @@ function calculate_stderror(
         "Autocorrelation was NOT taken into account. Therefore SE are UNRELIABLE. Use at your own discretion"
     )
 
-    se = Array{T}(undef, size(data, 1), size(data, 2), size(X, 2))
+    se = Array{T2}(undef, size(data, 1), size(data, 2), size(X, 2))
     for ch = 1:size(data, 1)
         for t = 1:size(data, 2)
             ix = .!ismissing.(data[ch, t, :])
