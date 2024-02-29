@@ -12,9 +12,23 @@ end
 
 
 
-modelfit(uf::UnfoldModel) = uf.modelfit
+function modelfit(uf::UnfoldModel)
+    if isa(uf.modelfit, JLD2.ReconstructedMutable{Symbol("Unfold.LinearModelFit")})
+        @warn "old Unfold Model detected, trying to 'upgrade'"
+        mf = uf.modelfit
+        T = typeof(mf.estimate)
+        if isempty(mf.standarderror)
+            return LinearModelFit(mf.estimate, mf.info)
+        else
+            return LinearModelFit(mf.estimate, mf.info, T(mf.standarderror))
+        end
+    else
+        return uf.modelfit
+    end
+end
 StatsModels.coef(uf::UnfoldModel) = coef(modelfit(uf))
 StatsModels.coef(mf::LinearModelFit) = mf.estimate
+
 
 
 
