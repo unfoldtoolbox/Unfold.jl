@@ -216,7 +216,7 @@ yhat(
     model::Union{<:UnfoldLinearMixedModel,<:UnfoldLinearModel},
     X::AbstractArray{T,2};
     kwargs...,
-) where {T<:Union{Missing,<:Number}} = yhat(X, coef(model); kwargs...)
+) where {T<:Union{Missing,<:Number}} = yhat(coef(model), X; kwargs...)
 
 
 
@@ -229,7 +229,7 @@ yhat(
 function yhat_mult(X::AbstractArray{T,2}, coef) where {T<:Union{Missing,<:Number}}
     yhat = Array{T}(undef, size(coef, 1), size(X, 1), size(coef, 2))
     for ch = 1:size(coef, 1)
-        yhat[ch, :, :] = X * permutedims(coef[ch, :, :], (2, 1))
+        yhat[ch, :, :] .= X * permutedims(coef[ch, :, :], (2, 1))
     end
     return yhat
 end
