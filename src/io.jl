@@ -62,8 +62,21 @@ function FileIO.load(file, ::Type{<:UnfoldModel}; generate_Xs = true)
     else
         X = missing
     end
+    modelfit =
+        if isa(uf.modelfit, JLD2.ReconstructedMutable{Symbol("Unfold.LinearModelFit")})
+            @warn "old Unfold Model detected, trying to 'upgrade' uf.modelfit"
+            mf = uf.modelfit
+            T = typeof(mf.estimate)
+            if isempty(mf.standarderror)
+                LinearModelFit(mf.estimate, mf.info)
+            else
+                LinearModelFit(mf.estimate, mf.info, T(mf.standarderror))
+            end
+        else
+            uf.modelfit
+        end
 
 
     # reintegrate the designmatrix
-    return typeof(uf)(uf.design, Unfold.DesignMatrix(form, X, events), uf.modelfit)
+    return typeof(uf)(uf.design, Unfold.DesignMatrix(form, X, events), modelfit)
 end
