@@ -19,7 +19,8 @@ using ProgressMeter
 using DocStringExtensions # for Docu
 using MLBase # for crossVal
 
-using Tullio
+using PooledArrays
+#using Tullio
 #using BSplineKit # for spline predictors
 
 #using RobustModels # for robust modelling

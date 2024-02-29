@@ -202,7 +202,11 @@ function yhat(
     times = nothing,
 ) where {T<:Union{Missing,<:Number}}
 
+    #@debug size(X), size(coef(model))
+    #@debug typeof(X), typeof(coef(model))
     yhat = X * coef(model)'
+    #coefs = coef(model)
+    #@tullio yhat[i, k] := X[i, j] * coefs[k, j]
     return yhat
 
 end
@@ -212,16 +216,16 @@ yhat(
     model::Union{<:UnfoldLinearMixedModel,<:UnfoldLinearModel},
     X::AbstractArray{T,2};
     kwargs...,
-) where {T<:Union{Missing,<:Number}} = yhat(coef(model), X; kwargs...)
+) where {T<:Union{Missing,<:Number}} = yhat(X, coef(model); kwargs...)
 
 
 
 
-function yhat_mult(X::AbstractArray{T,2}, coef) where {T<:Number}
-
-    @tullio yhat[ch, a, b] := X[a, trial] * coef[ch, b, trial]
-    return yhat
-end
+#function yhat_mult(X::AbstractArray{T,2}, coef) where {T<:Number}
+#
+#    @tullio yhat[ch, a, b] := X[a, trial] * coef[ch, b, trial]
+#    return yhat
+# end
 function yhat_mult(X::AbstractArray{T,2}, coef) where {T<:Union{Missing,<:Number}}
     yhat = Array{T}(undef, size(coef, 1), size(X, 1), size(coef, 2))
     for ch = 1:size(coef, 1)
