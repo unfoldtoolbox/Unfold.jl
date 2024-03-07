@@ -54,7 +54,7 @@ Now you can appreciate, that the conditions overlap in time with eachother. To g
 
 ### FIR Basis Function
 
-Okay, let's have a look at a different basis function: The FIR basisfunction.
+Okay, let's have a look at a different basis function: The FIR basisfunction. FIR stands for [Finite-Impulse-Response](https://en.wikipedia.org/wiki/Finite_impulse_response) and is a term taken from the filtering-literature.
 
 ```@example main
 using Unfold #hide
