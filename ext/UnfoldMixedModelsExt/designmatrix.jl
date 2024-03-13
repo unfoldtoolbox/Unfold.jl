@@ -21,7 +21,10 @@ function Unfold.unfold_apply_schema(
     schema,
 )
     @debug "LMM apply schema"
-    return apply_schema(f, schema, MixedModels.LinearMixedModel)
+    f_new = apply_schema(f, schema, MixedModels.LinearMixedModel)
+    check_groupsorting(f_new.rhs)
+    return f_new
+
 end
 
 

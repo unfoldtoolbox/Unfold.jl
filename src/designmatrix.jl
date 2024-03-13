@@ -16,7 +16,7 @@ julia>  Xdc = Xdc1+Xdc2
 ```
 
 """
-function combineDesignmatrices(X1::DesignMatrix, X2::DesignMatrix)
+function combineDesignmatrices(X1::T, X2::T) where {T<:AbstractDesignMatrix}
 
     # the reason for the assertion is simply that I found it too difficult to concatenate the formulas down below ;) should be easy to implement hough
     @assert !(isa(X1.formulas, AbstractArray) && isa(X2.formulas, AbstractArray)) "it is currently not possible to combine desigmatrices from two already concatenated designs - please concatenate one after the other"
@@ -44,7 +44,7 @@ function combineDesignmatrices(X1::DesignMatrix, X2::DesignMatrix)
         end
         fcomb[1] = X1.formulas
         fcomb[2] = X2.formulas
-        return DesignMatrix(fcomb, Xcomb, [X1.events, X2.events])
+        return T(fcomb, Xcomb, [X1.events, X2.events])
     else
         if X1.formulas[1].rhs isa Unfold.TimeExpandedTerm
             # we can ignore length of X2, as it has to be a single formula due to the assertion above
@@ -57,7 +57,7 @@ function combineDesignmatrices(X1::DesignMatrix, X2::DesignMatrix)
         end
         fcomb[1:end-1] = X1.formulas
         fcomb[end] = X2.formulas
-        return DesignMatrix(fcomb, Xcomb, [X1.events..., X2.events])
+        return T(fcomb, Xcomb, [X1.events..., X2.events])
     end
 end
 
