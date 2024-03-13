@@ -1,5 +1,7 @@
 module Unfold
 
+using SimpleTraits
+
 using SparseArrays
 using StatsModels
 using StatsBase
@@ -19,7 +21,8 @@ using ProgressMeter
 using DocStringExtensions # for Docu
 using MLBase # for crossVal
 
-using PooledArrays
+#using PooledArrays
+
 #using Tullio
 #using BSplineKit # for spline predictors
 

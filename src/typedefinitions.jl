@@ -2,28 +2,34 @@
 """
 The main abstract model-type of the toolbox. E.g. `UnfoldLinearModel` is a concrete type of this
 """
-abstract type UnfoldModel end
+abstract type UnfoldModel{T} end
 
 
 """
 Abstract Type to report modelresults
 """
-abstract type ModelFit end
+abstract type AbstractModelFit{T,N} end
 
+
+abstract type AbstractDesignMatrix{T} end
 
 
 """
     DesignMatrix
 Type that keeps an Array of  `formulas`, designmatrices `Xs` (Array or Array of Arrays in case of MixedModel) and `events`-dataframe 
 """
-struct DesignMatrix
-    "Array of formulas"
-    formulas::Any
-    "A concatenated designmatric. In case of Mixed Models an array, where the first one is a FeMat, later ones ReMats. "
-    Xs::Any
-    "Event table with all events"
-    events::Any
+struct DesignMatrixLinearModel{T} <: AbstractDesignMatrix{T}
+    formulas::Vector{FormulaTerm} # "Array of formulas"
+    Xs::Vector{Array{T}} #"A concatenated designmatric. In case of Mixed Models an array, where the first one is a FeMat, later ones ReMats. "
+    events::DataFrame #"Event table with all events"
 end
+
+struct DesignMatrixLinearModelContinuousTime{T} <: AbstractDesignMatrix{T}
+    formulas::Vector{FormulaTerm} # "Array of formulas"
+    Xs::SparseMatrixCSC{T} #"A concatenated designmatric. In case of Mixed Models an array, where the first one is a FeMat, later ones ReMats. "
+    events::DataFrame #"Event table with all events"
+end
+
 
 function DesignMatrix()
     return DesignMatrix([], [], [])
@@ -31,75 +37,9 @@ end
 
 
 """
-Concrete type to implement an Mass-Univariate LinearModel.
-`.design` contains the formula + times dict
-`.designmatrix` contains a `DesignMatrix`
-`modelfit` is a `Any` container for the model results
-"""
-mutable struct UnfoldLinearModel <: UnfoldModel
-    design::Dict
-    designmatrix::DesignMatrix
-    modelfit::Any
-end
-
-UnfoldLinearModel(d::Dict) = UnfoldLinearModel(d, Unfold.DesignMatrix(), [])
-UnfoldLinearModel(d::Dict, X::DesignMatrix) = UnfoldLinearModel(d, X, [])
-
-"""
-Concrete type to implement an Mass-Univariate LinearMixedModel.
-`.design` contains the formula + times dict
-`.designmatrix` contains a `DesignMatrix`
-`modelfit` is a `Any` container for the model results
-"""
-mutable struct UnfoldLinearMixedModel <: UnfoldModel
-    design::Dict
-    designmatrix::DesignMatrix
-    modelfit::Any#::Array{UnfoldMixedModelFitCollection} # optional info on the modelfit
-end
-UnfoldLinearMixedModel(d::Dict) = UnfoldLinearMixedModel(d, Unfold.DesignMatrix(), [])
-UnfoldLinearMixedModel(d::Dict, X::DesignMatrix) = UnfoldLinearMixedModel(d, X, [])
-
-"""
-Concrete type to implement an deconvolution LinearModel.
-`.design` contains the formula + times dict
-`.designmatrix` contains a `DesignMatrix`
-`modelfit` is a `Any` container for the model results
-"""
-mutable struct UnfoldLinearModelContinuousTime <: UnfoldModel
-    design::Dict
-    designmatrix::DesignMatrix
-    modelfit::Any
-end
-
-UnfoldLinearModelContinuousTime(d::Dict) =
-    UnfoldLinearModelContinuousTime(d, Unfold.DesignMatrix(), [])
-UnfoldLinearModelContinuousTime(d::Dict, X::DesignMatrix) =
-    UnfoldLinearModelContinuousTime(d, X, [])
-
-"""
-Concrete type to implement an deconvolution LinearMixedModel.
-
-**Warning** This is to be treated with care, not much testing went into it.
-
-`.design` contains the formula + times dict
-`.designmatrix` contains a `DesignMatrix`
-`modelfit` is a `Any` container for the model results
-"""
-mutable struct UnfoldLinearMixedModelContinuousTime <: UnfoldModel
-    design::Dict
-    designmatrix::DesignMatrix
-    modelfit::Any#::UnfoldMixedModelFitCollection
-end
-
-UnfoldLinearMixedModelContinuousTime(d::Dict) =
-    UnfoldLinearMixedModelContinuousTime(d, Unfold.DesignMatrix(), [])
-UnfoldLinearMixedModelContinuousTime(d::Dict, X::DesignMatrix) =
-    UnfoldLinearMixedModelContinuousTime(d, X, [])
-
-"""
 Contains the results of linearmodels (continuous and not)
 """
-struct LinearModelFit{T,N} <: ModelFit
+struct LinearModelFit{T,N} <: AbstractModelFit{T,N}
     estimate::Array{T,N}
     info::Any
     standarderror::Array{T,N}
@@ -111,6 +51,49 @@ LinearModelFit(estimate::Array{T,2}, info) where {T} =
     LinearModelFit(estimate, info, similar(Array{T}, 0, 0))
 LinearModelFit(estimate::Array{T,3}, info) where {T} =
     LinearModelFit(estimate, info, similar(Array{T}, 0, 0, 0))
+
+
+
+"""
+Concrete type to implement an Mass-Univariate LinearModel.
+`.design` contains the formula + times dict
+`.designmatrix` contains a `DesignMatrix`
+`modelfit` is a `Any` container for the model results
+"""
+mutable struct UnfoldLinearModel{T} <: UnfoldModel{T}
+    design::Dict
+    designmatrix::DesignMatrixLinearModel{T}
+    modelfit::LinearModelFit{T,3}
+end
+
+UnfoldLinearModel(d::Dict) = UnfoldLinearModel(d, Unfold.DesignMatrixLinearModel(), [])
+UnfoldLinearModel(d::Dict, X::AbstractDesignMatrix) = UnfoldLinearModel(d, X, [])
+
+
+"""
+Concrete type to implement an deconvolution LinearModel.
+`.design` contains the formula + times dict
+`.designmatrix` contains a `DesignMatrix`
+`modelfit` is a `Any` container for the model results
+"""
+mutable struct UnfoldLinearModelContinuousTime{T} <: UnfoldModel{T}
+    design::Dict
+    designmatrix::DesignMatrixLinearModelContinuousTime{T}
+    modelfit::LinearModelFit{T,2}
+end
+
+UnfoldLinearModelContinuousTime(d::Dict) =
+    UnfoldLinearModelContinuousTime(d, Unfold.DesignMatrixLinearModelContinuousTime(), [])
+UnfoldLinearModelContinuousTime(d::Dict, X::AbstractDesignMatrix) =
+    UnfoldLinearModelContinuousTime(d, X, [])
+
+#----
+# Traits definitions
+@traitdef ContinuousTimeTrait{X}
+
+@traitimpl ContinuousTimeTrait{UnfoldLinearModelContinuousTime}
+#---
+
 
 function Base.show(io::IO, obj::UnfoldModel)
     println(io, "Unfold-Type: $(typeof(obj)) \n")
