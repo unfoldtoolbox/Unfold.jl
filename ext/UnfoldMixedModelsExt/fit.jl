@@ -1,4 +1,25 @@
+StatsModels.modelmatrix(
+    uf::Union{UnfoldLinearMixedModelContinuousTime,<:UnfoldLinearMixedModel},
+) = modelmatrix(designmatrix(uf))
+function StatsModels.modelmatrix(
+    Xs::Vector{
+        <:Union{DesignMatrixLinearMixedModel,<:DesignMatrixLinearMixedModelContinuousTime},
+    },
+)
 
+    #X_vec = getfield.(designmatrix(uf), :modelmatrix)
+    Xcomb = Xs[1]
+    for k = 2:length(Xs)
+        modelmatrix1 = Unfold.get_modelmatrix(Xcomb)
+        modelmatrix2 = Unfold.get_modelmatrix(Xs[k])
+
+        @debug typeof(modelmatrix1), typeof(modelmatrix2)
+        Xcomb_temp = [modelmatrix1, modelmatrix2]
+        Xcomb = lmm_combine_modelmatrix!(Xcomb_temp, Xcomb, Xs[k])
+    end
+    Xs = length(Xs) > 1 ? Xcomb : Xs[1].modelmatrix
+    return Xs
+end
 """
 fit!(uf::UnfoldModel,data::Union{<:AbstractArray{T,2},<:AbstractArray{T,3}}) where {T<:Union{Missing, <:Number}}
 
@@ -33,18 +54,7 @@ function StatsModels.fit!(
     dataDim = length(size(data)) # surely there is a nicer way to get this but I dont know it
 
     #Xs = modelmatrix(uf)
-    Xs = designmatrix(uf)
-    #X_vec = getfield.(designmatrix(uf), :modelmatrix)
-    Xcomb = Xs[1]
-    for k = 2:length(Xs)
-        modelmatrix1 = Unfold.get_modelmatrix(Xcomb)
-        modelmatrix2 = Unfold.get_modelmatrix(Xs[k])
-
-        @debug typeof(modelmatrix1), typeof(modelmatrix2)
-        Xcomb_temp = [modelmatrix1, modelmatrix2]
-        Xcomb = lmm_combine_modelmatrix!(Xcomb_temp, Xcomb, Xs[k])
-    end
-    Xs = length(Xs) > 1 ? Xcomb : Xs[1].modelmatrix
+    Xs = modelmatrix(uf)
     # If we have3 dimension, we have a massive univariate linear mixed model for each timepoint
     if dataDim == 3
         firstData = data[1, 1, :]

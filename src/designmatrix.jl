@@ -12,8 +12,8 @@ Not supported for models without timebasis, as it is not needed there (one can s
 ```julia-repl
 julia>  basisfunction1 = firbasis(τ=(0,1),sfreq = 10,name="basis1")
 julia>  basisfunction2 = firbasis(τ=(0,0.5),sfreq = 10,name="basis2")
-julia>  Xdc1          = designmatrix(UnfoldLinearModelContinuousTime(Dict(Any=>(@formula 0~1,basisfunction1)),tbl_1)
-julia>  Xdc2          = designmatrix(UnfoldLinearModelContinuousTime(Dict(Any=>(@formula 0~1,basisfunction2)),tbl_2)
+julia>  Xdc1          = designmatrix(UnfoldLinearModelContinuousTime([Any=>(@formula 0~1,basisfunction1)],tbl_1)
+julia>  Xdc2          = designmatrix(UnfoldLinearModelContinuousTime([Any=>(@formula 0~1,basisfunction2)],tbl_2)
 julia>  Xdc = Xdc1+Xdc2 
 ```
 

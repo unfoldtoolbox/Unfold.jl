@@ -10,6 +10,21 @@ data_r = vcat(data_r, data_r)#add second channel
 #--------------------------#
 data_e, times = Unfold.epoch(data = data_r, tbl = evts, τ = (-1.0, 1.9), sfreq = 20) # cut the data into epochs
 
+
+@testset "Float32" begin
+    evts_nomiss, dat_nomiss = Unfold.dropMissingEpochs(evts, data_e)
+    uf = fit(UnfoldModel, f, evts_nomiss, Float32.((dat_nomiss)), times)
+    @test typeof(uf) == UnfoldLinearModel{Float32}
+    @test eltype(coef(uf)) == Float32
+    uf = fit(UnfoldModel, f, evts_nomiss, Float16.((dat_nomiss)), times)
+    @test eltype(coef(uf)) == Float16
+
+    # continuos case
+    basisfunction = firbasis(τ = (-1, 1), sfreq = 20, name = "basisA")
+    uf = fit(UnfoldModel, [Any => (f, basisfunction)], evts_nomiss, Float32.(data_r))
+    @test typeof(uf) == UnfoldLinearModelContinuousTime{Float32}
+    @test eltype(coef(uf)) == Float32
+end
 #---
 @testset "test manual pathway" begin
     uf = UnfoldLinearModel{Union{Float64,Missing}}([Any => (f, times)])
@@ -31,7 +46,7 @@ end
     @test size(coef(uf)) == (2, 59, 3)
     uf_2events = fit(
         UnfoldModel,
-        Dict("A" => (f, times), "B" => (@formula(0 ~ 1), times)),
+        ["A" => (f, times), "B" => (@formula(0 ~ 1), times)],
         evts_local,
         data_e;
         eventcolumn = "type",
