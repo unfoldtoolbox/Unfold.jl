@@ -27,7 +27,7 @@ The data has some noise. The underlying signal pattern is a positive-negative-po
 ```@example Main
 times = range(1/50, length=200, step=1/50)
 f = Figure()
-plot(f[1, 1], dat[1:200], times)
+plot(f[1, 1], data[1:200], times)
 vlines!(evts[evts.latency .<= 200, :latency] ./ 50) # show events, latency in samples!
 f
 ```
@@ -42,13 +42,13 @@ Every row is an experimental event. Note that `:latency` is meausred as the samp
 ## Traditional Mass Univariate Analysis
 To perform a mass univariate analysis, you must complete the following steps:
 
-1. Epoch the data
+1. Split data into epochs 
 2. Specify a formula 
 3. Fit a linear model to each time point & channel
 4. Visualize the results.
 
 
-#### 1. Epoch the data
+#### 1. Split data into epochs 
 Initially, you have data with a duration that represents the whole experimental trial. You need to cut the data into small regular epochs related to the some event, e.g. start of fixation.
 
 ```@example Main
