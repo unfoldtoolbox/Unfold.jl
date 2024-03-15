@@ -1,4 +1,4 @@
-## [How To get P-Values for Mass-Univariate LMM](@id lmm_pvalues    
+## [How To get P-Values for Mass-Univariate LMM](@id lmm_pvalues)    
 There are currently two ways to obtain p-values for LMMs: Wald's t-test and likelihood ratio tests (mass univariate only).
 
 #### Setup
