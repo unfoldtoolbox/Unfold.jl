@@ -7,7 +7,7 @@ function StatsBase.predict(model::UnfoldModel, events)
     # make a copy of it so we don't change it outside the function
     newevents = copy(events)
 
-    formulas = formula(model)
+    formulas = formulas(model)
     if typeof(formulas) <: FormulaTerm
         formulas = [formulas]
     end
@@ -20,7 +20,7 @@ function StatsBase.predict(model::UnfoldModel, events)
 
 
     # init the meta dataframe
-    metaData = DataFrame([:time => vcat(timesVec...), :basisname => ""])
+    metaData = DataFrame([:time => vcat(timesVec...), :eventname => ""])
 
     for c in names(newevents)
         metaData[:, c] .= newevents[1, c] # assign first element in order to have same column type
@@ -56,7 +56,7 @@ function StatsBase.predict(model::UnfoldModel, events)
                     metaData[j+shift, names(newevents)] = newevents[i, :]
                 end
                 # add basisfunction name
-                metaData[shift.+(fstart:fend), :basisname] .=
+                metaData[shift.+(fstart:fend), :eventname] .=
                     formulas[bIx].rhs.basisfunction.name
 
             end
@@ -79,11 +79,11 @@ end
 #yhat(model::UnfoldModel,formulas::AbstractTerm) = yhat(model,[formulas])
 
 # special case if one formula is defined but in an array => multiple events
-function yhat(
-    model::Union{<:UnfoldLinearMixedModel,<:UnfoldLinearModel},
+@traitfn function yhat(
+    model::T,
     formulas::AbstractArray,
     newevents::DataFrame,
-)
+) where {T <: UnfoldModel; !ContinuousTimeTrait{T}}
     X = modelcols.(formulas, Ref(newevents))
 
     co = coef(model)
@@ -106,11 +106,11 @@ yhat(model::UnfoldLinearModel, formulas::FormulaTerm, newevents) =
 yhat(model::UnfoldLinearModelContinuousTime, formulas::FormulaTerm, newevents) =
     yhat(model, formulas.rhs, newevents)
 
-function yhat(
-    model::Union{<:UnfoldLinearMixedModel,<:UnfoldLinearModel},
+@traitfn function yhat(
+    model::T,
     formulas::AbstractTerm,
     newevents,
-)#::AbstractArray{AbstractTerm})
+) where {T <: UnfoldModel; !ContinuousTimeTrait{T}}
     X = modelcols(formulas, newevents)
     return yhat(model, X)
 end
@@ -119,7 +119,11 @@ end
 yhat(model::UnfoldLinearModelContinuousTime, formulas::MatrixTerm, events) =
     yhat(model, formulas.terms, events)
 
-function yhat(model::UnfoldLinearModelContinuousTime, formulas, events)#::AbstractArray{AbstractTerm})
+@traitfn function yhat(
+    model::T,
+    formulas,
+    events,
+) where {T <: UnfoldModel; ContinuousTimeTrait{T}}
     X = AbstractArray[]
     fromTo = []
     timesVec = []
@@ -147,6 +151,7 @@ function yhat(model::UnfoldLinearModelContinuousTime, formulas, events)#::Abstra
 
 
         # get the model
+        @debug f, first(events)
         Xsingle = modelcols(f, events)
 
         timesSingle = times(f.basisfunction)
@@ -212,11 +217,12 @@ function yhat(
 end
 
 # kept for backwards compatability
-yhat(
-    model::Union{<:UnfoldLinearMixedModel,<:UnfoldLinearModel},
+@traitfn yhat(
+    model::U,
     X::AbstractArray{T,2};
     kwargs...,
-) where {T<:Union{Missing,<:Number}} = yhat(coef(model), X; kwargs...)
+) where {T<:Union{Missing,<:Number},U<:UnfoldModel;!ContinuousTimeTrait{U}} =
+    yhat(coef(model), X; kwargs...)
 
 
 
@@ -258,11 +264,23 @@ function yhat(
     return yhat
 end
 
-# there is only 1 times for Mass Univariate Models possible
-times(model::Union{<:UnfoldLinearMixedModel,<:UnfoldLinearModel}) = times(design(model))
-times(
-    d::Dict{<:Union{Any,<:AbstractString,Symbol},<:Tuple{<:AbstractTerm,<:AbstractVector}},
-) = first(values(d))[2]#[k[2] for k in values(d)] # probably going for steprange would be better
+
+@traitfn times(model::T) where {T <: UnfoldModel; !ContinuousTimeTrait{T}} =
+    times(design(model))
+
+function times(
+    d::Vector{
+        <:Pair{
+            <:Union{<:DataType,<:AbstractString,<:Symbol},
+            <:Tuple{<:AbstractTerm,<:AbstractVector},
+        },
+    },
+)
+    all_times = last.(last.(d)) #[k[2] for k in values(d)] # probably going for steprange would be better
+    @debug all_times
+    @assert all(all_times .== all_times[1:1]) "all times need to be equal in a mass univariate model"
+    return all_times[1]
+end
 
 
 function gen_timeev(timesVec, nRows)

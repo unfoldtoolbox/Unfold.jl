@@ -4,24 +4,24 @@ function MixedModels.tidyσs(
 )
     #    using MixedModels: AbstractReTerm
     t = MixedModels.tidyσs(modelfit(m))
-    reorder_tidyσs(t, Unfold.formula(m))
+    reorder_tidyσs(t, Unfold.formulas(m))
 end
 
 MixedModels.tidyβ(m::Union{UnfoldLinearMixedModel,UnfoldLinearMixedModelContinuousTime}) =
     MixedModels.tidyβ(modelfit(m))
 
 """
-    randomeffectgroupings(t::MixedModels.AbstractReTerm)
+    random_effect_groupings(t::MixedModels.AbstractReTerm)
 Returns the random effect grouping term (rhs), similar to coefnames, which returns the left hand sides
 """
-randomeffectgroupings(t::AbstractTerm) = repeat([nothing], length(t.terms))
-randomeffectgroupings(t::Unfold.TimeExpandedTerm) =
-    repeat(randomeffectgroupings(t.term), length(Unfold.colnames(t.basisfunction)))
-randomeffectgroupings(t::MixedModels.AbstractReTerm) =
+random_effect_groupings(t::AbstractTerm) = repeat([nothing], length(t.terms))
+random_effect_groupings(t::Unfold.TimeExpandedTerm) =
+    repeat(random_effect_groupings(t.term), length(Unfold.colnames(t.basisfunction)))
+random_effect_groupings(t::MixedModels.AbstractReTerm) =
     repeat([t.rhs.sym], length(t.lhs.terms))
 
-randomeffectgroupings(f::FormulaTerm) = vcat(randomeffectgroupings.(f.rhs)...)
-randomeffectgroupings(t::Vector) = vcat(randomeffectgroupings.(t)...)
+random_effect_groupings(f::FormulaTerm) = vcat(random_effect_groupings.(f.rhs)...)
+random_effect_groupings(t::Vector) = vcat(random_effect_groupings.(t)...)
 
 """
     reorder_tidyσs(t, f)
@@ -31,7 +31,7 @@ This function reorders a MixedModels.tidyσs output, according to the formula an
 function reorder_tidyσs(t, f)
     @debug typeof(f)
     # get the order from the formula, this is the target
-    f_order = randomeffectgroupings(f) # formula order
+    f_order = random_effect_groupings(f) # formula order
     @debug f_order
     f_order = vcat(f_order...)
     @debug f_order
@@ -42,7 +42,7 @@ function reorder_tidyσs(t, f)
 
 
     f_order = string.(f_order[.!fixef_ix])
-    @show coefnames(f)
+    #@show coefnames(f)
     f_name = vcat(coefnames(f)...)[.!fixef_ix]
 
     # get order from tidy object
@@ -59,6 +59,7 @@ function reorder_tidyσs(t, f)
     reorder_ix = Int[]
     for f_coef in f_comb
         ix = findall(t_comb .== f_coef)
+        @debug t_comb, f_coef
         @assert length(ix) == 1 "error in reordering of MixedModels - please file a bugreport!"
         push!(reorder_ix, ix[1])
     end
@@ -85,23 +86,19 @@ returns as a ch x beta, or ch x time x beta (for mass univariate)
 function Unfold.make_estimate(
     m::Union{UnfoldLinearMixedModel,UnfoldLinearMixedModelContinuousTime},
 )
-    estimate = cat(coef(m), ranef(m), dims = ndims(coef(m)))
+
+    coefs = coef(m)
+    estimate = cat(coefs, ranef(m), dims = ndims(coefs))
     ranef_group = [x.group for x in MixedModels.tidyσs(m)]
 
-    if ndims(coef(m)) == 3
-        group_f = repeat(
-            [nothing],
-            size(coef(m), 1),
-            size(coef(m), 2),
-            size(coef(m), ndims(coef(m))),
-        )
+    if ndims(coefs) == 3
+        group_f =
+            repeat([nothing], size(coefs, 1), size(coefs, 2), size(coefs, ndims(coefs)))
 
 
         # reshape to pred x time x chan and then invert to chan x time x pred
-        ranef_group = permutedims(
-            reshape(ranef_group, :, size(coef(m), 2), size(coef(m), 1)),
-            [3 2 1],
-        )
+        ranef_group =
+            permutedims(reshape(ranef_group, :, size(coefs, 2), size(coefs, 1)), [3 2 1])
 
 
 
@@ -109,20 +106,20 @@ function Unfold.make_estimate(
         stderror_ranef = fill(nothing, size(ranef(m)))
         stderror = cat(stderror_fixef, stderror_ranef, dims = 3)
     else
-        group_f = repeat([nothing], size(coef(m), 1), size(coef(m), 2))
+        group_f = repeat([nothing], size(coefs, 1), size(coefs, 2))
 
         # reshape to time x channel
-        ranef_group = reshape(ranef_group, :, size(coef(m), 1))
+        ranef_group = reshape(ranef_group, :, size(coefs, 1))
         # permute to channel x time
         ranef_group = permutedims(ranef_group, [2, 1])
 
         #@debug size(ranef_group)
         # 
-        #ranef_group = repeat(["ranef"], size(coef(m), 1), size(ranef(m), 2))
+        #ranef_group = repeat(["ranef"], size(coefs, 1), size(ranef(m), 2))
         #@debug size(ranef_group)
         stderror = fill(nothing, size(estimate))
     end
-    group = cat(group_f, ranef_group, dims = ndims(coef(m)))
+    group = cat(group_f, ranef_group, dims = ndims(coefs))
     return Float64.(estimate), stderror, group
 end
 
@@ -140,7 +137,7 @@ function Unfold.get_coefnames(uf::UnfoldLinearMixedModelContinuousTime)
     # special case here, because we have to reorder the random effects to the end, else labels get messed up as we concat (coefs,ranefs)
     #   coefnames = Unfold.coefnames(formula(uf))
     #    coefnames(formula(uf)[1].rhs[1])
-    formulas = Unfold.formula(uf)
+    formulas = Unfold.formulas(uf)
     if !isa(formulas, AbstractArray) # in case we have only a single basisfunction
         formulas = [formulas]
     end
@@ -148,3 +145,7 @@ function Unfold.get_coefnames(uf::UnfoldLinearMixedModelContinuousTime)
     re_coefnames = vcat([coefnames(f.rhs[2:end]) for f in formulas]...)
     return vcat(fe_coefnames, re_coefnames)
 end
+
+
+Unfold.modelfit(uf::Union{UnfoldLinearMixedModel,UnfoldLinearMixedModelContinuousTime}) =
+    uf.modelfit.collection

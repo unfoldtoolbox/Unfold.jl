@@ -1,15 +1,17 @@
 """
 See FIRBasis for an examples
 
-    a BasisFunction should implement:
-    kernel() 
-    collabel() [default "colname_basis"] # name for 
-    colnames() # unique names of expanded columns
-    times() # vector of times along expanded columns
-    name() # name of basis
-    width() # expansion to how many columns
+a BasisFunction should implement:
+- kernel() # kernel(b::BasisFunction,sample) => returns the designmatrix for that event
+- height() # number of samples in continuous time
+- width()  # number of predictor-columns (e.g. HRF 1 to 3, FIR height()-1 )
 
-    shiftOnset() [default 0]
+- colnames() # unique names of expanded columns
+- times() # vector of times along expanded columns, length = height()
+
+- name() # name of basisfunction
+- collabel() [default "colname_basis"] # name for coeftable
+- shiftOnset() [default 0]
 """
 abstract type BasisFunction end
 
@@ -100,12 +102,9 @@ julia>  f(103.3)
 ```
 
 """
-function firbasis(τ, sfreq, name::String)
+function firbasis(τ, sfreq, name::String = "basis_" * string(rand(1:10000)))
     τ = round_times(τ, sfreq)
     times = range(τ[1], stop = τ[2] + 1 ./ sfreq, step = 1 ./ sfreq) # stop + 1 step, because we support fractional event-timings
-
-
-
 
     shiftOnset = Int64(floor(τ[1] * sfreq))
 
@@ -113,8 +112,8 @@ function firbasis(τ, sfreq, name::String)
 end
 # cant multiple dispatch on optional arguments
 #firbasis(;τ,sfreq)           = firbasis(τ,sfreq)
-firbasis(; τ, sfreq, name) = firbasis(τ, sfreq, name)
-firbasis(τ, sfreq) = firbasis(τ, sfreq, "basis_" * string(rand(1:10000)))
+firbasis(; τ, sfreq, name = "basis_" * string(rand(1:10000))) = firbasis(τ, sfreq, name)
+
 
 """
 $(SIGNATURES)
@@ -206,7 +205,7 @@ shiftOnset(basis::HRFBasis) = 0
 collabel(basis::HRFBasis) = :derivative
 collabel(basis::SplineBasis) = :splineTerm
 
-collabel(uf::UnfoldModel) = collabel(formula(uf))
+collabel(uf::UnfoldModel) = collabel(formulas(uf))
 collabel(form::FormulaTerm) = collabel(form.rhs)
 collabel(t::Tuple) = collabel(t[1]) # MixedModels has Fixef+ReEf
 collabel(term::Array{<:AbstractTerm}) = collabel(term[1].rhs)  # in case of combined formulas
@@ -225,9 +224,10 @@ times(basis::BasisFunction) = basis.times
 name(basis::BasisFunction) = basis.name
 
 StatsModels.width(basis::BasisFunction) = length(times(basis))
+height(basis::FIRBasis) = width(basis) - 1
 
-StatsModels.width(basis::FIRBasis) = length(times(basis))
-
+StatsModels.width(basis::HRFBasis) = 1
+times(basis::HRFBasis) = NaN
 
 """
 $(SIGNATURES)

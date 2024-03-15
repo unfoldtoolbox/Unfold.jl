@@ -4,8 +4,8 @@ data_r = reshape(data, (1, :))
 data_e, times = Unfold.epoch(data = data_r, tbl = evts, τ = (0, 0.05), sfreq = 10) # cut the data into epochs
 
 f = @formula 0 ~ 1 + conditionA + continuousA # 1
-m_mul = fit(Unfold.UnfoldModel, Dict(Any => (f, times)), evts, data_e)
-##
+m_mul = fit(Unfold.UnfoldModel, [Any => (f, times)], evts, data_e)
+##---
 @testset "Mass Univariate, all specified" begin
 
 
@@ -87,7 +87,7 @@ m_tul = fit(
 @testset "Time Expansion, two events" begin
 
     eff = Unfold.effects(Dict(:conditionA => [0, 1], :continuousA => [0]), m_tul)
-    @test unique(eff.basisname) == ["basisA", "basisB"]
+    @test unique(eff.eventname) == ["basisA", "basisB"]
     @test unique(eff.yhat) ≈ [2, 3]
     @test size(eff, 1) == 2 * 2 * 20 # 2 basisfunctions, 2x conditionA, 1s a 20Hz
 
@@ -131,8 +131,8 @@ end
     )
     eff = Unfold.effects(Dict(:conditionA => [0, 1], :continuousA => [-1, 0, 1]), m_tul)
     @test nrow(eff) == (length(Unfold.times(b1)) - 1 + length(Unfold.times(b2)) - 1) * 6
-    @test sum(eff.basisname .== "basisA") == 120
-    @test sum(eff.basisname .== "basisB") == 66
+    @test sum(eff.eventname .== "basisA") == 120
+    @test sum(eff.eventname .== "basisB") == 66
 
 end
 
@@ -208,7 +208,7 @@ end
     f2 = @formula 0 ~ 1 + continuousB # 1
     m_tul = fit(
         UnfoldModel,
-        Dict("eventA" => (f1, b1), "eventB" => (f2, b2)),
+        ["eventA" => (f1, b1), "eventB" => (f2, b2)],
         evts,
         data,
         eventcolumn = "type",
@@ -218,8 +218,8 @@ end
 
     eff = Unfold.effects(Dict(:continuousA => [0, 1]), m_tul)
     @test size(eff, 1) == 4
-    @test all(eff.basisname[1:2] .== "basisA")
-    @test all(eff.basisname[4:end] .== "basisB")
+    @test all(eff.eventname[1:2] .== "basisA")
+    @test all(eff.eventname[4:end] .== "basisB")
     @test eff.yhat ≈ [
         0.0,
         mean(evts.continuousB[evts.type.=="eventA"] .== "x") * coef(m_tul)[4] +

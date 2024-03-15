@@ -5,6 +5,8 @@ fit!(uf::UnfoldModel,data::Union{<:AbstractArray{T,2},<:AbstractArray{T,3}}) whe
 Fit a DesignMatrix against a 2D/3D Array data along its last dimension
 Data is typically interpreted as channel x time (with basisfunctions) or channel x time x epoch (for mass univariate)
 
+- `show_progress` (default:true), deactivate the progressmeter
+
 Returns an UnfoldModel object
 
 # Examples
@@ -14,9 +16,10 @@ Returns an UnfoldModel object
 """
 function StatsModels.fit!(
     uf::Union{UnfoldLinearMixedModel,UnfoldLinearMixedModelContinuousTime},
-    data::AbstractArray;
+    data::AbstractArray{T};
+    show_progress = true,
     kwargs...,
-)
+) where {T}
 
     #@assert length(first(values(design(uf)))[2])
     if uf isa UnfoldLinearMixedModel
@@ -29,7 +32,19 @@ function StatsModels.fit!(
     df = Array{NamedTuple,1}()
     dataDim = length(size(data)) # surely there is a nicer way to get this but I dont know it
 
-    Xs = modelmatrix(uf)
+    #Xs = modelmatrix(uf)
+    Xs = designmatrix(uf)
+    #X_vec = getfield.(designmatrix(uf), :modelmatrix)
+    Xcomb = Xs[1]
+    for k = 2:length(Xs)
+        modelmatrix1 = Unfold.get_modelmatrix(Xcomb)
+        modelmatrix2 = Unfold.get_modelmatrix(Xs[k])
+
+        @debug typeof(modelmatrix1), typeof(modelmatrix2)
+        Xcomb_temp = [modelmatrix1, modelmatrix2]
+        Xcomb = lmm_combine_modelmatrix!(Xcomb_temp, Xcomb, Xs[k])
+    end
+    Xs = length(Xs) > 1 ? Xcomb : Xs[1].modelmatrix
     # If we have3 dimension, we have a massive univariate linear mixed model for each timepoint
     if dataDim == 3
         firstData = data[1, 1, :]
@@ -41,14 +56,14 @@ function StatsModels.fit!(
     end
     nchan = size(data, 1)
 
-    Xs = (Unfold.equalizeLengths(Xs[1]), Xs[2:end]...)
+    Xs = (Unfold.equalize_lengths(Xs[1]), Xs[2:end]...)
     _, data = Unfold.zeropad(Xs[1], data)
     # get a un-fitted mixed model object
 
     Xs = disallowmissing.(Xs)
     #Xs = (Matrix(Xs[1]),Xs[2:end]...)
 
-    mm = LinearMixedModel_wrapper(Unfold.formula(uf), firstData, Xs)
+    mm = LinearMixedModel_wrapper(Unfold.formulas(uf), firstData, Xs)
     # prepare some variables to be used
     βsc, θsc = similar(MixedModels.coef(mm)), similar(mm.θ) # pre allocate
     p, k = length(βsc), length(θsc)
@@ -72,7 +87,7 @@ function StatsModels.fit!(
         for t in range(1, stop = ntime)
 
             #@debug "ch:$ch/$nchan, t:$t/$ntime"
-            @debug "data-size: $(size(data))"
+            #@debug "data-size: $(size(data))"
             #@debug println("mixedModel: $(mm.feterms)")
             if ndims(data) == 3
                 MixedModels.refit!(mm, data[ch, t, :])
@@ -93,20 +108,24 @@ function StatsModels.fit!(
                 timeIX = ifelse(dataDim == 2, NaN, t),
             )
             push!(df, out)
-            ProgressMeter.next!(prog; showvalues = [(:channel, ch), (:time, t)])
+            if show_progress
+                ProgressMeter.next!(prog; showvalues = [(:channel, ch), (:time, t)])
+            end
         end
     end
 
-    uf.modelfit = UnfoldMixedModelFitCollection(
-        df,
-        deepcopy(mm.λ),
-        getfield.(mm.reterms, :inds),
-        copy(mm.optsum.lowerbd),
-        NamedTuple{Symbol.(fnames(mm))}(map(t -> (t.cnames...,), mm.reterms)),
+    uf.modelfit = UnfoldLinearMixedModelFit{T,ndims(data)}(
+        LinearMixedModelFitCollection{T}(
+            df,
+            deepcopy(mm.λ),
+            getfield.(mm.reterms, :inds),
+            copy(mm.optsum.lowerbd),
+            NamedTuple{Symbol.(fnames(mm))}(map(t -> (t.cnames...,), mm.reterms)),
+        ),
     )
 
 
-    return uf.modelfit
+    return uf
 end
 
 function StatsModels.coef(
@@ -124,7 +143,7 @@ function MixedModels.ranef(
 end
 
 function reshape_lmm(uf::UnfoldLinearMixedModel, est)
-    ntime = length(collect(values(design(uf)))[1][2])
+    ntime = length(Unfold.times(uf))
     nchan = modelfit(uf).fits[end].channel
     return permutedims(reshape(est, :, ntime, nchan), [3 2 1])
 end
@@ -156,7 +175,7 @@ function LinearMixedModel_wrapper(
     wts = [],
 ) where {TData<:Number}
     #    function LinearMixedModel_wrapper(form,data::Array{<:Union{Missing,TData},1},Xs;wts = []) where {TData<:Number}
-    Xs = (Unfold.equalizeLengths(Xs[1]), Xs[2:end]...)
+    Xs = (Unfold.equalize_lengths(Xs[1]), Xs[2:end]...)
     # XXX Push this to utilities zeropad
     # Make sure X & y are the same size
     m = size(Xs[1])[1]
@@ -165,7 +184,7 @@ function LinearMixedModel_wrapper(
     if m != size(data)[1]
         fe, data = Unfold.zeropad(Xs[1], data)
 
-        Xs = changeMatSize!(size(data)[1], fe, Xs[2:end])
+        Xs = change_modelmatrix_size!(size(data)[1], fe, Xs[2:end])
     end
 
     #y = (reshape(float(data), (:, 1)))
@@ -176,6 +195,7 @@ end
 
 function MixedModels.LinearMixedModel(y, Xs, form::Array, wts)
 
+    @debug "HELLLOOO", typeof(Xs)
 
     form_combined = form[1]
     for f in form[2:end]
@@ -186,8 +206,10 @@ function MixedModels.LinearMixedModel(y, Xs, form::Array, wts)
                 form_combined.rhs[2:end] +
                 f.rhs[2:end]
     end
+    @debug typeof(form_combined)
+    @debug typeof(y), typeof(Xs), typeof(wts)
     MixedModels.LinearMixedModel(y, Xs, form_combined, wts)
 end
 
 
-isMixedModelFormula(f::typeof(MixedModels.zerocorr)) = true
+isa_lmm_formula(f::typeof(MixedModels.zerocorr)) = true

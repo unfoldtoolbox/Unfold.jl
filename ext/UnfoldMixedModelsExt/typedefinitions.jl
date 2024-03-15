@@ -1,19 +1,26 @@
 
 struct DesignMatrixLinearMixedModel{T} <: AbstractDesignMatrix{T}
-    formulas::Vector{FormulaTerm} # "Array of formulas"
-    Xs::Vector{Vector{Union{FeMat{T},ReMat{T}}}} #"A concatenated designmatric. In case of Mixed Models an array, where the first one is a FeMat, later ones ReMats. "
-    events::DataFrame #"Event table with all events"
+    formula::FormulaTerm
+    modelmatrix::Tuple
+    events::DataFrame
 end
 
 struct DesignMatrixLinearMixedModelContinuousTime{T} <: AbstractDesignMatrix{T}
-    formulas::Vector{FormulaTerm} # "Array of formulas"
-    Xs::Vector{Union{FeMat{T},ReMat{T}}} #"A concatenated designmatric. In case of Mixed Models an array, where the first one is a FeMat, later ones ReMats. "
-    events::DataFrame #"Event table with all events"
+    formula::FormulaTerm
+    modelmatrix::Tuple
+    events::DataFrame
 end
 
+DesignMatrixLinearMixedModel{T}() where {T} =
+    DesignMatrixLinearMixedModel{T}(FormulaTerm(:empty, :empty), (), DataFrame())
+DesignMatrixLinearMixedModelContinuousTime{T}() where {T} =
+    DesignMatrixLinearMixedModelContinuousTime{T}(
+        FormulaTerm(:empty, :empty),
+        (),
+        DataFrame(),
+    )
 
-
-struct intern_LinearMixedModelFitCollection{T} <: MixedModels.MixedModelFitCollection{T}
+struct LinearMixedModelFitCollection{T} <: MixedModels.MixedModelFitCollection{T}
     fits::Vector
     λ::Vector
     inds::Vector{Vector{Int}}
@@ -21,15 +28,16 @@ struct intern_LinearMixedModelFitCollection{T} <: MixedModels.MixedModelFitColle
     fcnames::NamedTuple
 end
 
+LinearMixedModelFitCollection{T}() where {T} =
+    LinearMixedModelFitCollection{T}([], [], Vector{Int}[], T[], (;))
 
-
-struct UnfoldLinearMixedModelFitCollection{T<:AbstractFloat,N} <: AbstractModelFit{T,N}
-    field::intern_LinearMixedModelFitCollection
+struct UnfoldLinearMixedModelFit{T<:AbstractFloat,N} <: AbstractModelFit{T,N}
+    collection::LinearMixedModelFitCollection{T}
 end
 
 
-
-
+UnfoldLinearMixedModelFit{T,N}() where {T,N} =
+    UnfoldLinearMixedModelFit{T,N}(LinearMixedModelFitCollection{T}())
 
 """
 Concrete type to implement an Mass-Univariate LinearMixedModel.
@@ -38,13 +46,21 @@ Concrete type to implement an Mass-Univariate LinearMixedModel.
 `modelfit` is a `Any` container for the model results
 """
 mutable struct UnfoldLinearMixedModel{T} <: UnfoldModel{T}
-    design::Dict
-    designmatrix::DesignMatrixLinearMixedModel{T}
-    modelfit::Vector{UnfoldLinearMixedModelFitCollection{T,3}} # optional info on the modelfit
+    design::Vector{<:Pair}
+    designmatrix::Vector{<:DesignMatrixLinearMixedModel{T}}
+    modelfit::UnfoldLinearMixedModelFit{T,3} # optional info on the modelfit
 end
-UnfoldLinearMixedModel(d::Dict) =
-    UnfoldLinearMixedModel(d, Unfold.DesignMatrixLinearMixedModel(), [])
-UnfoldLinearMixedModel(d::Dict, X::AbstractDesignMatrix) = UnfoldLinearMixedModel(d, X, [])
+
+UnfoldLinearMixedModel(args...; kwargs...) =
+    UnfoldLinearMixedModel{Float64}(args...; kwargs...)
+UnfoldLinearMixedModel{T}() where {T} = UnfoldLinearMixedModel{T}(Pair[])
+UnfoldLinearMixedModel{T}(d::Vector) where {T} = UnfoldLinearMixedModel{T}(
+    d,
+    [DesignMatrixLinearMixedModel{T}()],
+    UnfoldLinearMixedModelFit{T,3}(),
+)
+UnfoldLinearMixedModel{T}(d::Vector, X::Vector{<:AbstractDesignMatrix}) where {T} =
+    UnfoldLinearMixedModel{T}(d, X, DataFrame())
 
 
 """
@@ -57,18 +73,27 @@ Concrete type to implement an deconvolution LinearMixedModel.
 `modelfit` is a `Any` container for the model results
 """
 mutable struct UnfoldLinearMixedModelContinuousTime{T} <: UnfoldModel{T}
-    design::Dict
-    designmatrix::DesignMatrixLinearMixedModelContinuousTime{T}
-    modelfit::UnfoldLinearMixedModelFitCollection{T,2}
+    design::Vector{<:Pair}
+    designmatrix::Vector{<:DesignMatrixLinearMixedModelContinuousTime{T}}
+    modelfit::UnfoldLinearMixedModelFit{T,2}
 end
 
-UnfoldLinearMixedModelContinuousTime(d::Dict) = UnfoldLinearMixedModelContinuousTime(
-    d,
-    Unfold.DesignMatrixLinearMixedModelContinuousTime(),
-    [],
-)
-UnfoldLinearMixedModelContinuousTime(d::Dict, X::AbstractDesignMatrix) =
-    UnfoldLinearMixedModelContinuousTime(d, X, [])
+UnfoldLinearMixedModelContinuousTime(args...; kwargs...) =
+    UnfoldLinearMixedModelContinuousTime{Float64}(args...; kwargs...)
+UnfoldLinearMixedModelContinuousTime{T}() where {T} =
+    UnfoldLinearMixedModelContinuousTime{T}(Pair[])
+
+UnfoldLinearMixedModelContinuousTime{T}(d::Vector) where {T} =
+    UnfoldLinearMixedModelContinuousTime{T}(
+        d,
+        [DesignMatrixLinearMixedModelContinuousTime{T}()],
+        UnfoldLinearMixedModelFit{T,2}(),
+    )
+UnfoldLinearMixedModelContinuousTime{T}(
+    d::Vector{<:Pair},
+    X::Vector{<:AbstractDesignMatrix{T}},
+) where {T} =
+    UnfoldLinearMixedModelContinuousTime{T}(d, X, UnfoldLinearMixedModelFit{T,2}())
 
 
-@traitimpl ContinuousTimeTrait{UnfoldLinearMixedModelContinuousTime}
+@traitimpl Unfold.ContinuousTimeTrait{UnfoldLinearMixedModelContinuousTime}

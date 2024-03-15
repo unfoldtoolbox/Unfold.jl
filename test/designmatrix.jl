@@ -1,4 +1,4 @@
-##
+##---
 
 tbl = DataFrame([1 4]', [:latency])
 X = ones(size(tbl))
@@ -14,7 +14,7 @@ shouldBePos[2, :] = [1, 0, 0, 0]
 shouldBePos[3, :] = [0, 1, 0, 0]
 shouldBePos[4, :] = [0, 0, 1, 0]
 
-
+#---
 @testset "basic designmat" begin
     ## test negative
     basisfunction = firbasis(τ = (-3, 0), sfreq = 1, name = "testing")
@@ -50,20 +50,21 @@ end
     basisfunction1 = firbasis(τ = (0, 1), sfreq = 10, name = "basis1")
     basisfunction2 = firbasis(τ = (0, 0.5), sfreq = 10, name = "basis2")
     f = @formula 0 ~ 1
-    Xdc1 = designmatrix(UnfoldLinearModel, f, tbl, basisfunction1)
-    Xdc2 = designmatrix(UnfoldLinearModel, f, tbl .+ 1, basisfunction2)
+    Xdc1 = designmatrix(UnfoldLinearModelContinuousTime, f, tbl, basisfunction1)
+    Xdc2 = designmatrix(UnfoldLinearModelContinuousTime, f, tbl .+ 1, basisfunction2)
 
     Xdc = Xdc1 + Xdc2
     @test size(modelmatrix(Xdc), 2) ==
           size(modelmatrix(Xdc1), 2) + size(modelmatrix(Xdc2), 2)
-    @test length(Xdc.events) == 2
+    @test length(events(Xdc)) == 2
 
     Xdc_3 = Xdc1 + Xdc2 + Xdc2
 
     @test size(modelmatrix(Xdc_3), 2) ==
           size(modelmatrix(Xdc1), 2) + 2 * size(modelmatrix(Xdc2), 2)
-    @test length(Xdc_3.events) == 3
-
+    @test length(events(Xdc_3)) == 3
+end
+@testset "combining MixedModel Designmatrices" begin
 
     basisfunction1 = firbasis(τ = (0, 1), sfreq = 10, name = "basis1")
     basisfunction2 = firbasis(τ = (0, 0.5), sfreq = 10, name = "basis2")
@@ -89,8 +90,8 @@ end
     Xdc4_wrong = designmatrix(UnfoldLinearMixedModel, f4_wrong, tbl, basisfunction2)
 
     Xdc = Xdc3 + Xdc4
-    @test typeof(Xdc.Xs[1][1]) <: SparseArrays.SparseMatrixCSC
-    @test length(Xdc.Xs) == 4 # one FeMat  + 3 ReMat
+    @test typeof(Xdc.modelmatrix[1][1]) <: SparseArrays.SparseMatrixCSC
+    @test length(Xdc.modelmatrix) == 4 # one FeMat  + 3 ReMat
     @test_throws String Xdc3 + Xdc4_wrong
     uf = UnfoldLinearMixedModelContinuousTime(Dict(), Xdc, [])
     Unfold.fit!(uf, y)
@@ -154,24 +155,24 @@ end
     else
         ext = Base.get_extension(Unfold, :UnfoldMixedModelsExt)
     end
-    ext.equalizeReMatLengths!(X)
+    ext.equalize_ReMat_lengths!(X)
     @test all([x[1] for x in size.(X)] .== 48)
 
     X = (deepcopy(X1[2:end])..., deepcopy(X2[2:end])...)
     @test !all([x[1] for x in size.(X)] .== 49) # not alllenghts the same
-    ext.equalizeReMatLengths!(X)
+    ext.equalize_ReMat_lengths!(X)
     @test all([x[1] for x in size.(X)] .== 49) # now all lengths the same :-)
 
 
     X = deepcopy(X2[2])
 
     @test size(X)[1] == 49
-    ext.changeReMatSize!(X, 52)
+    ext.change_ReMat_size!(X, 52)
     @test size(X)[1] == 52
 
     X = deepcopy(X2[2])
     @test size(X)[1] == 49
-    ext.changeReMatSize!(X, 40)
+    ext.change_ReMat_size!(X, 40)
     @test size(X)[1] == 40
 
 
@@ -180,11 +181,11 @@ end
     @test size(X[2])[1] == 48
     @test size(X[3])[1] == 48
     @test size(X[4])[1] == 49
-    XA, XB = ext.changeMatSize!(52, X[1], X[2:end])
+    XA, XB = ext.change_modelmatrix_size!(52, X[1], X[2:end])
     @test size(XA)[1] == 52
     @test size(XB)[1] == 52
 
-    XA, XB = ext.changeMatSize!(40, X[1], X[2:end])
+    XA, XB = ext.change_modelmatrix_size!(40, X[1], X[2:end])
     @test size(XA)[1] == 40
     @test size(XB)[1] == 40
 
@@ -203,10 +204,10 @@ end
     basisfunction = firbasis(τ = (-0.1, 0.1), sfreq = 10, name = "ABC")
     Xdc_zc = designmatrix(UnfoldLinearMixedModel, f_zc, evts, basisfunction)
 
-    @test length(Xdc_zc.Xs[2].inds) == 9
+    @test length(Xdc_zc.modelmatrix[2].inds) == 9
     f = @formula 0 ~ 1 + condA + condB + (1 + condA + condB | subject)
     Xdc = designmatrix(UnfoldLinearMixedModel, f, evts, basisfunction)
-    @test length(Xdc.Xs[2].inds) == (9 * 9 + 9) / 2
+    @test length(Xdc.modelmatrix[2].inds) == (9 * 9 + 9) / 2
 
     # test bug with not sequential subjects
     evts_nonseq = copy(evts)
@@ -234,26 +235,26 @@ end
     @test_throws ErrorException designmatrix(UnfoldLinearModel, @formula(0 ~ e), tbl)
 
     # including an actual missing doesnt work
-    design = Dict(
+    design = [
         "1" => (@formula(0 ~ a + b + c + d + e), firbasis((0, 1), 1)),
         "2" => (@formula(0 ~ a + b + c + d + e), firbasis((0, 1), 1)),
-    )
+    ]
     uf = UnfoldLinearModelContinuousTime(design)
     @test_throws ErrorException designmatrix(uf, tbl)
 
     # but if the missing is in another event, no problem
-    design = Dict(
+    design = [
         "1" => (@formula(0 ~ a + b + c + d + e), firbasis((0, 1), 1)),
         "2" => (@formula(0 ~ a + d), firbasis((0, 1), 1)),
-    )
+    ]
     uf = UnfoldLinearModelContinuousTime(design)
     designmatrix(uf, tbl)
 
     # prior to the Missing disallow sanity check, this gave an error
-    design = Dict(
+    design = [
         "1" => (@formula(0 ~ spl(a, 4) + spl(b, 4) + d + e), firbasis((0, 1), 1)),
         "2" => (@formula(0 ~ a + d), firbasis((0, 1), 1)),
-    )
+    ]
     uf = UnfoldLinearModelContinuousTime(design)
     designmatrix(uf, tbl)
 end

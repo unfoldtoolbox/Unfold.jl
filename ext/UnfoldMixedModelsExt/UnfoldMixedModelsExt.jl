@@ -2,7 +2,7 @@ module UnfoldMixedModelsExt
 
 using Unfold
 
-import Unfold: isMixedModelFormula, make_estimate
+import Unfold: isa_lmm_formula, make_estimate
 using MixedModels
 #import MixedModels.FeMat # extended for sparse femats, type piracy => issue on MixedModels.jl github
 using StaticArrays # for MixedModels extraction of parametrs (inherited from MixedModels.jl, not strictly needed )
@@ -14,13 +14,14 @@ using DocStringExtensions
 using LinearAlgebra # LowerTriangular
 using DataFrames
 using ProgressMeter
+using SimpleTraits
 
+include("typedefinitions.jl")
 include("condense.jl")
 include("designmatrix.jl")
 include("fit.jl")
 include("statistics.jl")
 include("timeexpandedterm.jl")
-include("typedefinitions.jl")
 include("effects.jl")
 
 end
