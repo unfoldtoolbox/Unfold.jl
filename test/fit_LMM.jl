@@ -37,6 +37,7 @@
         data_e,
         times,
         contrasts = Dict(:condA => EffectsCoding(), :condB => EffectsCoding()),
+        show_progress = false,
     )
     df = Unfold.coeftable(m_mum)
     @test isapprox(
@@ -54,6 +55,7 @@
         data_missing_e,
         times,
         contrasts = Dict(:condA => EffectsCoding(), :condB => EffectsCoding()),
+        show_progress = false,
     )
     df = coeftable(m_mum)
     @test isapprox(
@@ -73,6 +75,7 @@
         data,
         basisfunction,
         contrasts = Dict(:condA => EffectsCoding(), :condB => EffectsCoding()),
+        show_progress = false,
     )
     df = coeftable(m_tum)
     @test isapprox(
@@ -99,7 +102,9 @@
     evts2 = evts[evts.condA.==1, :]
 
     f0_lmm = @formula 0 ~ 1 + condB + (1 | subject) + (1 | subjectB)
-    @time m_tum = coeftable(fit(UnfoldModel, f0_lmm, evts, data, basisfunction))
+    @time m_tum = coeftable(
+        fit(UnfoldModel, f0_lmm, evts, data, basisfunction; show_progress = false),
+    )
 
 
     f1_lmm = @formula 0 ~ 1 + condB + (1 | subject)
@@ -112,7 +117,12 @@
     X1_lmm = designmatrix(ext.UnfoldLinearMixedModelContinuousTime, f1_lmm, evts1, b1)
     X2_lmm = designmatrix(ext.UnfoldLinearMixedModelContinuousTime, f2_lmm, evts2, b2)
 
-    r = fit(ext.UnfoldLinearMixedModelContinuousTime, X1_lmm + X2_lmm, data)
+    r = fit(
+        ext.UnfoldLinearMixedModelContinuousTime,
+        X1_lmm + X2_lmm,
+        data;
+        show_progress = false,
+    )
     df = coeftable(r)
 
     @test isapprox(
@@ -150,6 +160,7 @@ end
         evts,
         data,
         eventcolumn = "condA",
+        show_progress = false,
     )
 
     res = coeftable(m)
@@ -212,7 +223,7 @@ end
         ),
     ]
 
-    uf = fit(UnfoldModel, des, evts, data)
+    uf = fit(UnfoldModel, des, evts, data; show_progress = false)
     @test 3 ==
           unique(
         @subset(
@@ -237,6 +248,6 @@ end
             range(0, 1, length = size(data, 1)),
         ),
     ]
-    uf = fit(UnfoldModel, des, evts, data)
+    uf = fit(UnfoldModel, des, evts, data; show_progress = false)
     @test size(coef(uf)) == (1, 100, 3)
 end

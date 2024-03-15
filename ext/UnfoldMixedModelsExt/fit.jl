@@ -90,9 +90,9 @@ function StatsModels.fit!(
             #@debug "data-size: $(size(data))"
             #@debug println("mixedModel: $(mm.feterms)")
             if ndims(data) == 3
-                MixedModels.refit!(mm, data[ch, t, :])
+                MixedModels.refit!(mm, data[ch, t, :]; progress = false)
             else
-                MixedModels.refit!(mm, data[ch, :])
+                MixedModels.refit!(mm, data[ch, :]; progress = false)
             end
             #@debug println(MixedModels.fixef!(βsc,mm))
 

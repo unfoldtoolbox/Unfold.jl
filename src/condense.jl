@@ -41,8 +41,6 @@ StatsModels.coef(mf::LinearModelFit) = mf.estimate
     end
 
 
-    #colnames_basis_rep = permutedims(repeat(colnames_basis_raw,Int(length(colnames_basis)/length(colnames_basis_raw)),nchan),[2,1])
-    # XXX HOTFIX for above lines
     colnames_basis_rep = permutedims(repeat(colnames_basis, 1, nchan), [2, 1])
     try
         colnames_basis_rep = parse.(Float64, colnames_basis_rep)

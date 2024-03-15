@@ -23,7 +23,7 @@ function solver_krylov(
     GPU = false,
     history = true,
     multithreading = GPU ? false : true,
-    showprogress = true,
+    show_progress = true,
     stderror = false,
 ) where {T<:Union{Missing,<:Number}}
 
@@ -43,7 +43,7 @@ function solver_krylov(
         lsmr_solver = Krylov.LsmrSolver(size(X_loop)..., Vector{Float64})
     end
 
-    p = Progress(size(data, 1); enabled = showprogress)
+    p = Progress(size(data, 1); enabled = show_progress)
 
     beta = zeros(size(data, 1), size(X, 2)) # had issues with undef
     Unfold.@maybe_threads multithreading for ch = 1:size(data, 1)
