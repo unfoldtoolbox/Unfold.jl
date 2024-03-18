@@ -91,7 +91,7 @@ end
     Xdc4_wrong = designmatrix(ext.UnfoldLinearMixedModel, f4_wrong, tbl, basisfunction2)
 
     Xdc = Xdc3 + Xdc4
-    @test typeof(modelmatrix(Xdc)[1][1]) <: SparseArrays.SparseMatrixCSC
+    @test typeof(modelmatrix(Xdc)[1]) <: SparseArrays.SparseMatrixCSC
     @test length(modelmatrix(Xdc)) == 4 # one FeMat  + 3 ReMat
     @test_throws String modelmatrix(Xdc3 + Xdc4_wrong)
 
