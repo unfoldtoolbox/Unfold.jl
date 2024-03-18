@@ -1,21 +1,27 @@
 StatsModels.modelmatrix(
     uf::Union{UnfoldLinearMixedModelContinuousTime,<:UnfoldLinearMixedModel},
 ) = modelmatrix(designmatrix(uf))
+
+
 function StatsModels.modelmatrix(
     Xs::Vector{
         <:Union{DesignMatrixLinearMixedModel,<:DesignMatrixLinearMixedModelContinuousTime},
     },
 )
+    @debug "modelmatrix" typeof(Xs)
 
     #X_vec = getfield.(designmatrix(uf), :modelmatrix)
     Xcomb = Xs[1]
     for k = 2:length(Xs)
+        @debug typeof(Xcomb) typeof(Xs[k])
         modelmatrix1 = Unfold.get_modelmatrix(Xcomb)
         modelmatrix2 = Unfold.get_modelmatrix(Xs[k])
 
         @debug typeof(modelmatrix1), typeof(modelmatrix2)
-        Xcomb_temp = [modelmatrix1, modelmatrix2]
+        Xcomb_temp = Unfold.equalize_lengths(modelmatrix1, modelmatrix2)
+        @debug "tmp" typeof(Xcomb_temp)
         Xcomb = lmm_combine_modelmatrix!(Xcomb_temp, Xcomb, Xs[k])
+        @debug "Xcomb" typeof(Xcomb)
     end
     Xs = length(Xs) > 1 ? Xcomb : [Xs[1].modelmatrix]
     return Xs
@@ -52,9 +58,12 @@ function StatsModels.fit!(
     # function content partially taken from MixedModels.jl bootstrap.jl
     df = Array{NamedTuple,1}()
     dataDim = length(size(data)) # surely there is a nicer way to get this but I dont know it
-
+    @debug typeof(uf)
     #Xs = modelmatrix(uf)
-    Xs = modelmatrix(uf)[1]
+    Xs = modelmatrix(uf)
+    if isa(Xs, Vector)
+        Xs = Xs[1]
+    end
     # If we have3 dimension, we have a massive univariate linear mixed model for each timepoint
     if dataDim == 3
         firstData = data[1, 1, :]
@@ -66,13 +75,14 @@ function StatsModels.fit!(
     end
     nchan = size(data, 1)
 
-    #Xs = Unfold.equalize_lengths(Xs[1])#(Unfold.equalize_lengths(Xs[1]), Xs[2:end]...)
+    @show "fit!" typeof(Xs)
+    Xs = (Unfold.equalize_lengths(Xs[1]), Xs[2:end]...)#(Unfold.equalize_lengths(Xs[1]), Xs[2:end]...)
     _, data = Unfold.zeropad(Xs[1], data)
     # get a un-fitted mixed model object
 
-    Xs = disallowmissing.(Xs)
+    Xs = (disallowmissing(Xs[1]), Xs[2:end]...)
     #Xs = (Matrix(Xs[1]),Xs[2:end]...)
-
+    @debug "firstdata" size(firstData)
     mm = LinearMixedModel_wrapper(Unfold.formulas(uf), firstData, Xs)
     # prepare some variables to be used
     βsc, θsc = similar(MixedModels.coef(mm)), similar(mm.θ) # pre allocate
@@ -87,8 +97,8 @@ function StatsModels.fit!(
         "Beta-Names & coefficient length do not match. Did you provide two identical basis functions?"
     )
 
-    @debug println("beta_names $β_names")
-    @debug println("uniquelength: $(length(unique(β_names))) / $(length(β_names))")
+    #@debug println("beta_names $β_names")
+    #@debug println("uniquelength: $(length(unique(β_names))) / $(length(β_names))")
     # for each channel
     prog = Progress(nchan * ntime, 0.1)
     #@showprogress .1 
@@ -102,6 +112,7 @@ function StatsModels.fit!(
             if ndims(data) == 3
                 MixedModels.refit!(mm, data[ch, t, :]; progress = false)
             else
+                #@debug size(mm.y)
                 MixedModels.refit!(mm, data[ch, :]; progress = false)
             end
             #@debug println(MixedModels.fixef!(βsc,mm))
@@ -185,9 +196,11 @@ function LinearMixedModel_wrapper(
     wts = [],
 ) where {TData<:Number}
     #    function LinearMixedModel_wrapper(form,data::Array{<:Union{Missing,TData},1},Xs;wts = []) where {TData<:Number}
+    @debug "LMM wrapper, $(typeof(Xs))"
     Xs = (Unfold.equalize_lengths(Xs[1]), Xs[2:end]...)
     # XXX Push this to utilities zeropad
     # Make sure X & y are the same size
+    @assert isa(Xs[1], AbstractMatrix) & isa(Xs[2], ReMat) "Xs[1] was a $(typeof(Xs[1])), should be a AbstractMatrix, and Xs[2] was a $(typeof(Xs[2])) should be a ReMat"
     m = size(Xs[1])[1]
 
 
@@ -204,9 +217,6 @@ function LinearMixedModel_wrapper(
 end
 
 function MixedModels.LinearMixedModel(y, Xs, form::Array, wts)
-
-    @debug "HELLLOOO", typeof(Xs)
-
     form_combined = form[1]
     for f in form[2:end]
 
@@ -216,7 +226,7 @@ function MixedModels.LinearMixedModel(y, Xs, form::Array, wts)
                 form_combined.rhs[2:end] +
                 f.rhs[2:end]
     end
-    @debug typeof(form_combined)
+    #@debug typeof(form_combined)
     @debug typeof(y), typeof(Xs), typeof(wts)
     MixedModels.LinearMixedModel(y, Xs, form_combined, wts)
 end

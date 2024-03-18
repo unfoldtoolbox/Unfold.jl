@@ -135,7 +135,7 @@
     m = coeftable(
         fit(
             UnfoldModel,
-            Dict(0 => (f1_lmm, b1), 1 => (f2_lmm, b2)),
+            [0 => (f1_lmm, b1), 1 => (f2_lmm, b2)],
             evts,
             data,
             eventcolumn = "condA",
@@ -158,7 +158,7 @@ end
         UnfoldModel,
         Dict(0 => (fA0, bA0), 1 => (fA1, bA1)),
         evts,
-        data,
+        data;
         eventcolumn = "condA",
         show_progress = false,
     )

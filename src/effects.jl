@@ -32,7 +32,7 @@ function effects(design::AbstractDict, model::T; typical = mean) where {T<:Unfol
     form = Unfold.formulas(model) # get formula
 
     # replace non-specified fields with "constants"
-    m = modelmatrix(model, false) # get the modelmatrix without timeexpansion
+    m = Unfold.modelmatrix(model, false) # get the modelmatrix without timeexpansion
     #@debug "type form[1]", typeof(form[1])
     @debug typeof(m), size(m)
     form_typical = _typify(T, reference_grid, form, m, typical)
@@ -127,6 +127,7 @@ end
 ) where {UF <: UnfoldModel; !ContinuousTimeTrait{UF}}
     # Mass Univariate with multiple effects
     @debug "_typify going the mass univariate route - $(typeof(form))"
+    @debug length(form), length(m)
     out = []
     for k = 1:length(form)
         push!(out, typify(reference_grid, form[k], m[k]; typical = typical))
@@ -134,6 +135,9 @@ end
     return out
 
 end
+# mixedModels case - unsure why this is needed :/
+Effects.typify(reference_grid, form, m::Tuple; typical) =
+    typify(reference_grid, form, m[1]; typical)
 
 function cast_referenceGrid(r, eff::AbstractArray{T}, times; eventname = nothing) where {T}
     @debug typeof(eff), typeof(r)

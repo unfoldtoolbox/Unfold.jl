@@ -249,6 +249,7 @@ function StatsModels.modelcols(
 end
 function change_modelmatrix_size!(m, fe::AbstractSparseMatrix, remats)
     change_ReMat_size!.(remats, Ref(m))
+    @debug "changemodelmatrix" typeof(fe)
     fe = SparseMatrixCSC(m, fe.n, fe.colptr, fe.rowval, fe.nzval)
     return (fe, remats...)
 end

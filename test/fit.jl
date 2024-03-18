@@ -106,7 +106,7 @@ end
 
 end
 
-@testset "automatic, non-dictionary call" begin
+@testset "automatic, non-vector call" begin
     times = -1.0:0.05:1.9
     m_mul = coeftable(fit(UnfoldLinearModel, f, evts, data_e, times))
 

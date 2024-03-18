@@ -305,6 +305,7 @@ equalize_lengths(modelmatrix::Vector{<:AbstractMatrix}) = modelmatrix
 equalize_lengths(modelmatrix::Vector{<:SparseMatrixCSC}) = equalize_lengths(modelmatrix...)
 equalize_lengths(modelmatrix1::SparseMatrixCSC, modelmatrix2::SparseMatrixCSC, args...) =
     equalize_lengths(equalize_lengths(modelmatrix1, modelmatrix2), args...)
+
 function equalize_lengths(modelmatrix1::SparseMatrixCSC, modelmatrix2::SparseMatrixCSC)
     sX1 = size(modelmatrix1, 1)
     sX2 = size(modelmatrix2, 1)
@@ -402,7 +403,6 @@ $(SIGNATURES)
 calculates the actual designmatrix for a timeexpandedterm. Multiple dispatch on StatsModels.modelcols
 """
 function StatsModels.modelcols(term::TimeExpandedTerm, tbl)
-    @debug term.term, first(tbl)
     X = modelcols(term.term, tbl)
 
     time_expand(X, term, tbl)

@@ -50,8 +50,8 @@ function reorder_tidyσs(t, f)
     t_name = [string(i.column) for i in t if i.iter == 1]
 
     # combine for formula and tidy output the group + the coefname
-    @debug f_order
-    @debug f_name
+    #@debug f_order
+    #@debug f_name
     f_comb = f_order .* f_name
     t_comb = t_order .* t_name
 
@@ -59,12 +59,12 @@ function reorder_tidyσs(t, f)
     reorder_ix = Int[]
     for f_coef in f_comb
         ix = findall(t_comb .== f_coef)
-        @debug t_comb, f_coef
+        # @debug t_comb, f_coef
         @assert length(ix) == 1 "error in reordering of MixedModels - please file a bugreport!"
         push!(reorder_ix, ix[1])
     end
     @assert length(reorder_ix) == length(t_comb)
-    @debug reorder_ix
+    #@debug reorder_ix
     # repeat and build the index for all timepoints
     reorder_ix_all = repeat(reorder_ix, length(t) ÷ length(reorder_ix))
     for k = 1:length(reorder_ix):length(t)
