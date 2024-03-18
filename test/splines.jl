@@ -63,7 +63,7 @@ end
 @testset "PeriodicSplines" begin
     f_circspl = @formula 0 ~ 1 + circspl(continuousA, 10, -1, 1) # 1
     m = fit(UnfoldModel, f_circspl, evts, data_e, times)
-    f_evaluated = Unfold.formula(m)
+    f_evaluated = Unfold.formulas(m)
 
     effValues = [-1, -0.99, 0, 0.99, 1]
     effValues = range(-1.1, 1.1, step = 0.1)

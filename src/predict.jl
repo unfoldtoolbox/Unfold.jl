@@ -11,7 +11,7 @@ function StatsBase.predict(model::UnfoldModel, events)
     if typeof(formulas) <: FormulaTerm
         formulas = [formulas]
     end
-    if typeof(model) == UnfoldLinearModel
+    if isa(model, UnfoldLinearModel)
         eff = yhat(model, formulas[1], newevents)
         timesVec = gen_timeev(times(model), size(newevents, 1))
     else
@@ -26,7 +26,7 @@ function StatsBase.predict(model::UnfoldModel, events)
     for c in names(newevents)
         metaData[:, c] .= newevents[1, c] # assign first element in order to have same column type
     end
-    if typeof(model) == UnfoldLinearModel
+    if isa(model, UnfoldLinearModel)
         # for mass univariate we can make use of the knowledge that all events have the same length :)
         ntimes = size(coef(model), 2)
         for c in names(newevents)

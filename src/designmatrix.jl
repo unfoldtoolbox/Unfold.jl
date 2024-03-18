@@ -338,11 +338,11 @@ function StatsModels.modelmatrix(uf::UnfoldLinearModelContinuousTime, basisfunct
         f = formulas(uf)
 
         # probably a more julian way to do this...
-        if isa(f, AbstractArray)
-            return modelcols_nobasis.(f, events(uf))
-        else
-            return modelcols_nobasis(f, events(uf))
-        end
+        #if isa(f, AbstractArray)
+        return modelcols_nobasis.(f, events(uf))
+        #else
+        #    return modelcols_nobasis(f, events(uf))
+        #end
 
     end
 end
@@ -352,7 +352,7 @@ StatsModels.modelmatrix(uf::UnfoldModel) = modelmatrix(designmatrix(uf))#modelma
 StatsModels.modelmatrix(d::AbstractDesignMatrix) = get_modelmatrix(d)
 StatsModels.modelmatrix(d::Vector{<:AbstractDesignMatrix}) =
     equalize_lengths(get_modelmatrix.(d))
-get_modelmatrix
+
 
 #StatsModels.modelmatrix(d::Dict, events) = modelcols(formulas(d).rhs, events)
 

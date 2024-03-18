@@ -17,7 +17,7 @@ function StatsModels.modelmatrix(
         Xcomb_temp = [modelmatrix1, modelmatrix2]
         Xcomb = lmm_combine_modelmatrix!(Xcomb_temp, Xcomb, Xs[k])
     end
-    Xs = length(Xs) > 1 ? Xcomb : Xs[1].modelmatrix
+    Xs = length(Xs) > 1 ? Xcomb : [Xs[1].modelmatrix]
     return Xs
 end
 """
@@ -54,7 +54,7 @@ function StatsModels.fit!(
     dataDim = length(size(data)) # surely there is a nicer way to get this but I dont know it
 
     #Xs = modelmatrix(uf)
-    Xs = modelmatrix(uf)
+    Xs = modelmatrix(uf)[1]
     # If we have3 dimension, we have a massive univariate linear mixed model for each timepoint
     if dataDim == 3
         firstData = data[1, 1, :]
@@ -66,7 +66,7 @@ function StatsModels.fit!(
     end
     nchan = size(data, 1)
 
-    Xs = (Unfold.equalize_lengths(Xs[1]), Xs[2:end]...)
+    #Xs = Unfold.equalize_lengths(Xs[1])#(Unfold.equalize_lengths(Xs[1]), Xs[2:end]...)
     _, data = Unfold.zeropad(Xs[1], data)
     # get a un-fitted mixed model object
 

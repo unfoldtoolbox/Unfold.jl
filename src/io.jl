@@ -27,19 +27,51 @@ For memory efficiency the designmatrix is set to missing.
 If needed, it can be reconstructed when loading the model.
 """
 function FileIO.save(file, uf::T; compress = false) where {T<:UnfoldModel}
+
+    mm = modelmatrix(uf)
+    #nd = length(size(mm[1]))
+    d = designmatrix(uf)
     jldopen(file, "w"; compress = compress) do f
         f["uf"] = T(
-            uf.design,
-            Unfold.DesignMatrix(
-                designmatrix(uf).formulas,
-                missing,
-                designmatrix(uf).events,
-            ),
+            design(uf),
+            [
+                typeof(uf.designmatrix[k])(
+                    Unfold.formulas(uf)[k],
+                    empty_modelmatrix(designmatrix(uf)[k]),
+                    Unfold.events(uf)[k],
+                ) for k = 1:length(uf.designmatrix)
+            ],
             uf.modelfit,
         )
     end
 end
 
+function empty_modelmatrix(d::AbstractDesignMatrix)
+
+    return typeof(d)().modelmatrix
+end
+function FileIO.save(
+    file,
+    uf::T;
+    compress = false,
+) where {T<:UnfoldLinearModelContinuousTime}
+
+    mm = modelmatrix(uf)
+    nd = length(size(mm))
+    jldopen(file, "w"; compress = compress) do f
+        f["uf"] = T(
+            design(uf),
+            [
+                typeof(uf.designmatrix[k])(
+                    Unfold.formulas(uf)[k],
+                    sparse(Array{typeof(mm[k])}(undef, repeat([0], nd)...)),
+                    Unfold.events(uf)[k],
+                ) for k = 1:length(uf.designmatrix)
+            ],
+            modelfit(uf),
+        )
+    end
+end
 
 """
     FileIO.load(file, ::Type{<:UnfoldModel}; generate_Xs=true)
@@ -54,14 +86,21 @@ function FileIO.load(file, ::Type{<:UnfoldModel}; generate_Xs = true)
     uf = f["uf"]
     close(f)
 
-    form = designmatrix(uf).formulas
-    events = designmatrix(uf).events
+    form = formulas(designmatrix(uf))
+    events = Unfold.events(designmatrix(uf))
+
+    @debug typeof(form), typeof(events)
     # potentially don't generate Xs, but always generate it for LinearModels as it is small + cheap + we actually need it for many functions
     if generate_Xs || uf isa UnfoldLinearModel
         X = Unfold.modelcols(form, events)
     else
-        X = missing
+        #nd = length(size(modelmatrix(designmatrix(uf)[1])))
+        #@debug eltype(uf), nd, length(form)
+        #X = [sparse(Array{eltype(uf)}(undef, repeat([0], nd)...)) for k = 1:length(form)]
+        X = [empty_modelmatrix(designmatrix(uf)[k]) for k = 1:length(form)]
+
     end
+
     modelfit =
         if isa(uf.modelfit, JLD2.ReconstructedMutable{Symbol("Unfold.LinearModelFit")})
             @warn "old Unfold Model detected, trying to 'upgrade' uf.modelfit"
@@ -76,7 +115,7 @@ function FileIO.load(file, ::Type{<:UnfoldModel}; generate_Xs = true)
             uf.modelfit
         end
 
-
+    @debug typeof(form), typeof(X), typeof(events), size(form), size(X), size(events)
     # reintegrate the designmatrix
-    return typeof(uf)(uf.design, Unfold.DesignMatrix(form, X, events), modelfit)
+    return typeof(uf)(uf.design, typeof(designmatrix(uf)[1]).(form, X, events), modelfit)
 end

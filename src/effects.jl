@@ -34,7 +34,7 @@ function effects(design::AbstractDict, model::T; typical = mean) where {T<:Unfol
     # replace non-specified fields with "constants"
     m = modelmatrix(model, false) # get the modelmatrix without timeexpansion
     #@debug "type form[1]", typeof(form[1])
-    @debug form
+    @debug typeof(m), size(m)
     form_typical = _typify(T, reference_grid, form, m, typical)
     @debug form_typical
     #@debug "type form_typical[1]", typeof(form_typical[1])
@@ -86,7 +86,7 @@ _typify(
     ::Type{UF},
     reference_grid,
     form::Vector{<:FormulaTerm},
-    m::Vector{<:AbstractMatrix},
+    m::Vector,
     typical,
 ) where {UF <: UnfoldModel; ContinuousTimeTrait{UF}}
     @debug "_typify - stripping away timeexpandedterm"
@@ -122,7 +122,7 @@ end
     ::Type{UF},
     reference_grid,
     form::AbstractArray{<:FormulaTerm},
-    m::Vector{<:AbstractMatrix},
+    m::Vector,
     typical,
 ) where {UF <: UnfoldModel; !ContinuousTimeTrait{UF}}
     # Mass Univariate with multiple effects
