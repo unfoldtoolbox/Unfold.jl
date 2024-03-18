@@ -149,18 +149,6 @@ UnfoldLinearModelContinuousTime{T}(
 #---
 
 
-function Base.show(io::IO, obj::UnfoldModel)
-    println(io, "Unfold-Type: $(typeof(obj)) \n")
-    println(io, "formula: $(obj.design)")
-    println(
-        io,
-        "Useful functions:\n 
-    design(uf) \t\t(returns Dict of event => (formula,times/basis))  \n
-    designmatrix(uf) \t(returns DesignMatrix with events) \n
-    modelfit(uf) \t\t(returns modelfit object) \n
-    coeftable(uf) \t\t(returns tidy result dataframe) \n",
-    )
-end
 
 """
 Abstract non-linear spline term.

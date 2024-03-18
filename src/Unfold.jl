@@ -21,6 +21,10 @@ using ProgressMeter
 using DocStringExtensions # for Docu
 using MLBase # for crossVal
 
+import Term # prettiert output
+using OrderedCollections # for Base.Show
+import Term: vstack, Panel, tprint
+import Term: Tree  # to display Dicts
 #using PooledArrays
 
 #using Tullio
@@ -57,7 +61,7 @@ include("splinepredictors.jl")
 include("effects.jl")
 include("statistics.jl")
 include("io.jl")
-
+include("show.jl") # pretty printing
 
 
 #include("plot.jl") # don't include for now

@@ -75,17 +75,6 @@ end
 
 
 
-function Base.show(io::IO, obj::BasisFunction)
-    println(io, "name: $(name(obj))")
-    println(io, "collabel: $(collabel(obj))")
-    println(io, "colnames: $(colnames(obj))")
-    println(io, "kerneltype: $(typeof(obj))")
-    println(io, "times: $(times(obj))")
-    println(io, "shiftOnset: $(shiftOnset(obj))")
-end
-
-
-
 
 """
 $(SIGNATURES)
