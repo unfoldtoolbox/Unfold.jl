@@ -81,7 +81,7 @@ p = predict(m_tul, DataFrame(:Cond => [1]))
 
 @test size(p, 1) == 40
 @test length(unique(p.time)) == 20
-@test unique(p.basisname) == ["basisA", "basisB"]
+@test unique(p.eventname) == ["basisA", "basisB"]
 
 
 
