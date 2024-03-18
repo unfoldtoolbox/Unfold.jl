@@ -7,7 +7,7 @@ function StatsBase.predict(model::UnfoldModel, events)
     # make a copy of it so we don't change it outside the function
     newevents = copy(events)
 
-    formulas = formulas(model)
+    formulas = Unfold.formulas(model)
     if typeof(formulas) <: FormulaTerm
         formulas = [formulas]
     end
@@ -15,6 +15,7 @@ function StatsBase.predict(model::UnfoldModel, events)
         eff = yhat(model, formulas[1], newevents)
         timesVec = gen_timeev(times(model), size(newevents, 1))
     else
+        @debug size(formulas), typeof(model)
         fromTo, timesVec, eff = yhat(model, formulas, newevents)
     end
 
@@ -84,6 +85,7 @@ end
     formulas::AbstractArray,
     newevents::DataFrame,
 ) where {T <: UnfoldModel; !ContinuousTimeTrait{T}}
+    @debug "Not ContinuousTime yhat, Array"
     X = modelcols.(formulas, Ref(newevents))
 
     co = coef(model)
@@ -101,7 +103,7 @@ end
 end
 
 
-yhat(model::UnfoldLinearModel, formulas::FormulaTerm, newevents) =
+yhat(model::UnfoldLinearModel, formulas::FormulaTerm, newevents::DataFrame) =
     yhat(model, formulas.rhs, newevents)
 yhat(model::UnfoldLinearModelContinuousTime, formulas::FormulaTerm, newevents) =
     yhat(model, formulas.rhs, newevents)
@@ -111,6 +113,7 @@ yhat(model::UnfoldLinearModelContinuousTime, formulas::FormulaTerm, newevents) =
     formulas::AbstractTerm,
     newevents,
 ) where {T <: UnfoldModel; !ContinuousTimeTrait{T}}
+    @debug "Not ContinuousTime yhat, single Term"
     X = modelcols(formulas, newevents)
     return yhat(model, X)
 end
@@ -124,6 +127,7 @@ yhat(model::UnfoldLinearModelContinuousTime, formulas::MatrixTerm, events) =
     formulas,
     events,
 ) where {T <: UnfoldModel; ContinuousTimeTrait{T}}
+    @debug "Yes ContinuousTime yhat"
     X = AbstractArray[]
     fromTo = []
     timesVec = []
