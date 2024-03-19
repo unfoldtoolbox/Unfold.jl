@@ -51,7 +51,7 @@ function renderable(obj::BasisFunction; title = "::BasisFunction")
         :colnames => colnames(obj) |> show_shorten_vector,
         :times => times(obj) |> show_shorten_vector,
         :collabel => collabel(obj),
-        :shiftOnset => shiftOnset(obj),
+        :shift_onset => shift_onset(obj),
     )# |> x -> Tree(x; title = title)
 
     str = "{bold blue}::BasisFunction{/bold blue}\n"

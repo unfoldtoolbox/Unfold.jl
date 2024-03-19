@@ -11,7 +11,7 @@ a BasisFunction should implement:
 
 - name() # name of basisfunction
 - collabel() [default "colname_basis"] # name for coeftable
-- shiftOnset() [default 0]
+- shift_onset() [default 0]
 """
 abstract type BasisFunction end
 
@@ -36,13 +36,13 @@ struct FIRBasis <: BasisFunction
     "name of the event, random 1:1000 if unspecified"
     name::String
     "by how many samples do we need to shift the event onsets? This number is determined by how many 'negative' timepoints the basisfunction defines"
-    shiftOnset::Int64
+    shift_onset::Int64
 end
 
-@deprecate FIRBasis(kernel::Function, times, name, shiftOnset) FIRBasis(
+@deprecate FIRBasis(kernel::Function, times, name, shift_onset) FIRBasis(
     times,
     name,
-    shiftOnset,
+    shift_onset,
 )
 collabel(basis::FIRBasis) = :time
 colnames(basis::FIRBasis) = basis.times[1:end-1]
@@ -58,7 +58,7 @@ struct SplineBasis <: BasisFunction
     "name of the event, random 1:1000 if unspecified"
     name::String
     "by how many samples do we need to shift the event onsets? This number is determined by how many 'negative' timepoints the basisfunction defines"
-    shiftOnset::Int64
+    shift_onset::Int64
 end
 
 
@@ -95,9 +95,9 @@ function firbasis(τ, sfreq, name::String = "basis_" * string(rand(1:10000)))
     τ = round_times(τ, sfreq)
     times = range(τ[1], stop = τ[2] + 1 ./ sfreq, step = 1 ./ sfreq) # stop + 1 step, because we support fractional event-timings
 
-    shiftOnset = Int64(floor(τ[1] * sfreq))
+    shift_onset = Int64(floor(τ[1] * sfreq))
 
-    return FIRBasis(times, name, shiftOnset)
+    return FIRBasis(times, name, shift_onset)
 end
 # cant multiple dispatch on optional arguments
 #firbasis(;τ,sfreq)           = firbasis(τ,sfreq)
@@ -189,7 +189,7 @@ function hrfbasis(
     )
 end
 
-shiftOnset(basis::HRFBasis) = 0
+shift_onset(basis::HRFBasis) = 0
 
 collabel(basis::HRFBasis) = :derivative
 collabel(basis::SplineBasis) = :splineTerm
@@ -202,7 +202,7 @@ collabel(term::Array{<:AbstractTerm}) = collabel(term[1].rhs)  # in case of comb
 
 # typical defaults
 
-shiftOnset(basis::BasisFunction) = basis.shiftOnset
+shift_onset(basis::BasisFunction) = basis.shift_onset
 colnames(basis::BasisFunction) = basis.colnames
 kernel(basis::BasisFunction, e) = basis.kernel(e)
 @deprecate kernel(basis::BasisFunction) basis.kernel

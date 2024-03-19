@@ -147,7 +147,7 @@ yhat(model::UnfoldLinearModelContinuousTime, formulas::MatrixTerm, events) =
         # find out how long each designmatrix is
         n_range = length(times(f.basisfunction))
         # find out how much to shift so that X[1,:] is the the first "sample"
-        n_negative = f.basisfunction.shiftOnset
+        n_negative = f.basisfunction.shift_onset
         # generate the correct eventfields (default: latencies)
         events[:, f.eventfields[1]] =
             range(-n_negative + 1, step = n_range, length = size(events, 1))

@@ -89,7 +89,6 @@ function round_times(τ, sfreq)
 end
 function dropMissingEpochs(X, y)
     missingIx = .!any(ismissing.(y), dims = (1, 2))
-    print(size(missingIx))
     goodIx = dropdims(missingIx, dims = (1, 2))
     return X[goodIx, :], Array{Float64}(y[:, :, goodIx])
 end

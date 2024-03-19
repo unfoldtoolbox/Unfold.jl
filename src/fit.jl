@@ -63,7 +63,6 @@ function StatsModels.fit(
     kwargs...,
 ) where {T}
 
-
     for k = 1:length(design)
         d_first = design[k]
         d_tuple = last(d_first)
@@ -71,15 +70,17 @@ function StatsModels.fit(
     end
 
 
+
     if UnfoldModelType == UnfoldModel
         @debug "autodetecting UnfoldModelType"
         UnfoldModelType = design_to_modeltype(design)
     end
+
     for k = 1:length(design)
         d_first = design[k]
         d_tuple = last(d_first)
         @assert (typeof(last(d_tuple)) <: AbstractVector) ⊻
-                (UnfoldModelType <: UnfoldLinearModelContinuousTime) "InputError: Either a basis function was declared, but a UnfoldLinearModel was built, or a times-vector (and no basis function) was given, but a UnfoldLinearModelContinuousTime was asked for."
+                (SimpleTraits.istrait(Unfold.ContinuousTimeTrait{UnfoldModelType})) "InputError: Either a basis function was declared, but a UnfoldLinearModel was built, or a times-vector (and no basis function) was given, but a UnfoldLinearModelContinuousTime was asked for."
     end
     @debug "Check Data + Applying UnfoldModelType: $UnfoldModelType {$T}"
     data_r = check_data(UnfoldModelType, data)

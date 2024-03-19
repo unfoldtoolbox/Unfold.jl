@@ -524,7 +524,7 @@ function time_expand(Xorg, term, onsets, bases)
 
 
 
-    rows = timeexpand_rows(onsets, bases, shiftOnset(term.basisfunction), ncolsX)
+    rows = timeexpand_rows(onsets, bases, shift_onset(term.basisfunction), ncolsX)
     cols = timeexpand_cols(term, bases, ncolsBasis, ncolsX)
 
     vals = timeexpand_vals(bases, X, size(cols), ncolsX)

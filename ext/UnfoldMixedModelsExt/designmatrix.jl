@@ -98,7 +98,7 @@ end
 function equalize_ReMat_lengths!(remats::NTuple{A,MixedModels.AbstractReMat}) where {A}
     # find max length
     m = maximum([x[1] for x in size.(remats)])
-    @debug print("combining lengths: $m")
+    @debug "combining lengths: $m"
     # for each reMat
     for k in range(1, length = length(remats))
         remat = remats[k]
@@ -191,7 +191,7 @@ function StatsModels.modelcols(
             time_start = 1
         else
             time_start = time[ix_start]
-            # XXX Replace this functionality by shiftOnset?
+            # XXX Replace this functionality by shift_onset?
             time_start = time_start - sum(Unfold.times(term.basisfunction) .<= 0)
         end
         if i == length(uGroup)

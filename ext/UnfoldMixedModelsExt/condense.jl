@@ -42,7 +42,7 @@ function reorder_tidyσs(t, f)
 
 
     f_order = string.(f_order[.!fixef_ix])
-    #@show coefnames(f)
+
     f_name = vcat(coefnames(f)...)[.!fixef_ix]
 
     # get order from tidy object

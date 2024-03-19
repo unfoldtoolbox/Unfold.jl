@@ -28,7 +28,7 @@ ext = Base.get_extension(Unfold, :UnfoldMixedModelsExt)
     timeexpandterm =
         Unfold.TimeExpandedTerm(FormulaTerm(Term, Term), basisfunction, :latency)
     Xdc = Unfold.time_expand(X, timeexpandterm, tbl)
-    println(Matrix(Xdc))
+
 
     @test all(isapprox.(Matrix(Xdc)[1:4, 1:4], shouldBePos, atol = 1e-15))
 end
