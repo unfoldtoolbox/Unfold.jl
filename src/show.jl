@@ -94,7 +94,7 @@ function Base.show(io::IO, ::MIME"text/plain", obj::T) where {T<:UnfoldModel}
     Term.tprintln(
         io,
         is_not_fit ? "{red}❌{/red]} model not fit" :
-        "{bold green}✔{/bold green} model is fit. {blue_light} Parameters: $(size(coef(obj))){/blue_light}",
+        "{bold green}✔{/bold green} model is fit. {blue_light} size(coefs) $(size(coef(obj))){/blue_light}",
     )
     #println(io, "Design: $(design(obj))")
     println(io)

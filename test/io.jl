@@ -43,7 +43,7 @@ for deconv in [false, true]
             generate_Xs = true,
         )
 
-        @test isempty(Unfold.get_modelmatrix(designmatrix(m1_loaded))[1]) == false
+        @test isempty(Unfold.modelmatrices(designmatrix(m1_loaded))[1]) == false
         @test typeof(m1) == typeof(m1_loaded)
         @test coeftable(m1) == coeftable(m1_loaded)
         @test m1.modelfit.estimate == m1_loaded.modelfit.estimate
@@ -108,7 +108,7 @@ m2_loaded =
         load(joinpath(save_path, "m2_compressed2.jld2"), UnfoldModel, generate_Xs = true)
 
 
-    @test isempty(Unfold.get_modelmatrix(designmatrix(m2_loaded))[1]) == false
+    @test isempty(Unfold.modelmatrices(designmatrix(m2_loaded))[1]) == false
 
     @test typeof(m2) == typeof(m2_loaded)
     @test coeftable(m2) == coeftable(m2_loaded)

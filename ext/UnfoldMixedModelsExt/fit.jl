@@ -14,8 +14,8 @@ function StatsModels.modelmatrix(
     Xcomb = Xs[1]
     for k = 2:length(Xs)
         @debug typeof(Xcomb) typeof(Xs[k])
-        modelmatrix1 = Unfold.get_modelmatrix(Xcomb)
-        modelmatrix2 = Unfold.get_modelmatrix(Xs[k])
+        modelmatrix1 = Unfold.modelmatrices(Xcomb)
+        modelmatrix2 = Unfold.modelmatrices(Xs[k])
 
         @debug typeof(modelmatrix1), typeof(modelmatrix2)
         Xcomb_temp = Unfold.equalize_lengths(modelmatrix1, modelmatrix2)
@@ -75,7 +75,7 @@ function StatsModels.fit!(
     end
     nchan = size(data, 1)
 
-    @show "fit!" typeof(Xs)
+
     Xs = (Unfold.equalize_lengths(Xs[1]), Xs[2:end]...)#(Unfold.equalize_lengths(Xs[1]), Xs[2:end]...)
     _, data = Unfold.zeropad(Xs[1], data)
     # get a un-fitted mixed model object

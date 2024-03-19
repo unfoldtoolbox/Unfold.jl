@@ -73,8 +73,8 @@ export UnfoldLinearModel,
     UnfoldLinearMixedModelContinuousTime,
     UnfoldLinearModelContinuousTime
 export FIRBasis, HRFBasis, SplineBasis
-export modelmatrix
-export formula, design, designmatrix, coef
+export modelmatrix, modelmatrices
+export formulas, design, designmatrix, coef
 export coeftable
 export modelfit
 export predict

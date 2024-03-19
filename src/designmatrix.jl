@@ -1,8 +1,6 @@
 """
 $(SIGNATURES)
-using DataFrames: AbstractAggregate
-using DataFrames: AbstractAggregate
-using DataFrames: AbstractAggregate
+
 Combine two UnfoldDesignmatrices. This allows combination of multiple events.
 
 This also allows to define events with different lengths.
@@ -18,49 +16,6 @@ julia>  Xdc = Xdc1+Xdc2
 ```
 
 """
-function combine_designmatrices(X1::T, X2::T) where {T<:AbstractDesignMatrix}
-
-    @error "deprecated, shouldnt reach"
-
-    X1 = deepcopy(X1)
-    X2 = deepcopy(X2)
-    modelmatrix1 = get_modelmatrix(X1)
-    modelmatrix2 = get_modelmatrix(X2)
-    @assert !((length(modelmatrix1) > 1) && (length(modelmatrix2) > 1)) "it is currently not possible to combine desigmatrices from two already concatenated designs - please concatenate one after the other"
-
-    Xcomb = append!(modelmatrix1, modelmatrix2)
-
-
-    if typeof(X1.modelmatrix) <: Tuple
-        Xcomb = lmm_combine_modelmatrix!(Xcomb, X1, X2)
-    end
-
-    if X1.formulas isa FormulaTerm
-        # due to the assertion above, we can assume we have only 2 formulas here
-        if X1.formulas.rhs isa Unfold.TimeExpandedTerm
-            fcomb = Vector{FormulaTerm{<:InterceptTerm,<:TimeExpandedTerm}}(undef, 2)
-        else
-            fcomb = Vector{FormulaTerm}(undef, 2) # mass univariate case
-        end
-        fcomb[1] = X1.formulas
-        fcomb[2] = X2.formulas
-        return T(fcomb, Xcomb, [events(X1), events(X2)])
-    else
-        if X1.formulas[1].rhs isa Unfold.TimeExpandedTerm
-            # we can ignore length of X2, as it has to be a single formula due to the assertion above
-            fcomb = Vector{FormulaTerm{<:InterceptTerm,<:TimeExpandedTerm}}(
-                undef,
-                length(X1.formulas) + 1,
-            )
-        else
-            fcomb = Vector{FormulaTerm}(undef, length(X1.formulas) + 1) # mass univariate case
-        end
-        fcomb[1:end-1] = formulas(X1)
-        fcomb[end] = formulas(X2)[1]
-        @debug typeof(Xcomb)
-        return T(fcomb, Xcomb, [events(X1)..., events(X2)])
-    end
-end
 
 
 Base.:+(X1::Vector{T}, X2::T) where {T<:AbstractDesignMatrix} = [X1..., X2]
@@ -69,22 +24,23 @@ Base.:+(X1::Nothing, X2::AbstractDesignMatrix) = [X2]
 
 
 # helper to get the fixef of lmm but the normal matrix elsewhere
-get_modelmatrix(modelmatrix::Tuple) = modelmatrix[1]
-get_modelmatrix(modelmatrix::AbstractMatrix) = modelmatrix
 
-#function get_modelmatrix(modelmatrix::AbstractArray)
-# mass univariate case
-# mass univariate case with multiple events
-#    return modelmatrix
-#end
+modelmatrices(modelmatrix::AbstractMatrix) = modelmatrix
+
+
 
 """
-Typically returns the field X.modelmatrix of the designmatrix
+    modelmatrices(X::AbstractDesignMatrix)
+    modelmatrices(X::Vector{<:AbstractDesignMatrix})
+    modelmatrices(modelmatrix::AbstractMatrix)
 
-Compare to `modelmatrix` which further concatenates the designmatrices (in the UnfoldLinearModelContinuousTime) as needed
+Returns the modelmatrices (also called designmatrices) separately for the events. This is similar to `StatsModels.modelcols`.
+
+Compare to `modelmatrix` which further concatenates the designmatrices (in the ContinuousTime case).
 """
-get_modelmatrix(X::AbstractDesignMatrix) = get_modelmatrix(X.modelmatrix)
-get_modelmatrix(X::Vector{<:AbstractDesignMatrix}) = get_modelmatrix.(X)
+modelmatrices(X::AbstractDesignMatrix) = modelmatrices(X.modelmatrix)
+modelmatrices(X::Vector{<:AbstractDesignMatrix}) = modelmatrices.(X)
+
 
 """
 $(SIGNATURES)
@@ -259,7 +215,7 @@ function designmatrix(
 end
 
 import Base.isempty
-Base.isempty(d::AbstractDesignMatrix) = isempty(get_modelmatrix(d))
+Base.isempty(d::AbstractDesignMatrix) = isempty(modelmatrices(d))
 
 """
 $(SIGNATURES)
@@ -283,6 +239,14 @@ function designmatrix!(uf::UnfoldModel{T}, evts; kwargs...) where {T}
     return uf
 end
 
+
+"""
+    modelmatrix(uf::UnfoldLinearModel)
+returns the modelmatrix of the model. Concatenates them, except in the MassUnivariate cases, where a vector of modelmatrices is return
+
+Compare with `modelmatrices` which returns a vector of modelmatrices, one per event
+
+"""
 function StatsModels.modelmatrix(uf::UnfoldLinearModel, basisfunction)
     if basisfunction
         @warn("basisfunction not defined for this kind of model")
@@ -350,12 +314,25 @@ end
 
 modelcols_nobasis(f::FormulaTerm, tbl::AbstractDataFrame) = modelcols(f.rhs.term, tbl)
 StatsModels.modelmatrix(uf::UnfoldModel) = modelmatrix(designmatrix(uf))#modelmatrix(uf.design,uf.designmatrix.events)
-StatsModels.modelmatrix(d::AbstractDesignMatrix) = get_modelmatrix(d)
+StatsModels.modelmatrix(d::AbstractDesignMatrix) = modelmatrices(d)
 StatsModels.modelmatrix(d::Vector{<:AbstractDesignMatrix}) =
-    equalize_lengths(get_modelmatrix.(d))
+    equalize_lengths(modelmatrices.(d))
 
 
-#StatsModels.modelmatrix(d::Dict, events) = modelcols(formulas(d).rhs, events)
+"""
+    formulas(design::Vector{<:Pair})
+returns vector of formulas, no schema has been applied (those formulas never saw the data). Also no timeexpansion has been applied (in the case of timecontinuous models)
+"""
+formulas(design::Vector{<:Pair}) = formulas.(design)
+formulas(design::Pair{<:Any,<:Tuple}) = last(design)[1]
+
+
+
+"""
+    formulas(uf::UnfoldModel)
+    formulas(d::Vector{<:AbstractDesignMatrix}) 
+returns vector of formulas, **after** timeexpansion / apply_schema has been used.
+"""
 
 formulas(uf::UnfoldModel) = formulas(designmatrix(uf))
 formulas(d::AbstractDesignMatrix) = d.formula
@@ -519,11 +496,6 @@ function time_expand(Xorg, term, onsets, bases)
     X = reshape(Xorg, size(Xorg, 1), :) # why is this necessary?
     ncolsX = size(X)[2]::Int64
 
-
-
-
-
-
     rows = timeexpand_rows(onsets, bases, shift_onset(term.basisfunction), ncolsX)
     cols = timeexpand_cols(term, bases, ncolsBasis, ncolsX)
 
@@ -570,9 +542,9 @@ function StatsModels.coefnames(term::TimeExpandedTerm)
     return name .* " : " .* kron(terms .* " : ", string.(colnames))
 end
 
-function termnames(term::TimeExpandedTerm)
+function StatsModels.termnames(term::TimeExpandedTerm)
     terms = coefnames(term.term)
-    colnames = colnames(term.basisfunction)
+    colnames = Unfold.colnames(term.basisfunction)
     if typeof(terms) == String
         terms = [terms]
     end
@@ -582,7 +554,7 @@ end
 
 function colname_basis(term::TimeExpandedTerm)
     terms = coefnames(term.term)
-    colnames = colnames(term.basisfunction)
+    colnames = Unfold.colnames(term.basisfunction)
     if typeof(terms) == String
         terms = [terms]
     end

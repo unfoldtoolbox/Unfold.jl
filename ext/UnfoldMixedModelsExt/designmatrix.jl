@@ -259,6 +259,10 @@ function change_modelmatrix_size!(m, fe::AbstractMatrix, remats)
     return (fe, remats...)
 end
 
-
+"""
+    modelmatrices(modelmatrix::Tuple)
+in the case of a Tuple (MixedModels - FeMat/ReMat Tuple), returns only the FeMat part
+"""
+modelmatrices(modelmatrix::Tuple) = modelmatrix[1]
 
 #modelcols(rhs::MatrixTerm, tbl) = modelcols.(rhs, Ref(tbl))
