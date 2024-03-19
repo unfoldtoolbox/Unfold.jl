@@ -130,5 +130,5 @@ m2_loaded =
     m2_loaded_without_dm =
         load(joinpath(save_path, "m2_compressed2.jld2"), UnfoldModel, generate_Xs = false)
 
-    @test isempty(modelmatrix(designmatrix(m2_loaded_without_dm))) == true
+    @test isempty(modelmatrix(designmatrix(m2_loaded_without_dm))[1]) == true
 end

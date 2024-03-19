@@ -16,6 +16,9 @@ Calculates marginal effects for all term-combinations in `design`.
  Implementation based on Effects Package; likely could repackage in UnfoldEffects; somebody wants to do it? This would make it easier to cross-maintain it to changes/bugfixes in the Effects.jl Package
  `design` is a Dictionary containing those predictors (als keys) with levels (as values), that you want to evaluate. The `typical` refers to the value, that other predictors not in the Dictionary should take on.
 
+
+For MixedModels, the returned effects are based on the "typical" subject, i.e. all random effects are put to 0.
+
  # Example
  ```julia-repl
  julia> f = @formula 0 ~ categoricalA + continuousA + continuousB
@@ -127,7 +130,7 @@ end
 ) where {UF <: UnfoldModel; !ContinuousTimeTrait{UF}}
     # Mass Univariate with multiple effects
     @debug "_typify going the mass univariate route - $(typeof(form))"
-    @debug length(form), length(m)
+    @debug length(form), length(m), typeof(m)
     out = []
     for k = 1:length(form)
         push!(out, typify(reference_grid, form[k], m[k]; typical = typical))
@@ -135,7 +138,7 @@ end
     return out
 
 end
-# mixedModels case - unsure why this is needed :/
+# mixedModels case - just use the FixEff, ignore the ranefs
 Effects.typify(reference_grid, form, m::Tuple; typical) =
     typify(reference_grid, form, m[1]; typical)
 

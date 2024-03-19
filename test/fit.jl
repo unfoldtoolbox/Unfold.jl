@@ -142,6 +142,7 @@ end
     @test !all(isnothing.(m_mul_se.stderror))
 
     # robust solver
+    #ext = Base.get_extension(Unfold, :UnfoldRobustModelsExt)
     rob_solver = (x, y) -> Unfold.solver_robust(x, y)#,rlmOptions=(initial_coef=zeros(3 *length(times)),))
     data_outlier = copy(data_e)
     data_outlier[:, 31, 1] .= 1000

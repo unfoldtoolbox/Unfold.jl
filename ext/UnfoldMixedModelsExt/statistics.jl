@@ -5,9 +5,12 @@ Returns a partial LMM model (non-functional due to lacking data) to be used in l
 `k` to selcet which of the modelfit's to fake
 """
 function fake_lmm(m::UnfoldLinearMixedModel, k::Int)
-    (feterm, reterm) = modelmatrix(m)
+    mm = modelmatrix(m)
+    @assert length(mm) == 1 "LRT currently not implemented for fitting multiple events at the same time"
+    feterm = mm[1][1]
+    #reterm = mm[2:end]
     fakeY = zeros(size(feterm, 1))
-    lmm = LinearMixedModel_wrapper(Unfold.formulas(m), fakeY, (feterm, reterm))
+    lmm = LinearMixedModel_wrapper(Unfold.formulas(m), fakeY, mm[1])
 
     fcoll = Unfold.modelfit(m)
     #lmm.objective .= fcoll.fits[1].objective
