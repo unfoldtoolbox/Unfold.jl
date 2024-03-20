@@ -54,7 +54,7 @@ StatsModels.coef(mf::LinearModelFit) = mf.estimate
     designkeys = collect(first.(design(uf)))
     if length(designkeys) == 1
         # in case of 1 event, repeat it by ncoefs
-        eventnames = repeat([designkeys[1]], length(chan_rep))
+        eventnames = repeat([designkeys[1]], length(coefs))
     else
         eventnames = String[]
         sizehint!(eventnames, length(chan_rep))
