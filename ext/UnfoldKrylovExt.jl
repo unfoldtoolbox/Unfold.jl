@@ -34,7 +34,7 @@ function solver_krylov(
     X_loop = disallowmissing(X[ix, :])
     data = disallowmissing(view(data, :, ix))
 
-    #@show typeof(X_loop)
+
     if GPU
         X_loop = CuSparseMatrixCSC(X_loop)
         lsmr_solver = Krylov.LsmrSolver(size(X_loop)..., CuVector{Float64})
