@@ -14,7 +14,7 @@ effects(design::AbstractDict, model::UnfoldModel;typical=mean)
 Calculates marginal effects for all term-combinations in `design`.
 
  Implementation based on Effects Package; likely could repackage in UnfoldEffects; somebody wants to do it? This would make it easier to cross-maintain it to changes/bugfixes in the Effects.jl Package
- `design` is a Dictionary containing those predictors (als keys) with levels (as values), that you want to evaluate. The `typical` refers to the value, that other predictors not in the Dictionary should take on.
+ `design` is a Dictionary containing those predictors (as keys) with levels (as values), that you want to evaluate. The `typical` refers to the value, that other predictors not in the Dictionary should take on.
 
 
 For MixedModels, the returned effects are based on the "typical" subject, i.e. all random effects are put to 0.
