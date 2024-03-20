@@ -89,7 +89,7 @@ if !isdefined(Base, :get_extension)
     pvalues = UnfoldMixedModelsExt.pvalues
     using MixedModels
     rePCA = MixedModels.rePCA
-    lmm_combine_modelmatrix! = UnfoldMixedModelsExt.lmm_combine_modelmatrix!
+    lmm_combine_modelmatrices! = UnfoldMixedModelsExt.lmm_combine_modelmatrices!
     likelihoodratiotest = UnfoldMixedModelsExt.likelihoodratiotest
     check_groupsorting = UnfoldMixedModelsExt.check_groupsorting
 
@@ -134,10 +134,10 @@ else
         msg = "MixedModels not loaded. Please use ]add MixedModels, using MixedModels to install it prior to using"
         isnothing(ext) ? throw(msg) : ext.check_groupsorting(args...; kwargs...)
     end
-    function lmm_combine_modelmatrix!(args...; kwargs...)
+    function lmm_combine_modelmatrices!(args...; kwargs...)
         ext = checkFun(:UnfoldMixedModelsExt)
         msg = "MixedModels not loaded. Please use ]add MixedModels, using MixedModels to install it prior to using"
-        isnothing(ext) ? throw(msg) : ext.lmm_combine_modelmatrix!(args...; kwargs...)
+        isnothing(ext) ? throw(msg) : ext.lmm_combine_modelmatrices!(args...; kwargs...)
     end
     function splinebasis(args...; kwargs...)
         ext = checkFun(:UnfoldBSplineKitExt)

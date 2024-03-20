@@ -27,10 +27,6 @@ For memory efficiency the designmatrix is set to missing.
 If needed, it can be reconstructed when loading the model.
 """
 function FileIO.save(file, uf::T; compress = false) where {T<:UnfoldModel}
-
-    mm = modelmatrix(uf)
-    #nd = length(size(mm[1]))
-    d = designmatrix(uf)
     jldopen(file, "w"; compress = compress) do f
         f["uf"] = T(
             design(uf),
@@ -50,28 +46,7 @@ function empty_modelmatrix(d::AbstractDesignMatrix)
 
     return typeof(d)().modelmatrix
 end
-function FileIO.save(
-    file,
-    uf::T;
-    compress = false,
-) where {T<:UnfoldLinearModelContinuousTime}
 
-    mm = modelmatrix(uf)
-    nd = length(size(mm))
-    jldopen(file, "w"; compress = compress) do f
-        f["uf"] = T(
-            design(uf),
-            [
-                typeof(uf.designmatrix[k])(
-                    Unfold.formulas(uf)[k],
-                    sparse(Array{typeof(mm[k])}(undef, repeat([0], nd)...)),
-                    Unfold.events(uf)[k],
-                ) for k = 1:length(uf.designmatrix)
-            ],
-            modelfit(uf),
-        )
-    end
-end
 
 """
     FileIO.load(file, ::Type{<:UnfoldModel}; generate_Xs=true)
