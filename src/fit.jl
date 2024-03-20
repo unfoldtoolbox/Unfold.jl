@@ -133,7 +133,7 @@ function StatsModels.fit!(
 
 
     if isa(uf, UnfoldLinearModel)
-        @assert length(times(uf)) == size(data, length(size(data)) - 1) "Times Vector does not match second last dimension of input data - forgot to epoch?"
+        @assert length(times(uf)) == size(data, length(size(data)) - 1) "Times Vector does not match second last dimension of input data - forgot to cut into epochs?"
     end
 
     X = modelmatrix(uf)
@@ -230,7 +230,7 @@ function design_to_modeltype(design)
         ext = Base.get_extension(@__MODULE__, :UnfoldMixedModelsExt)
         if isnothing(ext)
             throw(
-                "MixedModels not loaded. Please use `]add MixedModels` and `using MixedModels` to install it prior to using",
+                "MixedModels is not loaded. Please use `]add MixedModels` and `using MixedModels` to install it prior to using",
             )
         end
     end
@@ -250,5 +250,3 @@ function design_to_modeltype(design)
     end
     return UnfoldModelType
 end
-
-

@@ -4,7 +4,7 @@ See FIRBasis for an examples
 a BasisFunction should implement:
 - kernel() # kernel(b::BasisFunction,sample) => returns the designmatrix for that event
 - height() # number of samples in continuous time
-- width()  # number of predictor-columns (e.g. HRF 1 to 3, FIR height()-1 )
+- width()  # number of coefficient columns (e.g. HRF 1 to 3, FIR height()-1 )
 
 - colnames() # unique names of expanded columns
 - times() # vector of times along expanded columns, length = height()

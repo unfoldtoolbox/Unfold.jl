@@ -70,7 +70,7 @@ Concrete type to implement an deconvolution LinearMixedModel.
 
 `.design` contains the formula + times dict
 `.designmatrix` contains a `DesignMatrix`
-`modelfit` is a `Any` container for the model results
+`.modelfit` is a `Any` container for the model results
 """
 mutable struct UnfoldLinearMixedModelContinuousTime{T} <: UnfoldModel{T}
     design::Vector{<:Pair}
