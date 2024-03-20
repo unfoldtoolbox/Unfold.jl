@@ -20,7 +20,7 @@ function StatsModels.modelmatrix(
         @debug typeof(modelmatrix1), typeof(modelmatrix2)
         Xcomb_temp = Unfold.equalize_lengths(modelmatrix1, modelmatrix2)
         @debug "tmp" typeof(Xcomb_temp)
-        Xcomb = lmm_combine_modelmatrix!(Xcomb_temp, Xcomb, Xs[k])
+        Xcomb = lmm_combine_modelmatrices!(Xcomb_temp, Xcomb, Xs[k])
         @debug "Xcomb" typeof(Xcomb)
     end
     Xs = length(Xs) > 1 ? Xcomb : [Xs[1].modelmatrix]

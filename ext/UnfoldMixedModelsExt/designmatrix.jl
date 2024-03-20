@@ -33,7 +33,7 @@ function StatsModels.coefnames(term::MixedModels.ZeroCorr)
     coefnames(term.term)
 end
 
-function lmm_combine_modelmatrix!(Xcomb, X1, X2)
+function lmm_combine_modelmatrices!(Xcomb, X1, X2)
     # we have random effects                
     # combine REMats in single-eventtpe formulas ala y ~ (1|x) + (a|x)
     modelmatrix1 = MixedModels._amalgamate([X1.modelmatrix[2:end]...], Float64)
@@ -89,8 +89,8 @@ end
 $(SIGNATURES)
 Get the timeranges where the random grouping variable was applied
 """
-function get_timeexpanded_random_grouping(tblGroup, tblLatencies, basisfunction)
-    ranges = Unfold.get_timeexpanded_time_range.(tblLatencies, Ref(basisfunction))
+function get_timeexpanded_random_grouping(tbl_group, tbl_latencies, basisfunction)
+    ranges = Unfold.get_timeexpanded_time_range.(tbl_latencies, Ref(basisfunction))
 end
 
 
