@@ -28,7 +28,7 @@ StatsModels.coef(mf::LinearModelFit) = mf.estimate
     coefs = extract_coef_info(coefsRaw, 2)
     #colnames_basis_raw = get_colnames_basis(formulas(uf))# this is unconverted basisfunction basis,
     colnames_basis = extract_coef_info(coefsRaw, 3) # this is converted to strings! 
-    eventnames = extract_coef_info(coefsRaw, 1)
+    #eventnames = extract_coef_info(coefsRaw, 1)
     @debug coefs
     @debug colnames_basis
 
@@ -49,6 +49,22 @@ StatsModels.coef(mf::LinearModelFit) = mf.estimate
     end
     chan_rep = repeat(1:nchan, 1, size(colnames_basis_rep, 2))
 
+
+
+    designkeys = collect(first.(design(uf)))
+    if length(designkeys) == 1
+        # in case of 1 event, repeat it by ncoefs
+        eventnames = repeat([designkeys[1]], length(chan_rep))
+    else
+        eventnames = String[]
+        sizehint!(eventnames, length(chan_rep))
+        for (ix, evt) in enumerate(designkeys)
+            push!(
+                eventnames,
+                repeat([evt], size(modelmatrices(designmatrix(uf))[ix], 2))...,
+            )
+        end
+    end
     eventnames_rep = permutedims(repeat(eventnames, 1, nchan), [2, 1])
 
 
@@ -83,10 +99,6 @@ end
     chan_rep = repeat(1:nchan, 1, ncols, ncoefs)
 
     designkeys = collect(first.(design(uf)))
-
-
-
-
     if length(designkeys) == 1
         # in case of 1 event, repeat it by ncoefs
         eventnames = repeat([designkeys[1]], ncoefs)
