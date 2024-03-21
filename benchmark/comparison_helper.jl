@@ -3,26 +3,27 @@
 using MATLAB
 using UnfoldSim
 using Random
+using DataFrames
 
 
 # calculate simulations
 
-function runsim(design, ovlap::Tuple, multi_channel)
+function runsim(design, ovlap::Tuple, multi_channel; srate=100)
     if ~multi_channel
         p1 = LinearModelComponent(;
-            basis=p100(),
+            basis=p100(;sfreq=srate),
             formula=@formula(0 ~ 1),
             β=[5]
         )
 
         n1 = LinearModelComponent(;
-            basis=n170(),
+            basis=n170(;sfreq=srate),
             formula=@formula(0 ~ 1 + condition),
             β=[5, -3]
         )
 
         p3 = LinearModelComponent(;
-            basis=p300(),
+            basis=p300(;sfreq=srate),
             formula=@formula(0 ~ 1 + continuous),
             β=[5, 1]
         )
@@ -31,16 +32,30 @@ function runsim(design, ovlap::Tuple, multi_channel)
         data, events = simulate(MersenneTwister(1), design, components, UniformOnset(; width=ovlap[1], offset=ovlap[2]), PinkNoise())
 
     else
-        c = LinearModelComponent(; basis=p100(), formula=@formula(0 ~ 1 + condition), β=[5, 1])
-        c2 = LinearModelComponent(; basis=p300(), formula=@formula(0 ~ 1 + continuous), β=[5, -3])
+        c = LinearModelComponent(; basis=p100(;sfreq=srate), formula=@formula(0 ~ 1), β=[5])
+        c2 = LinearModelComponent(; basis=n170(;sfreq=srate), formula=@formula(0 ~ 1 + condition), β=[5, 1])
+        c3 = LinearModelComponent(; basis=p300(;sfreq=srate), formula=@formula(0 ~ 1 + continuous), β=[5, -3])
 
         hart = headmodel(type="hartmut")
         mc = UnfoldSim.MultichannelComponent(c, hart => "Left Postcentral Gyrus")
-        mc2 = UnfoldSim.MultichannelComponent(c2, hart => "Right Occipital Pole")
+        mc2 = UnfoldSim.MultichannelComponent(c2, hart => "Left Postcentral Gyrus")
+        mc3 = UnfoldSim.MultichannelComponent(c3, hart => "Right Occipital Pole")
 
-        data, events = simulate(MersenneTwister(1), design, [mc, mc2], UniformOnset(; width=ovlap[1], offset=ovlap[2]), PinkNoise())
+        data, events = simulate(MersenneTwister(1), design, [mc, mc2, mc3], UniformOnset(; width=ovlap[1], offset=ovlap[2]), PinkNoise())
     end
     return data, events
+end
+
+## 
+function add_rand_predic(events::DataFrame)
+    events.predic1 = rand(size(events,1))
+    events.predic2 = rand(size(events,1))
+    events.predic3 = rand(size(events,1))
+    events.predic4 = rand(size(events,1))
+    events.predic5 = rand(size(events,1))
+    events.predic6 = rand(size(events,1))
+    events.predic7 = rand(size(events,1))
+    return events
 end
 
 # run Matlab code

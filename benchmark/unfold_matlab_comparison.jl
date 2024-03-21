@@ -18,7 +18,7 @@ mat"init_unfold"
 
 # Parameters
 rep_design = 50;
-sfreq = 100;
+sfreq = 500;
 ovlap = (50,20);
 jl_formula = @formula(0~1+condition+spl(continuous,5));
 design_dict = Dict(Any=>(jl_formula,
@@ -40,15 +40,16 @@ m = fit(UnfoldModel,design_dict,events,data);
 
 ## Matlab part
 
-calc_matlab(data, events)
+#calc_matlab(data, events) # sfreq needs to be specified in the matlab part!!
 
 # Above tested XXXX/XX/XX; Julia: XX sec ; Matlab: XX sec
 
+gpu_solver =(x,y)->Unfold.solver_krylov(x,y;GPU=true)
+#=
 ## Multichannel w/ headmodel
 data_mc, events_mc = runsim(design, ovlap, true)
 
-# Fit Unfold using GPU (again, run twice to deal with compilation time)
-gpu_solver =(x,y)->Unfold.solver_krylov(x,y;GPU=true)
+ Fit Unfold using GPU (again, run twice to deal with compilation time)
 m_gpu = Unfold.fit(UnfoldModel,design_dict,events_mc,data_mc,solver=gpu_solver);
 @time m_gpu = Unfold.fit(UnfoldModel,design_dict,events_mc,data_mc,solver=gpu_solver);
 
@@ -56,7 +57,58 @@ m_gpu = Unfold.fit(UnfoldModel,design_dict,events_mc,data_mc,solver=gpu_solver);
 @time m = fit(UnfoldModel,design_dict,events_mc,data_mc);
 
 # Fit Matlab
-calc_matlab(data_mc, events_mc)
+#calc_matlab(data_mc, events_mc)
 
 
 # Above tested 2023/11/29; Julia: 15 sec ; Julia GPU: 11 sec ; Matlab: ca. 68 sec
+=#
+
+#" Setting up data
+data_mc, events_mc = runsim(design, ovlap, true; srate=500)
+NrChan = Int64(round(size(data_mc,1)/2));
+data_mc_c = data_mc[1:NrChan,:];
+events_mc_c = deepcopy(events_mc)
+
+# Add 7 random predictors
+events_mc_c = add_rand_predic(events_mc_c)
+
+jl_formula_mc_c = @formula(0~1+condition+spl(continuous,5)
+    +spl(predic1,5)
+    +spl(predic2,7)
+    +spl(predic3,5)
+    +spl(predic4,4)
+    +spl(predic5,6)
+    +spl(predic6,5)
+    +spl(predic7,9));
+
+design_dict_mc_c = Dict(Any=>(jl_formula_mc_c,
+                firbasis(τ=[-1,1],sfreq=500,name="basis")));
+
+#m = fit(UnfoldModel,design_dict,events,data);
+@time m = fit(UnfoldModel,design_dict_mc_c,events_mc_c,data_mc_c);
+@time m_gpu = Unfold.fit(UnfoldModel,design_dict_mc_c,events_mc_c,data_mc_c,solver=gpu_solver);
+
+#" Setting up data
+#=
+data_c, events_c = runsim(design, ovlap, false; srate=500);
+
+# Add 7 random predictors
+events_c = add_rand_predic(events_c)
+
+
+jl_formula_c = @formula(0~1+condition+spl(continuous,5)
+    +spl(predic1,5)
+    +spl(predic2,7)
+    +spl(predic3,5)
+    +spl(predic4,4)
+    +spl(predic5,6)
+    +spl(predic6,5)
+    +spl(predic7,9));
+
+design_dict_c = Dict(Any=>(jl_formula_c,
+                firbasis(τ=[-1,1],sfreq=500,name="basis")));
+
+#m = fit(UnfoldModel,design_dict,events,data);
+@time m = fit(UnfoldModel,design_dict_c,events_c,data_c);
+@time m_gpu = Unfold.fit(UnfoldModel,design_dict_c,events_c,data_c,solver=gpu_solver);
+=#
