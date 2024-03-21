@@ -3,7 +3,126 @@ import StatsBase.predict
 using DocStringExtensions: format
 
 
-function StatsBase.predict(model::UnfoldModel, events)
+
+# opt-in
+
+# Most important function ;-)
+#predict(X::AbstractMatrix, coefs::AbstractMatrix) = coefs * X'
+predict(X::AbstractMatrix, coefs::AbstractMatrix) = (X * coefs')'
+
+function predict(
+    X::AbstractMatrix,
+    coefs::AbstractMatrix{T},
+    onsets::Vector,
+    timewindow::NTuple{2,Int},
+) where {T}
+    # Create an empty array for the residuals
+    # Note there is a +1 because start and stop indices are both included in the interval
+    yhat = missings(T, size(coefs, 1), timewindow[2] - timewindow[1] + 1, length(onsets))
+    for event in eachindex(onsets)
+
+        event_range_temp = start_idx[event]:stop_idx[event]
+
+        # Clip indices that are outside of the design matrix (i.e. before the start or after the end)
+        #indices_inside_data = 0 .< event_range_temp .< size(data, 2)
+        indices_inside_data = 0 .< event_range_temp .< size(X, 1)
+        event_range = event_range_temp[indices_inside_data]
+
+        # Calculate residuals
+        yhat[:, indices_inside_data, event] .= predict(@view(X[event_range, :]), coefs)
+    end
+end
+
+# predict new data (for effects)
+# predict without overlap
+# Predict continuos data
+residuals(uf, data::AbstractArray) = data .- predict(uf)
+
+# Predict new 
+function predict(
+    uf,
+    evts::DataFrame = reduce(vcat, events(uf));
+    overlap = true,
+    keep_basis = [],
+    exclude_basis = [],
+    epoch_to = nothing,
+    epoch_timewindow = nothing,
+    eventcolumn = :event,
+)
+    @assert !(!isempty(keep_basis) & !isempty(exclude_basis)) "choose either to keep events, or to exclude, but not both"
+    #@assert overlap == false & !isempty(keep_basis) & !isempty(exclude_basis) "can't have no overlap & specify keep/exclude at the same time. decide for either case"
+
+
+    coefs = coef(uf)
+    # generate X_new
+    # X_new*b => continuierlich yhats::Matrix, channel x continuostime
+    if overlap
+        if isempty(keep_basis) & isempty(exclude_basis)
+            # return full-overlap
+            if events(uf) == evts
+                return predict(uf, modelmatrix(uf))
+            else
+                X_new = modelcols.(formulas(uf), Ref(evts)) |> Unfold.equalize_lengths
+                return predict(X_new, coefs)
+            end
+        else
+            if !isempty(keep_basis)
+                basisnames = keep_basis
+            else
+                basisnames = basisname(formulas(uf))
+                basisnames = setdiff(basisnames, exclude_basis)
+            end
+
+            ix = get_basis_indices(uf, basisnames)
+
+
+
+            X_view = @view(modelmatrix(uf)[:, ix])
+            coefs_view = @view(coefs[:, ix])
+            if !isnothing(epoch_to)
+                return predict(X_view, coefs_view)
+
+            else
+                timewindow =
+                    isnothing(epoch_timewindow) ? calc_epoch_timewindow(uf, epoch_to) :
+                    epoch_timewindow
+
+                latencies = evts[evts[:, eventcolumn].==epoch_to, :latencies]
+                return predict(X_view, coefs_view, latencies, timewindow;)
+            end
+
+        end
+
+    else
+        # generate [X_single]
+        # each X_single * b => "epochiert", ohne overlap [yhats::Matrix] jeweils channel x basistimes
+
+        # XXX improvement possible here, call modelcols only for the appropriate events "subset(evts")"
+        X_singles = map(x -> modelcols(formulas(uf), DataFrame(x)), eachrow(evts))
+        return predict.(X_singles, Ref(coefs))
+    end
+end
+
+
+"""
+returns an integer range with the samples around `epoch_event` as defined in the corresponding basisfunction
+
+"""
+
+function calc_epoch_timewindow(uf, epoch_event)
+    evts = events(uf)
+    basis_ix = findfirst(Unfold.basisname(formulas(uf)) .== epoch_event)
+    basisfunction = formulas(uf)[basis_ix].rhs.basisfunction
+
+    return 1:Unfold.height(basisfunction).-Unfold.shift_onset(basisfunction)
+end
+
+get_basis_indices(uf, basisnames) = Unfold.get_basis_name(uf) .∈ Ref(basisnames)
+
+
+
+
+function predicttable(model::UnfoldModel, events)
     # make a copy of it so we don't change it outside the function
     newevents = copy(events)
 
@@ -12,13 +131,13 @@ function StatsBase.predict(model::UnfoldModel, events)
         formulas = [formulas]
     end
     if isa(model, UnfoldLinearModel)
-        eff = yhat(model, formulas[1], newevents)
+        eff = predict(model, formulas[1], newevents)
         timesVec = gen_timeev(times(model), size(newevents, 1))
     else
         @debug size(formulas), typeof(model)
 
 
-        eff = yhat(model, formulas, newevents)
+        eff = predict(model, formulas, newevents)
         @debug typeof(model)
         timesVec = yhat_timevec(model, formulas, newevents)
         fromTo = yhat_nranges(model, formulas, newevents) # formerly fromTo == n_ranges
@@ -71,7 +190,129 @@ function StatsBase.predict(model::UnfoldModel, events)
             # the next meta data has to be at the end
             shift += n_range[end] - 1 + n_range.step
 
+        end# opt-in
+
+        # Most important function ;-)
+        predict(X, coefs) = X * coefs'
+
+        function predict(
+            X::AbstractMatrix,
+            coefs::AbstractMatrix{T},
+            onsets::Vector,
+            timewindow::NTuple{2,Int},
+        ) where {T}
+            # Create an empty array for the residuals
+            # Note there is a +1 because start and stop indices are both included in the interval
+            yhat = missings(
+                T,
+                size(coefs, 1),
+                timewindow[2] - timewindow[1] + 1,
+                length(onsets),
+            )
+            for event in eachindex(onsets)
+
+                event_range_temp = start_idx[event]:stop_idx[event]
+
+                # Clip indices that are outside of the design matrix (i.e. before the start or after the end)
+                #indices_inside_data = 0 .< event_range_temp .< size(data, 2)
+                indices_inside_data = 0 .< event_range_temp .< size(X, 1)
+                event_range = event_range_temp[indices_inside_data]
+
+                # Calculate residuals
+                yhat[:, indices_inside_data, event] .=
+                    predict(@view(X[event_range, :]), coefs)
+            end
         end
+
+        # predict new data (for effects)
+        # predict without overlap
+        # Predict continuos data
+        residuals(uf, data::AbstractArray) = data .- predict(uf)
+
+        # Predict new 
+        function predict(
+            uf,
+            evts::DataFrame = events(uf);
+            overlap = true,
+            keep_basis = [],
+            exclude_basis = [],
+            epoch_to = nothing,
+            epoch_timewindow = nothing,
+            eventcolumn = :event,
+        )
+            @assert !(!isempty(keep_basis) & !isempty(exclude_basis)) "choose either to keep events, or to exclude, but not both"
+            @assert overlap == false & !isempty(keep_basis) & !isempty(exclude_basis) "can't have no overlap & specify keep/exclude at the same time. decide for either case"
+
+
+            coefs = coef(uf)
+            # generate X_new
+            # X_new*b => continuierlich yhats::Matrix, channel x continuostime
+            if overlap
+                if isempty(keep_basis) & isempty(exclude_basis)
+                    # return full-overlap
+                    if events(uf) == evts
+                        return predict(uf, modelmatrix(uf))
+                    else
+                        X_new =
+                            modelcols.(formulas(uf), Ref(evts)) |> Unfold.equalize_lengths
+                        return predict(X_new, coefs)
+                    end
+                else
+                    if !isempty(keep_basis)
+                        basisnames = keep_basis
+                    else
+                        basisnames = basisname(formulas(uf))
+                        basisnames = setdiff(basisnames, exclude_basis)
+                    end
+
+                    ix = get_basis_indices(uf, basisnames)
+
+
+
+                    X_view = @view(modelmatrix(uf)[:, ix])
+                    coefs_view = @view(coefs[:, ix])
+                    if !isnothing(epoch_to)
+                        return predict(X_view, coefs_view)
+
+                    else
+                        timewindow =
+                            isnothing(epoch_timewindow) ?
+                            calc_epoch_timewindow(uf, epoch_event) : epoch_timewindow
+
+                        latencies = evts[evts.eventcolumn.==epoch_event, :latencies]
+                        return predict(X_view, coefs_view, latencies, timewindow;)
+                    end
+
+                end
+
+            else
+                # generate [X_single]
+                # each X_single * b => "epochiert", ohne overlap [yhats::Matrix] jeweils channel x basistimes
+
+                # XXX improvement possible here, call modelcols only for the appropriate events "subset(evts")"
+                X_singles = modelcols.(Ref(formulas(uf)), eachrow(evts))
+                return predict.(X_singles, Ref(coefs))
+            end
+        end
+
+
+        """
+        returns an integer range with the samples around `epoch_event` as defined in the corresponding basisfunction
+
+        """
+
+        function calc_epoch_timewindow(uf, epoch_event)
+            evts = events(uf)
+            basis_ix = findfirst(Unfold.basisname(formulas(uf)) .== epoch_event)
+            basisfunction = formulas(uf)[basis_ix].rhs.basisfunction
+
+            epoch_timewindow =
+                1:Unfold.height(basisfunction).-Unfold.shift_onset(basisfunction)
+        end
+
+        get_basis_indices(uf, basisnames) = Unfold.get_basis_name(uf) .∈ Ref(basisnames)
+
+
     end
 
 
@@ -84,10 +325,10 @@ function StatsBase.predict(model::UnfoldModel, events)
 end
 
 # in case the formula is not an array
-#yhat(model::UnfoldModel,formulas::AbstractTerm) = yhat(model,[formulas])
+#predict(model::UnfoldModel,formulas::AbstractTerm) = predict(model,[formulas])
 
 # special case if one formula is defined but in an array => multiple events
-@traitfn function yhat(
+@traitfn function predict(
     model::T,
     formulas::AbstractArray,
     newevents::DataFrame,
@@ -110,46 +351,46 @@ end
 end
 
 
-yhat(model::UnfoldLinearModel, formulas::FormulaTerm, newevents::DataFrame) =
-    yhat(model, formulas.rhs, newevents)
-yhat(model::UnfoldLinearModelContinuousTime, formulas::FormulaTerm, newevents) =
-    yhat(model, formulas.rhs, newevents)
+predict(model::UnfoldLinearModel, formulas::FormulaTerm, newevents::DataFrame) =
+    predict(model, formulas.rhs, newevents)
+predict(model::UnfoldLinearModelContinuousTime, formulas::FormulaTerm, newevents) =
+    predict(model, formulas.rhs, newevents)
 
-@traitfn function yhat(
+@traitfn function predict(
     model::T,
     formulas::AbstractTerm,
     newevents,
 ) where {T <: UnfoldModel; !ContinuousTimeTrait{T}}
     @debug "Not ContinuousTime yhat, single Term"
     X = modelcols(formulas, newevents)
-    return yhat(model, X)
+    return predict(model, X)
 end
 
 
-@traitfn function yhat(
+@traitfn function predict(
     m::T,
     f::AbstractArray,
     events,
 ) where {T <: UnfoldModel; ContinuousTimeTrait{T}}
     @debug f
-    yhat(m, blockdiag(yhat.(Ref(m), f, Ref(events))...))  #  blockdiag([Xsingle1,Xsingle2,Xsingle3]...)
+    predict(m, blockdiag(yhat.(Ref(m), f, Ref(events))...))  #  blockdiag([Xsingle1,Xsingle2,Xsingle3]...)
 end
 
-@traitfn yhat(
+@traitfn predict(
     model::T,
     f::MatrixTerm,
     events,
-) where {T <: UnfoldModel; ContinuousTimeTrait{T}} = yhat(m, f.terms, events) # terms[1] or not?!?
+) where {T <: UnfoldModel; ContinuousTimeTrait{T}} = predict(m, f.terms, events) # terms[1] or not?!?
 
-@traitfn yhat(
+@traitfn predict(
     model::T,
     f::FormulaTerm,
     events,
-) where {T <: UnfoldModel; ContinuousTimeTrait{T}} = yhat(m, f.rhs, events)
+) where {T <: UnfoldModel; ContinuousTimeTrait{T}} = predict(m, f.rhs, events)
 
 
 
-@traitfn function yhat(
+@traitfn function predict(
     model::T,
     f::TimeExpandedTerm,
     events,
@@ -193,52 +434,7 @@ end
 
 
 
-
-@traitfn yhat_nranges(
-    model::T,
-    formulas::Array{<:FormulaTerm},
-    events,
-) where {T <: UnfoldModel; ContinuousTimeTrait{T}} =
-    yhat_nranges.(Ref(model), formulas, Ref(events)) # todo: add hcat? vcat? who knows
-
-
-@traitfn function yhat_nranges(
-    model::T,
-    f::FormulaTerm,
-    events,
-) where {T <: UnfoldModel; ContinuousTimeTrait{T}}
-    n_range = length(times(f.rhs.basisfunction))
-    if typeof(f.rhs.basisfunction) <: FIRBasis
-        n_range = n_range - 1
-    end
-    return range(1, step = n_range, length = size(events, 1))
-end
-
-@traitfn yhat_timevec(
-    model::T,
-    formulas::Array{<:FormulaTerm},
-    events,
-) where {T <: UnfoldModel; ContinuousTimeTrait{T}} =
-    yhat_timevec.(Ref(model), formulas, Ref(events))
-
-
-@traitfn function yhat_timevec(
-    model::T,
-    f::FormulaTerm,
-    events,
-) where {T <: UnfoldModel; ContinuousTimeTrait{T}}
-    @debug typeof(f)
-    # keep track of the times
-    timesSingle = times(f.rhs.basisfunction)
-    # see yhat blabla why this is necessary
-    if typeof(f.rhs.basisfunction) <: FIRBasis
-        timesSingle = timesSingle[1:end-1]
-    end
-    return repeat(timesSingle, size(events, 1))
-end
-
-
-function yhat(
+function predict(
     model::UnfoldLinearModelContinuousTime,
     X::AbstractArray{T,2};
     times = nothing,
@@ -254,12 +450,12 @@ function yhat(
 end
 
 # kept for backwards compatability
-@traitfn yhat(
+@traitfn predict(
     model::U,
     X::AbstractArray{T,2};
     kwargs...,
 ) where {T<:Union{Missing,<:Number},U<:UnfoldModel;!ContinuousTimeTrait{U}} =
-    yhat(coef(model), X; kwargs...)
+    predict(coef(model), X; kwargs...)
 
 
 
@@ -276,7 +472,7 @@ function yhat_mult(X::AbstractArray{T,2}, coef) where {T<:Union{Missing,<:Number
     end
     return yhat
 end
-function yhat(
+function predict(
     coef::AbstractArray{T1,3},
     X::AbstractArray{T2,2};
     kwargs...,
@@ -323,4 +519,50 @@ end
 function gen_timeev(timesVec, nRows)
     timesVec = repeat(timesVec, nRows)
     return timesVec
+end
+
+
+
+
+@traitfn yhat_nranges(
+    model::T,
+    formulas::Array{<:FormulaTerm},
+    events,
+) where {T <: UnfoldModel; ContinuousTimeTrait{T}} =
+    yhat_nranges.(Ref(model), formulas, Ref(events)) # todo: add hcat? vcat? who knows
+
+
+@traitfn function yhat_nranges(
+    model::T,
+    f::FormulaTerm,
+    events,
+) where {T <: UnfoldModel; ContinuousTimeTrait{T}}
+    n_range = length(times(f.rhs.basisfunction))
+    if typeof(f.rhs.basisfunction) <: FIRBasis
+        n_range = n_range - 1
+    end
+    return range(1, step = n_range, length = size(events, 1))
+end
+
+@traitfn yhat_timevec(
+    model::T,
+    formulas::Array{<:FormulaTerm},
+    events,
+) where {T <: UnfoldModel; ContinuousTimeTrait{T}} =
+    yhat_timevec.(Ref(model), formulas, Ref(events))
+
+
+@traitfn function yhat_timevec(
+    model::T,
+    f::FormulaTerm,
+    events,
+) where {T <: UnfoldModel; ContinuousTimeTrait{T}}
+    @debug typeof(f)
+    # keep track of the times
+    timesSingle = times(f.rhs.basisfunction)
+    # see yhat blabla why this is necessary
+    if typeof(f.rhs.basisfunction) <: FIRBasis
+        timesSingle = timesSingle[1:end-1]
+    end
+    return repeat(timesSingle, size(events, 1))
 end

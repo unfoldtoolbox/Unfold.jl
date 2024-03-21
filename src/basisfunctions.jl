@@ -207,6 +207,9 @@ colnames(basis::BasisFunction) = basis.colnames
 kernel(basis::BasisFunction, e) = basis.kernel(e)
 @deprecate kernel(basis::BasisFunction) basis.kernel
 
+
+basisname(fs::Vector{<:FormulaTerm}) = [name(f.rhs.basisfunction) for f in fs]
+
 kernel(basis::FIRBasis, e) = firkernel(e, basis.times[1:end-1])
 
 times(basis::BasisFunction) = basis.times
