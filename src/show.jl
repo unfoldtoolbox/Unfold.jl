@@ -67,7 +67,7 @@ function renderable(obj::BasisFunction; title = "::BasisFunction")
     show(
         IOContext(io, :limit => true, :displaysize => (40, 40)),
         "text/plain",
-        kernel(obj, 0.5),
+        kernel(obj, 0),
     )
 
     s = String(take!(io))
@@ -111,7 +111,10 @@ print design in a beautiful way
 function Base.show(io::IO, design::Vector{<:Pair{<:Any,<:Tuple}})
     basisList = []
     for (first, second) in design
-        push!(basisList, Panel(first * "=>" * "($(second[1]),$(second[2]))", fit = false))
+        push!(
+            basisList,
+            Panel(string(first) * "=>" * "($(second[1]),$(second[2]))", fit = false),
+        )
     end
     print(io, Term.grid(basisList))
 end

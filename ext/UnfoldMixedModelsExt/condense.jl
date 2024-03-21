@@ -29,12 +29,12 @@ This function reorders a MixedModels.tidyσs output, according to the formula an
 
 """
 function reorder_tidyσs(t, f)
-    @debug typeof(f)
+    #@debug typeof(f)
     # get the order from the formula, this is the target
     f_order = random_effect_groupings(f) # formula order
-    @debug f_order
+    #@debug f_order
     f_order = vcat(f_order...)
-    @debug f_order
+    #@debug f_order
 
     # find the fixefs
     fixef_ix = isnothing.(f_order)

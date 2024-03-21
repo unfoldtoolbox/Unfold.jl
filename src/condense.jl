@@ -28,7 +28,7 @@ StatsModels.coef(mf::LinearModelFit) = mf.estimate
     coefs = extract_coef_info(coefsRaw, 2)
     #colnames_basis_raw = get_colnames_basis(formulas(uf))# this is unconverted basisfunction basis,
     colnames_basis = extract_coef_info(coefsRaw, 3) # this is converted to strings! 
-    #eventnames = extract_coef_info(coefsRaw, 1)
+    basisnames = extract_coef_info(coefsRaw, 1)
     @debug coefs
     @debug colnames_basis
 
@@ -52,21 +52,24 @@ StatsModels.coef(mf::LinearModelFit) = mf.estimate
 
 
     designkeys = collect(first.(design(uf)))
-    if length(designkeys) == 1
-        # in case of 1 event, repeat it by ncoefs
-        eventnames = repeat([designkeys[1]], length(coefs))
-    else
-        eventnames = []
-        sizehint!(eventnames, length(chan_rep))
-        for (ix, evt) in enumerate(designkeys)
-            push!(
-                eventnames,
-                repeat([evt], size(modelmatrices(designmatrix(uf))[ix], 2))...,
-            )
+    if design(uf) != [:empty => ()]
+        basiskeys = [b.name for b in last.(last.(design(uf)))]
+
+        eventnames =
+            Array{Union{eltype(designkeys),eltype(basiskeys)}}(undef, length(basisnames))
+        for (b, d) in zip(basiskeys, designkeys)
+            eventnames[basisnames.==b] .= d
         end
+    else
+        @warn "No design found, falling back to basisnames instead of eventnames"
+        eventnames = basisnames
     end
     eventnames_rep = permutedims(repeat(eventnames, 1, nchan), [2, 1])
 
+    @debug "length before make_long_df" length(coefs_rep) length(chan_rep) length(
+        eventnames_rep,
+    )
+    @debug nchan, size.(modelmatrices(designmatrix(uf)), 2), length(designkeys)
 
     return make_long_df(
         uf,
