@@ -1,15 +1,17 @@
 """
 See FIRBasis for an examples
 
-    a BasisFunction should implement:
-    kernel() 
-    collabel() [default "colname_basis"] # name for 
-    colnames() # unique names of expanded columns
-    times() # vector of times along expanded columns
-    name() # name of basis
-    width() # expansion to how many columns
+a BasisFunction should implement:
+- kernel() # kernel(b::BasisFunction,sample) => returns the designmatrix for that event
+- height() # number of samples in continuous time
+- width()  # number of coefficient columns (e.g. HRF 1 to 3, FIR height()-1 )
 
-    shiftOnset() [default 0]
+- colnames() # unique names of expanded columns
+- times() # vector of times along expanded columns, length = height()
+
+- name() # name of basisfunction
+- collabel() [default "colname_basis"] # name for coeftable
+- shift_onset() [default 0]
 """
 abstract type BasisFunction end
 
@@ -34,13 +36,13 @@ struct FIRBasis <: BasisFunction
     "name of the event, random 1:1000 if unspecified"
     name::String
     "by how many samples do we need to shift the event onsets? This number is determined by how many 'negative' timepoints the basisfunction defines"
-    shiftOnset::Int64
+    shift_onset::Int64
 end
 
-@deprecate FIRBasis(kernel::Function, times, name, shiftOnset) FIRBasis(
+@deprecate FIRBasis(kernel::Function, times, name, shift_onset) FIRBasis(
     times,
     name,
-    shiftOnset,
+    shift_onset,
 )
 collabel(basis::FIRBasis) = :time
 colnames(basis::FIRBasis) = basis.times[1:end-1]
@@ -56,7 +58,7 @@ struct SplineBasis <: BasisFunction
     "name of the event, random 1:1000 if unspecified"
     name::String
     "by how many samples do we need to shift the event onsets? This number is determined by how many 'negative' timepoints the basisfunction defines"
-    shiftOnset::Int64
+    shift_onset::Int64
 end
 
 
@@ -70,17 +72,6 @@ struct HRFBasis <: BasisFunction
     name::String
 end
 
-
-
-
-function Base.show(io::IO, obj::BasisFunction)
-    println(io, "name: $(name(obj))")
-    println(io, "collabel: $(collabel(obj))")
-    println(io, "colnames: $(colnames(obj))")
-    println(io, "kerneltype: $(typeof(obj))")
-    println(io, "times: $(times(obj))")
-    println(io, "shiftOnset: $(shiftOnset(obj))")
-end
 
 
 
@@ -100,21 +91,18 @@ julia>  f(103.3)
 ```
 
 """
-function firbasis(τ, sfreq, name::String)
+function firbasis(τ, sfreq, name::String = "basis_" * string(rand(1:10000)))
     τ = round_times(τ, sfreq)
     times = range(τ[1], stop = τ[2] + 1 ./ sfreq, step = 1 ./ sfreq) # stop + 1 step, because we support fractional event-timings
 
+    shift_onset = Int64(floor(τ[1] * sfreq))
 
-
-
-    shiftOnset = Int64(floor(τ[1] * sfreq))
-
-    return FIRBasis(times, name, shiftOnset)
+    return FIRBasis(times, name, shift_onset)
 end
 # cant multiple dispatch on optional arguments
 #firbasis(;τ,sfreq)           = firbasis(τ,sfreq)
-firbasis(; τ, sfreq, name) = firbasis(τ, sfreq, name)
-firbasis(τ, sfreq) = firbasis(τ, sfreq, "basis_" * string(rand(1:10000)))
+firbasis(; τ, sfreq, name = "basis_" * string(rand(1:10000))) = firbasis(τ, sfreq, name)
+
 
 """
 $(SIGNATURES)
@@ -201,12 +189,12 @@ function hrfbasis(
     )
 end
 
-shiftOnset(basis::HRFBasis) = 0
+shift_onset(basis::HRFBasis) = 0
 
 collabel(basis::HRFBasis) = :derivative
 collabel(basis::SplineBasis) = :splineTerm
 
-collabel(uf::UnfoldModel) = collabel(formula(uf))
+collabel(uf::UnfoldModel) = collabel(formulas(uf))
 collabel(form::FormulaTerm) = collabel(form.rhs)
 collabel(t::Tuple) = collabel(t[1]) # MixedModels has Fixef+ReEf
 collabel(term::Array{<:AbstractTerm}) = collabel(term[1].rhs)  # in case of combined formulas
@@ -214,7 +202,7 @@ collabel(term::Array{<:AbstractTerm}) = collabel(term[1].rhs)  # in case of comb
 
 # typical defaults
 
-shiftOnset(basis::BasisFunction) = basis.shiftOnset
+shift_onset(basis::BasisFunction) = basis.shift_onset
 colnames(basis::BasisFunction) = basis.colnames
 kernel(basis::BasisFunction, e) = basis.kernel(e)
 @deprecate kernel(basis::BasisFunction) basis.kernel
@@ -225,9 +213,10 @@ times(basis::BasisFunction) = basis.times
 name(basis::BasisFunction) = basis.name
 
 StatsModels.width(basis::BasisFunction) = length(times(basis))
+height(basis::FIRBasis) = width(basis) - 1
 
-StatsModels.width(basis::FIRBasis) = length(times(basis))
-
+StatsModels.width(basis::HRFBasis) = 1
+times(basis::HRFBasis) = NaN
 
 """
 $(SIGNATURES)

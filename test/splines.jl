@@ -12,8 +12,8 @@ m_mul_spl = coeftable(fit(UnfoldModel, f_spl, evts, data_e, times))
 # asking for 4 splines should generate 4 splines 
 @test length(unique(m_mul_spl.coefname)) == 5
 
-s = Unfold.formula(fit(UnfoldModel, f_spl, evts, data_e, times)).rhs.terms[3]
-@test width(s) == 3
+s = Unfold.formulas(fit(UnfoldModel, f_spl, evts, data_e, times))[1].rhs.terms[3]
+@test Unfold.width(s) == 3
 @test length(coefnames(s)) == 3
 @test s.df == 4
 
@@ -63,7 +63,7 @@ end
 @testset "PeriodicSplines" begin
     f_circspl = @formula 0 ~ 1 + circspl(continuousA, 10, -1, 1) # 1
     m = fit(UnfoldModel, f_circspl, evts, data_e, times)
-    f_evaluated = Unfold.formula(m)
+    f_evaluated = Unfold.formulas(m)
 
     effValues = [-1, -0.99, 0, 0.99, 1]
     effValues = range(-1.1, 1.1, step = 0.1)

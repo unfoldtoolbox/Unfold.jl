@@ -31,14 +31,14 @@ f  = @formula 0~1
 
 Next, we have to specify for each event, what is the formula and what is the basisfunction we want to use
 ```@example main
-bfDict = Dict("eventA"=>(f,bf1),
-              "eventB"=>(f,bf2))
+bfDict = ["eventA"=>(f,bf1),
+              "eventB"=>(f,bf2)]
 ```
 
 Finally, fitting & plotting works the same way as always
 ```@example main
 
-m = Unfold.fit(UnfoldModel,bfDict,evts,dat,solver=(x,y) -> Unfold.solver_default(x,y;stderror=true),eventcolumn="type")
+m = Unfold.fit(UnfoldModel,bfDict,evts,dat;solver=(x,y) -> Unfold.solver_default(x,y;stderror=true),eventcolumn="type")
 results = coeftable(m)
 plot_erp(results;stderror=true,mapping=(;col=:group))
 ``` 

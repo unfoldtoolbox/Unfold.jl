@@ -22,7 +22,7 @@ else
     bases = kernel(term.basisfunction).(eachrow(tbl[!, term.eventfields]))
 end
 
-rows = Unfold.timeexpand_rows(onsets, bases, Unfold.shiftOnset(term.basisfunction), ncolsX)
+rows = Unfold.timeexpand_rows(onsets, bases, Unfold.shift_onset(term.basisfunction), ncolsX)
 cols = Unfold.timeexpand_cols(term, bases, ncolsBasis, ncolsX)
 vals = Unfold.timeexpand_vals(bases, X, size(cols), ncolsX)
 

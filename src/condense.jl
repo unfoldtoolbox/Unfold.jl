@@ -1,12 +1,12 @@
 
 
 function extract_coef_info(coefs, ix)
-    # 1 = basisname, 2 = coefname, 3 = colname
+    # 1 = eventname, 2 = coefname, 3 = colname
     return [c[ix] for c in split.(coefs, " : ")]
 end
 
-function get_coefnames(uf::Union{UnfoldModel,DesignMatrix})
-    coefnames = Unfold.coefnames(formula(uf))
+function get_coefnames(uf::Union{<:UnfoldModel,<:AbstractDesignMatrix})
+    coefnames = Unfold.coefnames(formulas(uf))
     coefnames = vcat(coefnames...) # gets rid of an empty Any() XXX not sure where it comes from, only in MixedModel Timexpanded case
 end
 
@@ -21,12 +21,12 @@ StatsModels.coef(mf::LinearModelFit) = mf.estimate
 
 
 
-function StatsModels.coeftable(
-    uf::Union{UnfoldLinearModelContinuousTime,UnfoldLinearMixedModelContinuousTime},
-)
+@traitfn function StatsModels.coeftable(
+    uf::T,
+) where {T <: UnfoldModel; ContinuousTimeTrait{T}}
     coefsRaw = get_coefnames(uf)
     coefs = extract_coef_info(coefsRaw, 2)
-    #colnames_basis_raw = get_colnames_basis(formula(uf))# this is unconverted basisfunction basis,
+    #colnames_basis_raw = get_colnames_basis(formulas(uf))# this is unconverted basisfunction basis,
     colnames_basis = extract_coef_info(coefsRaw, 3) # this is converted to strings! 
     basisnames = extract_coef_info(coefsRaw, 1)
     @debug coefs
@@ -41,8 +41,6 @@ function StatsModels.coeftable(
     end
 
 
-    #colnames_basis_rep = permutedims(repeat(colnames_basis_raw,Int(length(colnames_basis)/length(colnames_basis_raw)),nchan),[2,1])
-    # XXX HOTFIX for above lines
     colnames_basis_rep = permutedims(repeat(colnames_basis, 1, nchan), [2, 1])
     try
         colnames_basis_rep = parse.(Float64, colnames_basis_rep)
@@ -51,25 +49,46 @@ function StatsModels.coeftable(
     end
     chan_rep = repeat(1:nchan, 1, size(colnames_basis_rep, 2))
 
-    basisnames_rep = permutedims(repeat(basisnames, 1, nchan), [2, 1])
 
+
+    designkeys = collect(first.(design(uf)))
+    if design(uf) != [:empty => ()]
+        basiskeys = [b.name for b in last.(last.(design(uf)))]
+
+        eventnames =
+            Array{Union{eltype(designkeys),eltype(basiskeys)}}(undef, length(basisnames))
+        for (b, d) in zip(basiskeys, designkeys)
+            eventnames[basisnames.==b] .= d
+        end
+    else
+        @warn "No design found, falling back to basisnames instead of eventnames"
+        eventnames = basisnames
+    end
+    eventnames_rep = permutedims(repeat(eventnames, 1, nchan), [2, 1])
+
+    @debug "length before make_long_df" length(coefs_rep) length(chan_rep) length(
+        eventnames_rep,
+    )
+    @debug nchan, size.(modelmatrices(designmatrix(uf)), 2), length(designkeys)
 
     return make_long_df(
         uf,
         coefs_rep,
         chan_rep,
         colnames_basis_rep,
-        basisnames_rep,
+        eventnames_rep,
         collabel(uf),
     )
 end
 
 
-function StatsModels.coeftable(uf::Union{UnfoldLinearModel,UnfoldLinearMixedModel})
+@traitfn function StatsModels.coeftable(
+    uf::T,
+) where {T <: UnfoldModel; !ContinuousTimeTrait{T}}
     # Mass Univariate Case
     coefnames = get_coefnames(uf)
 
-    colnames_basis = collect(values(design(uf)))[1][2]#times#get_colnames_basis(m.X.formulas,times)
+    colnames_basis = collect(last.(last.(design(uf)[1])))
 
     @debug "coefs: $(size(coefnames)),colnames_basis:$(size(colnames_basis)))"
     @debug "coefs: $coefnames,colnames_basis:$colnames_basis"
@@ -82,25 +101,21 @@ function StatsModels.coeftable(uf::Union{UnfoldLinearModel,UnfoldLinearMixedMode
     colnames_basis_rep = permutedims(repeat(colnames_basis, 1, nchan, ncoefs), [2 1 3])
     chan_rep = repeat(1:nchan, 1, ncols, ncoefs)
 
-    designkeys = collect(keys(design(uf)))
-
-
-
-
+    designkeys = collect(first.(design(uf)))
     if length(designkeys) == 1
         # in case of 1 event, repeat it by ncoefs
-        basisnames = repeat(["event: $(designkeys[1])"], ncoefs)
+        eventnames = repeat([designkeys[1]], ncoefs)
     else
-        basisnames = String[]
+        eventnames = String[]
         for (ix, evt) in enumerate(designkeys)
-            push!(basisnames, repeat(["event: $(evt)"], size(modelmatrix(uf)[ix], 2))...)
+            push!(eventnames, repeat([evt], size(modelmatrix(uf)[ix], 2))...)
         end
     end
 
-    basisnames_rep = permutedims(repeat(basisnames, 1, nchan, ncols), [2, 3, 1])
+    eventnames_rep = permutedims(repeat(eventnames, 1, nchan, ncols), [2, 3, 1])
     #
     results =
-        make_long_df(uf, coefs_rep, chan_rep, colnames_basis_rep, basisnames_rep, :time)
+        make_long_df(uf, coefs_rep, chan_rep, colnames_basis_rep, eventnames_rep, :time)
 
     return results
 end
@@ -108,7 +123,7 @@ end
 
 #---
 # Returns a long df given the already matched
-function make_long_df(m, coefs, chans, colnames, basisnames, collabel)
+function make_long_df(m, coefs, chans, colnames, eventnames, collabel)
     @assert all(size(coefs) .== size(chans)) "coefs, chans and colnames need to have the same size at this point, $(size(coefs)),$(size(chans)),$(size(colnames)), should be $(size(coef(m))))"
     @assert all(size(coefs) .== size(colnames)) "coefs, chans and colnames need to have the same size at this point"
     estimate, stderror, group = make_estimate(m)
@@ -118,7 +133,7 @@ function make_long_df(m, coefs, chans, colnames, basisnames, collabel)
         Dict(
             :coefname => String.(linearize(coefs)),
             :channel => linearize(chans),
-            :basisname => linearize(basisnames),
+            :eventname => linearize(eventnames),
             collabel => linearize(colnames),
             :estimate => linearize(estimate),
             :stderror => linearize(stderror),
