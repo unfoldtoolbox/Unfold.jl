@@ -18,7 +18,7 @@ function StatsModels.modelmatrix(
         modelmatrix2 = Unfold.modelmatrices(Xs[k])
 
         @debug typeof(modelmatrix1), typeof(modelmatrix2)
-        Xcomb_temp = Unfold.equalize_lengths(modelmatrix1, modelmatrix2)
+        Xcomb_temp = Unfold.extend_to_larger(modelmatrix1, modelmatrix2)
         @debug "tmp" typeof(Xcomb_temp)
         Xcomb = lmm_combine_modelmatrices!(Xcomb_temp, Xcomb, Xs[k])
         @debug "Xcomb" typeof(Xcomb)
@@ -76,8 +76,8 @@ function StatsModels.fit!(
     nchan = size(data, 1)
 
 
-    Xs = (Unfold.equalize_lengths(Xs[1]), Xs[2:end]...)#(Unfold.equalize_lengths(Xs[1]), Xs[2:end]...)
-    _, data = Unfold.zeropad(Xs[1], data)
+    Xs = (Unfold.extend_to_larger(Xs[1]), Xs[2:end]...)#(Unfold.extend_to_larger(Xs[1]), Xs[2:end]...)
+    _, data = Unfold.equalize_size(Xs[1], data)
     # get a un-fitted mixed model object
 
     Xs = (disallowmissing(Xs[1]), Xs[2:end]...)
@@ -197,15 +197,15 @@ function LinearMixedModel_wrapper(
 ) where {TData<:Number}
     #    function LinearMixedModel_wrapper(form,data::Array{<:Union{Missing,TData},1},Xs;wts = []) where {TData<:Number}
     @debug "LMM wrapper, $(typeof(Xs))"
-    Xs = (Unfold.equalize_lengths(Xs[1]), Xs[2:end]...)
-    # XXX Push this to utilities zeropad
+    Xs = (Unfold.extend_to_larger(Xs[1]), Xs[2:end]...)
+    # XXX Push this to utilities equalize_size
     # Make sure X & y are the same size
     @assert isa(Xs[1], AbstractMatrix) & isa(Xs[2], ReMat) "Xs[1] was a $(typeof(Xs[1])), should be a AbstractMatrix, and Xs[2] was a $(typeof(Xs[2])) should be a ReMat"
     m = size(Xs[1])[1]
 
 
     if m != size(data)[1]
-        fe, data = Unfold.zeropad(Xs[1], data)
+        fe, data = Unfold.equalize_size(Xs[1], data)
 
         Xs = change_modelmatrix_size!(size(data)[1], fe, Xs[2:end])
     end

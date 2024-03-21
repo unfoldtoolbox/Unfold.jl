@@ -30,11 +30,11 @@ $(FIELDS)
 julia>  b = FIRBasis(range(0,1,length=10),"basisA",-1)
 ```
 """
-struct FIRBasis <: BasisFunction
-    " vector of times along rows of kernel-output (in seconds)"
+mutable struct FIRBasis <: BasisFunction
+    "vector of times along rows of kernel-output (in seconds)"
     times::Vector
-    "name of the event, random 1:1000 if unspecified"
-    name::String
+    "name of the event, should be the actual eventName in `eventcolumn` of the dataframes later"
+    name::Any
     "by how many samples do we need to shift the event onsets? This number is determined by how many 'negative' timepoints the basisfunction defines"
     shift_onset::Int64
 end
@@ -48,7 +48,7 @@ collabel(basis::FIRBasis) = :time
 colnames(basis::FIRBasis) = basis.times[1:end-1]
 
 
-struct SplineBasis <: BasisFunction
+mutable struct SplineBasis <: BasisFunction
     kernel::Function
 
     "vector of names along columns of kernel-output"
@@ -62,7 +62,7 @@ struct SplineBasis <: BasisFunction
 end
 
 
-struct HRFBasis <: BasisFunction
+mutable struct HRFBasis <: BasisFunction
     kernel::Function
     "vector of names along columns of kernel-output"
     colnames::AbstractVector
@@ -91,7 +91,7 @@ julia>  f(103.3)
 ```
 
 """
-function firbasis(τ, sfreq, name::String = "basis_" * string(rand(1:10000)))
+function firbasis(τ, sfreq, name::String = "")
     τ = round_times(τ, sfreq)
     times = range(τ[1], stop = τ[2] + 1 ./ sfreq, step = 1 ./ sfreq) # stop + 1 step, because we support fractional event-timings
 
@@ -101,7 +101,7 @@ function firbasis(τ, sfreq, name::String = "basis_" * string(rand(1:10000)))
 end
 # cant multiple dispatch on optional arguments
 #firbasis(;τ,sfreq)           = firbasis(τ,sfreq)
-firbasis(; τ, sfreq, name = "basis_" * string(rand(1:10000))) = firbasis(τ, sfreq, name)
+firbasis(; τ, sfreq) = firbasis(τ, sfreq)
 
 
 """
@@ -164,11 +164,7 @@ julia>  f(103.3,4.1)
 
 
 """
-function hrfbasis(
-    TR::Float64;
-    parameters = [6.0 16.0 1.0 1.0 6.0 0.0 32.0],
-    name::String = "basis_" * string(rand(1:10000)),
-)
+function hrfbasis(TR::Float64; parameters = [6.0 16.0 1.0 1.0 6.0 0.0 32.0], name = "")
     # Haemodynamic response function adapted from SPM12b "spm_hrf.m"
     # Parameters:
     #                                                           defaults

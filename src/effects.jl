@@ -42,7 +42,7 @@ function effects(design::AbstractDict, model::T; typical = mean) where {T<:Unfol
     @debug form_typical
     #@debug "type form_typical[1]", typeof(form_typical[1])
     eff = predict(model, form_typical, reference_grid)
-
+    @debug "eff" typeof(eff), typeof(form_typical)
     # because coefficients are 2D/3D arry, we have to cast it correctly to one big dataframe
     if isa(eff, Tuple)
         # TimeContinuous Model, we also get back other things like times & fromWhereToWhere a BasisFunction goes

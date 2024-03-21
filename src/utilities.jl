@@ -114,11 +114,11 @@ Equates the length of data and designmatrix by cutting the shorter one
 
 The reason we need this is because when generating the designmatrix, we do not know how long the data actually are. We only assume that event-latencies are synchronized with the data
 """
-function zeropad(
+function equalize_size(
     X::AbstractMatrix,
     data::AbstractArray{T,2},
 ) where {T<:Union{Missing,<:Number}}
-    @debug("2d zeropad")
+    @debug("2d equalize_size")
     if size(X, 1) > size(data, 2)
         X = X[1:size(data, 2), :]
     else
@@ -126,11 +126,11 @@ function zeropad(
     end
     return X, data
 end
-function zeropad(
+function equalize_size(
     X::AbstractMatrix,
     data::AbstractVector{T},
 ) where {T<:Union{Missing,<:Number}}
-    @debug("1d zeropad")
+    @debug("1d equalize_size")
     if size(X, 1) > length(data)
         X = X[1:length(data), :]
     else
@@ -139,11 +139,11 @@ function zeropad(
     return X, data
 end
 
-function zeropad(
+function equalize_size(
     X::AbstractMatrix,
     data::AbstractArray{T,3},
 ) where {T<:Union{Missing,<:Number}}
-    @debug("3d zeropad")
+    @debug("3d equalize_size")
 
     @assert size(X, 1) == size(data, 3) "Your events are not of the same size as your last dimension of data"
 

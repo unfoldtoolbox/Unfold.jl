@@ -67,6 +67,7 @@ function designmatrix(
     tbl,
     basisfunction;
     contrasts = Dict{Symbol,Any}(),
+    eventname = Any,
     kwargs...,
 )
     @debug("generating DesignMatrix")
@@ -95,8 +96,12 @@ function designmatrix(
     @debug "applying schema $unfoldmodeltype"
     form = unfold_apply_schema(unfoldmodeltype, f, schema(f, tbl_nomissing, contrasts))
 
-    form =
-        apply_basisfunction(form, basisfunction, get(Dict(kwargs), :eventfields, nothing))
+    form = apply_basisfunction(
+        form,
+        basisfunction,
+        get(Dict(kwargs), :eventfields, nothing),
+        eventname,
+    )
 
     # Evaluate the designmatrix
 
@@ -201,14 +206,21 @@ function designmatrix(
                     eventTbl,
                     collect(f[bIx])[1];
                     contrasts = contrasts,
+                    eventname = eventname,
                     kwargs...,
                 )
         else
             # normal way
             @debug f
             X =
-                X +
-                designmatrix(typeof(uf), f[fIx], eventTbl; contrasts = contrasts, kwargs...)
+                X + designmatrix(
+                    typeof(uf),
+                    f[fIx],
+                    eventTbl;
+                    contrasts = contrasts,
+                    eventname = eventname,
+                    kwargs...,
+                )
         end
     end
     return X
@@ -222,12 +234,17 @@ $(SIGNATURES)
 timeexpand the rhs-term of the formula with the basisfunction
 
 """
-function apply_basisfunction(form, basisfunction::BasisFunction, eventfields)
+function apply_basisfunction(form, basisfunction::BasisFunction, eventfields, eventname)
     @debug("apply_basisfunction")
+    if basisfunction.name == ""
+        basisfunction.name = eventname
+    elseif basisfunction.name != eventname
+        @error "since unfold 0.7 basisfunction names need to be equivalent to the event.name (or =\"\" for autofilling)."
+    end
     return FormulaTerm(form.lhs, TimeExpandedTerm(form.rhs, basisfunction, eventfields))
 end
 
-function apply_basisfunction(form, basisfunction::Nothing, eventfields)
+function apply_basisfunction(form, basisfunction::Nothing, eventfields, eventname)
     # in case of no basisfunctin, do nothing
     return form
 end
@@ -256,21 +273,21 @@ function StatsModels.modelmatrix(uf::UnfoldLinearModel, basisfunction)
 end
 
 # catch all case
-equalize_lengths(modelmatrix::AbstractMatrix) = modelmatrix
+extend_to_larger(modelmatrix::AbstractMatrix) = modelmatrix
 
 # UnfoldLinearMixedModelContinuousTime case
-equalize_lengths(modelmatrix::Tuple) =
-    (equalize_lengths(modelmatrix[1]), modelmatrix[2:end]...)
+extend_to_larger(modelmatrix::Tuple) =
+    (extend_to_larger(modelmatrix[1]), modelmatrix[2:end]...)
 
 # UnfoldLinearModel - they have to be equal already
-equalize_lengths(modelmatrix::Vector{<:AbstractMatrix}) = modelmatrix
+extend_to_larger(modelmatrix::Vector{<:AbstractMatrix}) = modelmatrix
 
 #UnfoldLinearModelContinuousTime
-equalize_lengths(modelmatrix::Vector{<:SparseMatrixCSC}) = equalize_lengths(modelmatrix...)
-equalize_lengths(modelmatrix1::SparseMatrixCSC, modelmatrix2::SparseMatrixCSC, args...) =
-    equalize_lengths(equalize_lengths(modelmatrix1, modelmatrix2), args...)
+extend_to_larger(modelmatrix::Vector{<:SparseMatrixCSC}) = extend_to_larger(modelmatrix...)
+extend_to_larger(modelmatrix1::SparseMatrixCSC, modelmatrix2::SparseMatrixCSC, args...) =
+    extend_to_larger(extend_to_larger(modelmatrix1, modelmatrix2), args...)
 
-function equalize_lengths(modelmatrix1::SparseMatrixCSC, modelmatrix2::SparseMatrixCSC)
+function extend_to_larger(modelmatrix1::SparseMatrixCSC, modelmatrix2::SparseMatrixCSC)
     sX1 = size(modelmatrix1, 1)
     sX2 = size(modelmatrix2, 1)
 
@@ -316,7 +333,7 @@ modelcols_nobasis(f::FormulaTerm, tbl::AbstractDataFrame) = modelcols(f.rhs.term
 StatsModels.modelmatrix(uf::UnfoldModel) = modelmatrix(designmatrix(uf))#modelmatrix(uf.design,uf.designmatrix.events)
 StatsModels.modelmatrix(d::AbstractDesignMatrix) = modelmatrices(d)
 StatsModels.modelmatrix(d::Vector{<:AbstractDesignMatrix}) =
-    equalize_lengths(modelmatrices.(d))
+    extend_to_larger(modelmatrices.(d))
 
 
 """
