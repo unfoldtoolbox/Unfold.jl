@@ -39,10 +39,17 @@ end
 # Predict continuos data
 residuals(uf, data::AbstractArray) = data .- predict(uf)
 
+
+predict(uf::UnfoldModel; kwargs...) = predict(uf, formulas(uf), events(uf); kwargs...)
+predict(uf::UnfoldModel, f::Vector{<:FormulaTerm}; kwargs...) =
+    predict(uf, f, events(uf); kwargs...)
+predict(uf::UnfoldModel, evts::DataFrame; kwargs...) =
+    predict(uf, Unfold.formulas(uf), evts; kwargs...)
 # Predict new 
 function predict(
     uf,
-    evts::DataFrame = reduce(vcat, events(uf));
+    f::Vector{<:FormulaTerm},
+    evts::Vector{<:DataFrame};
     overlap = true,
     keep_basis = [],
     exclude_basis = [],
@@ -53,33 +60,35 @@ function predict(
     @assert !(!isempty(keep_basis) & !isempty(exclude_basis)) "choose either to keep events, or to exclude, but not both"
     #@assert overlap == false & !isempty(keep_basis) & !isempty(exclude_basis) "can't have no overlap & specify keep/exclude at the same time. decide for either case"
 
+    #evts = reduce(vcat, evts) # XXX for now only
 
     coefs = coef(uf)
-    # generate X_new
-    # X_new*b => continuierlich yhats::Matrix, channel x continuostime
+
     if overlap
         if isempty(keep_basis) & isempty(exclude_basis)
             # return full-overlap
             if events(uf) == evts
+                # off-the-shelf standard continuous predict, as you'd expect
                 return predict(uf, modelmatrix(uf))
             else
-                X_new = modelcols.(formulas(uf), Ref(evts)) |> Unfold.extend_to_larger
+                # predict of new data-table with a latency column. First generate new designmatrix, then off-the-shelf X*b predict
+                @assert length(f) == length(evts) "please provide the same amount of formulas (currently $(length(f)) as event-dataframes (currently $(length(evts)))"
+                X_new = modelcols.(f, evts) |> Unfold.extend_to_larger
                 return predict(X_new, coefs)
             end
         else
+            # Partial overlap! we reconstruct with some basisfunctions deactivated
             if !isempty(keep_basis)
                 basisnames = keep_basis
             else
-                basisnames = basisname(formulas(uf))
+                basisnames = basisname(f)
                 basisnames = setdiff(basisnames, exclude_basis)
             end
 
-            ix = get_basis_indices(uf, basisnames)
+            X_view = matrix_by_basisname(modelmatrix(uf), uf, basisname)
+            coefs_view = matrix_by_basisname(coefs, uf, basisname)
 
 
-
-            X_view = @view(modelmatrix(uf)[:, ix])
-            coefs_view = @view(coefs[:, ix])
             if isnothing(epoch_to)
                 return predict(X_view, coefs_view)
 
@@ -87,8 +96,8 @@ function predict(
                 timewindow =
                     isnothing(epoch_timewindow) ? calc_epoch_timewindow(uf, epoch_to) :
                     epoch_timewindow
-                @debug "timewindow" timewindow
-                latencies = evts[evts[:, eventcolumn].==epoch_to, :latency]
+                ix_event = basisname .== epoch_to
+                latencies = evts[ix_event].latency
                 return predict(
                     X_view,
                     coefs_view,
@@ -100,15 +109,46 @@ function predict(
         end
 
     else
-        # generate [X_single]
-        # each X_single * b => "epochiert", ohne overlap [yhats::Matrix] jeweils channel x basistimes
+        # no overlap, the "ideal response". We predict each event row independently. user could concatenate if they really want to :)
 
         # XXX improvement possible here, call modelcols only for the appropriate events "subset(evts")"
-        X_singles = map(x -> modelcols(formulas(uf), DataFrame(x)), eachrow(evts))
-        return predict.(X_singles, Ref(coefs))
+        #X_singles = map(x -> modelcols(f, DataFrame(x)), eachrow(evts))
+
+
+        yhat = Array{eltype(coefs)}[]
+        for (fi, e) in zip(f, evts)
+
+            e.latency .= sum(times(fi) .<= 0)
+            X_singles = map(x -> modelcols(fi, DataFrame(x)), eachrow(e))
+            #X_views = matrix_by_basisname.(X_singles, Ref(uf), Ref(basisname([fi])))
+
+            coefs_view = matrix_by_basisname(coefs, (uf), (basisname([fi])))
+
+            yhat_single = similar(
+                coefs_view,
+                size(coefs_view, 1),
+                size(X_singles[1], 1),
+                length(X_singles),
+            )
+
+            for ev = 1:length(X_singles)
+                p = predict(X_singles[ev], coefs_view)
+                yhat_single[:, :, ev] .= p
+            end
+            push!(yhat, yhat_single)
+
+        end
+        return yhat
     end
 end
 
+"""
+Returns a view of the Matrix `y`, according to the indices of the timeexpanded `basisname`
+"""
+function matrix_by_basisname(y::AbstractMatrix, uf, basisnames::Vector)
+    ix = get_basis_indices(uf, basisnames)
+    return @view(y[:, ix])
+end
 
 """
 returns an integer range with the samples around `epoch_event` as defined in the corresponding basisfunction
@@ -129,43 +169,84 @@ end
 get_basis_indices(uf, basisnames) = Unfold.get_basis_name(uf) .∈ Ref(basisnames)
 
 
+function predict_to_table(model, eff::AbstractArray, formulas::Vector, events::Vector)
+    times_vecs = repeat.(times(model), size.(events, 1))
+    # init the meta dataframe
+    @debug "times" times_vecs size(times_vecs) size.(times_vecs)
+
+    data_list = []
+    for (single_events, single_eff, single_times, single_formula) in
+        zip(events, eff, times_vecs, formulas)
+        metadata = DataFrame([
+            :time => vcat(single_times...),
+            :eventname => basisname([single_formula])[1],
+        ])
+
+        for c in names(single_events)
+            metadata[:, c] .= single_events[1, c] # assign first element in order to have same column type
+        end
 
 
-function predicttable(model::UnfoldModel, events)
+        ntimes = size(single_eff, 2)
+        for c in names(single_events)
+            for row = 1:size(single_events, 1)
+                rowIx = (1.0 .+ (row - 1) .* ntimes) .+ range(1.0, length = ntimes) .- 1
+                metadata[Int64.(rowIx), c] .= single_events[row, c]
+            end
+        end
+        @debug "single_eff" size(single_eff) size(single_eff[1]) size(eff) typeof(eff) typeof(
+            single_eff,
+        )
+        single_data = DataFrame([:yhat => vec(reshape(single_eff, :, 1))])
+        single_data.channel =
+            repeat(1:size(single_eff, 1), inner = size(single_eff, 2) * size(single_eff, 3))
+        @debug "single_data" size(single_data)
+        #@debug metadata
+        @debug "metadata" size(metadata)
+        @debug "single_eff" size(single_eff)
+        single_data = hcat(single_data, repeat(metadata, size(single_eff, 1)))
+        push!(data_list, single_data)
+    end
+    return reduce(vcat, data_list)
+
+
+end
+
+function predict_table(model::UnfoldModel, events)
     # make a copy of it so we don't change it outside the function
-    newevents = copy(events)
+    singleevents = copy(events)
 
     formulas = Unfold.formulas(model)
     if typeof(formulas) <: FormulaTerm
         formulas = [formulas]
     end
     if isa(model, UnfoldLinearModel)
-        eff = predict(model, formulas[1], newevents)
-        timesVec = gen_timeev(times(model), size(newevents, 1))
+        eff = predict(model, formulas[1], singleevents)
+        timesVec = gen_timeev(times(model), size(singleevents, 1))
     else
         @debug size(formulas), typeof(model)
 
 
-        eff = predict(model, formulas, newevents)
+        eff = predict(model, formulas, singleevents)
         @debug typeof(model)
-        timesVec = yhat_timevec(model, formulas, newevents)
-        fromTo = yhat_nranges(model, formulas, newevents) # formerly fromTo == n_ranges
+        timesVec = yhat_timevec(model, formulas, singleevents)
+        fromTo = yhat_nranges(model, formulas, singleevents) # formerly fromTo == n_ranges
     end
 
 
     # init the meta dataframe
-    metaData = DataFrame([:time => vcat(timesVec...), :eventname => ""])
+    metadata = DataFrame([:time => vcat(timesVec...), :eventname => ""])
 
-    for c in names(newevents)
-        metaData[:, c] .= newevents[1, c] # assign first element in order to have same column type
+    for c in names(singleevents)
+        metadata[:, c] .= singleevents[1, c] # assign first element in order to have same column type
     end
     if isa(model, UnfoldLinearModel)
         # for mass univariate we can make use of the knowledge that all events have the same length :)
         ntimes = size(coef(model), 2)
-        for c in names(newevents)
-            for row = 1:size(newevents, 1)
+        for c in names(singleevents)
+            for row = 1:size(singleevents, 1)
                 rowIx = (1.0 .+ (row - 1) .* ntimes) .+ range(1.0, length = ntimes) .- 1
-                metaData[Int64.(rowIx), c] .= newevents[row, c]
+                metadata[Int64.(rowIx), c] .= singleevents[row, c]
             end
         end
 
@@ -185,14 +266,14 @@ function predicttable(model::UnfoldModel, events)
                 fend = n_range[i] + n_range.step .- 1
                 #fend = fstart + basistime.step - 1
 
-                # couldn't figure out how to broadcast everything directly (i.e out[fstart:fend,names(newevents)] .= newevents[i,:])
+                # couldn't figure out how to broadcast everything directly (i.e out[fstart:fend,names(singleevents)] .= singleevents[i,:])
                 # copy the correct metadata
                 @debug fstart, fend
                 for j = fstart:fend
-                    metaData[j+shift, names(newevents)] = newevents[i, :]
+                    metadata[j+shift, names(singleevents)] = singleevents[i, :]
                 end
                 # add basisfunction name
-                metaData[shift.+(fstart:fend), :eventname] .=
+                metadata[shift.+(fstart:fend), :eventname] .=
                     formulas[bIx].rhs.basisfunction.name
 
             end
@@ -208,7 +289,7 @@ function predicttable(model::UnfoldModel, events)
     nchannel = size(eff, 2)
 
     out.channel = repeat(1:nchannel, inner = size(eff, 1))
-    out = hcat(out, repeat(metaData, nchannel))
+    out = hcat(out, repeat(metadata, nchannel))
     return out
 end
 
@@ -219,10 +300,10 @@ end
 @traitfn function predict(
     model::T,
     formulas::AbstractArray,
-    newevents::DataFrame,
+    singleevents::DataFrame,
 ) where {T <: UnfoldModel; !ContinuousTimeTrait{T}}
     @debug "Not ContinuousTime yhat, Array"
-    X = modelcols.(formulas, Ref(newevents))
+    X = modelcols.(formulas, Ref(singleevents))
 
     co = coef(model)
     Xsizes = size.(X, Ref(2))
@@ -239,18 +320,18 @@ end
 end
 
 
-predict(model::UnfoldLinearModel, formulas::FormulaTerm, newevents::DataFrame) =
-    predict(model, formulas.rhs, newevents)
-predict(model::UnfoldLinearModelContinuousTime, formulas::FormulaTerm, newevents) =
-    predict(model, formulas.rhs, newevents)
+predict(model::UnfoldLinearModel, formulas::FormulaTerm, singleevents::DataFrame) =
+    predict(model, formulas.rhs, singleevents)
+predict(model::UnfoldLinearModelContinuousTime, formulas::FormulaTerm, singleevents) =
+    predict(model, formulas.rhs, singleevents)
 
 @traitfn function predict(
     model::T,
     formulas::AbstractTerm,
-    newevents,
+    singleevents,
 ) where {T <: UnfoldModel; !ContinuousTimeTrait{T}}
     @debug "Not ContinuousTime yhat, single Term"
-    X = modelcols(formulas, newevents)
+    X = modelcols(formulas, singleevents)
     return predict(model, X)
 end
 
@@ -412,11 +493,6 @@ function times(
 end
 
 
-function gen_timeev(timesVec, nRows)
-    timesVec = repeat(timesVec, nRows)
-    return timesVec
-end
-
 
 
 
@@ -438,27 +514,4 @@ end
         n_range = n_range - 1
     end
     return range(1, step = n_range, length = size(events, 1))
-end
-
-@traitfn yhat_timevec(
-    model::T,
-    formulas::Array{<:FormulaTerm},
-    events,
-) where {T <: UnfoldModel; ContinuousTimeTrait{T}} =
-    yhat_timevec.(Ref(model), formulas, Ref(events))
-
-
-@traitfn function yhat_timevec(
-    model::T,
-    f::FormulaTerm,
-    events,
-) where {T <: UnfoldModel; ContinuousTimeTrait{T}}
-    @debug typeof(f)
-    # keep track of the times
-    timesSingle = times(f.rhs.basisfunction)
-    # see yhat blabla why this is necessary
-    if typeof(f.rhs.basisfunction) <: FIRBasis
-        timesSingle = timesSingle[1:end-1]
-    end
-    return repeat(timesSingle, size(events, 1))
 end

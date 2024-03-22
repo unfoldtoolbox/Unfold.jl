@@ -37,40 +37,18 @@ function effects(design::AbstractDict, model::T; typical = mean) where {T<:Unfol
     # replace non-specified fields with "constants"
     m = Unfold.modelmatrix(model, false) # get the modelmatrix without timeexpansion
     #@debug "type form[1]", typeof(form[1])
-    @debug typeof(m), size(m)
+
     form_typical = _typify(T, reference_grid, form, m, typical)
-    @debug form_typical
-    #@debug "type form_typical[1]", typeof(form_typical[1])
-    eff = predict(model, form_typical, reference_grid)
-    @debug "eff" typeof(eff), typeof(form_typical)
-    # because coefficients are 2D/3D arry, we have to cast it correctly to one big dataframe
-    if isa(eff, Tuple)
-        # TimeContinuous Model, we also get back other things like times & fromWhereToWhere a BasisFunction goes
-        if typeof(form) <: FormulaTerm
-            form = [form]
-        end
-        # figure out the eventname
-        bnames = [[form[ix].rhs.basisfunction.name] for ix = 1:length(form)]
-        # repeat it as much as necessary
-        bnames = repeat.(bnames, [e.stop + e.step - 1 for e in eff[1]])
 
-        result = DataFrame(
-            cast_referenceGrid(reference_grid, eff[3], eff[2]; eventname = vcat(bnames...)),
-        )
-        select!(result, DataFrames.Not(:latency)) # remove the latency column if it was added
-    elseif isa(eff, Vector)
-        # mass univariate with multiple effects
-        results_tmp =
-            DataFrame.(cast_referenceGrid.(Ref(reference_grid), eff, Ref(times(model))))
-        names = collect(keys(Unfold.design(model)))
-        [df.eventname .= n for (df, n) in zip(results_tmp, names)]
-        result = reduce(vcat, results_tmp)
-    else
-        # normal mass univariate model
-        result = DataFrame(cast_referenceGrid(reference_grid, eff, times(model)))
-    end
+    form_typical = vec(form_typical)
+    reference_grids = repeat([reference_grid], length(form_typical))
 
-    return result
+
+    eff = predict(model, form_typical, reference_grids; overlap = false)
+
+    return predict_to_table(model, eff, form_typical, reference_grids)
+
+
 end
 
 Effects.typify(reference_grid, form::AbstractArray, X; kwargs...) =
@@ -88,12 +66,12 @@ _typify(
 @traitfn function _typify(
     ::Type{UF},
     reference_grid,
-    form::Vector{<:FormulaTerm},
+    form::Vector{T},
     m::Vector,
     typical,
-) where {UF <: UnfoldModel; ContinuousTimeTrait{UF}}
+) where {T<:FormulaTerm,UF<:UnfoldModel;ContinuousTimeTrait{UF}}
     @debug "_typify - stripping away timeexpandedterm"
-    form_typical = Array{Any}(undef, 1, length(form))
+    form_typical = Array{FormulaTerm}(undef, length(form))
     for f = 1:length(form)
 
         # strip of basisfunction and put it on afterwards again
@@ -111,7 +89,7 @@ _typify(
             form[f].rhs.basisfunction;
             eventfields = form[f].rhs.eventfields,
         )
-        form_typical[f] = tmpf
+        form_typical[f] = FormulaTerm(form[f].lhs, tmpf)
     end
     return form_typical
 end
