@@ -10,9 +10,9 @@ function splinebasis(τ, sfreq, nsplines, name::String)
     times = range(τ[1], stop = τ[2], step = 1 ./ sfreq)
     kernel = e -> splinekernel(e, times, nsplines - 2)
 
-    shiftOnset = Int64(floor(τ[1] * sfreq))
+    shift_onset = Int64(floor(τ[1] * sfreq))
     colnames = spl_breakpoints(times, nsplines)
-    return SplineBasis(kernel, colnames, times, name, shiftOnset)
+    return SplineBasis(kernel, colnames, times, name, shift_onset)
 end
 
 

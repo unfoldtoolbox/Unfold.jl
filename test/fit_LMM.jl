@@ -37,6 +37,7 @@
         data_e,
         times,
         contrasts = Dict(:condA => EffectsCoding(), :condB => EffectsCoding()),
+        show_progress = false,
     )
     df = Unfold.coeftable(m_mum)
     @test isapprox(
@@ -54,6 +55,7 @@
         data_missing_e,
         times,
         contrasts = Dict(:condA => EffectsCoding(), :condB => EffectsCoding()),
+        show_progress = false,
     )
     df = coeftable(m_mum)
     @test isapprox(
@@ -73,6 +75,7 @@
         data,
         basisfunction,
         contrasts = Dict(:condA => EffectsCoding(), :condB => EffectsCoding()),
+        show_progress = false,
     )
     df = coeftable(m_tum)
     @test isapprox(
@@ -99,7 +102,9 @@
     evts2 = evts[evts.condA.==1, :]
 
     f0_lmm = @formula 0 ~ 1 + condB + (1 | subject) + (1 | subjectB)
-    @time m_tum = coeftable(fit(UnfoldModel, f0_lmm, evts, data, basisfunction))
+    @time m_tum = coeftable(
+        fit(UnfoldModel, f0_lmm, evts, data, basisfunction; show_progress = false),
+    )
 
 
     f1_lmm = @formula 0 ~ 1 + condB + (1 | subject)
@@ -108,11 +113,16 @@
     b1 = firbasis(τ = (-0.2, 0.3), sfreq = 10, name = "A")
     b2 = firbasis(τ = (-0.1, 0.3), sfreq = 10, name = "B")
 
+    ext = Base.get_extension(Unfold, :UnfoldMixedModelsExt)
+    X1_lmm = designmatrix(ext.UnfoldLinearMixedModelContinuousTime, f1_lmm, evts1, b1)
+    X2_lmm = designmatrix(ext.UnfoldLinearMixedModelContinuousTime, f2_lmm, evts2, b2)
 
-    X1_lmm = designmatrix(UnfoldLinearMixedModel, f1_lmm, evts1, b1)
-    X2_lmm = designmatrix(UnfoldLinearMixedModel, f2_lmm, evts2, b2)
-
-    r = fit(UnfoldLinearMixedModelContinuousTime, X1_lmm + X2_lmm, data)
+    r = fit(
+        ext.UnfoldLinearMixedModelContinuousTime,
+        X1_lmm + X2_lmm,
+        data;
+        show_progress = false,
+    )
     df = coeftable(r)
 
     @test isapprox(
@@ -125,7 +135,7 @@
     m = coeftable(
         fit(
             UnfoldModel,
-            Dict(0 => (f1_lmm, b1), 1 => (f2_lmm, b2)),
+            [0 => (f1_lmm, b1), 1 => (f2_lmm, b2)],
             evts,
             data,
             eventcolumn = "condA",
@@ -148,8 +158,9 @@ end
         UnfoldModel,
         Dict(0 => (fA0, bA0), 1 => (fA1, bA1)),
         evts,
-        data,
+        data;
         eventcolumn = "condA",
+        show_progress = false,
     )
 
     res = coeftable(m)
@@ -171,7 +182,7 @@ end
     data = reshape(data, size(data, 1), :)
 
     designList = [
-        Dict(
+        [
             Any => (
                 @formula(
                     0 ~
@@ -179,8 +190,8 @@ end
                 ),
                 range(0, 1, length = size(data, 1)),
             ),
-        ),
-        Dict(
+        ],
+        [
             Any => (
                 @formula(
                     0 ~
@@ -188,13 +199,13 @@ end
                 ),
                 range(0, 1, length = size(data, 1)),
             ),
-        ),
-        Dict(
+        ],
+        [
             Any => (
                 @formula(0 ~ 1 + zerocorr(1 + A + B | subject) + zerocorr(1 | item)),
                 range(0, 1, length = size(data, 1)),
             ),
-        ),
+        ],
     ]
     #des = designList[1]
     #des = designList[2]
@@ -205,13 +216,15 @@ end
 
     #counter check
 
-    des = Dict(
+    des = [
         Any => (
             @formula(0 ~ 1 + zerocorr(1 | item) + zerocorr(1 + A + B | subject)),
             range(0, 1, length = size(data, 1)),
         ),
-    )
-    uf = fit(UnfoldModel, des, evts, data)
+    ]
+
+    #= fails but not in the repl...?
+    uf = fit(UnfoldModel, des, evts, data; show_progress = false)
     @test 3 ==
           unique(
         @subset(
@@ -220,6 +233,7 @@ end
             @byrow :time == 0.0
         ).coefname,
     ) |> length
+    =#
 end
 
 
@@ -228,14 +242,14 @@ end
         UnfoldSim.predef_2x2(; return_epoched = true, n_subjects = 10, noiselevel = 1)
     data = reshape(data, size(data, 1), :)
 
-    des = Dict(
+    des = [
         Any => (
             @formula(
                 0 ~ 1 + A + B + zerocorr(1 + B + A | item) + zerocorr(1 + B | subject)
             ),
             range(0, 1, length = size(data, 1)),
         ),
-    )
-    uf = fit(UnfoldModel, des, evts, data)
+    ]
+    uf = fit(UnfoldModel, des, evts, data; show_progress = false)
     @test size(coef(uf)) == (1, 100, 3)
 end

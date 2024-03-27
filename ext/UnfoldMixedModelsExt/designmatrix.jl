@@ -21,7 +21,10 @@ function Unfold.unfold_apply_schema(
     schema,
 )
     @debug "LMM apply schema"
-    return apply_schema(f, schema, MixedModels.LinearMixedModel)
+    f_new = apply_schema(f, schema, MixedModels.LinearMixedModel)
+    check_groupsorting(f_new.rhs)
+    return f_new
+
 end
 
 
@@ -30,16 +33,16 @@ function StatsModels.coefnames(term::MixedModels.ZeroCorr)
     coefnames(term.term)
 end
 
-function lmm_combineMats!(Xcomb, X1, X2)
+function lmm_combine_modelmatrices!(Xcomb, X1, X2)
     # we have random effects                
     # combine REMats in single-eventtpe formulas ala y ~ (1|x) + (a|x)
-    Xs1 = MixedModels._amalgamate([X1.Xs[2:end]...], Float64)
-    Xs2 = MixedModels._amalgamate([X2.Xs[2:end]...], Float64)
+    modelmatrix1 = MixedModels._amalgamate([X1.modelmatrix[2:end]...], Float64)
+    modelmatrix2 = MixedModels._amalgamate([X2.modelmatrix[2:end]...], Float64)
 
-    Xcomb = (Xcomb, Xs1..., Xs2...)
+    Xcomb = (Xcomb, modelmatrix1..., modelmatrix2...)
 
     # Next we make the ranefs all equal size
-    equalizeReMatLengths!(Xcomb[2:end])
+    equalize_ReMat_lengths!(Xcomb[2:end])
 
     # check if ranefs can be amalgamated. If this fails, then MixedModels tried to amalgamate over different eventtypes and we should throw the warning
     # if it success, we have to check if the size before and after is identical. If it is not, it tried to amalgamize over different eventtypes which were of the same length
@@ -63,7 +66,7 @@ function lmm_combineMats!(Xcomb, X1, X2)
 end
 
 
-function changeReMatSize!(remat::MixedModels.AbstractReMat, m::Integer)
+function change_ReMat_size!(remat::MixedModels.AbstractReMat, m::Integer)
 
     n = m - length(remat.refs) # missing elements
     if n < 0
@@ -86,16 +89,16 @@ end
 $(SIGNATURES)
 Get the timeranges where the random grouping variable was applied
 """
-function time_expand_getRandomGrouping(tblGroup, tblLatencies, basisfunction)
-    ranges = Unfold.time_expand_getTimeRange.(tblLatencies, Ref(basisfunction))
+function get_timeexpanded_random_grouping(tbl_group, tbl_latencies, basisfunction)
+    ranges = Unfold.get_timeexpanded_time_range.(tbl_latencies, Ref(basisfunction))
 end
 
 
 
-function equalizeReMatLengths!(remats::NTuple{A,MixedModels.AbstractReMat}) where {A}
+function equalize_ReMat_lengths!(remats::NTuple{A,MixedModels.AbstractReMat}) where {A}
     # find max length
     m = maximum([x[1] for x in size.(remats)])
-    @debug print("combining lengths: $m")
+    @debug "combining lengths: $m"
     # for each reMat
     for k in range(1, length = length(remats))
         remat = remats[k]
@@ -103,7 +106,7 @@ function equalizeReMatLengths!(remats::NTuple{A,MixedModels.AbstractReMat}) wher
             continue
         end
         # prolong if necessary
-        changeReMatSize!(remat, m)
+        change_ReMat_size!(remat, m)
 
     end
 end
@@ -165,7 +168,7 @@ function StatsModels.modelcols(
     time = tbl[!, term.eventfields[1]]
 
     # get the from-to onsets of the grouping varibales
-    onsets = time_expand_getRandomGrouping(group, time, term.basisfunction)
+    onsets = get_timeexpanded_random_grouping(group, time, term.basisfunction)
     #print(size(reMat.z))
     refs = zeros(size(z)[2]) .+ 1
     for (i, o) in enumerate(onsets[2:end])
@@ -188,7 +191,7 @@ function StatsModels.modelcols(
             time_start = 1
         else
             time_start = time[ix_start]
-            # XXX Replace this functionality by shiftOnset?
+            # XXX Replace this functionality by shift_onset?
             time_start = time_start - sum(Unfold.times(term.basisfunction) .<= 0)
         end
         if i == length(uGroup)
@@ -244,13 +247,22 @@ function StatsModels.modelcols(
     # Once MixedModels.jl supports it, can be replaced with: SparseReMat
     ReMat{T,S}(rhs, refs, levels, cnames, z, wtz, λ, inds, adjA, scratch)
 end
-function changeMatSize!(m, fe::AbstractSparseMatrix, remats)
-    changeReMatSize!.(remats, Ref(m))
+function change_modelmatrix_size!(m, fe::AbstractSparseMatrix, remats)
+    change_ReMat_size!.(remats, Ref(m))
+    @debug "changemodelmatrix" typeof(fe)
     fe = SparseMatrixCSC(m, fe.n, fe.colptr, fe.rowval, fe.nzval)
     return (fe, remats...)
 end
-function changeMatSize!(m, fe::AbstractMatrix, remats)
-    changeReMatSize!.(remats, Ref(m))
+function change_modelmatrix_size!(m, fe::AbstractMatrix, remats)
+    change_ReMat_size!.(remats, Ref(m))
     fe = fe[1:m, :]
     return (fe, remats...)
 end
+
+"""
+    modelmatrices(modelmatrix::Tuple)
+in the case of a Tuple (MixedModels - FeMat/ReMat Tuple), returns only the FeMat part
+"""
+Unfold.modelmatrices(modelmatrix::Tuple) = modelmatrix[1]
+
+#modelcols(rhs::MatrixTerm, tbl) = modelcols.(rhs, Ref(tbl))

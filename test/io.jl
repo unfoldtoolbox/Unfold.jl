@@ -19,10 +19,10 @@ bf1_B = firbasis(τ = [-0.1, 1], sfreq = 100, name = "event_B");
 f1_A = @formula 0 ~ 1;
 f1_B = @formula 0 ~ 1 + condition + spl(continuous, 4);
 
-bfDict1 = Dict("event_A" => (f1_A, bf1_A), "event_B" => (f1_B, bf1_B));
+bfDict1 = ["event_A" => (f1_A, bf1_A), "event_B" => (f1_B, bf1_B)];
 
 data1_e, times = Unfold.epoch(data1, evts1, [-0.1, 1], 100)
-bfDict1_e = Dict("event_A" => (f1_A, times), "event_B" => (f1_B, times));
+bfDict1_e = ["event_A" => (f1_A, times), "event_B" => (f1_B, times)];
 
 
 for deconv in [false, true]
@@ -36,20 +36,23 @@ for deconv in [false, true]
     @testset "SingleSubjectDesign with two event types and splines" begin
         # save the model to a compressed .jld2 file and load it again
 
-        save(joinpath(save_path, "m1_compressed.jld2"), m1; compress = true)
-        m1_loaded =
-            load(joinpath(save_path, "m1_compressed.jld2"), UnfoldModel, generate_Xs = true)
+        save(joinpath(save_path, "m1_compressed2.jld2"), m1; compress = true)
+        m1_loaded = load(
+            joinpath(save_path, "m1_compressed2.jld2"),
+            UnfoldModel,
+            generate_Xs = true,
+        )
 
-        @test ismissing(m1_loaded.designmatrix.Xs) == false
+        @test isempty(Unfold.modelmatrices(designmatrix(m1_loaded))[1]) == false
         @test typeof(m1) == typeof(m1_loaded)
         @test coeftable(m1) == coeftable(m1_loaded)
         @test m1.modelfit.estimate == m1_loaded.modelfit.estimate
-        @test m1.designmatrix.events == m1_loaded.designmatrix.events
+        @test m1.designmatrix[end].events == m1_loaded.designmatrix[end].events
 
         # In the loaded version one gets two matrices instead of one.
         # The dimensions do also not match.
         # Probably the designmatrix reconstruction in the load function needs to be changed.
-        @test m1.designmatrix.Xs == m1_loaded.designmatrix.Xs
+        @test m1.designmatrix[end].modelmatrix == m1_loaded.designmatrix[end].modelmatrix
 
         # Test whether the effects function works with the loaded model
         # and the results match the ones of the original model
@@ -60,14 +63,15 @@ for deconv in [false, true]
 
         # load the model without reconstructing the designmatrix
         m1_loaded_without_dm = load(
-            joinpath(save_path, "m1_compressed.jld2"),
+            joinpath(save_path, "m1_compressed2.jld2"),
             UnfoldModel,
             generate_Xs = false,
         )
 
 
         # ismissing should only be true fr the deconv case
-        @test ismissing(m1_loaded_without_dm.designmatrix.Xs) == (deconv == true)
+        @test isempty(modelmatrix(designmatrix(m1_loaded_without_dm)[2])) ==
+              (deconv == true)
 
     end
 end
@@ -93,21 +97,24 @@ m2 = Unfold.fit(
     reshape(data2, 1, size(data2)...),
 );
 
-save(joinpath(save_path, "m2_compressed.jld2"), m2; compress = true)
-m2_loaded = load(joinpath(save_path, "m2_compressed.jld2"), UnfoldModel, generate_Xs = true)
+save(joinpath(save_path, "m2_compressed2.jld2"), m2; compress = true)
+m2_loaded =
+    load(joinpath(save_path, "m2_compressed2.jld2"), UnfoldModel, generate_Xs = true)
 
 @testset "2x2 MultiSubjectDesign Mixed-effects model" begin
     # save the model to a compressed .jld2 file and load it again
-    save(joinpath(save_path, "m2_compressed.jld2"), m2; compress = true)
+    save(joinpath(save_path, "m2_compressed2.jld2"), m2; compress = true)
     m2_loaded =
-        load(joinpath(save_path, "m2_compressed.jld2"), UnfoldModel, generate_Xs = true)
+        load(joinpath(save_path, "m2_compressed2.jld2"), UnfoldModel, generate_Xs = true)
 
-    @test ismissing(m2_loaded.designmatrix.Xs) == false
+
+    @test isempty(Unfold.modelmatrices(designmatrix(m2_loaded))[1]) == false
+
     @test typeof(m2) == typeof(m2_loaded)
     @test coeftable(m2) == coeftable(m2_loaded)
-    @test m2.modelfit.fits == m2_loaded.modelfit.fits
-    @test m2.designmatrix.events == m2_loaded.designmatrix.events
-    @test m2.designmatrix.Xs == m2_loaded.designmatrix.Xs
+    @test modelfit(m2).fits == modelfit(m2_loaded).fits
+    @test Unfold.events(m2) == Unfold.events(m2_loaded)
+    @test modelmatrix(m2) == modelmatrix(m2_loaded)
 
     # Test whether the effects function works with the loaded models
     # and the results match the ones of the original model
@@ -121,7 +128,7 @@ m2_loaded = load(joinpath(save_path, "m2_compressed.jld2"), UnfoldModel, generat
 
     # load the model without reconstructing the designmatrix
     m2_loaded_without_dm =
-        load(joinpath(save_path, "m2_compressed.jld2"), UnfoldModel, generate_Xs = false)
+        load(joinpath(save_path, "m2_compressed2.jld2"), UnfoldModel, generate_Xs = false)
 
-    @test ismissing(m2_loaded_without_dm.designmatrix.Xs) == true
+    @test isempty(modelmatrix(designmatrix(m2_loaded_without_dm))[1]) == true
 end

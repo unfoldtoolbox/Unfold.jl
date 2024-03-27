@@ -17,8 +17,8 @@ times = range(0,1,length=size(data_epoch,1))
         f0  = @formula 0~1+A + (1+A|subject);
         f1  = @formula 0~1+A+B + (1+A|subject); # could also differ in random effects
             
-        m0 = fit(UnfoldModel,Dict(Any=>(f0,times)),evts,data_epoch);
-        m1 = fit(UnfoldModel,Dict(Any=>(f1,times)),evts,data_epoch);
+        m0 = fit(UnfoldModel,[Any=>(f0,times)],evts,data_epoch);
+        m1 = fit(UnfoldModel,[Any=>(f1,times)],evts,data_epoch);
 ```
 
 ## Likelihoodratio
@@ -75,11 +75,11 @@ Cool! Let's compare!
 ```@example Main
 df = DataFrame(:walds=>res[res.coefname .== "B: b_tiny",:pvalue],:lrt=>pvals_lrt)
 f = Figure()
-scatter(f[1,1],times,res[res.coefname .== "B: b_tiny",:estimate])
-scatter(f[1,2],df.walds,df.lrt)
-scatter(f[2,1],times,df.walds)
-scatter(f[2,2],times,df.lrt)
+scatter(f[1,1],times,res[res.coefname .== "B: b_tiny",:estimate],axis=(;xlabel="time",ylabel="coef: B:b_tiny"))
+scatter(f[1,2],df.walds,df.lrt,axis=(;xlabel="walds-t pvalue",ylabel="LRT pvalue"))
+scatter(f[2,1],times,df.walds,axis=(;ylabel="walds-t pvalue",xlabel="time"))
+scatter(f[2,2],times,df.lrt,axis=(;ylabel="lrt pvalue",xlabel="time"))
 
 f
 ``` 
-Look pretty similar! note that the Walds-T is typically too liberal (LRT also, but to a lesser exted). Best is to use the forthcoming MixedModelsPermutations.jl or go the route via R and use KenwardRoger (data not yet published)
+Look pretty similar! Note that the Walds-T is typically too liberal (LRT also, but to a lesser exted). Best is to use the forthcoming MixedModelsPermutations.jl or go the route via R and use KenwardRoger (data not yet published)

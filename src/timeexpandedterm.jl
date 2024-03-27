@@ -35,14 +35,5 @@ function TimeExpandedTerm(term, basisfunction; eventfields = [:latency])
 end
 
 collabel(term::TimeExpandedTerm) = collabel(term.basisfunction)
-StatsModels.width(term::TimeExpandedTerm) = width(term.basisfunction)
+StatsModels.width(term::TimeExpandedTerm) = width(term.basisfunction) * width(term.term)
 StatsModels.terms(t::TimeExpandedTerm) = terms(t.term)
-
-function Base.show(io::IO, p::TimeExpandedTerm)
-    print(
-        io,
-        "$(p.basisfunction.name): timeexpand($(p.term)) for times $(times(p.basisfunction))",
-    )
-
-    #println(io, "$(coefnames(p))")
-end
