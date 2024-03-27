@@ -59,7 +59,17 @@ predict(uf::UnfoldModel, f::Vector{<:FormulaTerm}; kwargs...) =
 predict(uf::UnfoldModel, evts::DataFrame; overlap = false, kwargs...) =
     predict(uf, Unfold.formulas(uf), evts; overlap, kwargs...)
 
-# Predict new 
+"""
+function predict(
+    uf,
+    f::Vector{<:FormulaTerm},
+    evts::Vector{<:DataFrame};
+    overlap = true,
+    kwargs...
+)
+
+
+"""
 function predict(
     uf,
     f::Vector{<:FormulaTerm},
@@ -69,12 +79,10 @@ function predict(
     exclude_basis = [],
     epoch_to = nothing,
     epoch_timewindow = nothing,
-    eventcolumn = :event,
+    #eventcolumn = :event,
 )
     @assert !(!isempty(keep_basis) & !isempty(exclude_basis)) "choose either to keep events, or to exclude, but not both"
-    #@assert overlap == false & !isempty(keep_basis) & !isempty(exclude_basis) "can't have no overlap & specify keep/exclude at the same time. decide for either case"
 
-    #evts = reduce(vcat, evts) # XXX for now only
 
     coefs = coef(uf)
 
@@ -93,13 +101,20 @@ function predict(
                 return predict(X_new, coefs)
             end
         else
-            return predict_partial_overlap()
+            return predict_partial_overlap(
+                uf,
+                coefs,
+                evts;
+                keep_basis,
+                exclude_basis,
+                epoch_to,
+                epoch_timewindow,
+            )
         end
     else
 
         @debug "no overlap predict2"
         # no overlap, the "ideal response". We predict each event row independently. user could concatenate if they really want to :)
-        @debug size(f), size(evts)
         return predict_no_overlap(uf, coefs, f, evts)
     end
 end
@@ -113,6 +128,7 @@ end
     epoch_to = nothing,
     epoch_timewindow = nothing,
 ) where {T <: UnfoldModel; ContinuousTimeTrait{T}}
+    @assert !isempty(keep_basis) & !isempty(exclude_basis) "can't have no overlap & specify keep/exclude at the same time. decide for either case"
     # Partial overlap! we reconstruct with some basisfunctions deactivated
     if !isempty(keep_basis)
         basisnames = keep_basis
@@ -243,8 +259,8 @@ predict_to_table(model, eff::AbstractArray, events::Vector{<:DataFrame}) =
 eventnames(model::UnfoldModel) = first.(design(model))
 function predict_to_table(
     eff::AbstractArray,
-    events::Vector,
-    times::Vector,
+    events::Vector{<:DataFrame},
+    times::Vector{<:Vector{<:Number}},
     eventnames::Vector,
 )
     @assert length(eventnames) == length(events) == length(times)

@@ -24,6 +24,8 @@ evts_grid = DataFrame(collect(hcat(tmp...)'), ["conditionA", "continuousA"])
 yhat_mul = predict(m_mul, evts_grid)
 yhat_tul = predict(m_tul, evts_grid)
 
+@test yhat_mul[1][1, :, :] ≈ yhat_tul[1][1, 1:20, :]
+
 Unfold.predict_to_table(m_mul, yhat_mul, [evts_grid])
 
 @test all(yhat_mul[1][:] .≈ mean(data[data.!=0]))
