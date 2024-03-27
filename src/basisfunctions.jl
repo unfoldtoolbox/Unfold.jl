@@ -211,8 +211,8 @@ kernel(basis::FIRBasis, e) = firkernel(e, basis.times[1:end-1])
 times(basis::BasisFunction) = basis.times
 name(basis::BasisFunction) = basis.name
 
-StatsModels.width(basis::BasisFunction) = length(times(basis))
-height(basis::FIRBasis) = width(basis) - 1
+StatsModels.width(basis::BasisFunction) = height(basis) - 1
+height(basis::FIRBasis) = length(times(basis))
 
 StatsModels.width(basis::HRFBasis) = 1
 times(basis::HRFBasis) = NaN

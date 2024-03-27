@@ -556,7 +556,7 @@ function StatsModels.coefnames(term::TimeExpandedTerm)
     if typeof(terms) == String
         terms = [terms]
     end
-    return name .* " : " .* kron(terms .* " : ", string.(colnames))
+    return string(name) .* " : " .* kron(terms .* " : ", string.(colnames))
 end
 
 function StatsModels.termnames(term::TimeExpandedTerm)

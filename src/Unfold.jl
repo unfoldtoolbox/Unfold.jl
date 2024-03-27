@@ -25,7 +25,8 @@ import Term # prettiert output
 using OrderedCollections # for Base.Show
 import Term: vstack, Panel, tprint
 import Term: Tree  # to display Dicts
-#using PooledArrays
+using PooledArrays
+using TypedTables # DataFrames loose the pooled array, so we have to do it differently for now...
 
 #using Tullio
 #using BSplineKit # for spline predictors
@@ -37,9 +38,9 @@ import StatsBase: coef
 import StatsBase: fit!
 import StatsBase: coefnames
 import StatsBase: modelmatrix
+import StatsBase: predict
 import StatsModels: width
 import StatsModels: terms
-
 
 
 import StatsBase.quantile

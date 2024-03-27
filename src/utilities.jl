@@ -173,3 +173,6 @@ macro maybe_threads(multithreading, code)
         end
     ))
 end
+
+
+poolArray(x) = PooledArray(x; compress = true)

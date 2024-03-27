@@ -133,7 +133,7 @@ function StatsModels.fit!(
 
 
     if isa(uf, UnfoldLinearModel)
-        @assert length(times(uf)) == size(data, length(size(data)) - 1) "Times Vector does not match second last dimension of input data - forgot to cut into epochs?"
+        @assert length(times(uf)[1]) == size(data, length(size(data)) - 1) "Times Vector does not match second last dimension of input data - forgot to cut into epochs?"
     end
 
     X = modelmatrix(uf)

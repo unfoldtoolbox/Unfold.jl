@@ -26,7 +26,7 @@ StatsModels.coef(mf::LinearModelFit) = mf.estimate
 ) where {T <: UnfoldModel; ContinuousTimeTrait{T}}
     coefsRaw = get_coefnames(uf)
     coefs = extract_coef_info(coefsRaw, 2)
-    #colnames_basis_raw = get_colnames_basis(formulas(uf))# this is unconverted basisfunction basis,
+    #colnames_basis_raw = get_basis_colnames(formulas(uf))# this is unconverted basisfunction basis,
     colnames_basis = extract_coef_info(coefsRaw, 3) # this is converted to strings! 
     basisnames = extract_coef_info(coefsRaw, 1)
     @debug coefs
@@ -53,17 +53,20 @@ StatsModels.coef(mf::LinearModelFit) = mf.estimate
 
     designkeys = collect(first.(design(uf)))
     if design(uf) != [:empty => ()]
-        basiskeys = [b.name for b in last.(last.(design(uf)))]
+        basiskeys = [string(b.name) for b in last.(last.(design(uf)))]
 
         eventnames =
             Array{Union{eltype(designkeys),eltype(basiskeys)}}(undef, length(basisnames))
+        @debug basiskeys basisnames
         for (b, d) in zip(basiskeys, designkeys)
+
             eventnames[basisnames.==b] .= d
         end
     else
         @warn "No design found, falling back to basisnames instead of eventnames"
         eventnames = basisnames
     end
+    @debug eventnames, nchan
     eventnames_rep = permutedims(repeat(eventnames, 1, nchan), [2, 1])
 
     @debug "length before make_long_df" length(coefs_rep) length(chan_rep) length(
@@ -158,32 +161,32 @@ function make_estimate(uf::UnfoldModel)
 end
 
 # Return the column names of the basis functions.
-function get_colnames_basis(formula::FormulaTerm)
-    return get_colnames_basis(formula.rhs)
+function get_basis_colnames(formula::FormulaTerm)
+    return get_basis_colnames(formula.rhs)
 end
 
-function get_colnames_basis(rhs::Tuple)
+function get_basis_colnames(rhs::Tuple)
     return colnames(rhs[1].basisfunction)
 end
 
-function get_colnames_basis(rhs::AbstractTerm)
+function get_basis_colnames(rhs::AbstractTerm)
     return colnames(rhs.basisfunction)
 end
 
-function get_basis_name(m::UnfoldModel)
-    return extract_coef_info(Unfold.get_coefnames(m), 1)
-end
-function get_basis_name(rhs::AbstractTerm)
-    return name(rhs.basisfunction)
+@traitfn get_basis_names(m::T) where {T <: UnfoldModel; ContinuousTimeTrait{T}} =
+    get_basis_names.(formulas(m))
+function get_basis_names(m::FormulaTerm)
+    bf = m.rhs.basisfunction
+    #    @debug bf
+    return repeat([name(bf)] |> poolArray, width(m.rhs))
 end
 
-function get_colnames_basis(formulas::AbstractArray{<:FormulaTerm})
-    # In case of multiple basisfunction we can have an array of formulas.
-    # in that case we have to add an unique identifier
-    colnames_all = []
-    for formula in formulas
-        append!(colnames_all, get_colnames_basis(formula.rhs))
-    end
-    #get_colnames_basis_name(formula.rhs) .*
-    return colnames_all
-end
+
+
+"""
+    get_basis_colnames(m)
+    get_basis_colnames(formulas)
+returns list of colnames - e.g. times for firbasis.
+
+"""
+get_basis_colnames(formulas::AbstractArray{<:FormulaTerm}) = get_basis_colnames.(formula)

@@ -46,7 +46,12 @@ function effects(design::AbstractDict, model::T; typical = mean) where {T<:Unfol
 
     eff = predict(model, form_typical, reference_grids; overlap = false)
 
-    return predict_to_table(model, eff, form_typical, reference_grids)
+    return predict_to_table(
+        model,
+        eff,
+        select.(reference_grids, Ref(DataFrames.Not(:latency))),
+        eventnames(model),
+    )
 
 
 end
@@ -119,92 +124,3 @@ end
 # mixedModels case - just use the FixEff, ignore the ranefs
 Effects.typify(reference_grid, form, m::Tuple; typical) =
     typify(reference_grid, form, m[1]; typical)
-
-function cast_referenceGrid(r, eff::AbstractArray{T}, times; eventname = nothing) where {T}
-    @debug typeof(eff), typeof(r)
-    nchan = size(eff, 2) # correct
-    neff = size(r, 1) # how many effects requested
-    neffCol = size(r, 2) # how many predictors
-    ncols = size(eff, 1) ÷ neff # typically ntimes
-
-
-
-    # replicate
-    # for each predictor in r (reference grid), we need this at the bottom
-
-    if isnothing(eventname)
-        nbases = 1
-    else
-        nbases = length(unique(eventname))
-    end
-    coefs_rep = Array{Array}(undef, nbases, neffCol)
-
-
-    for k = 1:neffCol
-        # in case we have only a single basis (e.g. mass univariate), we can directly fill in all values
-        ixList = []
-        if isnothing(eventname)
-            ix = ones(ncols) .== 1.0
-            append!(ixList, [ix])
-        else
-            #in case of multiple bases, we have to do it iteratively, because the bases can be different length
-            for b in unique(eventname)
-                ix = eventname[1:neff:end] .== b
-                append!(ixList, [ix])
-            end
-        end
-        for i_ix = 1:length(ixList)
-
-            coefs_rep[i_ix, k] = linearize(
-                permutedims(
-                    repeat(r[:, k], outer = [1, nchan, sum(ixList[i_ix])]),
-                    [2, 3, 1],
-                ),
-            )
-        end
-    end
-
-    # often the "times" vector
-    if length(times) == neff * ncols
-        # in case we have timeexpanded, times is already in long format and doesnt need to be repeated for each coefficient
-        colnames_basis_rep = permutedims(repeat(times, 1, nchan, 1), [2 1 3])
-    else
-        colnames_basis_rep = permutedims(repeat(times, 1, nchan, neff), [2 1 3])
-    end
-
-    # for multiple channels
-    chan_rep = repeat(1:nchan, 1, ncols, neff)
-
-    # for mass univariate there is no eventname
-    if isnothing(eventname)
-        eventname = fill(nothing, ncols)
-        eventname_rep = permutedims(repeat(eventname, 1, nchan, neff), [2, 1, 3])
-    else
-        eventname_rep = permutedims(repeat(eventname, 1, nchan, 1), [2, 1, 3])
-    end
-
-
-    result = Dict(
-        :yhat => linearize(eff'),
-        :time => linearize(colnames_basis_rep),
-        :channel => linearize(chan_rep),
-        :eventname => linearize(eventname_rep),
-    )
-    #@debug size(coefs_rep), typeof(coefs_rep), size(coefs_rep[1, 1])
-    #@debug coefs_rep[1, 2][1:2]
-    for k = 1:neffCol
-        #@debug names(r)[k]
-        push!(result, Symbol(names(r)[k]) => reduce(vcat, coefs_rep[:, k]))
-    end
-
-    return result
-end
-
-#Effects._symequal(t1::AbstractTerm,t2::Unfold.TimeExpandedTerm) = _symequal(t1,t2.term)
-#function Effects._replace(matrix_term::MatrixTerm{<:Tuple{<:Unfold.TimeExpandedTerm}},typicals::Dict)
-
-#    replaced_term = MatrixTerm((Effects._replace.(matrix_term.terms, Ref(typicals))...,))
-#    basisfunctionTerm = getfield(matrix_term,:terms)[1]
-#    return TimeExpandedTerm(replaced_term,basisfunctionTerm.basisfunction,basisfunctionTerm.eventfields)
-
-#end
