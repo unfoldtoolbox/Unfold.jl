@@ -119,7 +119,7 @@ function Unfold.make_estimate(
         #@debug size(ranef_group)
         stderror = fill(nothing, size(estimate))
     end
-    group = cat(group_f, ranef_group, dims = ndims(coefs))
+    group = cat(group_f, ranef_group, dims = ndims(coefs)) |> Unfold.poolArray
     return Float64.(estimate), stderror, group
 end
 

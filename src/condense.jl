@@ -18,19 +18,26 @@ StatsModels.coef(uf::UnfoldModel) = coef(modelfit(uf))
 StatsModels.coef(mf::LinearModelFit) = mf.estimate
 
 
+#=
+function coeftable2(uf)
+    coefs = coef(uf)
+    ix = get_basis_indices.(Ref(uf), eventnames(uf))
 
-
+    # XXX stderror, group, coefname
+    coefs_views = [@view(coefs[:, i]) for i in ix]
+    XXX = DataFrame() # specify the coefficient dataframe somehow?! 
+    result_to_table(uf, coefs_views, XXX)
+end
+=#
 
 @traitfn function StatsModels.coeftable(
     uf::T,
 ) where {T <: UnfoldModel; ContinuousTimeTrait{T}}
-    coefsRaw = get_coefnames(uf)
-    coefs = extract_coef_info(coefsRaw, 2)
+    coefsRaw = get_coefnames(uf) |> poolArray
+    coefs = extract_coef_info(coefsRaw, 2) |> poolArray
     #colnames_basis_raw = get_basis_colnames(formulas(uf))# this is unconverted basisfunction basis,
-    colnames_basis = extract_coef_info(coefsRaw, 3) # this is converted to strings! 
-    basisnames = extract_coef_info(coefsRaw, 1)
-    @debug coefs
-    @debug colnames_basis
+    colnames_basis = extract_coef_info(coefsRaw, 3) |> poolArray # this is converted to strings! 
+    basisnames = extract_coef_info(coefsRaw, 1) |> poolArray
 
     nchan = size(coef(uf), 1)
 
@@ -47,7 +54,7 @@ StatsModels.coef(mf::LinearModelFit) = mf.estimate
     catch
         #do nothing
     end
-    chan_rep = repeat(1:nchan, 1, size(colnames_basis_rep, 2))
+    chan_rep = repeat((1:nchan) |> poolArray, 1, size(colnames_basis_rep, 2))
 
 
 
@@ -57,7 +64,7 @@ StatsModels.coef(mf::LinearModelFit) = mf.estimate
 
         eventnames =
             Array{Union{eltype(designkeys),eltype(basiskeys)}}(undef, length(basisnames))
-        @debug basiskeys basisnames
+
         for (b, d) in zip(basiskeys, designkeys)
 
             eventnames[basisnames.==b] .= d
@@ -66,14 +73,9 @@ StatsModels.coef(mf::LinearModelFit) = mf.estimate
         @warn "No design found, falling back to basisnames instead of eventnames"
         eventnames = basisnames
     end
-    @debug eventnames, nchan
-    eventnames_rep = permutedims(repeat(eventnames, 1, nchan), [2, 1])
 
-    @debug "length before make_long_df" length(coefs_rep) length(chan_rep) length(
-        eventnames_rep,
-    )
-    @debug nchan, size.(modelmatrices(designmatrix(uf)), 2), length(designkeys)
-
+    eventnames_rep = permutedims(repeat(eventnames |> poolArray, 1, nchan), [2, 1])
+    @debug typeof(coefs_rep) coefs_rep[1]
     return make_long_df(
         uf,
         coefs_rep,
@@ -134,7 +136,7 @@ function make_long_df(m, coefs, chans, colnames, eventnames, collabel)
 
     return DataFrame(
         Dict(
-            :coefname => String.(linearize(coefs)),
+            :coefname => String.(linearize(coefs)) |> poolArray,
             :channel => linearize(chans),
             :eventname => linearize(eventnames),
             collabel => linearize(colnames),
@@ -157,7 +159,7 @@ function stderror(m::LinearModelFit)
 end
 
 function make_estimate(uf::UnfoldModel)
-    return Float64.(coef(uf)), stderror(uf), fill(nothing, size(coef(uf)))
+    return Float64.(coef(uf)), stderror(uf), fill(nothing, size(coef(uf))) |> poolArray
 end
 
 # Return the column names of the basis functions.
@@ -190,3 +192,89 @@ returns list of colnames - e.g. times for firbasis.
 
 """
 get_basis_colnames(formulas::AbstractArray{<:FormulaTerm}) = get_basis_colnames.(formula)
+
+
+
+"""
+    result_to_table(model<:UnfoldModel, eff::AbstractArray, events::Vector{<:DataFrame})
+    result_to_table(
+        eff::AbstractArray,
+        events::Vector{<:DataFrame},
+        times::Vector{<:Vector{<:Number}},
+        eventnames::Vector)
+Converts an array-result (prediction or coefficient) together with the events, to a tidy dataframe
+"""
+result_to_table(model, eff::AbstractArray, events::Vector{<:DataFrame}) =
+    result_to_table(eff, events, times(model), eventnames(model))
+
+
+function result_to_table(
+    eff::AbstractArray,
+    events::Vector{<:DataFrame},
+    times::Vector,
+    eventnames::Vector,
+)
+    @assert length(eventnames) == length(events) == length(times)
+    times_vecs = repeat.(poolArray.(times), size.(events, 1))
+    # times_vecs = map((x, n) -> repeat(x, outer = n), poolArray.(times), size.(events, 1))
+    # init the meta dataframe
+    @debug typeof(times_vecs) size(times_vecs)
+    data_list = []
+    for (single_events, single_eff, single_times, single_eventname) in
+        zip(events, eff, times_vecs, eventnames)
+
+        #=
+        metadata = FlexTable(
+            time = single_times |> poolArray,
+            eventname = repeat([single_eventname] |> poolArray, length(single_times)),
+        ) # used to be DataFrames, but dataFrames looses type-information of pooledarray upon concatenation with vcat
+
+        for c in names(single_events)
+            setproperty!(
+                metadata,
+                Symbol(c),
+                Vector{eltype(single_events[1, c])}(undef, length(metadata.time)),
+            )
+            #metadata[:, c] .= single_events[1, c] # assign first element in order to have same column type
+        end
+        =#
+        #        @debug metadata.conditionA
+
+        ntimes = size(single_eff, 2)
+        evts_tbl = repeat(Table(single_events), inner = (ntimes))
+        time_event = Table(
+            time = single_times |> poolArray,
+            eventname = repeat([single_eventname] |> poolArray, length(single_times)),
+        )
+        @debug size(time_event) length(single_times) ntimes
+        metadata = Table(evts_tbl, time_event)
+
+        #metadata = repeat(metadata, ntimes)
+        #for c in names(single_events)
+        #    @debug c
+        #    for row = 1:size(single_events, 1)
+        #        rowIx = (1.0 .+ (row - 1) .* ntimes) .+ range(1.0, length = ntimes) .- 1
+        #        getproperty(metadata, Symbol(c))[Int64.(rowIx)] .= single_events[row, c]
+        #        #metadata[Int64.(rowIx),c] .= single_events[row, c]
+        #    end
+        #    @debug metadata.conditionA[end]
+        #end
+
+        single_data = Table(
+            yhat = single_eff[:],#vec(reshape(single_eff, :, 1)),
+            channel = repeat(
+                (1:size(single_eff, 1)) |> poolArray,
+                outer = size(single_eff, 2) * size(single_eff, 3),
+            ),
+        )
+
+        # single_data = hcat(single_data, repeat(metadata, size(single_eff, 1)))
+        @debug size(metadata) size(single_eff) size(single_data)
+        single_data_comb =
+            map(merge, single_data, repeat(metadata, inner = size(single_eff, 1)))
+        push!(data_list, single_data_comb)
+    end
+    return reduce(vcat, data_list) |> DataFrame
+
+
+end

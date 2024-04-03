@@ -26,7 +26,7 @@ yhat_tul = predict(m_tul, evts_grid)
 
 @test yhat_mul[1][1, :, :] ≈ yhat_tul[1][1, 1:20, :]
 
-Unfold.predict_to_table(m_mul, yhat_mul, [evts_grid])
+Unfold.result_to_table(m_mul, yhat_mul, [evts_grid])
 
 @test all(yhat_mul[1][:] .≈ mean(data[data.!=0]))
 @test all(yhat_tul[1][:] .≈ mean(data[data.!=0]))
@@ -80,7 +80,7 @@ p = predict(m_mul, DataFrame(:Cond => [1, 2, 3]))
 @test length(p) == 2
 @test size(p[2]) == (1, 20, 3)
 
-## predict_to_table
+## result_to_table
 data, evts = UnfoldSim.predef_eeg(; n_repeats = 5, noiselevel = 0.8)
 m = fit(
     UnfoldModel,
@@ -94,7 +94,7 @@ m = fit(
     show_progress = false,
 )
 p = predict(m; overlap = false)
-pt = Unfold.predict_to_table(m, p, repeat([evts], 2))
+pt = Unfold.result_to_table(m, p, repeat([evts], 2))
 
 @test all(pt[[1, 2, 3], :yhat] .== 0.293292)
 @test all(pt[[1, 2, 3], :channel] .== [1, 2, 3])

@@ -56,19 +56,39 @@ predict(uf::UnfoldModel, f::Vector, evts::DataFrame; kwargs...) =
 predict(uf::UnfoldModel; kwargs...) = predict(uf, formulas(uf), events(uf); kwargs...)
 predict(uf::UnfoldModel, f::Vector{<:FormulaTerm}; kwargs...) =
     predict(uf, f, events(uf); kwargs...)
-predict(uf::UnfoldModel, evts::DataFrame; overlap = false, kwargs...) =
+predict(uf::UnfoldModel, evts::Vector{<:DataFrame}; overlap = false, kwargs...) =
     predict(uf, Unfold.formulas(uf), evts; overlap, kwargs...)
 
 """
-function predict(
-    uf,
-    f::Vector{<:FormulaTerm},
-    evts::Vector{<:DataFrame};
-    overlap = true,
-    kwargs...
-)
+    function predict(
+        uf,
+        f::Vector{<:FormulaTerm},
+        evts::Vector{<:DataFrame};
+        overlap = true,
+        kwargs...
+    )
+Returns a predicted ("y_hat = X*b") `Array`. 
+
+- `uf` is an `<:UnfoldModel`
+- `f` is a (vector of) formulas, typically `Unfold.formulas(uf)`, but formulas can be modified e.g. by `effects`.
+- `evts` is a (vector of) events, can be `Unfold.events(uf)` to return the (possibly continuous-time) predictions of the model. Can be a custom even
 
 
+## kwargs:
+if `overlap = true` (default), overlap based on the `latency` column of 'evts` will be simulated, or in the case of `!ContinuousTimeTrait` just X*coef is returned. 
+if `overlap = false`, predict coefficients without overlap (models with `ContinuousTimeTrait` (=> with basisfunction / deconvolution) only), via `predict_no_overlap`
+
+if `keep_basis` or `exclude_basis` is defined, then `predict_partial_overkap` is called, which allows to selective introduce overlap based on specified (or excluded respective) events/basisfunctions
+
+`epoch_to` and  `epoch_timewindow` currently only defined for partial_overlap, calculated (partial) overlap controlled predictions, but returns them at the specified `epoch_at` event, with the times `epoch_timewindow` in samples
+
+Hint: all vectors can be "single" types, and will be containered in a vector
+
+## Output
+
+- If `overlap=false`, returns a 3D-Array
+- If `overlap=true` and `epoch_to=nothing` (default), returns a 2D-array
+- If `overlap=true` and `epoch_to!=nothing`, returns a 3D array
 """
 function predict(
     uf,
@@ -133,7 +153,7 @@ end
     if !isempty(keep_basis)
         basisnames = keep_basis
     else
-        basisnames = basisname(f)
+        basisnames = basisname(uf)
         basisnames = setdiff(basisnames, exclude_basis)
     end
 
@@ -228,7 +248,6 @@ Returns a view of the Matrix `y`, according to the indices of the timeexpanded `
 """
 function matrix_by_basisname(y::AbstractMatrix, uf, basisnames::Vector)
     ix = get_basis_indices(uf, basisnames)
-    #    @debug ix
     return @view(y[:, ix])
 end
 
@@ -249,258 +268,36 @@ returns a boolean vector with length spanning all coefficients, which coefficien
 """
 get_basis_indices(uf, basisnames::Vector) =
     reduce(vcat, Unfold.get_basis_names(uf)) .∈ Ref(basisnames)
+get_basis_indices(uf, basisname) = get_basis_indices(uf, [basisname])
 
-#predict_to_table(model, eff::AbstractArray, events::DataFrame) =
-#    predict_to_table(eff, repeat([events], length(formulas(model))), times(model))
-predict_to_table(model, eff::AbstractArray, events::Vector{<:DataFrame}) =
-    predict_to_table(eff, events, times(model), eventnames(model))
+"""
+    predict_table(model<:UnfoldModel,events=Unfold.events(model),args...;kwargs...)
+Shortcut to call efficiently call (pseudocode) `result_to_table(predict(...))`.
 
+Returns a tidy DataFrame with the predicted results. Loops all input to `predict`, but really only makes sense to use if you specify either:
+
+`overlap = false` or `epoch_to = "eventname"`.
+
+"""
+function predict_table(
+    model::UnfoldModel,
+    events = Unfold.events(model),
+    args...;
+    kwargs...,
+)
+    p = predict(model, Unfold.formulas(model), events, args...; kwargs...)
+    return result_to_table(model, p, events)
+end
 
 eventnames(model::UnfoldModel) = first.(design(model))
-function predict_to_table(
-    eff::AbstractArray,
-    events::Vector{<:DataFrame},
-    times::Vector{<:Vector{<:Number}},
-    eventnames::Vector,
-)
-    @assert length(eventnames) == length(events) == length(times)
-    times_vecs = repeat.(poolArray.(times), size.(events, 1))
-    # times_vecs = map((x, n) -> repeat(x, outer = n), poolArray.(times), size.(events, 1))
-    # init the meta dataframe
-    @debug typeof(times_vecs) size(times_vecs)
-    data_list = []
-    for (single_events, single_eff, single_times, single_eventname) in
-        zip(events, eff, times_vecs, eventnames)
-
-        #=
-        metadata = FlexTable(
-            time = single_times |> poolArray,
-            eventname = repeat([single_eventname] |> poolArray, length(single_times)),
-        ) # used to be DataFrames, but dataFrames looses type-information of pooledarray upon concatenation with vcat
-
-        for c in names(single_events)
-            setproperty!(
-                metadata,
-                Symbol(c),
-                Vector{eltype(single_events[1, c])}(undef, length(metadata.time)),
-            )
-            #metadata[:, c] .= single_events[1, c] # assign first element in order to have same column type
-        end
-        =#
-        #        @debug metadata.conditionA
-
-        ntimes = size(single_eff, 2)
-        evts_tbl = repeat(Table(single_events), inner = (ntimes))
-        time_event = Table(
-            time = single_times |> poolArray,
-            eventname = repeat([single_eventname] |> poolArray, length(single_times)),
-        )
-        @debug size(time_event) length(single_times) ntimes
-        metadata = Table(evts_tbl, time_event)
-
-        #metadata = repeat(metadata, ntimes)
-        #for c in names(single_events)
-        #    @debug c
-        #    for row = 1:size(single_events, 1)
-        #        rowIx = (1.0 .+ (row - 1) .* ntimes) .+ range(1.0, length = ntimes) .- 1
-        #        getproperty(metadata, Symbol(c))[Int64.(rowIx)] .= single_events[row, c]
-        #        #metadata[Int64.(rowIx),c] .= single_events[row, c]
-        #    end
-        #    @debug metadata.conditionA[end]
-        #end
-
-        single_data = Table(
-            yhat = single_eff[:],#vec(reshape(single_eff, :, 1)),
-            channel = repeat(
-                (1:size(single_eff, 1)) |> poolArray,
-                outer = size(single_eff, 2) * size(single_eff, 3),
-            ),
-        )
-
-        # single_data = hcat(single_data, repeat(metadata, size(single_eff, 1)))
-        @debug size(metadata) size(single_eff) size(single_data)
-        single_data_comb =
-            map(merge, single_data, repeat(metadata, inner = size(single_eff, 1)))
-        push!(data_list, single_data_comb)
-    end
-    return reduce(vcat, data_list) |> DataFrame
-
-
-end
-
-# in case the formula is not an array
-#predict(model::UnfoldModel,formulas::AbstractTerm) = predict(model,[formulas])
-
-
-#=
-# special case if one formula is defined but in an array => multiple events
-@traitfn function predict(
-    model::T,
-    formulas::AbstractArray,
-    singleevents::DataFrame,
-) where {T <: UnfoldModel; !ContinuousTimeTrait{T}}
-
-
-
-end
-=#
-
-#=
-predict(model::UnfoldLinearModel, formulas::FormulaTerm, singleevents::DataFrame) =
-    predict(model, formulas.rhs, singleevents)
-predict(model::UnfoldLinearModelContinuousTime, formulas::FormulaTerm, singleevents) =
-    predict(model, formulas.rhs, singleevents)
-
-=#
-
-#=
-@traitfn function predict(
-    model::T,
-    formulas::AbstractTerm,
-    singleevents,
-) where {T <: UnfoldModel; !ContinuousTimeTrait{T}}
-    @debug "Not ContinuousTime yhat, single Term"
-    X = modelcols(formulas, singleevents)
-    return predict(model, X)
-end
-=#
-#=
-@traitfn function predict(
-    m::T,
-    f::AbstractArray,
-    events,
-) where {T <: UnfoldModel; ContinuousTimeTrait{T}}
-    @debug f
-    predict(m, blockdiag(predict.(Ref(m), f, Ref(events))...))  #  blockdiag([Xsingle1,Xsingle2,Xsingle3]...)
-end
-
-@traitfn predict(
-    model::T,
-    f::MatrixTerm,
-    events,
-) where {T <: UnfoldModel; ContinuousTimeTrait{T}} = predict(m, f.terms, events) # terms[1] or not?!?
-
-@traitfn predict(
-    model::T,
-    f::FormulaTerm,
-    events,
-) where {T <: UnfoldModel; ContinuousTimeTrait{T}} = predict(m, f.rhs, events)
-
-=#
-
-#=
-@traitfn function predict(
-    model::T,
-    f::TimeExpandedTerm,
-    events,
-) where {T <: UnfoldModel; ContinuousTimeTrait{T}}
-
-    # find out how long each designmatrix is
-    n_range = length(times(f.basisfunction))
-    # find out how much to shift so that X[1,:] is the the first "sample"
-    n_negative = f.basisfunction.shift_onset
-    # generate the correct eventfields (default: latencies)
-    events = deepcopy(events)
-
-    events[:, f.eventfields[1]] =
-        range(-n_negative + 1, step = n_range, length = size(events, 1))
-    # get the model
-    Xsingle = modelcols(f, events)
-
-    timesSingle = times(f.basisfunction)
-
-    # this pertains only to FIR-models
-
-    # remove the last time-point because it is attached due to non-integer latency/eventonsets.
-    # e.g. x denotes a sample
-    # x- - -x- - -x- - -x
-    # e- - - -f- - - -g-
-    # 
-    # e is aligned (integer) with the sample
-    # f&g are between two samples, thus the design matrix would interpolate between them. Thus has as a result, that the designmatrix is +1 longer than what would naively be expected
-    #
-    # because in "predict" we define where samples onset, we can remove the last sample, it s always 0 anyway, but to be sure we test it
-
-    if typeof(f.basisfunction) <: FIRBasis
-        keep = ones(size(Xsingle, 1))
-        keep[range(length(timesSingle), size(Xsingle, 1), step = length(timesSingle))] .= 0
-        Xsingle = Xsingle[keep.==1, :]
-    end
-    return Xsingle
-    # don't include, via broadcast: append!(X, [Xsingle])
-end
-
-=#
-
-
-#=
-function predict(
-    model::UnfoldLinearModelContinuousTime,
-    X::AbstractArray{T,2};
-    times = nothing,
-) where {T<:Union{Missing,<:Number}}
-
-    #@debug size(X), size(coef(model))
-    #@debug typeof(X), typeof(coef(model))
-    yhat = X * coef(model)'
-    #coefs = coef(model)
-    #@tullio yhat[i, k] := X[i, j] * coefs[k, j]
-    return yhat
-
-end
-=#
-
-#=
-# kept for backwards compatability
-@traitfn predict(
-    model::U,
-    X::AbstractArray{T,2};
-    kwargs...,
-) where {T<:Union{Missing,<:Number},U<:UnfoldModel;!ContinuousTimeTrait{U}} =
-    predict(coef(model), X; kwargs...)
 
 
 
 
-#function yhat_mult(X::AbstractArray{T,2}, coef) where {T<:Number}
-#
-#    @tullio yhat[ch, a, b] := X[a, trial] * coef[ch, b, trial]
-#    return yhat
-# end
-function yhat_mult(X::AbstractArray{T,2}, coef) where {T<:Union{Missing,<:Number}}
-    yhat = Array{T}(undef, size(coef, 1), size(X, 1), size(coef, 2))
-    for ch = 1:size(coef, 1)
-        yhat[ch, :, :] .= X * permutedims(coef[ch, :, :], (2, 1))
-    end
-    return yhat
-end
-function predict(
-    coef::AbstractArray{T1,3},
-    X::AbstractArray{T2,2};
-    kwargs...,
-) where {T1<:Union{Missing,<:Number},T2<:Union{Missing,<:Number}}
-    # function that calculates coef*designmat, but in the ch x times x coef vector
-    # setup the output matrix, has to be a matrix
-    # then transforms it back to 2D matrix times/coef x ch to be compatible with the timecontinuous format
-    @debug "type X", typeof(X)
-
-    try
-
-        X = disallowmissing(X)
-
-    catch
-    end
-    yhat = yhat_mult(X, coef)
-
-
-    # bring the yhat into a ch x yhat format
-    yhat = reshape(permutedims(yhat, (1, 3, 2)), size(yhat, 1), :)
-    yhat = permutedims(yhat, (2, 1))
-    return yhat
-end
-
-=#
-
+"""
+    times(model<:UnfoldModel)
+returns arrays of time-vectors, one for each basisfunction / parallel-fitted-model (MassUnivarite case)
+"""
 @traitfn times(model::T) where {T <: UnfoldModel; !ContinuousTimeTrait{T}} =
     times(design(model))
 
@@ -525,27 +322,3 @@ function times(
     return all_times
 end
 
-
-
-
-#=
-@traitfn yhat_nranges(
-    model::T,
-    formulas::Array{<:FormulaTerm},
-    events,
-) where {T <: UnfoldModel; ContinuousTimeTrait{T}} =
-    yhat_nranges.(Ref(model), formulas, Ref(events)) # todo: add hcat? vcat? who knows
-
-
-@traitfn function yhat_nranges(
-    model::T,
-    f::FormulaTerm,
-    events,
-) where {T <: UnfoldModel; ContinuousTimeTrait{T}}
-    n_range = length(times(f.rhs.basisfunction))
-    if typeof(f.rhs.basisfunction) <: FIRBasis
-        n_range = n_range - 1
-    end
-    return range(1, step = n_range, length = size(events, 1))
-end
-=#
