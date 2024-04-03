@@ -46,7 +46,7 @@ function effects(design::AbstractDict, model::T; typical = mean) where {T<:Unfol
 
     eff = predict(model, form_typical, reference_grids; overlap = false)
 
-    return predict_to_table(
+    return result_to_table(
         eff,
         select.(reference_grids, Ref(DataFrames.Not(:latency))),
         times(model),

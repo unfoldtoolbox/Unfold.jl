@@ -1,12 +1,12 @@
 
 """
-    fit(type::UnfoldModel,d::Vector{Pair},tbl::DataFrame,data::Array)
-    fit(type::UnfoldModel,f::FormulaTerm,tbl::DataFrame,data::Array{T,3},times)
-    fit(type::UnfoldModel,f::FormulaTerm,tbl::DataFrame,data::Array{T,2},basisfunction::BasisFunction)
+    fit(type::UnfoldModel,d::Vector{Pair},tbl::AbstractDataFrame,data::Array)
+    fit(type::UnfoldModel,f::FormulaTerm,tbl::AbstractDataFrame,data::Array{T,3},times)
+    fit(type::UnfoldModel,f::FormulaTerm,tbl::AbstractDataFrame,data::Array{T,2},basisfunction::BasisFunction)
 
 Generates Designmatrix & fits model, either mass-univariate (one model per epoched-timepoint) or time-expanded (modeling linear overlap).
 
-- `eventcolumn` (Symbol/String, default :event) - the column in `tbl::DataFrame` to differentiate the basisfunctions as defined in `d::Vector{Pair}`
+- `eventcolumn` (Symbol/String, default :event) - the column in `tbl::AbstractDataFrame` to differentiate the basisfunctions as defined in `d::Vector{Pair}`
 - `show_progress` (Bool, default true) - show Progress via ProgressMeter
 
 If a `Vector[Pairs]` is provided, it has to have one of the following structures:
@@ -38,7 +38,7 @@ julia> model = fit(UnfoldModel,[Any=>(f,basisfunction],evts,data_r)
 function StatsModels.fit(
     UnfoldModelType::Type{T},
     f::FormulaTerm,
-    tbl::DataFrame,
+    tbl::AbstractDataFrame,
     data::AbstractArray,
     basisOrTimes::Union{BasisFunction,AbstractArray};
     kwargs...,
@@ -58,7 +58,7 @@ end
 function StatsModels.fit(
     UnfoldModelType::Type{<:UnfoldModel},
     design::Vector,
-    tbl::DataFrame,
+    tbl::AbstractDataFrame,
     data::AbstractArray{T};
     kwargs...,
 ) where {T}
@@ -89,7 +89,12 @@ function StatsModels.fit(
 end
 
 
-function StatsModels.fit(uf::UnfoldModel, tbl::DataFrame, data::AbstractArray; kwargs...)
+function StatsModels.fit(
+    uf::UnfoldModel,
+    tbl::AbstractDataFrame,
+    data::AbstractArray;
+    kwargs...,
+)
     @debug "adding desigmatrix!"
     designmatrix!(uf, tbl; kwargs...)
     fit!(uf, data; kwargs...)
