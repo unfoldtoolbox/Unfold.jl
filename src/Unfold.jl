@@ -1,5 +1,8 @@
 module Unfold
 
+using PyMNE # for clusterpermutation
+using MixedModelsPermutations
+
 using SparseArrays
 using StatsModels
 using StatsBase
