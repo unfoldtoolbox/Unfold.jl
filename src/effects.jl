@@ -39,19 +39,16 @@ function effects(design::AbstractDict, model::T; typical = mean) where {T<:Unfol
     #@debug "type form[1]", typeof(form[1])
 
     form_typical = _typify(T, reference_grid, form, m, typical)
+    @debug typeof(form_typical) typeof(form_typical[1])
 
-    form_typical = vec(form_typical)
+    #form_typical = vec(form_typical)
     reference_grids = repeat([reference_grid], length(form_typical))
 
-
     eff = predict(model, form_typical, reference_grids; overlap = false)
-
-    return result_to_table(
-        eff,
-        select.(reference_grids, Ref(DataFrames.Not(:latency))),
-        times(model),
-        eventnames(model),
-    )
+    if :latency ∈ unique(vcat(names.(reference_grids)...))
+        reference_grids = select.(reference_grids, Ref(DataFrames.Not(:latency)))
+    end
+    return result_to_table(eff, reference_grids, times(model), eventnames(model))
 
 
 end
@@ -107,17 +104,19 @@ end
 @traitfn function _typify(
     ::Type{UF},
     reference_grid,
-    form::AbstractArray{<:FormulaTerm},
+    form::AbstractArray{T},
     m::Vector,
     typical,
-) where {UF <: UnfoldModel; !ContinuousTimeTrait{UF}}
+) where {T<:FormulaTerm,UF<:UnfoldModel;!ContinuousTimeTrait{UF}}
     # Mass Univariate with multiple effects
     @debug "_typify going the mass univariate route - $(typeof(form))"
     @debug length(form), length(m), typeof(m)
-    out = []
+    out = FormulaTerm[]
     for k = 1:length(form)
-        push!(out, typify(reference_grid, form[k], m[k]; typical = typical))
+        tmpf = typify(reference_grid, form[k], m[k]; typical = typical)
+        push!(out, FormulaTerm(form[k].lhs, tmpf))
     end
+    @debug :_typify typeof(form)
     return out
 
 end

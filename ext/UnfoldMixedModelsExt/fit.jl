@@ -51,7 +51,7 @@ function StatsModels.fit!(
     #@assert length(first(values(design(uf)))[2])
     if uf isa UnfoldLinearMixedModel
         if ~isempty(Unfold.design(uf))
-            @assert length(Unfold.times(Unfold.design(uf))) ==
+            @assert length(Unfold.times(Unfold.design(uf))[1]) ==
                     size(data, length(size(data)) - 1) "Times Vector does not match second last dimension of input data - forgot to epoch, or misspecified 'time' vector?"
         end
     end
@@ -164,7 +164,8 @@ function MixedModels.ranef(
 end
 
 function reshape_lmm(uf::UnfoldLinearMixedModel, est)
-    ntime = length(Unfold.times(uf))
+    ntime = length(Unfold.times(uf)[1])
+    @debug ntime
     nchan = modelfit(uf).fits[end].channel
     return permutedims(reshape(est, :, ntime, nchan), [3 2 1])
 end

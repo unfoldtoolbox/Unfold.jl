@@ -317,7 +317,7 @@ function times(
     },
 )
     all_times = last.(last.(d)) #[k[2] for k in values(d)] # probably going for steprange would be better
-    @debug all_times
+    #    @debug all_times length(all_times) length.(all_times)
     @assert all(all_times .== all_times[1:1]) "all times need to be equal in a mass univariate model"
     return all_times
 end

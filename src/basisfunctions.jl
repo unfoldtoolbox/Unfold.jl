@@ -91,7 +91,7 @@ julia>  f(103.3)
 ```
 
 """
-function firbasis(τ, sfreq, name::String = "")
+function firbasis(τ, sfreq, name = "")
     τ = round_times(τ, sfreq)
     times = range(τ[1], stop = τ[2] + 1 ./ sfreq, step = 1 ./ sfreq) # stop + 1 step, because we support fractional event-timings
 
@@ -101,7 +101,8 @@ function firbasis(τ, sfreq, name::String = "")
 end
 # cant multiple dispatch on optional arguments
 #firbasis(;τ,sfreq)           = firbasis(τ,sfreq)
-firbasis(; τ, sfreq) = firbasis(τ, sfreq)
+firbasis(; τ, sfreq, name = "") = firbasis(τ, sfreq, name)
+
 
 
 """

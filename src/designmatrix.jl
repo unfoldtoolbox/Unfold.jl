@@ -235,11 +235,14 @@ timeexpand the rhs-term of the formula with the basisfunction
 
 """
 function apply_basisfunction(form, basisfunction::BasisFunction, eventfields, eventname)
-    @debug("apply_basisfunction")
+    @debug "apply_basisfunction" basisfunction.name eventname
     if basisfunction.name == ""
         basisfunction.name = eventname
-    elseif basisfunction.name != eventname
-        @error "since unfold 0.7 basisfunction names need to be equivalent to the event.name (or =\"\" for autofilling)."
+    elseif basisfunction.name != eventname && eventname != Any
+
+        error(
+            "since unfold 0.7 basisfunction names need to be equivalent to the event.name (or = \"\" for autofilling).",
+        )
     end
     return FormulaTerm(form.lhs, TimeExpandedTerm(form.rhs, basisfunction, eventfields))
 end

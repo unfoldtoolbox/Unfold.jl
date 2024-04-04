@@ -47,6 +47,7 @@
     )
 
 
+
     # with missing
     @time m_mum = fit(
         UnfoldModel,
@@ -67,7 +68,7 @@
 
     # Timexpanded Univariate Mixed
     f = @formula 0 ~ 1 + condA + condB + (1 + condA | subject)
-    basisfunction = firbasis(τ = (-0.2, 0.3), sfreq = 10, name = "ABC")
+    basisfunction = firbasis(τ = (-0.2, 0.3), sfreq = 10)
     @time m_tum = fit(
         UnfoldModel,
         f,
@@ -110,8 +111,8 @@
     f1_lmm = @formula 0 ~ 1 + condB + (1 | subject)
     f2_lmm = @formula 0 ~ 1 + condB + (1 | subjectB)
 
-    b1 = firbasis(τ = (-0.2, 0.3), sfreq = 10, name = "A")
-    b2 = firbasis(τ = (-0.1, 0.3), sfreq = 10, name = "B")
+    b1 = firbasis(τ = (-0.2, 0.3), sfreq = 10, name = 0)
+    b2 = firbasis(τ = (-0.1, 0.3), sfreq = 10, name = 1)
 
     ext = Base.get_extension(Unfold, :UnfoldMixedModelsExt)
     X1_lmm = designmatrix(ext.UnfoldLinearMixedModelContinuousTime, f1_lmm, evts1, b1)
@@ -149,8 +150,8 @@ end
     transform!(evts, :subject => categorical => :subject)
     data = vcat(data', data')
 
-    bA0 = firbasis(τ = (-0.0, 0.1), sfreq = 10, name = "bA0")
-    bA1 = firbasis(τ = (0.1, 0.2), sfreq = 10, name = "bA1")
+    bA0 = firbasis(τ = (-0.0, 0.1), sfreq = 10, name = 0)
+    bA1 = firbasis(τ = (0.1, 0.2), sfreq = 10, name = 1)
     evts.subject2 = evts.subject
     fA0 = @formula 0 ~ 1 + condB + zerocorr(1 | subject)
     fA1 = @formula 0 ~ 1 + condB + zerocorr(1 | subject2)

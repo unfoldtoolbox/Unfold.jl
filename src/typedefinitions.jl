@@ -102,7 +102,7 @@ UnfoldLinearModel{T}(d::Vector{<:Pair}, X::AbstractDesignMatrix) where {T} =
     UnfoldLinearModel{T}(d, [X])
 # no modelfit
 UnfoldLinearModel{T}(d::Vector{<:Pair}, X::Vector{<:AbstractDesignMatrix{T}}) where {T} =
-    UnfoldLinearModel{T}(d, X, LinearModelFit(Array{T,3}(undef, 0, 0, 0)))
+    UnfoldLinearModel{T}(deepcopy(d), X, LinearModelFit(Array{T,3}(undef, 0, 0, 0)))
 
 
 
@@ -138,8 +138,11 @@ UnfoldLinearModelContinuousTime{T}(d::Vector{<:Pair}, X::AbstractDesignMatrix) w
 UnfoldLinearModelContinuousTime{T}(
     d::Vector{<:Pair},
     X::Vector{<:AbstractDesignMatrix{T}},
-) where {T} =
-    UnfoldLinearModelContinuousTime{T}(d, X, LinearModelFit(Array{T,2}(undef, 0, 0)))
+) where {T} = UnfoldLinearModelContinuousTime{T}(
+    deepcopy(d),
+    X,
+    LinearModelFit(Array{T,2}(undef, 0, 0)),
+)
 
 #----
 # Traits definitions

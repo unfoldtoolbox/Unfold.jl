@@ -20,7 +20,7 @@ data_e, times = Unfold.epoch(data = data_r, tbl = evts, τ = (-1.0, 1.9), sfreq 
     @test eltype(coef(uf)) == Float16
 
     # continuos case
-    basisfunction = firbasis(τ = (-1, 1), sfreq = 20, name = "basisA")
+    basisfunction = firbasis(τ = (-1, 1), sfreq = 20)
     uf = fit(UnfoldModel, [Any => (f, basisfunction)], evts_nomiss, Float32.(data_r))
     @test typeof(uf) == UnfoldLinearModelContinuousTime{Float32}
     @test eltype(coef(uf)) == Float32
@@ -42,7 +42,7 @@ end
     evts_local = deepcopy(evts)
     evts_local.type .= repeat(["A", "B"], nrow(evts) ÷ 2)
 
-    uf = fit(UnfoldModel, Dict("A" => (f, times)), evts_local, data_e; eventcolumn = "type")
+    uf = fit(UnfoldModel, ["A" => (f, times)], evts_local, data_e; eventcolumn = "type")
     @test size(coef(uf)) == (2, 59, 3)
     uf_2events = fit(
         UnfoldModel,
@@ -67,23 +67,20 @@ end
     @test Unfold.design_to_modeltype([Any => (@formula(0 ~ 1 + A), 0:10)]) ==
           UnfoldLinearModel
     @test Unfold.design_to_modeltype([
-        Any => (@formula(0 ~ 1 + A), firbasis(τ = (-1, 1), sfreq = 20, name = "basisA")),
+        Any => (@formula(0 ~ 1 + A), firbasis(τ = (-1, 1), sfreq = 20)),
     ],) == UnfoldLinearModelContinuousTime
 
     ext = Base.get_extension(Unfold, :UnfoldMixedModelsExt)
     @test Unfold.design_to_modeltype([Any => (@formula(0 ~ 1 + (1 | test)), 0:10)]) ==
           ext.UnfoldLinearMixedModel
     @test Unfold.design_to_modeltype([
-        Any => (
-            @formula(0 ~ 1 + (1 | test)),
-            firbasis(τ = (-1, 1), sfreq = 20, name = "basisA"),
-        ),
+        Any => (@formula(0 ~ 1 + (1 | test)), firbasis(τ = (-1, 1), sfreq = 20)),
     ],) == ext.UnfoldLinearMixedModelContinuousTime
 end
 
 @testset "Bad Input" begin
     # check that if UnfoldLinearModel or UnfoldLinearModelContinuousTime is defined, that the design is appropriate
-    basisfunction = firbasis(τ = (-1, 1), sfreq = 20, name = "basisA")
+    basisfunction = firbasis(τ = (-1, 1), sfreq = 20)
     @test_throws "AssertionError" fit(
         UnfoldLinearModel,
         [Any => (@formula(0 ~ 1), basisfunction)],
@@ -174,7 +171,7 @@ end
 #---------------------------------#
 ## Timexpanded Univariate Linear ##
 #---------------------------------#
-basisfunction = firbasis(τ = (-1, 1), sfreq = 20, name = "basisA")
+basisfunction = firbasis(τ = (-1, 1), sfreq = 20)
 
 @testset "timeexpanded univariate linear+missings" begin
 
@@ -201,8 +198,8 @@ basisfunction = firbasis(τ = (-1, 1), sfreq = 20, name = "basisA")
 
 
     ## Test multiple basisfunctions
-    b1 = firbasis(τ = (-1, 1), sfreq = 20, name = "basisA")
-    b2 = firbasis(τ = (-1, 1), sfreq = 20, name = "basisB")
+    b1 = firbasis(τ = (-1, 1), sfreq = 20)
+    b2 = firbasis(τ = (-1, 1), sfreq = 20)
 
     f1 = @formula 0 ~ 1 + continuousA # 1
     f2 = @formula 0 ~ 1 + continuousA # 1
@@ -211,7 +208,7 @@ basisfunction = firbasis(τ = (-1, 1), sfreq = 20, name = "basisA")
     res = coeftable(
         fit(
             UnfoldModel,
-            Dict(0 => (f1, b1), 1 => (f2, b2)),
+            [0 => (f1, b1), 1 => (f2, b2)],
             evts,
             data_r,
             eventcolumn = "conditionA",

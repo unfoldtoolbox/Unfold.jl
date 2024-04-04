@@ -60,7 +60,7 @@ UnfoldLinearMixedModel{T}(d::Vector) where {T} = UnfoldLinearMixedModel{T}(
     UnfoldLinearMixedModelFit{T,3}(),
 )
 UnfoldLinearMixedModel{T}(d::Vector, X::Vector{<:AbstractDesignMatrix}) where {T} =
-    UnfoldLinearMixedModel{T}(d, X, DataFrame())
+    UnfoldLinearMixedModel{T}(deepcopy(d), X, DataFrame())
 
 
 """
@@ -89,11 +89,16 @@ UnfoldLinearMixedModelContinuousTime{T}(d::Vector) where {T} =
         [DesignMatrixLinearMixedModelContinuousTime{T}()],
         UnfoldLinearMixedModelFit{T,2}(),
     )
+
+# empty modelfit
 UnfoldLinearMixedModelContinuousTime{T}(
     d::Vector{<:Pair},
     X::Vector{<:AbstractDesignMatrix{T}},
-) where {T} =
-    UnfoldLinearMixedModelContinuousTime{T}(d, X, UnfoldLinearMixedModelFit{T,2}())
+) where {T} = UnfoldLinearMixedModelContinuousTime{T}(
+    deepcopy(d),
+    X,
+    UnfoldLinearMixedModelFit{T,2}(),
+)
 
 
 @traitimpl Unfold.ContinuousTimeTrait{UnfoldLinearMixedModelContinuousTime}
