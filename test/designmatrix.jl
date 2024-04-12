@@ -120,11 +120,11 @@ end
     f2 = @formula 0 ~ 1 + (1 | itemB)
 
     form = apply_schema(f1, schema(f1, tbl1), MixedModels.LinearMixedModel)
-    form = Unfold.apply_basisfunction(form, bf1, nothing)
+    form = Unfold.apply_basisfunction(form, bf1, nothing, Any)
     X1 = modelcols.(form.rhs, Ref(tbl1))
 
     form = apply_schema(f2, schema(f2, tbl2), MixedModels.LinearMixedModel)
-    form = Unfold.apply_basisfunction(form, bf2, nothing)
+    form = Unfold.apply_basisfunction(form, bf2, nothing, Any)
     X2 = modelcols.(form.rhs, Ref(tbl2))
 
     # no missmatch, shouldnt change anything then
@@ -136,31 +136,31 @@ end
         ext = Base.get_extension(Unfold, :UnfoldMixedModelsExt)
     end
     ext.equalize_ReMat_lengths!(X)
-    @test all([x[1] for x in size.(X)] .== 48)
+    @test all([x[1] for x in size.(X)] .== 47)
 
     X = (deepcopy(X1[2:end])..., deepcopy(X2[2:end])...)
-    @test !all([x[1] for x in size.(X)] .== 49) # not alllenghts the same
+    @test !all([x[1] for x in size.(X)] .== 48) # not alllenghts the same
     ext.equalize_ReMat_lengths!(X)
-    @test all([x[1] for x in size.(X)] .== 49) # now all lengths the same :-)
+    @test all([x[1] for x in size.(X)] .== 48) # now all lengths the same :-)
 
 
     X = deepcopy(X2[2])
 
-    @test size(X)[1] == 49
+    @test size(X)[1] == 48
     ext.change_ReMat_size!(X, 52)
     @test size(X)[1] == 52
 
     X = deepcopy(X2[2])
-    @test size(X)[1] == 49
+    @test size(X)[1] == 48
     ext.change_ReMat_size!(X, 40)
     @test size(X)[1] == 40
 
 
     X = (deepcopy(X1)..., deepcopy(X2[2:end])...)
-    @test size(X[1])[1] == 48
-    @test size(X[2])[1] == 48
-    @test size(X[3])[1] == 48
-    @test size(X[4])[1] == 49
+    @test size(X[1])[1] == 47
+    @test size(X[2])[1] == 47
+    @test size(X[3])[1] == 47
+    @test size(X[4])[1] == 48
     XA, XB = ext.change_modelmatrix_size!(52, X[1], X[2:end])
     @test size(XA)[1] == 52
     @test size(XB)[1] == 52

@@ -37,15 +37,18 @@ mutable struct FIRBasis <: BasisFunction
     name::Any
     "by how many samples do we need to shift the event onsets? This number is determined by how many 'negative' timepoints the basisfunction defines"
     shift_onset::Int64
+    "should we linearly interpolate events not on full samples?"
+    interpolate::Bool
 end
-
+# default dont interpolate
+FIRBasis(times, name, shift_onset) = FIRBasis(times, name, shift_onset, false)
 @deprecate FIRBasis(kernel::Function, times, name, shift_onset) FIRBasis(
     times,
     name,
     shift_onset,
 )
 collabel(basis::FIRBasis) = :time
-colnames(basis::FIRBasis) = basis.times[1:end-1]
+colnames(basis::FIRBasis) = basis.interpolate ? basis.times[1:end-1] : basis.times[1:end]
 
 
 mutable struct SplineBasis <: BasisFunction
@@ -80,6 +83,9 @@ end
 $(SIGNATURES)
 Generate a sparse FIR basis around the *τ* timevector at sampling rate *sfreq*. This is useful if you cannot make any assumptions on the shape of the event responses. If unrounded events are supplied, they are split between samples. E.g. event-latency = 1.2 will result in a "0.8" and a "0.2" entry.
 
+# keyword arguments
+`interpolate` (Bool, default false): if true, interpolates events between samples linearly. This results in `predict` functions to return a trailling 0
+
 # Examples
 Generate a FIR basis function from -0.1s to 0.3s at 100Hz
 ```julia-repl
@@ -91,17 +97,22 @@ julia>  f(103.3)
 ```
 
 """
-function firbasis(τ, sfreq, name = "")
+function firbasis(τ, sfreq, name = ""; interpolate = false)
     τ = round_times(τ, sfreq)
-    times = range(τ[1], stop = τ[2] + 1 ./ sfreq, step = 1 ./ sfreq) # stop + 1 step, because we support fractional event-timings
+    if interpolate
+        # stop + 1 step, because we support fractional event-timings
+        τ = (τ[1], τ[2] + 1 ./ sfreq)
+    end
+    times = range(τ[1], stop = τ[2], step = 1 ./ sfreq)
 
     shift_onset = Int64(floor(τ[1] * sfreq))
 
-    return FIRBasis(times, name, shift_onset)
+    return FIRBasis(times, name, shift_onset, interpolate)
+
 end
 # cant multiple dispatch on optional arguments
 #firbasis(;τ,sfreq)           = firbasis(τ,sfreq)
-firbasis(; τ, sfreq, name = "") = firbasis(τ, sfreq, name)
+firbasis(; τ, sfreq, name = "", kwargs...) = firbasis(τ, sfreq, name; kwargs...)
 
 
 
@@ -114,25 +125,27 @@ Calculate a sparse firbasis
 julia>  f = firkernel(103.3,range(-0.1,step=0.01,stop=0.31))
 ```
 """
-function firkernel(e, times)
+function firkernel(e, times; interpolate = false)
     @assert ndims(e) <= 1 #either single onset or a row vector where we will take the first one :)
     if size(e, 1) > 1
         # XXX we will soon assume that the second entry would be the duration
         e = Float64(e[1])
     end
-    eboth = [1 .- (e .% 1) e .% 1]
-    eboth[isapprox.(eboth, 0, atol = 1e-15)] .= 0
     ksize = length(times) # kernelsize
+    if interpolate
+        eboth = [1 .- (e .% 1) e .% 1]
+        eboth[isapprox.(eboth, 0, atol = 1e-15)] .= 0
+        return spdiagm(
+            ksize + 1,
+            ksize,
+            0 => repeat([eboth[1]], ksize),
+            -1 => repeat([eboth[2]], ksize),
+        )
+    else
+        #eboth = Int(round(e))
+        return spdiagm(ksize, ksize, 0 => repeat([1], ksize))
+    end
 
-    kernel = spdiagm(
-        ksize + 1,
-        ksize,
-        0 => repeat([eboth[1]], ksize),
-        -1 => repeat([eboth[2]], ksize),
-    )
-
-    #    dropzeros!(kernel) # we often get implicit 0, especially if the latencies are rounded
-    return (kernel)
 
 end
 
@@ -207,12 +220,15 @@ kernel(basis::BasisFunction, e) = basis.kernel(e)
 
 basisname(fs::Vector{<:FormulaTerm}) = [name(f.rhs.basisfunction) for f in fs]
 
-kernel(basis::FIRBasis, e) = firkernel(e, basis.times[1:end-1])
+kernel(basis::FIRBasis, e) =
+    basis.interpolate ? firkernel(e, basis.times[1:end-1]; interpolate = true) :
+    firkernel(e, basis.times; interpolate = false)
 
 times(basis::BasisFunction) = basis.times
 name(basis::BasisFunction) = basis.name
 
-StatsModels.width(basis::BasisFunction) = height(basis) - 1
+StatsModels.width(basis::BasisFunction) = height(basis)
+StatsModels.width(basis::FIRBasis) = basis.interpolate ? height(basis) - 1 : height(basis)
 height(basis::FIRBasis) = length(times(basis))
 
 StatsModels.width(basis::HRFBasis) = 1

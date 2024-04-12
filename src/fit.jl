@@ -145,34 +145,34 @@ function StatsModels.fit!(
 
 
     if isa(uf, UnfoldLinearModel)
+
         d = designmatrix(uf)
 
-        if isa(X, Vector)
-            # mass univariate with multiple events fitted at the same time
+        # mass univariate with multiple events fitted at the same time
 
-            coefs = []
-            for m = 1:length(X)
-                # the main issue is, that the designmatrices are subsets of the event table - we have 
-                # to do the same for the data, but data and designmatrix dont know much about each other.
-                # Thus we use parentindices() to get the original indices of the @view events[...] from desigmatrix.jl
-                push!(coefs, solver(X[m], @view data[:, :, parentindices(events(d)[m])[1]]))
-            end
-            @debug [size(c.estimate) for c in coefs]
-            uf.modelfit = LinearModelFit{T,3}(
-                cat([c.estimate for c in coefs]..., dims = 3),
-                [c.info for c in coefs],
-                cat([c.standarderror for c in coefs]..., dims = 3),
-            )
-            return # we are done here
-
-        elseif isa(d.events, SubDataFrame)
-            # in case the user specified an event to subset (and not any) we have to use the view from now on
-            data = @view data[:, :, parentindices(d.events)[1]]
+        coefs = []
+        for m = 1:length(X)
+            # the main issue is, that the designmatrices are subsets of the event table - we have 
+            # to do the same for the data, but data and designmatrix dont know much about each other.
+            # Thus we use parentindices() to get the original indices of the @view events[...] from desigmatrix.jl
+            @debug typeof(X) typeof(events(d)[m])
+            push!(coefs, solver(X[m], @view data[:, :, parentindices(events(d)[m])[1]]))
         end
+        @debug [size(c.estimate) for c in coefs]
+        uf.modelfit = LinearModelFit{T,3}(
+            cat([c.estimate for c in coefs]..., dims = 3),
+            [c.info for c in coefs],
+            cat([c.standarderror for c in coefs]..., dims = 3),
+        )
+        return # we are done here
+
+        #        elseif isa(d.events, SubDataFrame)
+        # in case the user specified an event to subset (and not any) we have to use the view from now on
+        #            data = @view data[:, :, parentindices(d.events)[1]]
+        #        end
     end
 
 
-    # mass univariate, data = ch x times x epochs
     X, data = equalize_size(X, data)
     @debug typeof(uf.modelfit), typeof(T), typeof(X), typeof(data)
     uf.modelfit = solver(X, data)

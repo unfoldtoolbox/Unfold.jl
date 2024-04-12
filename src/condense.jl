@@ -204,12 +204,21 @@ get_basis_colnames(formulas::AbstractArray{<:FormulaTerm}) = get_basis_colnames.
         eventnames::Vector)
 Converts an array-result (prediction or coefficient) together with the events, to a tidy dataframe
 """
-result_to_table(model, eff::AbstractArray, events::Vector{<:DataFrame}) =
+result_to_table(model, eff, events::Vector{<:DataFrame}) =
     result_to_table(eff, events, times(model), eventnames(model))
 
-
+# Array directly without in Vector
 function result_to_table(
-    eff::AbstractArray,
+    eff::AbstractArray{<:Union{Number,Missing}},
+    events::Vector,
+    times::Vector,
+    eventnames,
+)
+    1 == length(times) == length(events)
+    result_to_table([eff], events, times, eventnames)
+end
+function result_to_table(
+    eff::Vector{<:AbstractArray},
     events::Vector{<:DataFrame},
     times::Vector,
     eventnames::Vector,
@@ -222,24 +231,7 @@ function result_to_table(
     data_list = []
     for (single_events, single_eff, single_times, single_eventname) in
         zip(events, eff, times_vecs, eventnames)
-
-        #=
-        metadata = FlexTable(
-            time = single_times |> poolArray,
-            eventname = repeat([single_eventname] |> poolArray, length(single_times)),
-        ) # used to be DataFrames, but dataFrames looses type-information of pooledarray upon concatenation with vcat
-
-        for c in names(single_events)
-            setproperty!(
-                metadata,
-                Symbol(c),
-                Vector{eltype(single_events[1, c])}(undef, length(metadata.time)),
-            )
-            #metadata[:, c] .= single_events[1, c] # assign first element in order to have same column type
-        end
-        =#
-        #        @debug metadata.conditionA
-
+        @debug typeof(eff)
         ntimes = size(single_eff, 2)
         evts_tbl = repeat(Table(single_events), inner = (ntimes))
         time_event = Table(
@@ -248,17 +240,6 @@ function result_to_table(
         )
         @debug size(time_event) length(single_times) ntimes
         metadata = Table(evts_tbl, time_event)
-
-        #metadata = repeat(metadata, ntimes)
-        #for c in names(single_events)
-        #    @debug c
-        #    for row = 1:size(single_events, 1)
-        #        rowIx = (1.0 .+ (row - 1) .* ntimes) .+ range(1.0, length = ntimes) .- 1
-        #        getproperty(metadata, Symbol(c))[Int64.(rowIx)] .= single_events[row, c]
-        #        #metadata[Int64.(rowIx),c] .= single_events[row, c]
-        #    end
-        #    @debug metadata.conditionA[end]
-        #end
 
         single_data = Table(
             yhat = single_eff[:],#vec(reshape(single_eff, :, 1)),
@@ -274,7 +255,7 @@ function result_to_table(
             map(merge, single_data, repeat(metadata, inner = size(single_eff, 1)))
         push!(data_list, single_data_comb)
     end
-    return reduce(vcat, data_list) |> DataFrame
+    return reduce(vcat, data_list) |> t -> DataFrame(columns(t))
 
 
 end

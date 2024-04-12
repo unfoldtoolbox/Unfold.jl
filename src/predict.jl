@@ -10,6 +10,15 @@ using DocStringExtensions: format
 #predict(X::AbstractMatrix, coefs::AbstractMatrix) = coefs * X'
 predict(X::AbstractMatrix, coefs::AbstractMatrix) = (X * coefs')'
 
+# MassUnivariate Model, we have to extract the coefficients per designmatrix
+function predict(X::Vector{<:AbstractMatrix}, coefs::AbstractArray{T,3}) where {T}
+    len = size.(X, 2)
+
+    @assert length(unique(len)) == 1 "all designmatrices need to be the same size in this case"
+    coefs_views = [@view(coefs[:, :, (i-1)*len[1]+1:i*len[1]]) for i = 1:length(len)]
+    predict.(X, coefs_views)
+end
+
 # 3D-case
 function predict(
     X::AbstractMatrix,
@@ -59,6 +68,14 @@ predict(uf::UnfoldModel, f::Vector{<:FormulaTerm}; kwargs...) =
 predict(uf::UnfoldModel, evts::Vector{<:DataFrame}; overlap = false, kwargs...) =
     predict(uf, Unfold.formulas(uf), evts; overlap, kwargs...)
 
+predict(uf::UnfoldModel, evts::DataFrame; overlap = false, kwargs...) = predict(
+    uf,
+    Unfold.formulas(uf),
+    repeat([evts], length(Unfold.formulas(uf)));
+    overlap,
+    kwargs...,
+)
+
 """
     function predict(
         uf,
@@ -80,7 +97,8 @@ if `overlap = false`, predict coefficients without overlap (models with `Continu
 
 if `keep_basis` or `exclude_basis` is defined, then `predict_partial_overkap` is called, which allows to selective introduce overlap based on specified (or excluded respective) events/basisfunctions
 
-`epoch_to` and  `epoch_timewindow` currently only defined for partial_overlap, calculated (partial) overlap controlled predictions, but returns them at the specified `epoch_at` event, with the times `epoch_timewindow` in samples
+`epoch_to` and  `epoch_timewindow` currently only defined for partial_overlap, calculated (partial) overlap controlled predictions, but returns them at the specified `epoch_at` event, with the times `epoch_timewindow` in samples.
+`eventcolumn` can be specified as well if different from the default `event`
 
 Hint: all vectors can be "single" types, and will be containered in a vector
 
@@ -99,6 +117,7 @@ function predict(
     exclude_basis = [],
     epoch_to = nothing,
     epoch_timewindow = nothing,
+    kwargs...,
     #eventcolumn = :event,
 )
     @assert !(!isempty(keep_basis) & !isempty(exclude_basis)) "choose either to keep events, or to exclude, but not both"
@@ -118,6 +137,7 @@ function predict(
                 # predict of new data-table with a latency column. First generate new designmatrix, then off-the-shelf X*b predict
                 @assert length(f) == length(evts) "please provide the same amount of formulas (currently $(length(f)) as event-dataframes (currently $(length(evts)))"
                 X_new = modelcols.(f, evts) |> Unfold.extend_to_larger
+                @debug typeof(X_new) typeof(modelcols.(f, evts))
                 return predict(X_new, coefs)
             end
         else
@@ -129,6 +149,7 @@ function predict(
                 exclude_basis,
                 epoch_to,
                 epoch_timewindow,
+                kwargs...,
             )
         end
     else
@@ -138,6 +159,12 @@ function predict(
         return predict_no_overlap(uf, coefs, f, evts)
     end
 end
+@traitfn predict_partial_overlap(
+    uf::T,
+    args;
+    kwargs...,
+) where {T <: UnfoldModel; !ContinuousTimeTrait{T}} =
+    error("can't have partial overlap without Timecontinuous model")
 
 @traitfn function predict_partial_overlap(
     uf::T,
@@ -147,8 +174,9 @@ end
     exclude_basis = [],
     epoch_to = nothing,
     epoch_timewindow = nothing,
+    eventcolumn = :event,
 ) where {T <: UnfoldModel; ContinuousTimeTrait{T}}
-    @assert !isempty(keep_basis) & !isempty(exclude_basis) "can't have no overlap & specify keep/exclude at the same time. decide for either case"
+    @assert !(!isempty(keep_basis) & !isempty(exclude_basis)) "can't have no overlap & specify keep/exclude at the same time. decide for either case"
     # Partial overlap! we reconstruct with some basisfunctions deactivated
     if !isempty(keep_basis)
         basisnames = keep_basis
@@ -156,20 +184,23 @@ end
         basisnames = basisname(uf)
         basisnames = setdiff(basisnames, exclude_basis)
     end
-
-    X_view = matrix_by_basisname(modelmatrix(uf), uf, basisname)
-    coefs_view = matrix_by_basisname(coefs, uf, basisname)
+    @debug basisname
+    X_view = matrix_by_basisname(modelmatrix(uf), uf, basisnames)
+    coefs_view = matrix_by_basisname(coefs, uf, basisnames)
 
 
     if isnothing(epoch_to)
         return predict(X_view, coefs_view)
 
     else
+        @debug typeof(evts)
         timewindow =
             isnothing(epoch_timewindow) ? calc_epoch_timewindow(uf, epoch_to) :
             epoch_timewindow
-        ix_event = basisname .== epoch_to
-        latencies = evts[ix_event].latency
+        find_lat = x -> x[x[:, eventcolumn].==epoch_to, :latency]
+        latencies = vcat(find_lat.(evts)...)
+        #ix_event = vcat(evts...)[:, eventcolumn] .== epoch_to
+        #latencies = evts[ix_event].latency
         return predict(X_view, coefs_view, latencies, (timewindow[1], timewindow[end]);)
     end
 
@@ -202,7 +233,9 @@ end
     evts::Vector,
 ) where {T <: UnfoldModel; ContinuousTimeTrait{T}}
 
+    has_missings = false
     yhat = Array{eltype(coefs)}[]
+    @debug eltype(coefs) typeof(yhat)
     for (fi, e) in zip(f, evts)
 
         e.latency .= sum(times(fi) .<= 0)
@@ -234,13 +267,46 @@ end
 
         for ev = 1:length(X_singles)
             p = predict(X_singles[ev], coefs_view)
+            if has_missings || isa(p, AbstractArray{<:Union{<:Missing,<:Number}})
+                # if outside range predictions happen for spline predictors, we have to allow missings
+                @debug "yeah, missings..."
+                has_missings = true
+                yhat_single = allowmissing(yhat_single)
+            end
             yhat_single[:, :, ev] .= p
         end
-        #@debug yhat_single
-        push!(yhat, yhat_single)
+
+
+        yhat = combine_yhat!(yhat, yhat_single)
 
     end
+
+    @debug typeof(yhat) typeof.(yhat)
+    @debug typeof(vcat(yhat))
     return yhat
+end
+
+
+
+"""
+    combine_yhat(list,single)
+combines single into list, if either list or single contains missing, automatically casts the respective counter-part to allow missings as well
+"""
+function combine_yhat!(yhat::Vector{<:Array{T}}, yhat_single::Array{T}) where {T}
+    @debug typeof(yhat) typeof.(yhat) typeof(yhat_single)
+    push!(yhat, yhat_single)
+end
+combine_yhat!(yhat::Vector{Array{Union{Missing,<:Number}}}, yhat_single) =
+    push!(yhat, allowmissing(yhat_single))
+function combine_yhat!(
+    yhat::Vector{<:Array{<:Number}},
+    yhat_single::Array{T},
+) where {T<:Union{Missing,<:Number}}
+    @debug "new yhat"
+    yhat_new = Array{T}[]
+    combine_yhat!.(Ref(yhat_new), yhat)
+    combine_yhat!(yhat_new, yhat_single)
+
 end
 
 """
@@ -271,24 +337,32 @@ get_basis_indices(uf, basisnames::Vector) =
 get_basis_indices(uf, basisname) = get_basis_indices(uf, [basisname])
 
 """
-    predict_table(model<:UnfoldModel,events=Unfold.events(model),args...;kwargs...)
+    predicttable(model<:UnfoldModel,events=Unfold.events(model),args...;kwargs...)
 Shortcut to call efficiently call (pseudocode) `result_to_table(predict(...))`.
 
 Returns a tidy DataFrame with the predicted results. Loops all input to `predict`, but really only makes sense to use if you specify either:
 
-`overlap = false` or `epoch_to = "eventname"`.
+`overlap = false` (the default) or `epoch_to = "eventname"`.
 
 """
-function predict_table(
+function predicttable(
     model::UnfoldModel,
-    events = Unfold.events(model),
+    events::Vector = Unfold.events(model),
     args...;
+    overlap = false,
     kwargs...,
 )
-    p = predict(model, Unfold.formulas(model), events, args...; kwargs...)
+    p = predict(
+        model,
+        Unfold.formulas(model),
+        events,
+        args...;
+        overlap = overlap,
+        kwargs...,
+    )
     return result_to_table(model, p, events)
 end
-
+predicttable(model, events::DataFrame) = predicttable(model, [events])
 eventnames(model::UnfoldModel) = first.(design(model))
 
 

@@ -120,9 +120,9 @@ function equalize_size(
 ) where {T<:Union{Missing,<:Number}}
     @debug("2d equalize_size")
     if size(X, 1) > size(data, 2)
-        X = X[1:size(data, 2), :]
+        X = @view X[1:size(data, 2), :]
     else
-        data = data[:, 1:size(X, 1)]
+        data = @view data[:, 1:size(X, 1)]
     end
     return X, data
 end
@@ -132,9 +132,9 @@ function equalize_size(
 ) where {T<:Union{Missing,<:Number}}
     @debug("1d equalize_size")
     if size(X, 1) > length(data)
-        X = X[1:length(data), :]
+        X = @view X[1:length(data), :]
     else
-        data = data[1:size(X, 1)]
+        data = @view data[1:size(X, 1)]
     end
     return X, data
 end

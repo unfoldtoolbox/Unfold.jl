@@ -106,14 +106,9 @@ function designmatrix(
     # Evaluate the designmatrix
 
     #note that we use tbl again, not tbl_nomissing.
-    @debug typeof(form)
-
-
     X = modelcols(form.rhs, tbl)
-    @debug typeof(X)
-    @debug unfoldmodeltype
+
     designmatrixtype = typeof(designmatrix(unfoldmodeltype())[1])
-    @debug typeof(form), typeof(X), typeof(tbl), designmatrixtype
     return designmatrixtype(form, X, tbl)
 end
 

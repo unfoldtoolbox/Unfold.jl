@@ -76,7 +76,7 @@ export UnfoldLinearModel,
 export FIRBasis, HRFBasis, SplineBasis
 export modelmatrix, modelmatrices
 export formulas, design, designmatrix, coef
-export coeftable
+export coeftable, predicttable
 export modelfit
 export predict
 

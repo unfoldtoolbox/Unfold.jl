@@ -1,3 +1,4 @@
+using Unfold: predicttable
 data, evts = loadtestdata("test_case_3a") #
 ##
 
@@ -20,7 +21,7 @@ s = Unfold.formulas(fit(UnfoldModel, f_spl, evts, data_e, times))[1].rhs.terms[3
 @testset "outside bounds" begin
     # test safe prediction
     m = fit(UnfoldModel, f_spl, evts, data_e, times)
-    r = predict(m, DataFrame(conditionA = [0, 0], continuousA = [0.9, 1.9]))
+    r = Unfold.predicttable(m, DataFrame(conditionA = [0, 0], continuousA = [0.9, 1.9]))
     @test all(ismissing.(r.yhat[r.continuousA.==1.9]))
     @test !any(ismissing.(r.yhat[r.continuousA.==0.9]))
 end
@@ -35,7 +36,7 @@ end
     # test safe predict
     m = fit(UnfoldModel, f_spl, evts, data_r, basisfunction)
 
-    p = predict(m, DataFrame(conditionA = [0, 0, 0], continuousA = [0.9, 0.9, 1.9]))
+    p = predicttable(m, DataFrame(conditionA = [0, 0, 0], continuousA = [0.9, 0.9, 1.9]))
     @test all(ismissing.(p[p.continuousA.==1.9, :yhat]))
 
 end

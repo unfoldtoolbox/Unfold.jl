@@ -24,7 +24,7 @@ evts_grid = DataFrame(collect(hcat(tmp...)'), ["conditionA", "continuousA"])
 yhat_mul = predict(m_mul, evts_grid)
 yhat_tul = predict(m_tul, evts_grid)
 
-@test yhat_mul[1][1, :, :] ≈ yhat_tul[1][1, 1:20, :]
+@test yhat_mul ≈ yhat_tul
 
 Unfold.result_to_table(m_mul, yhat_mul, [evts_grid])
 
@@ -96,9 +96,10 @@ m = fit(
 p = predict(m; overlap = false)
 pt = Unfold.result_to_table(m, p, repeat([evts], 2))
 
-@test all(pt[[1, 2, 3], :yhat] .== 0.293292)
+@test all(isapprox.(pt[[1, 2, 3], :yhat], 0.293292035997; atol = 0.001))
 @test all(pt[[1, 2, 3], :channel] .== [1, 2, 3])
 @test all(pt[[1, 2, 3], :channel] .== [1, 2, 3])
 @test all(
     pt[[1, 6 * 112 + 1, 3 * 112 + 1], :continuous] .≈ [5, 1.6666666667, -2.7777777778],
 )
+

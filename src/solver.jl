@@ -69,7 +69,7 @@ end
 
 function calculate_stderror(
     Xdc,
-    data::Matrix,
+    data::AbstractMatrix,
     beta::AbstractArray{T},
 ) where {T<:Union{Missing,<:Number}}
 

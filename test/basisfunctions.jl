@@ -15,7 +15,14 @@
     @test length(Unfold.times(firbase)) == size(Unfold.kernel(firbase, 3.1))[1]
 
     # testing the non-sampling rate samples
-    @test Unfold.kernel(firbase, 0.5)[1:3, 1:3] == [0.5 0.0 0.0; 0.5 0.5 0.0; 0.0 0.5 0.5]
+
+    # test the interpolate / true false
+    firbase_off = firbasis((-1, 1), 10; interpolate = false)
+    firbase_on = firbasis((-1, 1), 10; interpolate = true)
+
+    @test Unfold.kernel(firbase_off, 0.5)[1:3, 1:3] == [1 0 0; 0 1 0; 0 0 1]
+    @test Unfold.kernel(firbase_on, 0.5)[1:3, 1:3] ==
+          [0.5 0.0 0.0; 0.5 0.5 0.0; 0.0 0.5 0.5]
 
 end
 @testset "BOLD" begin
