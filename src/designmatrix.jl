@@ -584,16 +584,3 @@ end
 
 
 
-function Base.show(io::IO, d::AbstractDesignMatrix)
-    println(io, "Unfold.DesignMatrix")
-    println(io, "Formula: $(formulas(d))")
-
-    sz_evts = isa(d.events, Vector) ? size.(d.events) : size(d.events)
-    sz_modelmatrix =
-        (isa(d.modelmatrix, Vector) | isa(d.modelmatrix, Tuple)) ? size.(d.modelmatrix) :
-        size(d.modelmatrix)
-
-    println(io, "\nSizes: modelmatrix: $sz_modelmatrix, events: $sz_evts")
-    println(io, "\nuseful functions: formulas(d), modelmatrix(d), events(d)")
-    println(io, "Fields: .formula, .modelmatrix, .events")
-end

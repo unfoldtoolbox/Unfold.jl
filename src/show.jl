@@ -131,3 +131,31 @@ end
 #     coeftable(uf) \t\t(returns tidy result dataframe) \n",
 #     )
 # end
+
+function Base.show(io::IO, ::MIME"text/plain", d::Vector{<:AbstractDesignMatrix})
+    Term.tprintln(io, "Vector of length $(length(d)), $(unique(typeof.(d)))")
+    Term.tprintln(io, "$(formulas(d))")
+    Term.tprintln(
+        io,
+        "\nuseful functions: `formulas(d)`, `modelmatrix(d)/modelmatrices(d)`, `events(d)`",
+    )
+end
+function Base.show(io::IO, d::AbstractDesignMatrix)
+    Term.tprintln(io, "::$(typeof(d))")
+    Term.tprintln(io, "@formula: $(formulas(d))")
+
+    sz_evts = isa(d.events, Vector) ? size.(d.events) : size(d.events)
+    sz_modelmatrix =
+        (isa(d.modelmatrix, Vector) | isa(d.modelmatrix, Tuple)) ? size.(d.modelmatrix) :
+        size(d.modelmatrix)
+
+    Term.tprintln(io, "")
+    Term.tprintln(io, "- modelmatrix (time/trials x predictors): $sz_modelmatrix")
+    Term.tprintln(io, "- $(sz_evts[1]) events with $(sz_evts[2]) columns")
+    Term.tprintln(
+        io,
+        "\nuseful functions: `formulas(d)`, `modelmatrix(d)/modelmatrices(d)`, `events(d)`",
+    )
+    Term.tprintln(io, "Fields: `.formula`, `.modelmatrix`, `.events`")
+end
+
