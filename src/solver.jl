@@ -37,7 +37,7 @@ end
 function solver_default(
     X,
     data::AbstractArray{T,3};
-    stderror = false,
+    stderror = true,
     multithreading = true,
     show_progress = true,
 ) where {T<:Union{Missing,<:Number}}
