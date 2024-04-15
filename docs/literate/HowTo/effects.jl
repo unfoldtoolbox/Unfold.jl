@@ -16,7 +16,7 @@ using UnfoldMakie
 # Let's generate some data and fit a model of a 2-level categorical and a continuous predictor without interaction.
 data, evts = UnfoldSim.predef_eeg(; noiselevel = 8)
 
-basisfunction = firbasis(τ = (-0.1, 0.5), sfreq = 100, name = "basisA")
+basisfunction = firbasis(τ = (-0.1, 0.5), sfreq = 100)
 
 
 f = @formula 0 ~ 1 + condition + continuous # 1
@@ -48,7 +48,7 @@ plot_erp(
 # or split it up by condition and calculate all combinations automagically.
 
 eff = effects(Dict(:condition => ["car", "face"], :continuous => -5:2:5), m)
-plot_erp(eff; mapping = (; color = :condition, col = :continuous => nonnumeric))
+plot_erp(eff; mapping = (; color = :condition, col = :continuous))
 
 # ## What is typical anyway?
 # The user can specify the `typical function` applied to the covariates/factors that are marginalized over. This offers even greater flexibility in defining what is "typical", rather than only take the mean over a predictor as `typical`

@@ -29,9 +29,9 @@ size(signal)
 
 # Next we define three different models. **linear** **4 splines** and **10 splines**
 # note the different formulas, one `x` the other `spl(x,4)`
-design_linear = Dict(Any => (@formula(0 ~ 1 + x), [0]))
-design_spl3 = Dict(Any => (@formula(0 ~ 1 + spl(x, 4)), [0]))
-design_spl10 = Dict(Any => (@formula(0 ~ 1 + spl(x, 10)), [0])) #hide
+design_linear = [Any => (@formula(0 ~ 1 + x), [0])]
+design_spl3 = [Any => (@formula(0 ~ 1 + spl(x, 4)), [0])]
+design_spl10 = [Any => (@formula(0 ~ 1 + spl(x, 10)), [0])] #hide
 
 # and we fit the parameters
 uf_linear = fit(UnfoldModel, design_linear, evts, signal);
@@ -64,7 +64,7 @@ pl
 #
 # Maybe this becomes clear after looking at such a basisfunction:
 
-term_spl = Unfold.formula(uf_spl10).rhs.terms[2]
+term_spl = Unfold.formulas(uf_spl10)[1].rhs.terms[2]
 
 # This is the spline term.
 typeof(term_spl)

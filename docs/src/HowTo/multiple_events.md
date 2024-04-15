@@ -21,8 +21,8 @@ As you can see, there are two events here. EventA and EventB. Both are in the co
 ### Specify formulas and basisfunctions
 
 ```@example main
-bf1 = firbasis(τ=(-0.4,.8),sfreq=50,name="stimulusA")
-bf2 = firbasis(τ=(-0.2,1.2),sfreq=50,name="stimulusB")
+bf1 = firbasis(τ=(-0.4,.8),sfreq=50)
+bf2 = firbasis(τ=(-0.2,1.2),sfreq=50)
 ```
 For each event, we have to specify a basisfunction and a formula. We could use the same basis and the same formulas though
 ```@example main
