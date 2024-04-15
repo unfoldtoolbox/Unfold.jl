@@ -21,10 +21,10 @@ end
 
 # 3D-case
 function predict(
-    X::AbstractMatrix,
-    coef::AbstractArray{T,3},
-) where {T<:Union{Missing,<:Number}}
-    yhat = Array{T}(undef, size(coef, 1), size(X, 1), size(coef, 2))
+    X::AbstractMatrix{Tx},
+    coef::AbstractArray{Tc,3},
+) where {Tx<:Union{Missing,<:Number},Tc<:Union{Missing,<:Number}}
+    yhat = Array{Union{Tc,Tx}}(undef, size(coef, 1), size(X, 1), size(coef, 2))
     for ch = 1:size(coef, 1)
         yhat[ch, :, :] .= X * permutedims(coef[ch, :, :], (2, 1))
     end
@@ -222,7 +222,7 @@ end
 
     # split up the coefs accordingly
     coArray = [@view coefs[:, :, ix] for ix in indexes]
-
+    @debug typeof(collect(X[1])), typeof(collect(coArray[1])) size(X) size(coArray)
     return predict.(X, coArray)
 end
 
