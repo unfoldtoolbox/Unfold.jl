@@ -23,7 +23,7 @@ function solver_krylov(
     GPU = false,
     history = true,
     multithreading = GPU ? false : true,
-    showprogress = true,
+    show_progress = true,
     stderror = false,
 ) where {T<:Union{Missing,<:Number}}
 
@@ -34,7 +34,7 @@ function solver_krylov(
     X_loop = disallowmissing(X[ix, :])
     data = disallowmissing(view(data, :, ix))
 
-    #@show typeof(X_loop)
+
     if GPU
         X_loop = CuSparseMatrixCSC(X_loop)
         lsmr_solver = Krylov.LsmrSolver(size(X_loop)..., CuVector{Float64})
@@ -43,7 +43,7 @@ function solver_krylov(
         lsmr_solver = Krylov.LsmrSolver(size(X_loop)..., Vector{Float64})
     end
 
-    p = Progress(size(data, 1); enabled = showprogress)
+    p = Progress(size(data, 1); enabled = show_progress)
 
     beta = zeros(size(data, 1), size(X, 2)) # had issues with undef
     Unfold.@maybe_threads multithreading for ch = 1:size(data, 1)

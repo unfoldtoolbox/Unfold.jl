@@ -4,13 +4,12 @@ function epoch(; data, tbl, τ, sfreq, kwargs...)
 end
 
 """
-function epoch(
-    data::Array{T,1},
-    tbl::DataFrame,
-    τ::Tuple/Vector,
-    sfreq;
-    kwargs...,
-) 
+    epoch(data::Array{T,1},tbl::DataFrame,τ::Tuple/Vector,sfreq;kwargs...,
+
+Basic function to epoch data; all input also available as kwargs.
+
+Additional kwarg: `eventtime`=:latency, which defines the column in `tbl` that is used to cut the data (in samples). For uneven sample-times we use `round()``
+ 
 """
 function epoch(data::Array{T,1}, tbl, τ, sfreq; kwargs...) where {T<:Union{Missing,Number}}
     data_r = reshape(data, (1, :))
@@ -90,7 +89,6 @@ function round_times(τ, sfreq)
 end
 function dropMissingEpochs(X, y)
     missingIx = .!any(ismissing.(y), dims = (1, 2))
-    print(size(missingIx))
     goodIx = dropdims(missingIx, dims = (1, 2))
     return X[goodIx, :], Array{Float64}(y[:, :, goodIx])
 end
@@ -116,36 +114,36 @@ Equates the length of data and designmatrix by cutting the shorter one
 
 The reason we need this is because when generating the designmatrix, we do not know how long the data actually are. We only assume that event-latencies are synchronized with the data
 """
-function zeropad(
+function equalize_size(
     X::AbstractMatrix,
     data::AbstractArray{T,2},
 ) where {T<:Union{Missing,<:Number}}
-    @debug("2d zeropad")
+    @debug("2d equalize_size")
     if size(X, 1) > size(data, 2)
-        X = X[1:size(data, 2), :]
+        X = @view X[1:size(data, 2), :]
     else
-        data = data[:, 1:size(X, 1)]
+        data = @view data[:, 1:size(X, 1)]
     end
     return X, data
 end
-function zeropad(
+function equalize_size(
     X::AbstractMatrix,
     data::AbstractVector{T},
 ) where {T<:Union{Missing,<:Number}}
-    @debug("1d zeropad")
+    @debug("1d equalize_size")
     if size(X, 1) > length(data)
-        X = X[1:length(data), :]
+        X = @view X[1:length(data), :]
     else
-        data = data[1:size(X, 1)]
+        data = @view data[1:size(X, 1)]
     end
     return X, data
 end
 
-function zeropad(
+function equalize_size(
     X::AbstractMatrix,
     data::AbstractArray{T,3},
 ) where {T<:Union{Missing,<:Number}}
-    @debug("3d zeropad")
+    @debug("3d equalize_size")
 
     @assert size(X, 1) == size(data, 3) "Your events are not of the same size as your last dimension of data"
 
@@ -175,3 +173,6 @@ macro maybe_threads(multithreading, code)
         end
     ))
 end
+
+
+poolArray(x) = PooledArray(x; compress = true)

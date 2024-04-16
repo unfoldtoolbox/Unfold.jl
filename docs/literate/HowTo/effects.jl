@@ -22,7 +22,7 @@ basisfunction = firbasis(τ = (-0.1, 0.5), sfreq = 100, name = "basisA")
 
 f = @formula 0 ~ 1 + condition + continuous # 1
 
-m = fit(UnfoldModel, Dict(Any => (f, basisfunction)), evts, data, eventcolumn = "type")
+m = fit(UnfoldModel, [Any => (f, basisfunction)], evts, data, eventcolumn = "type")
 
 # Plot the results
 plot_erp(coeftable(m))

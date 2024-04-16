@@ -15,11 +15,13 @@ times = range(0, 1, length = size(data_epoch, 1))
 
 #### Define f0 & f1 and fit!
 ```@example Main
+
 f0 = @formula 0 ~ 1 + A + (1 + A | subject);
 f1 = @formula 0 ~ 1 + A + B + (1 + A | subject); # could also differ in random effects
+            
+m0 = fit(UnfoldModel,[Any=>(f0,times)],evts,data_epoch);
+m1 = fit(UnfoldModel,[Any=>(f1,times)],evts,data_epoch);
 
-m0 = fit(UnfoldModel, Dict(Any => (f0, times)), evts, data_epoch);
-m1 = fit(UnfoldModel, Dict(Any => (f1, times)), evts, data_epoch);
 ```
 
 ## Likelihood ratio
@@ -74,11 +76,13 @@ Cool! Let's compare both methods of p-value calculation!
 ```@example Main
 df = DataFrame(:walds => res[res.coefname.=="B: b_tiny", :pvalue], :lrt => pvals_lrt)
 f = Figure()
-scatter(f[1, 1], times, res[res.coefname.=="B: b_tiny", :estimate])
-scatter(f[1, 2], df.walds, df.lrt)
-scatter(f[2, 1], times, df.walds)
-scatter(f[2, 2], times, df.lrt)
+
+scatter(f[1,1],times,res[res.coefname .== "B: b_tiny",:estimate],axis=(;xlabel="time",title="coef: B:b_tiny"))
+scatter(f[1,2],df.walds,df.lrt,axis=(;title="walds-t pvalue",ylabel="LRT pvalue"))
+scatter(f[2,1],times,df.walds,axis=(;title="walds-t pvalue",xlabel="time"))
+scatter(f[2,2],times,df.lrt,axis=(;title="lrt pvalue",xlabel="time"))
 
 f
 ``` 
-The figures appears to be similar! Note that the Wald's T-test is considered more liberal than the LRT. It is recommended to use the upcoming `MixedModelsPermutations.jl` package or, alternatively, to use `KenwardRoger` in R (not yet published).
+Look pretty similar! Note that the Walds-T is typically too liberal (LRT also, but to a lesser exted). Best is to use the forthcoming MixedModelsPermutations.jl or go the route via R and use KenwardRoger (data not yet published)
+
