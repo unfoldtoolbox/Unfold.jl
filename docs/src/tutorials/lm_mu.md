@@ -66,7 +66,7 @@ size(data_epochs)
 typeof(data_epochs)
 ```
 !!! note
-   Partial trials could be included or ignored by the corresponding functions due to `missing` data type. Check functions such as the Julia-based `disallowmissing` and the internal `Unfold.dropMissingEpochs`.
+   Partial trials could be included or ignored by the corresponding functions due to `missing` data type. Check functions such as the Julia-based `disallowmissing` and the internal `Unfold.drop_missing_epochs`.
 
 #### 2. Specify a formula
 Define a formula to be applied to each time point.
