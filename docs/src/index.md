@@ -13,10 +13,10 @@ In case you want to understand the toolbox better, we plan to offer **technical 
 ## Quick start
 There are four different model types currently "fitable"
 
-1. Timeexpansion **No**, Mixed **No**  : `fit(UnfoldModel,Dict(Any=>(f,-0.1:0.01:0.5)),evts,data_epoch)`
-1. Timeexpansion **Yes**, Mixed **No** : `fit(UnfoldModel,Dict(Any=>(f,basisfunction)),evts,data)`
-1. Timeexpansion **No**, Mixed **Yes** : `fit(UnfoldModel,Dict(Any=>(fLMM,-0.1:0.01:0.5)),evts,data_epoch)`
-1. Timeexpansion **Yes**, Mixed **Yes**: `fit(UnfoldModel,Dict(Any=>(fLMM,basisfunction)),evts,data)`
+1. Timeexpansion **No**, Mixed **No**  : `fit(UnfoldModel,[Any=>(f,-0.1:0.01:0.5)],evts,data_epoch)`
+1. Timeexpansion **Yes**, Mixed **No** : `fit(UnfoldModel,[Any=>(f,basisfunction)],evts,data)`
+1. Timeexpansion **No**, Mixed **Yes** : `fit(UnfoldModel,[Any=>(fLMM,-0.1:0.01:0.5)],evts,data_epoch)`
+1. Timeexpansion **Yes**, Mixed **Yes**: `fit(UnfoldModel,[Any=>(fLMM,basisfunction)],evts,data)`
 
 With
 ```julia

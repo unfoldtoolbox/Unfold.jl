@@ -4,18 +4,19 @@ using StatsModels
 using Unfold
 
 """
-    StatsModels.modelcols(forms::Vector,events::Vector)
+    _modelcols(forms::Vector,events::Vector)
+A wrapper around StatsModels.modelcols that is only needed for easy multiple dispatch
 """
-function StatsModels.modelcols(forms::Vector, events::Vector)
+function _modelcols(forms::Vector, events::Vector)
     @assert length(forms) == length(events)
     return StatsModels.modelcols.(forms, events)
 end
 
 
 """
-    StatsModels.modelcols(form::FormulaTerm, events)
+    _modelcols(form::FormulaTerm, events)
 """
-StatsModels.modelcols(form::FormulaTerm, events) = modelcols(form.rhs, events)
+_modelcols(form::FormulaTerm, events) = modelcols(form.rhs, events)
 
 
 """
@@ -67,7 +68,7 @@ function FileIO.load(file, ::Type{<:UnfoldModel}; generate_Xs = true)
     @debug typeof(form), typeof(events)
     # potentially don't generate Xs, but always generate it for LinearModels as it is small + cheap + we actually need it for many functions
     if generate_Xs || uf isa UnfoldLinearModel
-        X = Unfold.modelcols(form, events)
+        X = _modelcols(form, events)
     else
         #nd = length(size(modelmatrix(designmatrix(uf)[1])))
         #@debug eltype(uf), nd, length(form)

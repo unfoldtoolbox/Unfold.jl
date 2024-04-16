@@ -93,7 +93,7 @@ Returns a predicted ("y_hat = X*b") `Array`.
 
 ## kwargs:
 if `overlap = true` (default), overlap based on the `latency` column of 'evts` will be simulated, or in the case of `!ContinuousTimeTrait` just X*coef is returned. 
-if `overlap = false`, predict coefficients without overlap (models with `ContinuousTimeTrait` (=> with basisfunction / deconvolution) only), via `predict_no_overlap`
+if `overlap = false`, returns predictions without overlap (models with `ContinuousTimeTrait` (=> with basisfunction / deconvolution) only), via `predict_no_overlap`
 
 if `keep_basis` or `exclude_basis` is defined, then `predict_partial_overkap` is called, which allows to selective introduce overlap based on specified (or excluded respective) events/basisfunctions
 
@@ -213,8 +213,8 @@ end
     evts::Vector,
 ) where {T <: UnfoldModel; !ContinuousTimeTrait{T}}
     @debug "Not ContinuousTime yhat, Array"
-    X = modelcols.(f, evts)
-
+    X = _modelcols.(f, evts)
+    @debug typeof(X)
     # figure out which coefficients belong to which event
     Xsizes = size.(X, Ref(2))
     Xsizes_cumsum = vcat(0, cumsum(Xsizes))
@@ -239,23 +239,7 @@ end
     for (fi, e) in zip(f, evts)
 
         e.latency .= sum(times(fi) .<= 0)
-        X_singles = map(x -> modelcols(fi, DataFrame(x)), eachrow(e))
-        #=
-        if typeof(fi.rhs.basisfunction) <: FIRBasis
-            # this pertains only to FIR-models
-            # remove the last time-point because it is attached due to non-integer latency/eventonsets.
-            # e.g. x denotes a sample
-            # x- - -x- - -x- - -x
-            # e- - - -f- - - -g-
-            # 
-            # e is aligned (integer) with the sample
-            # f&g are between two samples, thus the design matrix would interpolate between them. Thus has as a result, that the designmatrix is +1 longer than what would naively be expected
-            #
-            # because in "predict" we define where samples onset, we can remove the last sample, it s always 0 anyway, but to be sure we test it
-
-            X_singles = map(x -> x[1:end-1, :], X_singles)
-        end
-        =#
+        X_singles = map(x -> _modelcols(fi, DataFrame(x)), eachrow(e))
         coefs_view = matrix_by_basisname(coefs, (uf), (basisname([fi])))
 
         yhat_single = similar(

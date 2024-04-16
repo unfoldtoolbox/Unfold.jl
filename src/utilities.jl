@@ -1,38 +1,46 @@
 # misc functions
-function epoch(; data, tbl, τ, sfreq, kwargs...)
-    epoch(data, tbl, τ, sfreq; kwargs...)
+function epoch(; data, evts = nothing, tbl = nothing, τ, sfreq, kwargs...)
+    evts = isnothing(evts) ? tbl : evts
+    @show isnothing(evts), isnothing(tbl)
+    @assert (isnothing(evts) | isnothing(tbl))
+
+
+    epoch(data, evts, τ, sfreq; kwargs...)
 end
 
+
+
 """
-    epoch(data::Array{T,1},tbl::DataFrame,τ::Tuple/Vector,sfreq;kwargs...,
+    epoch(data::Array{T,1},evts::DataFrame,τ::Tuple/Vector,sfreq;kwargs...,
 
 Basic function to epoch data; all input also available as kwargs.
 
-Additional kwarg: `eventtime`=:latency, which defines the column in `tbl` that is used to cut the data (in samples). For uneven sample-times we use `round()``
+Additional kwarg: `eventtime`=:latency, which defines the column in `evts` that is used to cut the data (in samples). For uneven sample-times we use `round()``
  
 """
-function epoch(data::Array{T,1}, tbl, τ, sfreq; kwargs...) where {T<:Union{Missing,Number}}
+function epoch(data::Array{T,1}, evts, τ, sfreq; kwargs...) where {T<:Union{Missing,Number}}
     data_r = reshape(data, (1, :))
-    epoch(data_r, tbl, τ, sfreq; kwargs...)
+    epoch(data_r, evts, τ, sfreq; kwargs...)
 end
 
-function epoch(data::Matrix, tbl::DataFrame, τ::Vector, sfreq; kwargs...)
-    return epoch(data, tbl, (τ[1], τ[2]), sfreq; kwargs...)
+function epoch(data::Matrix, evts::DataFrame, τ::Vector, sfreq; kwargs...)
+    return epoch(data, evts, (τ[1], τ[2]), sfreq; kwargs...)
 end
 
 function epoch(
     data::Matrix,
-    tbl::DataFrame,
+    evts::DataFrame,
     τ::Tuple{Number,Number},
     sfreq;
     eventtime::String = "latency",
 )
-    return epoch(data, tbl, τ, sfreq; eventtime = Symbol(eventtime))
+    return epoch(data, evts, τ, sfreq; eventtime = Symbol(eventtime))
 end
+
 
 function epoch(
     data::Array{T,2},
-    tbl::DataFrame,
+    evts::DataFrame,
     τ::Tuple{Number,Number},
     sfreq;
     eventtime::Symbol = :latency,
@@ -41,7 +49,7 @@ function epoch(
 
     # partial taken from EEG.jl
 
-    numEpochs = size(tbl, 1)
+    numEpochs = size(evts, 1)
     τ = round_times(τ, sfreq)
 
     times = range(τ[1], stop = τ[2], step = 1 ./ sfreq)
@@ -58,15 +66,15 @@ function epoch(
     # User feedback
     @debug "Creating epochs: $numChans x $lenEpochs x $numEpochs"
 
-    for si = 1:size(tbl, 1)
-        #eventonset = tbl[si,eventtime] # in samples
+    for si = 1:size(evts, 1)
+        #eventonset = evts[si,eventtime] # in samples
         #d_start = eventonset
-        d_start = Int(round(tbl[si, eventtime]) + times[1] .* sfreq)
-        d_end = Int(round(tbl[si, eventtime]) + times[end] .* sfreq)
+        d_start = Int(round(evts[si, eventtime]) + times[1] .* sfreq)
+        d_end = Int(round(evts[si, eventtime]) + times[end] .* sfreq)
 
         e_start = 1
         e_end = lenEpochs
-        #println("d: $(size(data)),e: $(size(epochs)) | $d_start,$d_end,$e_start,$e_end | $(tbl[si,eventtime])")
+        #println("d: $(size(data)),e: $(size(epochs)) | $d_start,$d_end,$e_start,$e_end | $(evts[si,eventtime])")
         if d_start < 1
             e_start = e_start + (-d_start + 1)
             d_start = 1
@@ -75,7 +83,7 @@ function epoch(
             e_end = e_end - (d_end - size(data, 2))
             d_end = size(data, 2)
         end
-        #println("d: $(size(data)),e: $(size(epochs)) | $d_start,$d_end,$e_start,$e_end | $(tbl[si,eventtime])")
+        #println("d: $(size(data)),e: $(size(epochs)) | $d_start,$d_end,$e_start,$e_end | $(evts[si,eventtime])")
         epochs[:, e_start:e_end, si] = data[:, d_start:d_end]
     end
     return (epochs, times)
@@ -87,7 +95,14 @@ function round_times(τ, sfreq)
     return round.(τ .* sfreq) ./ sfreq
 
 end
-function dropMissingEpochs(X, y)
+
+
+"""
+    [X,y] = drop_missing_epochs(X::Matrix, y::Array)
+Helper function to remove epochs of `y` that contain missings. Drops them from both `X` and  `y`. Often used in combination with `Unfold.epoch`
+
+"""
+function drop_missing_epochs(X::AbstractMatrix, y::AbstractArray{T,3}) where {T}
     missingIx = .!any(ismissing.(y), dims = (1, 2))
     goodIx = dropdims(missingIx, dims = (1, 2))
     return X[goodIx, :], Array{Float64}(y[:, :, goodIx])
