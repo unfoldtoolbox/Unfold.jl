@@ -36,7 +36,7 @@ To inspect the event dataframe we use
 ```@example Main
 show(first(evts, 6), allcols = true)
 ```
-Every row is an experimental event. Note that `:latency` is meausred as the sample timestamps, whereas `:onset` would typically refer to seconds.
+Every row is an experimental event. Note that `:latency` refers to time in samples, whereas `:onset` would typically refer to seconds.
 
 
 ## Traditional Mass Univariate Analysis
