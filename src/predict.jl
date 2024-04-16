@@ -1,6 +1,6 @@
 
 
-using DocStringExtensions: format
+#using DocStringExtensions: format
 
 
 
@@ -238,7 +238,7 @@ end
     @debug eltype(coefs) typeof(yhat)
     for (fi, e) in zip(f, evts)
 
-        e.latency .= sum(times(fi) .<= 0)
+        e.latency .= -fi.rhs.basisfunction.shift_onset + 1#sum(times(fi) .<= 0)
         X_singles = map(x -> _modelcols(fi, DataFrame(x)), eachrow(e))
         coefs_view = matrix_by_basisname(coefs, (uf), (basisname([fi])))
 
