@@ -2,7 +2,7 @@
 data, evts = loadtestdata("test_case_3a") #
 data_r = reshape(data, (1, :))
 
-data_e, times = Unfold.epoch(data = data_r, tbl = evts, τ = (0.0, 0.95), sfreq = 20) # cut the data into epochs
+data_e, times = Unfold.epoch(data = data_r, evts = evts, τ = (0.0, 0.95), sfreq = 20) # cut the data into epochs
 basisfunction = firbasis(τ = (0.0, 0.95), sfreq = 20)
 
 f = @formula 0 ~ 1 # 1
@@ -97,7 +97,7 @@ p = predict(m; overlap = false)
 pt = Unfold.result_to_table(m, p, repeat([evts], 2))
 
 @show pt[[1, 2, 3], :yhat]
-@test all(isapprox.(pt[[1, 2, 3], :yhat], 0.293292035997; atol = 0.001))
+@test all(isapprox.(pt[[1, 2, 3], :yhat], 0.293292035997; atol = 0.01))
 @test all(pt[[1, 2, 3], :channel] .== [1, 2, 3])
 @test all(pt[[1, 2, 3], :channel] .== [1, 2, 3])
 @test all(

@@ -56,7 +56,7 @@ res = res[isnothing.(res.group), :]
 res[:, :tvalue] = res.estimate ./ res.stderror
 ``` 
 
-We obtained Walds t, but how to translate to a p-value?
+We obtained Walds t, but how to translate them to a p-value?
 
 Determining the necessary degrees of freedom for the t-distribution is a complex issue with much debate surrounding it. 
 One approach is to use the number of subjects as an upper bound for the p-value (your df will be between $n_{subject}$ and $\sum{n_{trials}}$).
