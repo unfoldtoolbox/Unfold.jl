@@ -63,7 +63,7 @@ size(data_epochs)
 typeof(data_epochs)
 ```
 !!! note
-    In julia, `missing` is supported throughout the ecosystem. Thus, we can have partial trials and they will be incorporated / ignored at the respective functions. Helpful functions are the julia-base `disallowmissing` and the internal `Unfold.dropMissingEpochs` functions
+    In julia, `missing` is supported throughout the ecosystem. Thus, we can have partial trials and they will be incorporated / ignored at the respective functions. Helpful functions are the julia-base `disallowmissing` and the internal `Unfold.drop_missing_epochs` functions
 
 
 

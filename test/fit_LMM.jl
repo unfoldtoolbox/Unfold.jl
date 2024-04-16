@@ -25,8 +25,8 @@
     data_e, times = Unfold.epoch(data = data, tbl = evts, τ = (-1.0, 1.9), sfreq = 10)
     data_missing_e, times =
         Unfold.epoch(data = data_missing, tbl = evts, τ = (-1.0, 1.9), sfreq = 10)
-    evts_e, data_e = Unfold.dropMissingEpochs(copy(evts), data_e)
-    evts_missing_e, data_missing_e = Unfold.dropMissingEpochs(copy(evts), data_missing_e)
+    evts_e, data_e = Unfold.drop_missing_epochs(copy(evts), data_e)
+    evts_missing_e, data_missing_e = Unfold.drop_missing_epochs(copy(evts), data_missing_e)
 
     ######################
     ##  Mass Univariate Mixed

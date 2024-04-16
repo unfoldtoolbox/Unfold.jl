@@ -1,8 +1,8 @@
 # misc functions
 function epoch(; data, evts = nothing, tbl = nothing, τ, sfreq, kwargs...)
+    @assert (isnothing(evts) | isnothing(tbl))
     evts = isnothing(evts) ? tbl : evts
     @show isnothing(evts), isnothing(tbl)
-    @assert (isnothing(evts) | isnothing(tbl))
 
 
     epoch(data, evts, τ, sfreq; kwargs...)
@@ -98,11 +98,14 @@ end
 
 
 """
-    [X,y] = drop_missing_epochs(X::Matrix, y::Array)
+    [X,y] = drop_missing_epochs(X, y::Array)
 Helper function to remove epochs of `y` that contain missings. Drops them from both `X` and  `y`. Often used in combination with `Unfold.epoch`
 
+X can be anything that has two dimensions (Matrix, DataFrame etc)
+
 """
-function drop_missing_epochs(X::AbstractMatrix, y::AbstractArray{T,3}) where {T}
+function drop_missing_epochs(X, y::AbstractArray{T,3}) where {T}
+    @assert length(size(X)) == 2
     missingIx = .!any(ismissing.(y), dims = (1, 2))
     goodIx = dropdims(missingIx, dims = (1, 2))
     return X[goodIx, :], Array{Float64}(y[:, :, goodIx])

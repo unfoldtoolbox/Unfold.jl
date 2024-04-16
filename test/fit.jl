@@ -12,7 +12,7 @@ data_e, times = Unfold.epoch(data = data_r, tbl = evts, τ = (-1.0, 1.9), sfreq 
 
 
 @testset "Float32" begin
-    evts_nomiss, dat_nomiss = Unfold.dropMissingEpochs(evts, data_e)
+    evts_nomiss, dat_nomiss = Unfold.drop_missing_epochs(evts, data_e)
     uf = fit(UnfoldModel, f, evts_nomiss, Float32.((dat_nomiss)), times)
     @test typeof(uf) == UnfoldLinearModel{Float32}
     @test eltype(coef(uf)) == Float32
