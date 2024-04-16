@@ -23,7 +23,7 @@ data, evts = UnfoldSim.predef_eeg()
 nothing # hide
 ```
 ## Inspection
-The data has some noise. The underlying signal pattern is a positive-negative-positive spike.
+The data has only little noise. The underlying signal pattern is a positive-negative-positive spike.
 ```@example Main
 times = range(1/50, length=200, step=1/50)
 f = Figure()
