@@ -40,7 +40,7 @@ events.face = string.(events.face) # ugly names, but fast
 
 Next fit an Unfold Model
 ```@Example main
-uf = fit(UnfoldModel,Dict(Any=>(@formula(0~face+coherence),Float64.(limo_epochs.times))),events,data)
+uf = fit(UnfoldModel,[Any=>(@formula(0~face+coherence),Float64.(limo_epochs.times))],events,data)
 results = coeftable(uf)
 ```
 
