@@ -20,7 +20,7 @@ using Krylov, CUDA # necessary to load the right package extension
 gpu_solver =(x, y) -> Unfold.solver_krylov(x, y; GPU = true)
 m = Unfold.fit(UnfoldModel, designDict, evts, dat, solver = gpu_solver)
 ```
-To test it, you will need to run it yourself as we cannot run it on the docs. If you require a different option than CUDA, please create an issue. Currently, we are unable to test it with any other option.
+To test it, you will need to run it yourself as we cannot run it on the docs. If you require a different graphicscard vendor than NVIDA/CUDA, please create an issue. Currently, we are unable to test it due to lack of hardware.
 
 ### Robust Solvers
 Robust solvers automatically account for outlier trials, but they come at a significant computational cost.
