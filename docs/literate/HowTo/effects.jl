@@ -44,7 +44,7 @@ The coefficients are represented by three lines on a figure:
 eff = effects(Dict(:condition => ["car", "face"]), m)
 plot_erp(eff; mapping = (; color = :condition,))
 
-# We can also generate continuous predicting variable:
+# We can also generate continuous predictions:
 eff = effects(Dict(:continuous => -5:0.5:5), m)
 plot_erp(
     eff;
