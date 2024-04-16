@@ -76,10 +76,10 @@ To fit any of the models, Unfold.jl offers a unified syntax:
 
 | Overlap-Correction | Mixed Modelling | julia syntax |
 |:---:|:---:|---|
-|  |  | `fit(UnfoldModel,Dict(Any=>(f,times)),evts,data_epoch)` |
-| x |  | `fit(UnfoldModel,Dict(Any=>(f,basis)),evts,data)` |
-|  | x | `fit(UnfoldModel,Dict(Any=>(fLMM,times)),evts,data_epoch)` |
-| x | x | `fit(UnfoldModel,Dict(Any=>(fLMM,basis)),evts,data)` |
+|  |  | `fit(UnfoldModel,[Any=>(f,times)),evts,data_epoch]` |
+| x |  | `fit(UnfoldModel,[Any=>(f,basis)),evts,data]` |
+|  | x | `fit(UnfoldModel,[Any=>(fLMM,times)),evts,data_epoch]` |
+| x | x | `fit(UnfoldModel,[Any=>(fLMM,basis)),evts,data]` |
 
 ## Comparison to Unfold (matlab)
 <details>

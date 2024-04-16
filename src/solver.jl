@@ -4,13 +4,13 @@ function solver_default(
     data::AbstractArray{T,2};
     stderror = false,
     multithreading = true,
-    showprogress = true,
+    show_progress = true,
 ) where {T<:Union{Missing,<:Number}}
     minfo = Array{IterativeSolvers.ConvergenceHistory,1}(undef, size(data, 1))
 
-    beta = zeros(size(data, 1), size(X, 2)) # had issues with undef
+    beta = zeros(T, size(data, 1), size(X, 2)) # had issues with undef
 
-    p = Progress(size(data, 1); enabled = showprogress)
+    p = Progress(size(data, 1); enabled = show_progress)
     @maybe_threads multithreading for ch = 1:size(data, 1)
         dd = view(data, ch, :)
         ix = @. !ismissing(dd)
@@ -34,9 +34,42 @@ function solver_default(
     return modelfit
 end
 
+function solver_default(
+    X,
+    data::AbstractArray{T,3};
+    stderror = false,
+    multithreading = true,
+    show_progress = true,
+) where {T<:Union{Missing,<:Number}}
+    #beta = Array{Union{Missing,Number}}(undef, size(data, 1), size(data, 2), size(X, 2))
+    beta = zeros(T, size(data, 1), size(data, 2), size(X, 2))
+    p = Progress(size(data, 1); enabled = show_progress)
+    @maybe_threads multithreading for ch = 1:size(data, 1)
+        for t = 1:size(data, 2)
+            #            @debug("$(ndims(data,)),$t,$ch")
+
+            dd = view(data, ch, t, :)
+            ix = @. !ismissing(dd)
+
+            beta[ch, t, :] = @view(X[ix, :]) \ @view(data[ch, t, ix])
+            # qr(X) was slower on Februar 2022
+        end
+        next!(p)
+    end
+    finish!(p)
+    if stderror
+        stderror = calculate_stderror(X, data, beta)
+        modelfit = LinearModelFit(beta, ["solver_default"], stderror)
+    else
+        modelfit = LinearModelFit(beta, ["solver_default"])
+    end
+    return modelfit
+end
+
+
 function calculate_stderror(
     Xdc,
-    data::Matrix,
+    data::AbstractMatrix,
     beta::AbstractArray{T},
 ) where {T<:Union{Missing,<:Number}}
 
@@ -74,7 +107,7 @@ function calculate_stderror(
     beta::AbstractArray{T2},
 ) where {T1<:Union{Missing,<:Number},T2<:Union{Missing,<:Number}}
     #function calculate_stderror(Xdc,data::AbstractArray{T,2},beta) where {T<:Union{Missing, <:Number}}  
-
+    X = disallowmissing(X)
     # Hat matrix
     hat_prime = inv(Matrix(X' * X))
     # Calculate residual variance
@@ -94,37 +127,6 @@ function calculate_stderror(
         end
     end
     return se
-end
-function solver_default(
-    X,
-    data::AbstractArray{T,3};
-    stderror = false,
-    multithreading = true,
-    showprogress = true,
-) where {T<:Union{Missing,<:Number}}
-    #beta = Array{Union{Missing,Number}}(undef, size(data, 1), size(data, 2), size(X, 2))
-    beta = zeros(Union{Missing,T}, size(data, 1), size(data, 2), size(X, 2))
-    p = Progress(size(data, 1); enabled = showprogress)
-    @maybe_threads multithreading for ch = 1:size(data, 1)
-        for t = 1:size(data, 2)
-            #            @debug("$(ndims(data,)),$t,$ch")
-
-            dd = view(data, ch, t, :)
-            ix = @. !ismissing(dd)
-
-            beta[ch, t, :] = @view(X[ix, :]) \ @view(data[ch, t, ix])
-            # qr(X) was slower on Februar 2022
-        end
-        next!(p)
-    end
-    finish!(p)
-    if stderror
-        stderror = calculate_stderror(X, data, beta)
-        modelfit = LinearModelFit(beta, ["solver_default"], stderror)
-    else
-        modelfit = LinearModelFit(beta, ["solver_default"])
-    end
-    return modelfit
 end
 
 solver_b2b(X, data, cross_val_reps) = solver_b2b(X, data, cross_val_reps = cross_val_reps)

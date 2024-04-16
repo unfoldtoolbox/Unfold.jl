@@ -30,7 +30,9 @@ f  = @formula 0 ~ 1
 
 For each event, we must specify the formula and basis function to be used. 
 ```@example main
-bfDict = Dict("eventA" => (f, bf1), "eventB" => (f, bf2))
+
+bfDict = [ "eventA" => (f, bf1),
+           "eventB" => (f, bf2) ]
 ```
 
 Finally, fitting & plotting works the same way as always
