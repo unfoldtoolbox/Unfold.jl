@@ -1,7 +1,10 @@
-#  # [Effects](@id effects)
-# Effects are super useful to understand the actual modelfits. If you are an EEG researcher, you can think of the coefficients as the "difference waves" and the (marginal) effects as the "modelled ERP evaluated at a certain predictor value combination".
-# In some way, we are fitting a model with coefficients and then try to get back the "original" ERPs - of course typically with some effect adjusted, overlap removed or similar - else why bother ;)
+#  # [Marginal effects](@id effects)
+# [Marginal effect plots](https://library.virginia.edu/data/articles/a-beginners-guide-to-marginal-effects) are useful for understanding model fits. 
 
+# If you are an EEG researcher, you can think of the coefficients as the 'difference waves' and the (marginal) effects as the 'modelled ERP evaluated at a certain predictor value combination'.
+# In some way, we are fitting a model with coefficients and then obtain the 'original' ERPs, typically with some effect adjustment, overlap removal, or similar. Otherwise, why bother? :)
+
+# # Setup things
 # Setup some packages
 
 using Unfold
@@ -12,12 +15,10 @@ using UnfoldMakie
 using UnfoldSim
 using UnfoldMakie
 
-# # Setup things
-# Let's generate some data and fit a model of a 2-level categorical and a continuous predictor without interaction.
+# Generate data and fit a model with a 2-level categorical predictor and a continuous predictor without interaction.
 data, evts = UnfoldSim.predef_eeg(; noiselevel = 8)
 
 basisfunction = firbasis(τ = (-0.1, 0.5), sfreq = 100)
-
 
 f = @formula 0 ~ 1 + condition + continuous # 1
 
@@ -26,17 +27,24 @@ m = fit(UnfoldModel, [Any => (f, basisfunction)], evts, data, eventcolumn = "typ
 # Plot the results
 plot_erp(coeftable(m))
 
-# As expected, we get three lines representing the coefficients - the slope of the continuous peaks at around 1µV / 1-unit-change, the categorical effect around 3µV and the intercept shows the reference-category with the typical p1/n1/p3 complex.
-#
-# ### Effects
-# In order to better understand the actual predicted ERP curves, often researchers had to do manual contrasts. Remember that a linear model is y = X*b, which allows (after `b` was estimated) to input a so-called `contrast` vector for X. You might know this in the form of `[1,0,-1,1]` or similar form. Quite errorprone for larger models!
-# Here the convenience function `effects` comes into play. It allows to specify the contrast-vectors by providing actual levels of the design. If multiple variables are provided, it calculates all possible combinations. If a variable is skipped, 
-# it automatically sets it to it's `typical value` (usually the `mean`, but for categorical variables could also be others - the emmeans package has quite some discussion on this).
+#= 
+The coefficients are represented by three lines on a figure:
+- the intercept showing the reference category for a typical p1/n1/p3 ERP components;
+- the slope of continuous variables with 1µV range;
+- the effect of categorical variabe with 3µV range. 
+=#
+
+# ### Effects function
+# In order to better understand the actual predicted ERP curves, often researchers had to do manual contrasts. Remember that a linear model is `y = X * b`, which allows (after `b` was estimated) to input a so-called `contrast` vector for X. You might know this in the form of `[1, 0, -1, 1]` or similar form. However, for larger models, this method can be prone to errors.
+
+# The `effects` function is a convenient way to specify contrast vectors by providing the actual levels of the experimental design. It can be used to calculate all possible combinations of multiple variables. 
+
+# If a variable is not specified, the function will automatically set it to its typical value. This value is usually the `mean`, but for categorical variables, it could be something else. The R package `emmeans` has a lot of discussion on this topic.
 
 eff = effects(Dict(:condition => ["car", "face"]), m)
 plot_erp(eff; mapping = (; color = :condition,))
 
-# We can also generate continuous predictions
+# We can also generate continuous predictions:
 eff = effects(Dict(:continuous => -5:0.5:5), m)
 plot_erp(
     eff;
@@ -45,17 +53,17 @@ plot_erp(
     categorical_group = false,
 )
 
-# or split it up by condition and calculate all combinations automagically.
+# Or we can split it up by condition and calculate all combinations automagically.
 
 eff = effects(Dict(:condition => ["car", "face"], :continuous => -5:2:5), m)
 plot_erp(eff; mapping = (; color = :condition, col = :continuous))
 
 # ## What is typical anyway?
-# The user can specify the `typical function` applied to the covariates/factors that are marginalized over. This offers even greater flexibility in defining what is "typical", rather than only take the mean over a predictor as `typical`
+# The `effects` function includes an argument called `typical`, which specifies the function applied to the marginalized covariates/factors. The default value is `mean`, which is usually sufficient for analysis.
 #
-# Note that this is rarely necessary, in most applications, readers would assume the mean. But for e.g. skewed distributions, it could be interesting to look at e.g. the `mode`, or with outliers, the `median`, or `mean(winsor)`
+# However, for skewed distributions, it may be more appropriate to use the `mode`, while for outliers, the `median` or `winsor` mean may be more appropriate.
 #
-# As an illustration we will employ the maximum over the `continuous` predictor
+# To illustrate, we will use the `maximum` function on the `continuous` predictor.
 
 eff_max = effects(Dict(:condition => ["car", "face"]), m; typical = maximum)
 eff_max.typical .= :maximum
