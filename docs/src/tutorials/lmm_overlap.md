@@ -19,7 +19,6 @@ This notebook is similar to the Linear Model with Overlap Correction tutorial, b
 !!! warning 
     **Limitation**: This is not ready for use at all. There are still a lot of things to find out and tinker with. Don't use this if you haven't looked under the hood of the toolbox!
 
-    Even worse - it is right now not working. Some new bug appeared
 
 ## Get some data
 
