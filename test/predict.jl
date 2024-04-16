@@ -104,3 +104,35 @@ pt = Unfold.result_to_table(m, p, repeat([evts], 2))
     pt[[1, 6 * 112 + 1, 3 * 112 + 1], :continuous] .≈ [5, 1.6666666667, -2.7777777778],
 )
 
+
+
+@testset "residuals" begin
+
+    # time expanded
+    m = fit(UnfoldModel, [Any => (@formula(0 ~ 1), firbasis((-0.1, 1), 100))], evts, data;)
+    @test size(Unfold.residuals(m, data)) == (1, 6170)
+
+    # time expanded + multichannel
+    m = fit(
+        UnfoldModel,
+        [Any => (@formula(0 ~ 1), firbasis((-0.1, 1), 100))],
+        evts,
+        repeat(data, 1, 3)';
+    )
+    @test size(Unfold.residuals(m, data)) == (3, 6170)
+
+
+    # time expanded, data longer 
+    m = fit(
+        UnfoldModel,
+        [Any => (@formula(0 ~ 1), firbasis((-0.1, 0.1), 100))],
+        evts,
+        repeat(data, 1, 3)';
+    )
+    resids = Unfold.residuals(m, data)
+    @test size(resids) == (3, 6170)
+    @test all(resids[1, end-2:end] .≈ data[end-2:end])
+
+
+
+end

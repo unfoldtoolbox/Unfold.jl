@@ -78,7 +78,7 @@ export modelmatrix, modelmatrices
 export formulas, design, designmatrix, coef
 export coeftable, predicttable
 export modelfit
-export predict
+export predict, residuals
 
 
 if !isdefined(Base, :get_extension)

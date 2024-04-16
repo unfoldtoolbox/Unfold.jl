@@ -202,8 +202,8 @@ end
         ["m", "x"][Int.(1 .+ round.(rand(MersenneTwister(43), nrow(evts))))]
 
 
-    b1 = firbasis(τ = (0.0, 0.02), sfreq = 20, name = "basisA")
-    b2 = firbasis(τ = (1.0, 1.02), sfreq = 20, name = "basisB")
+    b1 = firbasis(τ = (0.0, 0.02), sfreq = 20, name = "eventA")
+    b2 = firbasis(τ = (1.0, 1.02), sfreq = 20, name = "eventB")
     f1 = @formula 0 ~ 1 + continuousA * continuousB # 1
     f2 = @formula 0 ~ 1 + continuousB # 1
     m_tul = fit(
