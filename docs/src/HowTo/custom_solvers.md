@@ -1,5 +1,7 @@
 # [Alternative Solvers](@id custom_solvers)
 
+A solver takes an Unfold-specified DesignMatrix and the data, and typically solves the equation system `y = Xb` (in the case of Linear Models). There are many different ways how one can approach this problem, depending if the matrix is sparse, if it is 2D or 3D, if one wants to use GPU etc.
+
 ### Setup some data
 
 ```@Example main
@@ -23,7 +25,7 @@ m = Unfold.fit(UnfoldModel, designDict, evts, dat, solver = gpu_solver)
 To test it, you will need to run it yourself as we cannot run it on the docs. If you require a different graphicscard vendor than NVIDA/CUDA, please create an issue. Currently, we are unable to test it due to lack of hardware.
 
 ### Robust Solvers
-Robust solvers automatically account for outlier trials, but they come at a significant computational cost.
+Robust solvers automatically adjust for outlier trials, but they come at a significant computational cost.
 ```@Example main
 using RobustModels # necessary to load the Unfold package extension
 se_solver = (x, y) -> Unfold.solver_robust(x, y)

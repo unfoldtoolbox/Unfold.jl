@@ -46,7 +46,7 @@ reshape(pvals_lrt, ntime, nchan)' # note the last transpose via ' !
 Perfecto, these are the LRT p-values of a model `condA` vs. `condA+condB` with same random effect structure.
 
 ## Walds T-Test
-This method is easier to calculate but has limitations in accuracy and scope. It may also be less accurate due to estimation of degrees of freedom. Testing is limited in this case, as random effects cannot be tested and only single predictors can be used, which may not be appropriate for spline effects. It is important to note that this discussion is beyond the scope of this LMM package. 
+This method is easier to calculate but has limitations in accuracy and scope. It may also be less accurate due to the liberal estimation of degrees of freedom. Testing is limited in this case, as random effects cannot be tested and only single predictors can be used, which may not be appropriate for spline effects. It is important to note that this discussion is beyond the scope of this LMM package. 
 
 ```@example Main
 res = coeftable(m1)

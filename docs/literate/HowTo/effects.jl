@@ -2,7 +2,7 @@
 # [Marginal effect plots](https://library.virginia.edu/data/articles/a-beginners-guide-to-marginal-effects) are useful for understanding model fits. 
 
 # If you are an EEG researcher, you can think of the coefficients as the 'difference waves' and the (marginal) effects as the 'modelled ERP evaluated at a certain predictor value combination'.
-# In some way, we are fitting a model with coefficients and then obtain the 'original' ERPs, typically with some effect adjustment, overlap removal, or similar. Otherwise, why bother? :)
+# In some way, we are fitting a model with coefficients, receiving intercepts and slopes, and then try to recover the 'classical' ERPs in their "data-domain", typically with some effect adjustment, overlap removal, or similar.
 
 # # Setup things
 # Setup some packages
@@ -39,7 +39,7 @@ The coefficients are represented by three lines on a figure:
 
 # The `effects` function is a convenient way to specify contrast vectors by providing the actual levels of the experimental design. It can be used to calculate all possible combinations of multiple variables. 
 
-# If a variable is not specified, the function will automatically set it to its typical value. This value is usually the `mean`, but for categorical variables, it could be something else. The R package `emmeans` has a lot of discussion on this topic.
+# If a predictor-variable is not specified here, the function will automatically set it to its typical value. This value is usually the `mean`, but for categorical variables, it could be something else. The R package `emmeans` has a lot of discussion on this topic.
 
 eff = effects(Dict(:condition => ["car", "face"]), m)
 plot_erp(eff; mapping = (; color = :condition,))
@@ -53,7 +53,7 @@ plot_erp(
     categorical_group = false,
 )
 
-# Or we can split it up by condition and calculate all combinations automagically.
+# Or we can split our marginal effects by condition and calculate all combinations "automagically".
 
 eff = effects(Dict(:condition => ["car", "face"], :continuous => -5:2:5), m)
 plot_erp(eff; mapping = (; color = :condition, col = :continuous))

@@ -1,6 +1,6 @@
 # How to model multiple events
 
-When dealing with overlapping data, it is often necessary to plot multiple events.
+When dealing with overlapping data, it is often necessary to model multiple eventtypes (e.g. fixations, stimuli, responses).
 
 ### Load Example Data
 ```@example main
@@ -15,14 +15,14 @@ dat, evts = loadtestdata("test_case_4b");
 
 evts[1:5,:]
 ```
-The `type` column of table `evts` contains two conditions: EventA and EventB. By default, the toolbox will search for these conditions.
+The `type` column of table `evts` contains two conditions: `eventA`` and `eventB` (if your eventstypes are specified in a different column, you need to define the keywordargument `eventcolumn` in the `fit` command below)
 
 ### Specify formulas and basisfunctions
 
 ```@example main
 
 bf1 = firbasis(τ = (-0.4, 0.8), sfreq = 50)
-bf2 = firbasis(τ = (-0.2, 1.2), sfreq = 50)>>>>>>> 7d1a06c0f1c6aa93ce83f7d828a317c45dfaa674
+bf2 = firbasis(τ = (-0.2, 1.2), sfreq = 50)
 ```
 For each event, a basis function and formula must be specified. The same basis and formulas may be used.
 ```@example main

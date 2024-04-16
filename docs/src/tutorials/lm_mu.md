@@ -36,7 +36,7 @@ To inspect the event dataframe we use
 ```@example Main
 show(first(evts, 6), allcols = true)
 ```
-Every row is an experimental event. Note that `:latency` refers to time in samples, whereas `:onset` would typically refer to seconds.
+Every row is an experimental event. Note that `:latency` refers to time in samples, (in BIDS-specification,  `:onset` would typically refer to seconds).
 
 
 ## Traditional Mass Univariate Analysis
@@ -52,7 +52,7 @@ To perform a mass univariate analysis, you must complete the following steps:
 Initially, you have data with a duration that represents the whole experimental trial. You need to cut the data into small regular epochs related to the some event, e.g. start of fixation.
 
 ```@example Main
-# we have multi channel support
+# Unfold supports multi-channel, so we could provide matrix ch x time, which we can create like this from a vector:
 data_r = reshape(data, (1,:))
 # cut the data into epochs
 data_epochs, times = Unfold.epoch(data = data_r, tbl = evts, τ = (-0.4, 0.8), sfreq = 50);
@@ -70,16 +70,16 @@ typeof(data_epochs)
 
 
 #### 2. Specify a formula
-Define a formula to be applied to each time point.
+Define a formula to be applied to each time point (and each channel) relative to the event.
 
 ```@example Main
-f = @formula 0 ~ 1 + condition + continuous # 0 as a dummy, we will combine with data later
+f = @formula 0 ~ 1 + condition + continuous # note the formulas left side is `0 ~ ` for technical reasons`
 nothing # hide
 ```
 
 #### 3. Fit a linear model to each time point & channel
 
-Fit the `UnfoldLinearModel`.
+Fit the "`UnfoldModel`" (the `fit` syntax is used throughout the Julia ecosystem, with the first element indicating what kind of model to fit)
 ```@example Main
 m = fit(UnfoldModel, f, evts, data_epochs, times); 
 nothing #hide
