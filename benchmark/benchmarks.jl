@@ -71,7 +71,7 @@ if 1 == 0
 end
 #---
 
-ext = Base.get_extension(Unfold, :UnfoldLinearMixedModelsExt)
+ext = Base.get_extension(Unfold, :UnfoldMixedModelsExt)
 SUITE = BenchmarkGroup()
 SUITE["designmat"] = BenchmarkGroup(["designmat"])
 SUITE["fit"] = BenchmarkGroup(["fit"])
