@@ -34,8 +34,8 @@ for (ix, k) in
     evts_epochs[!, k] = rand(StableRNG(ix), size(evts_epochs, 1))
 end
 
-ba1 = firbasis(τ = (0, 1), sfreq = sfreq, name = "evts1")
-ba2 = firbasis(τ = (0, 1), sfreq = sfreq, name = "evts2")
+ba1 = firbasis(τ = (0, 1), sfreq = sfreq)
+ba2 = firbasis(τ = (0, 1), sfreq = sfreq)
 
 f1_lmm = @formula 0 ~ 1 + A + (1 + A | subject)
 f2_lmm = @formula 0 ~ 1 + A + (1 + A | item)
