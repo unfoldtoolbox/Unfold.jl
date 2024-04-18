@@ -9,7 +9,7 @@ A wrapper around StatsModels.modelcols that is only needed for easy multiple dis
 """
 function _modelcols(forms::Vector, events::Vector)
     @assert length(forms) == length(events)
-    return StatsModels.modelcols.(forms, events)
+    return _modelcols.(forms, events)
 end
 
 
@@ -65,13 +65,13 @@ function FileIO.load(file, ::Type{<:UnfoldModel}; generate_Xs = true)
     form = formulas(designmatrix(uf))
     events = Unfold.events(designmatrix(uf))
 
-    @debug typeof(form), typeof(events)
+    @debug typeof.(form) typeof.(events) size(form) size(events)
     # potentially don't generate Xs, but always generate it for LinearModels as it is small + cheap + we actually need it for many functions
     if generate_Xs || uf isa UnfoldLinearModel
         X = _modelcols(form, events)
     else
         #nd = length(size(modelmatrix(designmatrix(uf)[1])))
-        #@debug eltype(uf), nd, length(form)
+        #@debug typeof.(designmatrix(uf))
         #X = [sparse(Array{eltype(uf)}(undef, repeat([0], nd)...)) for k = 1:length(form)]
         X = [empty_modelmatrix(designmatrix(uf)[k]) for k = 1:length(form)]
 
@@ -91,7 +91,7 @@ function FileIO.load(file, ::Type{<:UnfoldModel}; generate_Xs = true)
             uf.modelfit
         end
 
-    @debug typeof(form), typeof(X), typeof(events), size(form), size(X), size(events)
+    @debug typeof(uf) typeof(form) typeof(X) typeof(events) size(form) size(X) size(events)
     # reintegrate the designmatrix
     return typeof(uf)(uf.design, typeof(designmatrix(uf)[1]).(form, X, events), modelfit)
 end
