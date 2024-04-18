@@ -107,6 +107,7 @@ pt = Unfold.result_to_table(m, p, repeat([evts], 2))
 
 
 @testset "residuals" begin
+    data, evts = UnfoldSim.predef_eeg(; n_repeats = 5, noiselevel = 0.8)
 
     # time expanded
     m = fit(UnfoldModel, [Any => (@formula(0 ~ 1), firbasis((-0.1, 1), 100))], evts, data;)
@@ -129,10 +130,23 @@ pt = Unfold.result_to_table(m, p, repeat([evts], 2))
         evts,
         repeat(data, 1, 3)';
     )
-    resids = Unfold.residuals(m, data)
+    resids = Unfold.residuals(m, repeat(data, 1, 3)')
     @test size(resids) == (3, 6170)
     @test all(resids[1, end-2:end] .≈ data[end-2:end])
 
+    # 
+
+    data_e, evts =
+        UnfoldSim.predef_eeg(; n_repeats = 5, noiselevel = 0.8, return_epoched = true)
+
+
+
+    times = 1:size(data_e, 1)
+    m_mul = fit(UnfoldModel, f, evts, data_e, times)
+    resids_e = Unfold.residuals(m_mul, data_e)
+
+    @test size(resids_e)[2:3] == size(data_e)
+    @test maximum(abs.(data_e .- (resids_e.+predict(m_mul)[1])[1, :, :])) < 0.0000001
 
 
 end

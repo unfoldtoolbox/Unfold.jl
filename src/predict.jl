@@ -56,25 +56,38 @@ function predict(
 end
 
 
-residuals(uf::T, data::AbstractArray) where {T<:UnfoldModel} =
+@traitfn residuals(
+    uf::T,
+    data::AbstractArray,
+) where {T <: UnfoldModel; ContinuousTimeTrait{T}} =
     _residuals(T, predict(uf), check_data(T, data))
+@traitfn function residuals(
+    uf::T,
+    data::AbstractArray,
+) where {T <: UnfoldModel; !ContinuousTimeTrait{T}}
+    pred = predict(uf)
+    @assert length(pred) == 1 "residuals currently not supported for multi-event MassUnivariateModels. It is not hard to implement, but I ran out of time. Write an issue if you  need this functionality"
+    _residuals(T, pred[1], check_data(T, data))
 
+end
+
+_split_data(y::AbstractMatrix, n) = return @view(y[:, 1:n]), @view(y[:, n+1:end])
+_split_data(y::AbstractArray, n) = return @view(y[:, 1:n, :]), @view(y[:, n+1:end, :])
 #@traitfn 
 function _residuals(::Type{T}, yhat, y) where {T<:UnfoldModel}#; ContinuousTimeTrait{T}}
 
     #_split_data(y::AbstractVector, n) = return @view(y[1:n]), @view(y[n+1:end])
 
-    _split_data(y::AbstractMatrix, n) = return @view(y[:, 1:n]), @view(y[:, n+1:end])
-    _split_data(y::AbstractArray, n) = return @view(y[:, 1:n, :]), @view(y[:, n+1:end, :])
     n_yhat = size(yhat, 2)
     n_y = size(y, 2)
     @debug n_yhat n_y
-    if n_yhat > n_y
-        @debug "n_yhat > n_y" size(y) size(_split_data(yhat, n_y)[1])
+    if n_yhat >= n_y
+        @debug "n_yhat > n_y" size(y) size.(_split_data(yhat, n_y))
         return y .- _split_data(yhat, n_y)[1]
     else
-        @debug "n_y <= n_yhat"
+        @debug "n_y < n_yhat"
         yA, yB = _split_data(y, n_yhat)
+        @debug size(yA) size(yB)
         res = yA .- n_y
         return cat(res, yB; dims = 2)
     end
