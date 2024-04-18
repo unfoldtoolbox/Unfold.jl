@@ -71,6 +71,7 @@ if 1 == 0
 end
 #---
 
+ext = Base.get_extension(Unfold, :UnfoldLinearMixedModelsExt)
 SUITE = BenchmarkGroup()
 SUITE["designmat"] = BenchmarkGroup(["designmat"])
 SUITE["fit"] = BenchmarkGroup(["fit"])
@@ -79,8 +80,12 @@ SUITE["effects"] = BenchmarkGroup(["effects"])
 # designmatrix generation
 SUITE["designmat"]["lin"] =
     @benchmarkable designmatrix(UnfoldLinearModelContinuousTime, $f1, $evts, $ba1)
-SUITE["designmat"]["lmm"] =
-    @benchmarkable designmatrix(UnfoldLinearMixedModelContinuousTime, $f1_lmm, $evts, $ba1)
+SUITE["designmat"]["lmm"] = @benchmarkable designmatrix(
+    ext.UnfoldLinearMixedModelContinuousTime,
+    $f1_lmm,
+    $evts,
+    $ba1,
+)
 
 # Model Fit
 SUITE["fit"]["lin"] =
