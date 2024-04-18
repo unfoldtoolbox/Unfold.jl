@@ -1,4 +1,16 @@
 using StatsBase: var
+
+function _lsmr!(beta, X::SparseMatrixCSC, data::AbstractArray{<:Number}, ch)
+    _, h = lsmr!(@view(beta[ch, :]), X, @view(data[ch, :]); log = true)
+    return h
+end
+function _lsmr!(beta, X::SparseMatrixCSC, data::AbstractArray{Union{<:Number,Missing}}, ch)
+    dd = view(data, ch, :)
+    ix = @. !ismissing(dd)
+    _, h = lsmr!(@view(beta[ch, :]), (X[ix, :]), @view(data[ch, ix]); log = true)
+    return h
+end
+
 function solver_default(
     X,
     data::AbstractArray{T,2};
@@ -11,15 +23,13 @@ function solver_default(
     beta = zeros(T, size(data, 1), size(X, 2)) # had issues with undef
 
     p = Progress(size(data, 1); enabled = show_progress)
+    X = SparseMatrixCSC(X) # X s often a SubArray, lsmr really doesnt like indexing into subarrays, one copy needed.
     @maybe_threads multithreading for ch = 1:size(data, 1)
-        dd = view(data, ch, :)
-        ix = @. !ismissing(dd)
+
         # use the previous channel as a starting point
         ch == 1 || copyto!(view(beta, ch, :), view(beta, ch - 1, :))
 
-        beta[ch, :], h =
-            lsmr!(@view(beta[ch, :]), (X[ix, :]), @view(data[ch, ix]), log = true)
-
+        h = _lsmr!(beta, X, data, ch)
         minfo[ch] = h
         next!(p)
     end
