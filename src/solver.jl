@@ -121,10 +121,6 @@ function calculate_stderror(
     # Hat matrix
     hat_prime = inv(Matrix(X' * X))
     # Calculate residual variance
-    @warn(
-        "Autocorrelation was NOT taken into account. Therefore SE are UNRELIABLE. Use at your own discretion"
-    )
-
     se = Array{T2}(undef, size(data, 1), size(data, 2), size(X, 2))
     for ch = 1:size(data, 1)
         for t = 1:size(data, 2)
