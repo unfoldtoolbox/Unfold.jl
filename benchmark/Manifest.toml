@@ -1522,7 +1522,7 @@ version = "1.0.2"
 deps = ["DSP", "DataFrames", "Distributions", "DocStringExtensions", "Effects", "FileIO", "GLM", "IterativeSolvers", "JLD2", "LinearAlgebra", "Logging", "MLBase", "Missings", "OrderedCollections", "PooledArrays", "ProgressMeter", "Random", "SimpleTraits", "SparseArrays", "StaticArrays", "Statistics", "StatsBase", "StatsFuns", "StatsModels", "Tables", "Term", "Test", "TimerOutputs", "TypedTables"]
 path = ".."
 uuid = "181c99d8-e21b-4ff3-b70b-c233eddec679"
-version = "0.6.10"
+version = "0.7.0"
 
     [Unfold.extensions]
     UnfoldBSplineKitExt = "BSplineKit"
