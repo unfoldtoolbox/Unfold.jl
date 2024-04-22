@@ -1,3 +1,4 @@
+using Unfold: predicttable
 data, evts = loadtestdata("test_case_3a") #
 ##
 
@@ -12,15 +13,15 @@ m_mul_spl = coeftable(fit(UnfoldModel, f_spl, evts, data_e, times))
 # asking for 4 splines should generate 4 splines 
 @test length(unique(m_mul_spl.coefname)) == 5
 
-s = Unfold.formula(fit(UnfoldModel, f_spl, evts, data_e, times)).rhs.terms[3]
-@test width(s) == 3
+s = Unfold.formulas(fit(UnfoldModel, f_spl, evts, data_e, times))[1].rhs.terms[3]
+@test Unfold.width(s) == 3
 @test length(coefnames(s)) == 3
 @test s.df == 4
 
 @testset "outside bounds" begin
     # test safe prediction
     m = fit(UnfoldModel, f_spl, evts, data_e, times)
-    r = predict(m, DataFrame(conditionA = [0, 0], continuousA = [0.9, 1.9]))
+    r = Unfold.predicttable(m, DataFrame(conditionA = [0, 0], continuousA = [0.9, 1.9]))
     @test all(ismissing.(r.yhat[r.continuousA.==1.9]))
     @test !any(ismissing.(r.yhat[r.continuousA.==0.9]))
 end
@@ -35,7 +36,7 @@ end
     # test safe predict
     m = fit(UnfoldModel, f_spl, evts, data_r, basisfunction)
 
-    p = predict(m, DataFrame(conditionA = [0, 0, 0], continuousA = [0.9, 0.9, 1.9]))
+    p = predicttable(m, DataFrame(conditionA = [0, 0, 0], continuousA = [0.9, 0.9, 1.9]))
     @test all(ismissing.(p[p.continuousA.==1.9, :yhat]))
 
 end
@@ -63,7 +64,7 @@ end
 @testset "PeriodicSplines" begin
     f_circspl = @formula 0 ~ 1 + circspl(continuousA, 10, -1, 1) # 1
     m = fit(UnfoldModel, f_circspl, evts, data_e, times)
-    f_evaluated = Unfold.formula(m)
+    f_evaluated = Unfold.formulas(m)
 
     effValues = [-1, -0.99, 0, 0.99, 1]
     effValues = range(-1.1, 1.1, step = 0.1)

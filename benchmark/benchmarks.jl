@@ -34,8 +34,8 @@ for (ix, k) in
     evts_epochs[!, k] = rand(StableRNG(ix), size(evts_epochs, 1))
 end
 
-ba1 = firbasis(τ = (0, 1), sfreq = sfreq, name = "evts1")
-ba2 = firbasis(τ = (0, 1), sfreq = sfreq, name = "evts2")
+ba1 = firbasis(τ = (0, 1), sfreq = sfreq)
+ba2 = firbasis(τ = (0, 1), sfreq = sfreq)
 
 f1_lmm = @formula 0 ~ 1 + A + (1 + A | subject)
 f2_lmm = @formula 0 ~ 1 + A + (1 + A | item)
@@ -57,13 +57,21 @@ dict_lmm = Dict(0 => (f1_lmm, ba1), 1 => (f2_lmm, ba2))
 
 times = 1:size(data_epochs, 1)
 
+#---
 m_epoch_lin_f1 = fit(UnfoldModel, f1, evts_epochs, data_epochs, times)
 m_epoch_lin_f1_spl = fit(UnfoldModel, f1_spl, evts_epochs, data_epochs, times)
 
 m_lin_f1 = fit(UnfoldModel, dict_lin, evts, data, eventcolumn = "type")
+
+
 m_lin_f1_spl = fit(UnfoldModel, dict_spl, evts, data, eventcolumn = "type")
+if 1 == 0
+    m_lin_f1_spl_ch =
+        fit(UnfoldModel, dict_spl, evts, repeat(data, 1, 100)', eventcolumn = "type")
+end
 #---
 
+ext = Base.get_extension(Unfold, :UnfoldMixedModelsExt)
 SUITE = BenchmarkGroup()
 SUITE["designmat"] = BenchmarkGroup(["designmat"])
 SUITE["fit"] = BenchmarkGroup(["fit"])
@@ -72,8 +80,12 @@ SUITE["effects"] = BenchmarkGroup(["effects"])
 # designmatrix generation
 SUITE["designmat"]["lin"] =
     @benchmarkable designmatrix(UnfoldLinearModelContinuousTime, $f1, $evts, $ba1)
-SUITE["designmat"]["lmm"] =
-    @benchmarkable designmatrix(UnfoldLinearMixedModelContinuousTime, $f1_lmm, $evts, $ba1)
+SUITE["designmat"]["lmm"] = @benchmarkable designmatrix(
+    ext.UnfoldLinearMixedModelContinuousTime,
+    $f1_lmm,
+    $evts,
+    $ba1,
+)
 
 # Model Fit
 SUITE["fit"]["lin"] =

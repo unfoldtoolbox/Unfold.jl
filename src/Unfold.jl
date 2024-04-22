@@ -1,5 +1,7 @@
 module Unfold
 
+using SimpleTraits
+
 using SparseArrays
 using StatsModels
 using StatsBase
@@ -19,7 +21,13 @@ using ProgressMeter
 using DocStringExtensions # for Docu
 using MLBase # for crossVal
 
+import Term # prettiert output
+using OrderedCollections # for Base.Show
+import Term: vstack, Panel, tprint
+import Term: Tree  # to display Dicts
 using PooledArrays
+using TypedTables # DataFrames loose the pooled array, so we have to do it differently for now...
+
 #using Tullio
 #using BSplineKit # for spline predictors
 
@@ -30,9 +38,9 @@ import StatsBase: coef
 import StatsBase: fit!
 import StatsBase: coefnames
 import StatsBase: modelmatrix
+import StatsBase: predict
 import StatsModels: width
 import StatsModels: terms
-
 
 
 import StatsBase.quantile
@@ -54,23 +62,23 @@ include("splinepredictors.jl")
 include("effects.jl")
 include("statistics.jl")
 include("io.jl")
-
+include("show.jl") # pretty printing
 
 
 #include("plot.jl") # don't include for now
 export fit, fit!, designmatrix!
 export firbasis, hrfbasis
+export AbstractDesignMatrix, AbstractModelFit, UnfoldModel
 export UnfoldLinearModel,
     UnfoldLinearMixedModel,
-    UnfoldModel,
     UnfoldLinearMixedModelContinuousTime,
     UnfoldLinearModelContinuousTime
 export FIRBasis, HRFBasis, SplineBasis
-export modelmatrix
-export formula, design, designmatrix, coef
-export coeftable
+export modelmatrix, modelmatrices
+export formulas, design, designmatrix, coef
+export coeftable, predicttable
 export modelfit
-export predict
+export predict, residuals
 
 
 if !isdefined(Base, :get_extension)
@@ -82,7 +90,7 @@ if !isdefined(Base, :get_extension)
     pvalues = UnfoldMixedModelsExt.pvalues
     using MixedModels
     rePCA = MixedModels.rePCA
-    lmm_combineMats! = UnfoldMixedModelsExt.lmm_combineMats!
+    lmm_combine_modelmatrices! = UnfoldMixedModelsExt.lmm_combine_modelmatrices!
     likelihoodratiotest = UnfoldMixedModelsExt.likelihoodratiotest
     check_groupsorting = UnfoldMixedModelsExt.check_groupsorting
 
@@ -127,10 +135,10 @@ else
         msg = "MixedModels not loaded. Please use ]add MixedModels, using MixedModels to install it prior to using"
         isnothing(ext) ? throw(msg) : ext.check_groupsorting(args...; kwargs...)
     end
-    function lmm_combineMats!(args...; kwargs...)
+    function lmm_combine_modelmatrices!(args...; kwargs...)
         ext = checkFun(:UnfoldMixedModelsExt)
         msg = "MixedModels not loaded. Please use ]add MixedModels, using MixedModels to install it prior to using"
-        isnothing(ext) ? throw(msg) : ext.lmm_combineMats!(args...; kwargs...)
+        isnothing(ext) ? throw(msg) : ext.lmm_combine_modelmatrices!(args...; kwargs...)
     end
     function splinebasis(args...; kwargs...)
         ext = checkFun(:UnfoldBSplineKitExt)

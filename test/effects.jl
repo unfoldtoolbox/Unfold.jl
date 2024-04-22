@@ -4,8 +4,8 @@ data_r = reshape(data, (1, :))
 data_e, times = Unfold.epoch(data = data_r, tbl = evts, τ = (0, 0.05), sfreq = 10) # cut the data into epochs
 
 f = @formula 0 ~ 1 + conditionA + continuousA # 1
-m_mul = fit(Unfold.UnfoldModel, Dict(Any => (f, times)), evts, data_e)
-##
+m_mul = fit(Unfold.UnfoldModel, [Any => (f, times)], evts, data_e)
+##---
 @testset "Mass Univariate, all specified" begin
 
 
@@ -72,9 +72,9 @@ f = @formula 0 ~ 1 + conditionA + continuousA # 1
 end
 
 data, evts = loadtestdata("test_case_4a") #
-b1 = firbasis(τ = (0.0, 0.95), sfreq = 20, name = "basisA")
-b2 = firbasis(τ = (0.0, 0.95), sfreq = 20, name = "basisB")
-b3 = firbasis(τ = (0.0, 0.95), sfreq = 20, name = "basisC")
+b1 = firbasis(τ = (0.0, 0.95), sfreq = 20, name = "eventA")
+b2 = firbasis(τ = (0.0, 0.95), sfreq = 20, name = "eventB")
+b3 = firbasis(τ = (0.0, 0.95), sfreq = 20, name = "eventC")
 f = @formula 0 ~ 1 # 1
 m_tul = fit(
     UnfoldModel,
@@ -87,7 +87,7 @@ m_tul = fit(
 @testset "Time Expansion, two events" begin
 
     eff = Unfold.effects(Dict(:conditionA => [0, 1], :continuousA => [0]), m_tul)
-    @test unique(eff.basisname) == ["basisA", "basisB"]
+    @test unique(eff.eventname) == ["eventA", "eventB"]
     @test unique(eff.yhat) ≈ [2, 3]
     @test size(eff, 1) == 2 * 2 * 20 # 2 basisfunctions, 2x conditionA, 1s a 20Hz
 
@@ -118,8 +118,8 @@ end
     ## Different sized events + different Formulas
     data, evts = loadtestdata("test_case_4a") #
     evts[!, :continuousA] = rand(MersenneTwister(42), nrow(evts))
-    b1 = firbasis(τ = (0.0, 0.95), sfreq = 20, name = "basisA")
-    b2 = firbasis(τ = (0.0, 0.5), sfreq = 20, name = "basisB")
+    b1 = firbasis(τ = (0.0, 0.95), sfreq = 20, name = "eventA")
+    b2 = firbasis(τ = (0.0, 0.5), sfreq = 20, name = "eventB")
     f1 = @formula 0 ~ 1 # 1
     f2 = @formula 0 ~ 1 + continuousA # 1
     m_tul = fit(
@@ -130,9 +130,9 @@ end
         eventcolumn = "type",
     )
     eff = Unfold.effects(Dict(:conditionA => [0, 1], :continuousA => [-1, 0, 1]), m_tul)
-    @test nrow(eff) == (length(Unfold.times(b1)) - 1 + length(Unfold.times(b2)) - 1) * 6
-    @test sum(eff.basisname .== "basisA") == 120
-    @test sum(eff.basisname .== "basisB") == 66
+    @test nrow(eff) == (length(Unfold.times(b1)) + length(Unfold.times(b2))) * 6
+    @test sum(eff.eventname .== "eventA") == 120
+    @test sum(eff.eventname .== "eventB") == 66
 
 end
 
@@ -171,8 +171,8 @@ end
     evts.continuousB[ixA] = evts.continuousB[ixA] .- mean(evts.continuousB[ixA]) .- 5
     evts.continuousB[.!ixA] =
         evts.continuousB[.!ixA] .- mean(evts.continuousB[.!ixA]) .+ 0.5
-    b1 = firbasis(τ = (0.0, 0.02), sfreq = 20, name = "basisA")
-    b2 = firbasis(τ = (1.0, 1.02), sfreq = 20, name = "basisB")
+    b1 = firbasis(τ = (0.0, 0.02), sfreq = 20, name = "eventA")
+    b2 = firbasis(τ = (1.0, 1.02), sfreq = 20, name = "eventB")
     f1 = @formula 0 ~ 1 + continuousA # 1
     f2 = @formula 0 ~ 1 + continuousB # 1
     m_tul = fit(
@@ -202,13 +202,13 @@ end
         ["m", "x"][Int.(1 .+ round.(rand(MersenneTwister(43), nrow(evts))))]
 
 
-    b1 = firbasis(τ = (0.0, 0.02), sfreq = 20, name = "basisA")
-    b2 = firbasis(τ = (1.0, 1.02), sfreq = 20, name = "basisB")
+    b1 = firbasis(τ = (0.0, 0.02), sfreq = 20, name = "eventA")
+    b2 = firbasis(τ = (1.0, 1.02), sfreq = 20, name = "eventB")
     f1 = @formula 0 ~ 1 + continuousA * continuousB # 1
     f2 = @formula 0 ~ 1 + continuousB # 1
     m_tul = fit(
         UnfoldModel,
-        Dict("eventA" => (f1, b1), "eventB" => (f2, b2)),
+        ["eventA" => (f1, b1), "eventB" => (f2, b2)],
         evts,
         data,
         eventcolumn = "type",
@@ -218,8 +218,8 @@ end
 
     eff = Unfold.effects(Dict(:continuousA => [0, 1]), m_tul)
     @test size(eff, 1) == 4
-    @test all(eff.basisname[1:2] .== "basisA")
-    @test all(eff.basisname[4:end] .== "basisB")
+    @test all(eff.eventname[1:2] .== "eventA")
+    @test all(eff.eventname[4:end] .== "eventB")
     @test eff.yhat ≈ [
         0.0,
         mean(evts.continuousB[evts.type.=="eventA"] .== "x") * coef(m_tul)[4] +
