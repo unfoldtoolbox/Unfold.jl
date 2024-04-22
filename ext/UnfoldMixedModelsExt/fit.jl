@@ -60,10 +60,6 @@ function StatsModels.fit!(
     dataDim = length(size(data)) # surely there is a nicer way to get this but I dont know it
     @debug typeof(uf)
     #Xs = modelmatrix(uf)
-    Xs = modelmatrix(uf)
-    if isa(Xs, Vector)
-        Xs = Xs[1]
-    end
     # If we have3 dimension, we have a massive univariate linear mixed model for each timepoint
     if dataDim == 3
         firstData = data[1, 1, :]
@@ -76,11 +72,11 @@ function StatsModels.fit!(
     nchan = size(data, 1)
 
 
-    Xs = (Unfold.extend_to_larger(Xs[1]), Xs[2:end]...)#(Unfold.extend_to_larger(Xs[1]), Xs[2:end]...)
+    Xs = prepare_modelmatrix(uf)
+
     _, data = Unfold.equalize_size(Xs[1], data)
     # get a un-fitted mixed model object
 
-    Xs = (disallowmissing(Xs[1]), Xs[2:end]...)
     #Xs = (Matrix(Xs[1]),Xs[2:end]...)
     @debug "firstdata" size(firstData)
     mm = LinearMixedModel_wrapper(Unfold.formulas(uf), firstData, Xs)
@@ -149,6 +145,20 @@ function StatsModels.fit!(
     return uf
 end
 
+
+function prepare_modelmatrix(uf)
+    Xs = modelmatrix(uf)
+    if isa(Xs, Vector)
+        if length(Xs) > 1
+            @warn "multi-event LMM currently not supported"
+        end
+        Xs = Xs[1]
+    end
+    Xs = (Unfold.extend_to_larger(Xs[1]), Xs[2:end]...)#(Unfold.extend_to_larger(Xs[1]), Xs[2:end]...)
+    Xs = (disallowmissing(Xs[1]), Xs[2:end]...)
+    return Xs
+
+end
 function StatsModels.coef(
     uf::Union{UnfoldLinearMixedModel,UnfoldLinearMixedModelContinuousTime},
 )
