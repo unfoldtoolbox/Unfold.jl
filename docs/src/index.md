@@ -1,5 +1,4 @@
 # Unfold Documentation
-Documentation is currently written.
 
 If you want to follow the **tutorials**, best to start with the [mass-univariate approach](@ref lm_massunivariate), which should be familiar to you if you did ERPs before. Then the [overlap-correction tutorial](@ref lm_overlap), [mixed mass univariate](@ref lmm_massunivariate), [mixed overlap (tricky!)](@ref lmm_overlap). If you are then not satisfied, check out more advanced topics: [effects-interface (aka what to do after fitting)](@ref effects), or non-linear effects.
 
