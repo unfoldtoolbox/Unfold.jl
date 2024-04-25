@@ -108,6 +108,7 @@ function designmatrix(
     #note that we use tbl again, not tbl_nomissing.
     X = modelcols(form.rhs, tbl)
 
+
     designmatrixtype = typeof(designmatrix(unfoldmodeltype())[1])
     return designmatrixtype(form, X, tbl)
 end
@@ -435,9 +436,9 @@ calculates in which rows the individual event-basisfunctions should go in Xdc
 
 see also timeexpand_rows timeexpand_vals
 """
-function timeexpand_cols(term, bases, ncolsBasis, ncolsX)
+function timeexpand_cols(basisfunction, bases, ncolsBasis, ncolsX)
     # we can generate the columns much faster, if all bases output the same number of columns 
-    fastpath = time_expand_allBasesSameCols(term.basisfunction, bases, ncolsBasis)
+    fastpath = time_expand_allBasesSameCols(basisfunction, bases, ncolsBasis)
 
     if fastpath
         return timeexpand_cols_allsamecols(bases, ncolsBasis, ncolsX)
@@ -493,26 +494,107 @@ performs the actual time-expansion in a sparse way.
  Returns SparseMatrixCSC 
 """
 
-function time_expand(Xorg, term, tbl)
-    # this is the predefined eventfield, usually "latency"
-    tbl = DataFrame(tbl)
-    onsets = Float64.(tbl[:, term.eventfields[1]])::Vector{Float64} # XXX if we have integer onsets, we could directly speed up matrix generation maybe?
+function time_expand(Xorg::AbstractArray, term::TimeExpandedTerm, tbl)
 
-    if typeof(term.eventfields) <: Array && length(term.eventfields) == 1
-        bases = kernel.(Ref(term.basisfunction), onsets)
+    tbl = DataFrame(tbl)
+
+    # this extracts the predefined eventfield, usually "latency"
+    onsets = tbl[!, term.eventfields]
+    time_expand(Xorg, term.basisfunction, onsets)
+end
+function time_expand(Xorg::AbstractArray, basisfunction::FIRBasis, onsets)
+    if basisfunction.interpolate
+        # code doubling, but I dont know how to do the multiple dispatch otherwise
+        # this is the "old" way, pre 0.7.1
+        #bases = kernel.(Ref(basisfunction), eachrow(onsets))
+        if size(onsets, 2) != 1
+            @error "not implemented"
+        end
+        bases = kernel.(Ref(basisfunction), onsets[!, 1])
+        return time_expand(Xorg, basisfunction, onsets[!, 1], bases)
+
     else
-        bases = kernel.(Ref(term.basisfunction), eachrow(tbl[!, term.eventfields]))
+        # fast way
+        return time_expand_firdiag(Xorg, basisfunction, onsets)
     end
 
-    return time_expand(Xorg, term, onsets, bases)
 end
-function time_expand(Xorg, term, onsets, bases)
-    ncolsBasis = size(kernel(term.basisfunction, 0), 2)::Int64
+
+function time_expand_firdiag(Xorg, basisfunction, onsets)
+    @assert width(basisfunction) == height(basisfunction)
+    w = width(basisfunction)
+
+
+    Xdc_list = SparseMatrixCSC[]
+    for Xcol in axes(Xorg, 2)
+        I, J, V, m, n = spdiagm_diag(w, (.-onsets[!, 1] .=> Xorg[:, Xcol])...)
+        Xdc_col = sparse(I, J, V, m, n)
+        #@debug typeof(Xdc_col) typeof(Xdc_list)
+        push!(Xdc_list, Xdc_col)
+
+    end
+    return reduce(hcat, Xdc_list)
+
+end
+
+
+"""
+Speed improved version of spdiagm, takes a single float value instead of a vector, like a version of spdiagm that takes in a UniformScaling
+
+
+e.g. 
+> sz = 5
+> ix = [1,3,10]
+> spdiagm_diag(sz,(.-ix.=>1)...)
+"""
+function spdiagm_diag(diagsz, kv::Pair{<:Integer,T}...) where {T}
+
+    ncoeffs = diagsz * length(kv)
+    I = Vector{Int}(undef, ncoeffs)
+    J = Vector{Int}(undef, ncoeffs)
+    V = Vector{T}(undef, ncoeffs)
+    i = 0
+    m = 0
+    n = 0
+    for p in kv
+        k = p.first # e.g. -1 
+        v = p.second # e.g. [1,2,3,4,5]
+        if k < 0
+            row = -k
+            col = 0
+        elseif k > 0
+            row = 0
+            col = k
+        else
+            row = 0
+            col = 0
+        end
+
+        r = 1+i:diagsz+i
+        I[r], J[r] = (row+1:row+diagsz, col+1:col+diagsz)
+        #copyto!(view(V, r), v)
+        view(V, r) .= v
+
+        m = max(m, row + diagsz)
+        n = max(n, col + diagsz)
+        i += diagsz
+    end
+    return I, J, V, m, n
+end
+
+
+function time_expand(Xorg::AbstractArray, basisfunction::BasisFunction, onsets)
+    bases = kernel.(Ref(basisfunction), eachrow(onsets))
+    return time_expand(Xorg, basisfunction, onsets, bases)
+end
+
+function time_expand(Xorg, basisfunction::BasisFunction, onsets, bases)
+    ncolsBasis = size(kernel(basisfunction, 0), 2)::Int64
     X = reshape(Xorg, size(Xorg, 1), :) # why is this necessary?
     ncolsX = size(X)[2]::Int64
 
-    rows = timeexpand_rows(onsets, bases, shift_onset(term.basisfunction), ncolsX)
-    cols = timeexpand_cols(term, bases, ncolsBasis, ncolsX)
+    rows = timeexpand_rows(onsets, bases, shift_onset(basisfunction), ncolsX)
+    cols = timeexpand_cols(basisfunction, bases, ncolsBasis, ncolsX)
 
     vals = timeexpand_vals(bases, X, size(cols), ncolsX)
 
