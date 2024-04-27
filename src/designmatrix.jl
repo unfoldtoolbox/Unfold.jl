@@ -520,23 +520,128 @@ function time_expand(Xorg::AbstractArray, basisfunction::FIRBasis, onsets)
 
 end
 
-function time_expand_firdiag(Xorg, basisfunction, onsets)
+function time_expand_firdiag(Xorg::AbstractMatrix{T}, basisfunction, onsets) where {T}
     @assert width(basisfunction) == height(basisfunction)
     w = width(basisfunction)
+    adjusted_onsets = floor.(onsets[!, 1] .+ shift_onset(basisfunction))
+    @assert (minimum(onsets[!, 1]) + shift_onset(basisfunction) .- 1 + w) > 0
+
+    neg_fix = sum(adjusted_onsets[adjusted_onsets.<1] .- 1)
+    ncoeffs = w * size(Xorg, 1) * size(Xorg, 2) .+ neg_fix * size(Xorg, 2)
 
 
-    Xdc_list = SparseMatrixCSC[]
-    for Xcol in axes(Xorg, 2)
-        I, J, V, m, n = spdiagm_diag(w, (.-onsets[!, 1] .=> Xorg[:, Xcol])...)
-        Xdc_col = sparse(I, J, V, m, n)
-        #@debug typeof(Xdc_col) typeof(Xdc_list)
-        push!(Xdc_list, Xdc_col)
+    I = Vector{Int}(undef, ncoeffs)
+    colptr = Vector{Int}(undef, w * size(Xorg, 2) + 1)
 
+    #V = Vector{T}(undef, ncoeffs)
+    V = similar(Xorg, ncoeffs)
+
+
+    for ix_X = 1:size(Xorg, 2)
+        #I, J, V, m, n = spdiagm_diag(w, (.-onsets[!, 1] .=> Xorg[:, Xcol])...)
+
+        #ix = (1+size(Xorg, 1)*(ix_X-1)):size(Xorg, 1)*ix_X
+        ol = w * size(Xorg, 1) + neg_fix
+        #ix = 1:ol
+        ix = 1+(ix_X-1)*ol:ix_X*ol
+        ix_col = (1+(ix_X-1)*w):ix_X*w+1
+
+        #@debug ix, ix_col size(I) size(colptr) size(V) w
+        @views spdiagm_diag_colwise!(
+            I[ix],
+            colptr[ix_col],
+            V[ix],
+            w,
+            adjusted_onsets,
+            Xorg[:, ix_X];
+            colptr_offset = (ix_X - 1) * (w * size(Xorg, 1) + neg_fix),
+        )
     end
-    return reduce(hcat, Xdc_list)
+    colptr[end] = length(V) + 1
+
+    #@debug "Xorg" size(Xorg)
+    #@debug "I" I
+    #@debug "colptr" colptr
+
+    #@debug onsets[end, 1] + w, size(Xorg, 2) * w, size(colptr), size(I), size(V)
+    return SparseMatrixCSC(adjusted_onsets[end, 1] + w - 1, w * size(Xorg, 2), colptr, I, V)
+    #return reduce(hcat, Xdc_list)
+
 
 end
 
+
+"""
+Even more speed improved version of spdiagm, takes a single float value instead of a vector, like a version of spdiagm that takes in a UniformScaling.
+This directly constructs the CSC required fields, thus it is possible to do SparseMatrixCSC(spdiagm_diag_colwise(...)).
+
+Use at your own discretion!!
+
+
+e.g. 
+> sz = 5
+> ix = [1,3,10]
+> vals = [4,1,2]
+> spdiagm_diag(sz,ix,vals)
+"""
+
+function spdiagm_diag_colwise!(
+    I,
+    colptr,
+    V,
+    diagsz,
+    onsets,
+    values::AbstractVector{T};
+    colptr_offset = 0,
+) where {T}
+    #ncoeffs = diagsz * length(onsets)
+    @debug size(I) size(colptr) size(V) size(onsets) size(values)
+    #colptr .= colptr_offset .+ (1:sum(>(0),onsets):ncoeffs+1)
+    r = 1
+    _c = 1
+    for c = 1:diagsz
+        colptr[c] = _c + colptr_offset
+        c_add = 0
+        for (i, o) in enumerate(onsets)
+            #     @debug i, r
+            row_val = o + c - 1
+            if row_val < 1
+                continue
+            end
+            I[r] = row_val
+            V[r] = values[i]
+            r = r + 1
+            c_add = c_add + 1
+        end
+        _c = _c + c_add
+    end
+    return (onsets[end] + diagsz, diagsz, colptr, I, V)
+end
+
+
+
+function spdiagm_diag_colwise(diagsz, onsets, values::AbstractVector{T}) where {T}
+
+    ncoeffs = diagsz * length(onsets)
+    I = Vector{Int}(undef, ncoeffs)
+    #J = Vector{Int}(undef, ncoeffs)
+    colptr = 1:length(onsets):ncoeffs+1 |> collect
+    V = Vector{T}(undef, ncoeffs)
+    r = 1
+    for c = 1:diagsz
+        for (i, o) in enumerate(onsets)
+            v = values[i]
+
+
+            I[r] = o + c
+            #J[r] = c
+
+            V[r] = v
+            r = r + 1
+        end
+    end
+    return (onsets[end] + diagsz, diagsz, colptr, I, V)
+end
 
 """
 Speed improved version of spdiagm, takes a single float value instead of a vector, like a version of spdiagm that takes in a UniformScaling
