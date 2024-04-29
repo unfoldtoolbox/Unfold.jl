@@ -104,12 +104,12 @@ function designmatrix(
     )
 
     # Evaluate the designmatrix
-
-    #note that we use tbl again, not tbl_nomissing.
-    X = modelcols(form.rhs, tbl)
+    X = modelcols(form.rhs, tbl_nomissing)
 
 
     designmatrixtype = typeof(designmatrix(unfoldmodeltype())[1])
+
+    #return X
     return designmatrixtype(form, X, tbl)
 end
 
@@ -521,6 +521,7 @@ function time_expand(Xorg::AbstractArray, basisfunction::FIRBasis, onsets)
 end
 
 function time_expand_firdiag(Xorg::AbstractMatrix{T}, basisfunction, onsets) where {T}
+    @debug "Xorg eltype" T
     @assert width(basisfunction) == height(basisfunction)
     w = width(basisfunction)
     adjusted_onsets = floor.(onsets[!, 1] .+ shift_onset(basisfunction))
@@ -562,9 +563,32 @@ function time_expand_firdiag(Xorg::AbstractMatrix{T}, basisfunction, onsets) whe
     #@debug "Xorg" size(Xorg)
     #@debug "I" I
     #@debug "colptr" colptr
+    @debug w size(Xorg, 2) size(adjusted_onsets) size(onsets)
+    @debug "m" adjusted_onsets[end, 1] + w - 1
+    @debug "n" w * size(Xorg, 2)
+    @debug "colptr[end]" colptr[end]
+    @debug "l(colptr)" length(colptr)
+    @debug "I/V" length(I) length(V)
 
-    #@debug onsets[end, 1] + w, size(Xorg, 2) * w, size(colptr), size(I), size(V)
-    return SparseMatrixCSC(adjusted_onsets[end, 1] + w - 1, w * size(Xorg, 2), colptr, I, V)
+
+    m = adjusted_onsets[end, 1] + w
+    n = w * size(Xorg, 2)
+
+    @debug SparseArrays._goodbuffers(Int(m), Int(n), colptr, I, V)
+    SparseArrays._goodbuffers(Int(m), Int(n), colptr, I, V) || throw(
+        ArgumentError(
+            "Invalid buffers for SparseMatrixCSC construction n=$n, colptr=$(summary(colptr)), rowval=$(summary(rowval)), nzval=$(summary(nzval))",
+        ),
+    )
+
+    Ti = promote_type(eltype(colptr), eltype(I))
+    SparseArrays.sparse_check_Ti(m, n, Ti)
+    SparseArrays.sparse_check(n, colptr, I, V)
+    # silently shorten rowval and nzval to usable index positions.
+    maxlen = abs(widemul(m, n))
+    isbitstype(Ti) && (maxlen = min(maxlen, typemax(Ti) - 1))
+    @debug maxlen length(I)
+    return SparseMatrixCSC(m, n, colptr, I, V)
     #return reduce(hcat, Xdc_list)
 
 
@@ -595,7 +619,7 @@ function spdiagm_diag_colwise!(
     colptr_offset = 0,
 ) where {T}
     #ncoeffs = diagsz * length(onsets)
-    @debug size(I) size(colptr) size(V) size(onsets) size(values)
+    #    @debug size(I) size(colptr) size(V) size(onsets) size(values)
     #colptr .= colptr_offset .+ (1:sum(>(0),onsets):ncoeffs+1)
     r = 1
     _c = 1

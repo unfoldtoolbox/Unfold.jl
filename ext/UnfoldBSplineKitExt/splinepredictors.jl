@@ -66,6 +66,7 @@ function spl_fillMat!(bs::BSplineBasis, large::Matrix, x::AbstractVector)
         @warn(
             "spline prediction outside of possible range  putting those values to missing.\n `findfirst(Out-Of-Bound-value)` is x=$(x[findfirst(ix)]), with bounds: $bnds"
         )
+        large = allowmissing(large)
         large[ix, :] .= missing
     end
 
@@ -76,9 +77,10 @@ evaluate a spline basisset `basis` at `x`
 
 returns `Missing` if x is outside of the basis set
 """
-function splFunction(x, bs)
+function splFunction(x::AbstractVector, bs)
+    @debug "spl" typeof(x)
     # init array
-    large = zeros(Union{Missing,Float64}, length(x), length(bs))
+    large = similar(x, length(x), length(bs))
 
     # fill it with spline values
     spl_fillMat!(bs, large, x)
@@ -86,12 +88,12 @@ function splFunction(x, bs)
     return large
 end
 
-function splFunction(x, spl::PeriodicBSplineTerm)
+function splFunction(x::AbstractVector, spl::PeriodicBSplineTerm)
     basis = PeriodicBSplineBasis(BSplineOrder(spl.order), deepcopy(spl.breakpoints))
     splFunction(x, basis)
 end
 
-function splFunction(x, spl::BSplineTerm)
+function splFunction(x::AbstractVector, spl::BSplineTerm)
     basis = BSplineKit.BSplineBasis(BSplineOrder(spl.order), deepcopy(spl.breakpoints))
     splFunction(x, basis)
 end
