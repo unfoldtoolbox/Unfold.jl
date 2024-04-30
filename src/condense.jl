@@ -253,8 +253,11 @@ function result_to_table(
 
         # single_data = hcat(single_data, repeat(metadata, size(single_eff, 1)))
         @debug size(metadata) size(single_eff) size(single_data)
-        @debug repeat(metadata, inner = size(single_eff, 1))
-        single_data_comb = map(merge, single_data, repeat(metadata, inner = 1))
+        @debug repeat(metadata, inner = size(single_eff, 1))[end]
+        @debug single_data[end]
+
+        single_data_comb =
+            map(merge, single_data, repeat(metadata, inner = size(single_eff, 1)))
         push!(data_list, single_data_comb)
     end
     return reduce(vcat, data_list) |> t -> DataFrame(columns(t))
