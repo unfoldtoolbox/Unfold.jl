@@ -91,6 +91,8 @@ function _splFunction(x::AbstractVector{<:AbstractFloat}, bs)
 end
 _splFunction(x::AbstractVector, bs) = _splFunction(Float64.(x), bs)
 
+splFunction(x, bs) = _splFunction(x, bs)
+
 function splFunction(x::AbstractVector, spl::PeriodicBSplineTerm)
     basis = PeriodicBSplineBasis(BSplineOrder(spl.order), deepcopy(spl.breakpoints))
     _splFunction(x, basis)
