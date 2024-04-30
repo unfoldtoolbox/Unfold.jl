@@ -52,8 +52,9 @@ function spl_fillMat!(bs::PeriodicBSplineBasis, large::Matrix, x::AbstractVector
         ix = basis_to_array_index(bs, axes(large, 2), k)
         large[:, ix] .+= bs[k](x)
     end
+    return large
 end
-function spl_fillMat!(bs::BSplineBasis, large::Matrix, x::AbstractVector)
+function spl_fillMat!(bs::BSplineBasis, large::AbstractMatrix, x::AbstractVector)
     for k = 1:length(bs)
 
         large[:, k] .+= bs[k](x)
