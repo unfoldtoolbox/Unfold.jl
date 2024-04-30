@@ -73,11 +73,13 @@ function spl_fillMat!(bs::BSplineBasis, large::Matrix, x::AbstractVector)
 end
 
 """
-evaluate a spline basisset `basis` at `x`
+    splFunction(x::AbstractVector,bs::AbstractBSplineTerm)
+    _splFunction(x::AbstractVector,bs::AbstractBSplineTerm)
+evaluate a spline basisset `basis` at `x`. Automatically promotes `x` to Float64 if not AbstractFloat
 
 returns `Missing` if x is outside of the basis set
 """
-function splFunction(x::AbstractVector, bs)
+function _splFunction(x::AbstractVector{<:AbstractFloat}, bs)
     @debug "spl" typeof(x)
     # init array
     large = similar(x, length(x), length(bs))
@@ -87,15 +89,16 @@ function splFunction(x::AbstractVector, bs)
 
     return large
 end
+_splFunction(x::AbstractVector, bs) = _splFunction(Float64.(x), bs)
 
 function splFunction(x::AbstractVector, spl::PeriodicBSplineTerm)
     basis = PeriodicBSplineBasis(BSplineOrder(spl.order), deepcopy(spl.breakpoints))
-    splFunction(x, basis)
+    _splFunction(x, basis)
 end
 
 function splFunction(x::AbstractVector, spl::BSplineTerm)
     basis = BSplineKit.BSplineBasis(BSplineOrder(spl.order), deepcopy(spl.breakpoints))
-    splFunction(x, basis)
+    _splFunction(x, basis)
 end
 #spl(x,df) = Splines2.bs(x,df=df,intercept=true) # assumes intercept
 Unfold.spl(x, df) = 0 # fallback
