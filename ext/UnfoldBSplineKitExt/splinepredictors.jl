@@ -69,7 +69,7 @@ function spl_fillMat!(bs::BSplineBasis, large::Matrix, x::AbstractVector)
         large = allowmissing(large)
         large[ix, :] .= missing
     end
-
+    return large
 end
 
 """
@@ -85,7 +85,7 @@ function _splFunction(x::AbstractVector{T}, bs) where {T<:AbstractFloat}
     large = zeros(T, length(x), length(bs))
 
     # fill it with spline values
-    spl_fillMat!(bs, large, x)
+    large = spl_fillMat!(bs, large, x)
 
     return large
 end
