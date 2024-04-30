@@ -32,6 +32,28 @@ ext = Base.get_extension(Unfold, :UnfoldMixedModelsExt)
 
     @test all(isapprox.(Matrix(Xdc)[1:4, 1:4], shouldBePos, atol = 1e-15))
 end
+
+
+@testset "basic designmat interpolated yes/no" begin
+    ## test negative
+    basisfunction = firbasis(τ = (-3, 0), sfreq = 1, name = "testing")
+    timeexpandterm =
+        Unfold.TimeExpandedTerm(FormulaTerm(Term, Term), basisfunction, :latency)
+    Xdc = Unfold.time_expand(X, timeexpandterm, tbl)
+    @test length(Unfold.times(timeexpandterm)) == 4
+    @test size(Xdc) == (4, 4)
+    @test Unfold.width(basisfunction) == 4
+    @test Unfold.height(basisfunction) == 4
+    basisfunction = firbasis(τ = (-3, 0), sfreq = 1, name = "testing", interpolate = true)
+    timeexpandterm =
+        Unfold.TimeExpandedTerm(FormulaTerm(Term, Term), basisfunction, :latency)
+    Xdc = Unfold.time_expand(X, timeexpandterm, tbl)
+    @test length(Unfold.times(timeexpandterm)) == 5
+    @test Unfold.width(basisfunction) == 4
+    @test Unfold.height(basisfunction) == 5
+
+    @test size(Xdc) == (5, 4)
+end
 @testset "customized eventfields" begin
     tbl2 = tbl = DataFrame([1 4]', [:onset])
 
@@ -200,9 +222,9 @@ end
 #basisfunction2 = firbasis(τ = (0, 0.5), sfreq = 10, name = "basis2")
 @testset "Missings in Events" begin
     tbl = DataFrame(
-        :a => [1, 2, 3, 4, 5, 6, 7, 8],
-        :b => [1, 1, 1, 2, 2, 2, 3, missing],
-        :c => [1, 2, 3, 4, 5, 6, 7, missing],
+        :a => [1.0, 2, 3, 4, 5, 6, 7, 8],
+        :b => [1.0, 1, 1, 2, 2, 2, 3, missing],
+        :c => [1.0, 2, 3, 4, 5, 6, 7, missing],
         :d => ["1", "2", "3", "4", "5", "6", "7", "8"],
         :e => ["1", "2", "3", "4", "5", "6", "7", missing],
         :event => [1, 1, 1, 1, 2, 2, 2, 2],
@@ -234,6 +256,20 @@ end
         "1" => (@formula(0 ~ spl(a, 4) + spl(b, 4) + d + e), firbasis((0, 1), 1)),
         "2" => (@formula(0 ~ a + d), firbasis((0, 1), 1)),
     ]
+    uf = UnfoldLinearModelContinuousTime(design)
+    designmatrix(uf, tbl)
+end
+@testset "Integer Covariate Splines" begin
+    tbl = DataFrame(
+        :a => [1.0, 2, 3, 4, 5, 6, 7, 8],
+        :event => [1, 1, 1, 1, 2, 2, 2, 2],
+        :latency => [10, 20, 30, 40, 50, 60, 70, 80],
+    )
+    tbl.event = string.(tbl.event)
+    designmatrix(UnfoldLinearModel, @formula(0 ~ a), tbl)
+
+    # prior to the Missing disallow sanity check, this gave an error
+    design = ["1" => (@formula(0 ~ spl(a, 4)), firbasis((0, 1), 1))]
     uf = UnfoldLinearModelContinuousTime(design)
     designmatrix(uf, tbl)
 end

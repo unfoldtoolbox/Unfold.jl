@@ -23,6 +23,7 @@ function solver_default(
     beta = zeros(T, size(data, 1), size(X, 2)) # had issues with undef
 
     p = Progress(size(data, 1); enabled = show_progress)
+    @debug typeof(X)
     X = SparseMatrixCSC(X) # X s often a SubArray, lsmr really doesnt like indexing into subarrays, one copy needed.
     @maybe_threads multithreading for ch = 1:size(data, 1)
 
