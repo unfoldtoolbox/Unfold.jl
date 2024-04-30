@@ -79,10 +79,10 @@ evaluate a spline basisset `basis` at `x`. Automatically promotes `x` to Float64
 
 returns `Missing` if x is outside of the basis set
 """
-function _splFunction(x::AbstractVector{<:AbstractFloat}, bs)
+function _splFunction(x::AbstractVector{T}, bs) where {T<:AbstractFloat}
     @debug "spl" typeof(x)
     # init array
-    large = similar(x, length(x), length(bs))
+    large = zeros(T, length(x), length(bs))
 
     # fill it with spline values
     spl_fillMat!(bs, large, x)
