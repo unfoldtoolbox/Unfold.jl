@@ -32,6 +32,28 @@ ext = Base.get_extension(Unfold, :UnfoldMixedModelsExt)
 
     @test all(isapprox.(Matrix(Xdc)[1:4, 1:4], shouldBePos, atol = 1e-15))
 end
+
+
+@testset "basic designmat interpolated yes/no" begin
+    ## test negative
+    basisfunction = firbasis(τ = (-3, 0), sfreq = 1, name = "testing")
+    timeexpandterm =
+        Unfold.TimeExpandedTerm(FormulaTerm(Term, Term), basisfunction, :latency)
+    Xdc = Unfold.time_expand(X, timeexpandterm, tbl)
+    @test length(Unfold.times(timeexpandterm)) == 4
+    @test size(Xdc) == (4, 4)
+    @test Unfold.width(basisfunction) == 4
+    @test Unfold.height(basisfunction) == 4
+    basisfunction = firbasis(τ = (-3, 0), sfreq = 1, name = "testing", interpolate = true)
+    timeexpandterm =
+        Unfold.TimeExpandedTerm(FormulaTerm(Term, Term), basisfunction, :latency)
+    Xdc = Unfold.time_expand(X, timeexpandterm, tbl)
+    @test length(Unfold.times(timeexpandterm)) == 5
+    @test Unfold.width(basisfunction) == 4
+    @test Unfold.height(basisfunction) == 5
+
+    @test size(Xdc) == (5, 4)
+end
 @testset "customized eventfields" begin
     tbl2 = tbl = DataFrame([1 4]', [:onset])
 

@@ -48,6 +48,7 @@ function effects(design::AbstractDict, model::T; typical = mean) where {T<:Unfol
     if :latency ∈ unique(vcat(names.(reference_grids)...))
         reference_grids = select.(reference_grids, Ref(DataFrames.Not(:latency)))
     end
+    @debug "effects" size(eff[1]) reference_grid size(times(model)[1]) eventnames(model)
     return result_to_table(eff, reference_grids, times(model), eventnames(model))
 
 

@@ -231,16 +231,18 @@ function result_to_table(
     data_list = []
     for (single_events, single_eff, single_times, single_eventname) in
         zip(events, eff, times_vecs, eventnames)
-        @debug typeof(eff)
+        @debug "sizes" size(single_events) size(single_eff) size(single_times)
+        @debug "sizes2" size.(events) size.(times)
         ntimes = size(single_eff, 2)
         evts_tbl = repeat(Table(single_events), inner = (ntimes))
         time_event = Table(
             time = single_times |> poolArray,
             eventname = repeat([single_eventname] |> poolArray, length(single_times)),
         )
-        @debug size(time_event) length(single_times) ntimes
+        @debug size(time_event) size(evts_tbl)
+        @assert size(evts_tbl) == size(time_event)
         metadata = Table(evts_tbl, time_event)
-
+        @debug "metadata" size(metadata)
         single_data = Table(
             yhat = single_eff[:],#vec(reshape(single_eff, :, 1)),
             channel = repeat(
@@ -251,8 +253,8 @@ function result_to_table(
 
         # single_data = hcat(single_data, repeat(metadata, size(single_eff, 1)))
         @debug size(metadata) size(single_eff) size(single_data)
-        single_data_comb =
-            map(merge, single_data, repeat(metadata, inner = size(single_eff, 1)))
+        @debug repeat(metadata, inner = size(single_eff, 1))
+        single_data_comb = map(merge, single_data, repeat(metadata, inner = 1))
         push!(data_list, single_data_comb)
     end
     return reduce(vcat, data_list) |> t -> DataFrame(columns(t))

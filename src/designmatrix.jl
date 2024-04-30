@@ -571,7 +571,7 @@ function time_expand_firdiag(Xorg::AbstractMatrix{T}, basisfunction, onsets) whe
     @debug "I/V" length(I) length(V)
 
 
-    m = adjusted_onsets[end, 1] + w
+    m = adjusted_onsets[end, 1] + w - 1
     n = w * size(Xorg, 2)
 
     @debug SparseArrays._goodbuffers(Int(m), Int(n), colptr, I, V)
