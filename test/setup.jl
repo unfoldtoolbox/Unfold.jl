@@ -7,6 +7,7 @@ using Statistics
 using Random
 using CategoricalArrays
 using StatsBase
+using Missings
 
 using MixedModels, RobustModels, BSplineKit # extensionTriggers
 using SparseArrays
