@@ -32,14 +32,19 @@ function predict(
 end
 
 function predict(
-    X::AbstractMatrix,
-    coefs::AbstractMatrix{T},
+    X::AbstractMatrix{Tcoef},
+    coefs::AbstractMatrix{TX},
     onsets::Vector,
     timewindow::NTuple{2,Int},
-) where {T}
+) where {Tcoef,TX}
     # Create an empty array for the residuals
     # Note there is a +1 because start and stop indices are both included in the interval
-    yhat = missings(T, size(coefs, 1), timewindow[2] - timewindow[1] + 1, length(onsets))
+    yhat = Array{Union{TX,Tcoef}}(
+        undef,
+        size(coefs, 1),
+        timewindow[2] - timewindow[1] + 1,
+        length(onsets),
+    )
     for event in eachindex(onsets)
 
         event_range_temp = onsets[event]+timewindow[1]:onsets[event]+timewindow[2]
@@ -53,6 +58,46 @@ function predict(
         yhat[:, indices_inside_data, event] .= predict(@view(X[event_range, :]), coefs)
     end
     return yhat
+end
+
+
+function _residuals(
+    yhat::AbstractArray{Tyhat,3},
+    y::AbstractMatrix{Ty},
+    onsets::Vector,
+    timewindow::NTuple{2,Int},
+) where {Ty,Tyhat}
+
+    resid = missings(
+        Union{Ty,Tyhat},
+        size(y, 1),
+        timewindow[2] - timewindow[1] + 1,
+        length(onsets),
+    )
+    for event in eachindex(onsets)
+
+        event_range_temp = onsets[event]+timewindow[1]:onsets[event]+timewindow[2]
+
+        # Clip indices that are outside of the design matrix (i.e. before the start or after the end)
+
+        indices_inside_data = 0 .< event_range_temp .< size(y, 2)
+        event_range = event_range_temp[indices_inside_data]
+
+
+        !isempty(event_range) || @warn "event_range is empty for $event $(onsets[event])"
+
+        # Calculate residuals
+        #@debug "_residuals" size(y) size(yhat) size(event_range)
+        #@debug event event_range[[1, end]]
+        @views resid[:, indices_inside_data, event] .=
+            y[:, event_range] .- yhat[:, indices_inside_data, event]
+
+        # if !all(indices_inside_data)
+        #    @views resid[:, .!indices_inside_data, event] .=
+        #        y[:, event_range_temp[.!indices_inside_data]]
+        #end
+    end
+    return resid
 end
 
 
@@ -131,7 +176,7 @@ Returns a predicted ("y_hat = X*b") `Array`.
 if `overlap = true` (default), overlap based on the `latency` column of 'evts` will be simulated, or in the case of `!ContinuousTimeTrait` just X*coef is returned. 
 if `overlap = false`, returns predictions without overlap (models with `ContinuousTimeTrait` (=> with basisfunction / deconvolution) only), via `predict_no_overlap`
 
-if `keep_basis` or `exclude_basis` is defined, then `predict_partial_overkap` is called, which allows to selective introduce overlap based on specified (or excluded respective) events/basisfunctions
+if `keep_basis` or `exclude_basis` is defined, then `predict_partial_overlap` is called, which allows to selective introduce overlap based on specified (or excluded respective) events/basisfunctions
 
 `epoch_to` and  `epoch_timewindow` currently only defined for partial_overlap, calculated (partial) overlap controlled predictions, but returns them at the specified `epoch_at` event, with the times `epoch_timewindow` in samples.
 `eventcolumn` can be specified as well if different from the default `event`
@@ -217,10 +262,10 @@ end
     if !isempty(keep_basis)
         basisnames = keep_basis
     else
-        basisnames = basisname(uf)
+        basisnames = basisname(Unfold.formulas(uf))
         basisnames = setdiff(basisnames, exclude_basis)
     end
-    @debug basisname
+    #    @debug basisname
     X_view = matrix_by_basisname(modelmatrix(uf), uf, basisnames)
     coefs_view = matrix_by_basisname(coefs, uf, basisnames)
 
@@ -229,14 +274,20 @@ end
         return predict(X_view, coefs_view)
 
     else
-        @debug typeof(evts)
+        #        @debug typeof(evts)
         timewindow =
             isnothing(epoch_timewindow) ? calc_epoch_timewindow(uf, epoch_to) :
             epoch_timewindow
-        find_lat = x -> x[x[:, eventcolumn].==epoch_to, :latency]
+
+        find_lat =
+            x -> x[
+                epoch_to == Any ? (1:size(x, 1)) : x[:, eventcolumn] .== epoch_to,
+                :latency,
+            ]
         latencies = vcat(find_lat.(evts)...)
         #ix_event = vcat(evts...)[:, eventcolumn] .== epoch_to
         #latencies = evts[ix_event].latency
+        #@debug latencies[end] size(X_view) timewindow
         return predict(X_view, coefs_view, latencies, (timewindow[1], timewindow[end]);)
     end
 
@@ -272,7 +323,7 @@ end
     has_missings = false
     yhat = Array{eltype(coefs)}[]
     @debug eltype(coefs) typeof(yhat)
-    for (fi, e) in zip(f, evts)
+    for (fi, e) in zip(f, deepcopy(evts))
 
         # put latency to 1 in case no basis shift
         e.latency .= -fi.rhs.basisfunction.shift_onset + 1 #sum(times(fi) .<= 0)
@@ -291,7 +342,7 @@ end
             p = predict(X_singles[ev], coefs_view)
             if has_missings || isa(p, AbstractArray{<:Union{<:Missing,<:Number}})
                 # if outside range predictions happen for spline predictors, we have to allow missings
-                @debug "yeah, missings..."
+                #                @debug "yeah, missings..."
                 has_missings = true
                 yhat_single = allowmissing(yhat_single)
             end
@@ -347,7 +398,7 @@ returns an integer range with the samples around `epoch_event` as defined in the
 function calc_epoch_timewindow(uf, epoch_event)
     basis_ix = findfirst(Unfold.basisname(formulas(uf)) .== epoch_event)
     basisfunction = formulas(uf)[basis_ix].rhs.basisfunction
-    return (1:Unfold.height(basisfunction)) .+ Unfold.shift_onset(basisfunction)
+    return (1:Unfold.height(basisfunction)) .- 1 .+ Unfold.shift_onset(basisfunction) # start at 0
 end
 
 """

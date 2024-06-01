@@ -45,7 +45,7 @@ function solver_krylov(
 
     p = Progress(size(data, 1); enabled = show_progress)
 
-    beta = zeros(size(data, 1), size(X, 2)) # had issues with undef
+    beta = zeros(T, size(data, 1), size(X, 2)) # had issues with undef
     Unfold.@maybe_threads multithreading for ch = 1:size(data, 1)
         @debug ch
         data_loop = view(data, ch, :)
