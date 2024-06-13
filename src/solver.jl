@@ -4,7 +4,12 @@ function _lsmr!(beta, X::SparseMatrixCSC, data::AbstractArray{<:Number}, ch)
     _, h = lsmr!(@view(beta[ch, :]), X, @view(data[ch, :]); log = true)
     return h
 end
-function _lsmr!(beta, X::SparseMatrixCSC, data::AbstractArray{Union{<:Number,Missing}}, ch)
+function _lsmr!(
+    beta,
+    X::SparseMatrixCSC,
+    data::AbstractArray{<:Union{<:Number,Missing}},
+    ch,
+)
     dd = view(data, ch, :)
     ix = @. !ismissing(dd)
     _, h = lsmr!(@view(beta[ch, :]), (X[ix, :]), @view(data[ch, ix]); log = true)
@@ -23,7 +28,6 @@ function solver_default(
     beta = zeros(T, size(data, 1), size(X, 2)) # had issues with undef
 
     p = Progress(size(data, 1); enabled = show_progress)
-    @debug typeof(X)
     X = SparseMatrixCSC(X) # X s often a SubArray, lsmr really doesnt like indexing into subarrays, one copy needed.
     @maybe_threads multithreading for ch = 1:size(data, 1)
 

@@ -106,6 +106,7 @@ function StatsModels.fit!(
             #@debug "data-size: $(size(data))"
             #@debug println("mixedModel: $(mm.feterms)")
             if ndims(data) == 3
+                @debug typeof(mm)
                 MixedModels.refit!(mm, data[ch, t, :]; progress = false)
             else
                 #@debug size(mm.y)
@@ -188,7 +189,7 @@ end
 
 LinearMixedModel_wrapper(
     form,
-    data::Array{<:Union{TData},1},
+    data::AbstractArray{<:Union{TData},1},
     Xs;
     wts = [],
 ) where {TData<:Union{Missing,Number}} =
@@ -202,7 +203,7 @@ Wrapper to generate a LinearMixedModel. Code taken from MixedModels.jl and sligh
 """
 function LinearMixedModel_wrapper(
     form,
-    data::Array{<:Union{TData},1},
+    data::AbstractArray{<:Union{TData},1},
     Xs;
     wts = [],
 ) where {TData<:Number}

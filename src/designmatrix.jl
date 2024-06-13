@@ -521,10 +521,12 @@ function time_expand(Xorg::AbstractArray, basisfunction::FIRBasis, onsets)
 end
 
 function time_expand_firdiag(Xorg::AbstractMatrix{T}, basisfunction, onsets) where {T}
-    @debug "Xorg eltype" T
+
+    #    @debug "Xorg eltype" T
     @assert width(basisfunction) == height(basisfunction)
     w = width(basisfunction)
-    adjusted_onsets = floor.(onsets[!, 1] .+ shift_onset(basisfunction))
+    adjusted_onsets = Int.(floor.(onsets[!, 1] .+ shift_onset(basisfunction)))
+
     @assert (minimum(onsets[!, 1]) + shift_onset(basisfunction) .- 1 + w) > 0
 
     neg_fix = sum(adjusted_onsets[adjusted_onsets.<1] .- 1)
@@ -557,24 +559,15 @@ function time_expand_firdiag(Xorg::AbstractMatrix{T}, basisfunction, onsets) whe
             Xorg[:, ix_X];
             colptr_offset = (ix_X - 1) * (w * size(Xorg, 1) + neg_fix),
         )
-    end
+
+  end
     colptr[end] = length(V) + 1
 
-    #@debug "Xorg" size(Xorg)
-    #@debug "I" I
-    #@debug "colptr" colptr
-    @debug w size(Xorg, 2) size(adjusted_onsets) size(onsets)
-    @debug "m" adjusted_onsets[end, 1] + w - 1
-    @debug "n" w * size(Xorg, 2)
-    @debug "colptr[end]" colptr[end]
-    @debug "l(colptr)" length(colptr)
-    @debug "I/V" length(I) length(V)
 
 
     m = adjusted_onsets[end, 1] + w - 1
     n = w * size(Xorg, 2)
 
-    @debug SparseArrays._goodbuffers(Int(m), Int(n), colptr, I, V)
     SparseArrays._goodbuffers(Int(m), Int(n), colptr, I, V) || throw(
         ArgumentError(
             "Invalid buffers for SparseMatrixCSC construction n=$n, colptr=$(summary(colptr)), rowval=$(summary(rowval)), nzval=$(summary(nzval))",
@@ -587,12 +580,13 @@ function time_expand_firdiag(Xorg::AbstractMatrix{T}, basisfunction, onsets) whe
     # silently shorten rowval and nzval to usable index positions.
     maxlen = abs(widemul(m, n))
     isbitstype(Ti) && (maxlen = min(maxlen, typemax(Ti) - 1))
-    @debug maxlen length(I)
+
     return SparseMatrixCSC(m, n, colptr, I, V)
     #return reduce(hcat, Xdc_list)
 
 
 end
+
 
 
 """

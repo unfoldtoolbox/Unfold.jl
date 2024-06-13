@@ -278,3 +278,25 @@ end
     #plot(m_tul_se[m_tul_se.channel.==1,:],se=true)
 
 end
+
+
+
+@testset "non-integer fir no interpolation #200" begin
+
+    data, evts = UnfoldSim.predef_eeg()
+    evts.latency .= evts.latency + rand(length(evts.latency))
+    f = @formula 0 ~ 1 + condition + continuous
+    # generate ModelStruct
+    m = fit(UnfoldModel, [Any => (f, firbasis([-0.111, 0.2312], 100))], evts, data;)
+end
+
+@testset "missing data modelfit" begin
+
+    data, evts = UnfoldSim.predef_eeg()
+    data = allowmissing(data)
+    data[500:600] .= missing
+
+    f = @formula 0 ~ 1 + condition + continuous
+    # generate ModelStruct
+    m = fit(UnfoldModel, [Any => (f, firbasis([-0.111, 0.2312], 100))], evts, data;)
+end

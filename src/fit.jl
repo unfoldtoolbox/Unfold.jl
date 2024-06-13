@@ -174,7 +174,7 @@ function StatsModels.fit!(
 
 
     X, data = equalize_size(X, data)
-    @debug typeof(uf.modelfit), typeof(T), typeof(X), typeof(data)
+    #    @debug typeof(uf.modelfit), typeof(T), typeof(X), typeof(data)
     uf.modelfit = solver(X, data)
     return uf
 
