@@ -52,12 +52,13 @@ yhat_mul = predict(m_mul, evts_grid)
 
 ## two events
 data, evts = loadtestdata("test_case_4a") #
+data_e, times = Unfold.epoch(data = data, evts = evts, τ = (0.0, 0.95), sfreq = 20) # cut the data into epochs
 b1 = firbasis(τ = (0.0, 0.95), sfreq = 20)
 b2 = firbasis(τ = (0.0, 0.95), sfreq = 20)
 f = @formula 0 ~ 1 # 1
 m_tul = fit(
     UnfoldModel,
-    Dict("eventA" => (f, b1), "eventB" => (f, b2)),
+    ["eventA" => (f, b1), "eventB" => (f, b2)],
     evts,
     data,
     eventcolumn = "type",
@@ -70,7 +71,7 @@ p = predict(m_tul, DataFrame(:Cond => [1]))
 ## two events mass-univariate
 m_mul = fit(
     UnfoldModel,
-    Dict("eventA" => (f, times), "eventB" => (f, times)),
+    ["eventA" => (f, times), "eventB" => (f, times)],
     evts,
     data_e,
     eventcolumn = "type",

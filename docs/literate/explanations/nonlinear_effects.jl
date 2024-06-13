@@ -7,7 +7,7 @@ using CairoMakie
 using DataFrames
 using Random
 using Colors
-
+using Missings
 
 
 # ## Generating a non-linear signal
@@ -48,8 +48,8 @@ first(p_linear, 5)
 # And plot them
 pl = plot(evts.x, signal[1, 1, :])
 lines!(p_linear.x, p_linear.yhat)
-lines!(p_spl3.x, p_spl3.yhat)
-lines!(p_spl10.x, p_spl10.yhat)
+lines!(p_spl3.x, coalesce.(p_spl3.yhat, NaN))
+lines!(p_spl10.x, coalesce.(p_spl10.yhat, NaN))
 pl
 
 # What we can clearly see here, that the linear effect (blue) underfits the data, the `spl(x,10)` overfits it, but the `spl(x,4)` fits it perfectly.
