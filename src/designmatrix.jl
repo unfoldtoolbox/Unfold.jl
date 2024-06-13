@@ -521,10 +521,12 @@ function time_expand(Xorg::AbstractArray, basisfunction::FIRBasis, onsets)
 end
 
 function time_expand_firdiag(Xorg::AbstractMatrix{T}, basisfunction, onsets) where {T}
+
     #    @debug "Xorg eltype" T
     @assert width(basisfunction) == height(basisfunction)
     w = width(basisfunction)
     adjusted_onsets = Int.(floor.(onsets[!, 1] .+ shift_onset(basisfunction)))
+
     @assert (minimum(onsets[!, 1]) + shift_onset(basisfunction) .- 1 + w) > 0
 
     neg_fix = sum(adjusted_onsets[adjusted_onsets.<1] .- 1)
@@ -557,7 +559,8 @@ function time_expand_firdiag(Xorg::AbstractMatrix{T}, basisfunction, onsets) whe
             Xorg[:, ix_X];
             colptr_offset = (ix_X - 1) * (w * size(Xorg, 1) + neg_fix),
         )
-    end
+
+  end
     colptr[end] = length(V) + 1
 
 
@@ -583,6 +586,7 @@ function time_expand_firdiag(Xorg::AbstractMatrix{T}, basisfunction, onsets) whe
 
 
 end
+
 
 
 """
