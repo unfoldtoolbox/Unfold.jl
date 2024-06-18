@@ -65,7 +65,7 @@ fLMM = @formula 0~1+condA+(1|subject) + (1|item)
 
 # in case of [overlap-correction] we need continuous data plus per-eventtype one basisfunction (typically firbasis)
 data::Array{Float64,2}
-basis = firbasis(τ=(-0.3,0.5),srate=250)
+basis = firbasis(τ=(-0.3,0.5),srate=250) # for "timeexpansion" / deconvolution
 
 # in case of [mass univariate] we need to epoch the data into trials, and a accompanying time vector
 epochs::Array{Float64,3} # channel x time x epochs (n-epochs == nrows(events))
@@ -105,7 +105,7 @@ The matlab version is still maintained, but active development happens in Julia.
 | different timewindows per event   |        |         | x         |
 | mixed models            |        | x       | x         |
 | item & subject effects  |        | (x)       | x         |
-| decoding  |        |        | back2back regression         |
+| decoding  |        |        | UnfoldDecode.jl         |
 | outlier-robust fits  |        |        |  [many options (but slower)](https://unfoldtoolbox.github.io/Unfold.jl/dev/HowTo/custom_solvers/#Robust-Solvers)   |
 | 🐍Python support | | | [via juliacall](https://unfoldtoolbox.github.io/Unfold.jl/dev/generated/HowTo/pyjulia_unfold/)|
 </details>
