@@ -44,7 +44,7 @@ function calc_time_models(evts, dat, tWinList, sfreq)
     for twindow in tWinList
         m = fit(
             UnfoldModel,
-            Dict(Any => (@formula(0 ~ 1), firbasis(twindow, sfreq))),
+            [Any => (@formula(0 ~ 1), firbasis(twindow, sfreq))],
             evts,
             dat,
         )

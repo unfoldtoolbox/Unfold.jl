@@ -11,13 +11,14 @@ using DataFrames
 using Unfold
 using UnfoldMakie, CairoMakie # for plotting
 using UnfoldSim
-
+using DisplayAs # hide
 
 nothing # hide
 ```
 
 
 ## Load Data
+We'll start with some predefined simulated continuos EEG data. We have 2000 events, 1 channel and one condition with two levels
 ```@example Main
 data, evts = UnfoldSim.predef_eeg()
 nothing # hide
@@ -25,10 +26,12 @@ nothing # hide
 ## Inspection
 The data has only little noise. The underlying signal pattern is a positive-negative-positive spike.
 ```@example Main
-times = range(1/50, length=200, step=1/50)
-f = Figure()
-plot(f[1, 1], data[1:200], times)
-vlines!(evts[evts.latency .<= 200, :latency] ./ 50) # show events, latency in samples!
+times_cont = range(0,length=200,step=1/100) # we simulated with 100hz for 0.5 seconds
+
+f,ax,h = plot(times_cont,data[1:200])
+vlines!(evts[evts.latency .<= 200, :latency] ./ 100;color=:black) # show events, latency in samples!
+ax.xlabel = "time [s]"
+ax.ylabel = "voltage [µV]"
 f
 ```
 
@@ -55,7 +58,7 @@ Initially, you have data with a duration that represents the whole experimental 
 # Unfold supports multi-channel, so we could provide matrix ch x time, which we can create like this from a vector:
 data_r = reshape(data, (1,:))
 # cut the data into epochs
-data_epochs, times = Unfold.epoch(data = data_r, tbl = evts, τ = (-0.4, 0.8), sfreq = 50);
+data_epochs, times = Unfold.epoch(data = data, tbl = evts, τ = (-0.4, 0.8), sfreq = 100); # channel x timesteps x trials
 size(data_epochs)
 ```
 - `τ` specifies the epoch size.
@@ -70,7 +73,7 @@ typeof(data_epochs)
 
 
 #### 2. Specify a formula
-Define a formula to be applied to each time point (and each channel) relative to the event.
+Define a formula to be applied to each time point (and each channel) relative to the event. `condition` and `continuous` are the names of the event-describing columns in `evts` that we want to use for modelling.
 
 ```@example Main
 f = @formula 0 ~ 1 + condition + continuous # note the formulas left side is `0 ~ ` for technical reasons`
@@ -87,13 +90,14 @@ nothing #hide
 
 Alternative way to call this model is below. This syntax allows you to fit multiple events at once. For example, replacing `Any` with `:fixation =>...` will fit this model specifically to the fixation event type.
 ```@example Main
-m = fit(UnfoldModel, Dict(Any=>(f, times)), evts, data_epochs); 
+m = fit(UnfoldModel, [Any=>(f, times)], evts, data_epochs); 
 nothing #hide
 ```
 
 Inspect the fitted model:
 ```@example Main
 m
+m|> DisplayAs.withcontext(:is_pluto=>true) # hide
 ```
 Note these functions to discover the model: `design`, `designmatrix`, `modelfit` and most importantly, `coeftable`. 
 

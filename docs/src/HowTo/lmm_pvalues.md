@@ -7,6 +7,7 @@ using MixedModels, Unfold # we require to load MixedModels to load the PackageEx
 using DataFrames
 using UnfoldSim
 using CairoMakie
+using DisplayAs # hide
 data_epoch, evts =
     UnfoldSim.predef_2x2(; n_items = 52, n_subjects = 40, return_epoched = true)
 data_epoch = reshape(data_epoch, size(data_epoch, 1), :) # 
@@ -22,6 +23,7 @@ f1 = @formula 0 ~ 1 + A + B + (1 + A | subject); # could also differ in random e
 m0 = fit(UnfoldModel,[Any=>(f0,times)],evts,data_epoch);
 m1 = fit(UnfoldModel,[Any=>(f1,times)],evts,data_epoch);
 
+m1|> DisplayAs.withcontext(:is_pluto=>true) # hide
 ```
 
 ## Likelihood ratio
