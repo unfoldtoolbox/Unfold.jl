@@ -11,7 +11,7 @@ using DataFrames
 using Unfold
 using UnfoldMakie, CairoMakie # for plotting
 using UnfoldSim
-
+using DisplayAs # hide
 
 nothing # hide
 ```
