@@ -13,7 +13,6 @@ using Unfold
 using UnfoldSim
 using UnfoldMakie,CairoMakie
 using DataFrames
-include(joinpath(dirname(pathof(Unfold)), "../test/test_utilities.jl") ) # to load data
 
 data, evts = UnfoldSim.predef_eeg()
 nothing # hide
@@ -33,7 +32,7 @@ For an overlap correction analysis we will do one additional step: define a temp
 #### 1. specify a temporal basisfunction
 By default, we would want to use a FIR basisfunction. See [Basis Functions](@ref) for more details.
 ```@example Main
-basisfunction = firbasis(τ=(-0.4,.8),sfreq=100,name="stimulus")
+basisfunction = firbasis(τ=(-0.4,.8),sfreq=100)
 nothing #hide
 ```
 
@@ -51,13 +50,13 @@ nothing #hide
 
 The formula and basisfunction is not enough on their own. We also need to specify which event and which formula matches - this is important in cases where there are multiple events with different formulas
 ```@example Main
-bfDict = Dict(Any=>(f,basisfunction))
+bf_vec = [Any=>(f,basisfunction)]
 ```
 !!! note
       The `Any` means to use all rows in `evts`. In case you have multiple events, you'd want to specify multiple basisfunctions e.g. 
       ```
-      bfDict = Dict("stimulus"=>(f1,basisfunction1),
-                    "response"=>(f2,basisfunction2))
+      bfDict = ["stimulus"=>(f1,basisfunction1),
+                    "response"=>(f2,basisfunction2)]
       ```
 
       You likely have to specify a further argument to `fit`: `eventcolumn="type"` with `type` being the column in `evts` that codes for the event (stimulus / response in this case)
@@ -66,7 +65,7 @@ bfDict = Dict(Any=>(f,basisfunction))
 Now we are ready to fit a `UnfoldLinearModel`. Not that instead of `times` as in the mass-univariate case, we have to provide the `BasisFunction` type now.
 
 ```@example Main
-m = fit(UnfoldModel,bfDict,evts,data); 
+m = fit(UnfoldModel,bf_vec,evts,data); 
 nothing #hide
 ```
 

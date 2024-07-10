@@ -1,4 +1,31 @@
 
+# pluto compatability of plotting
+
+function Base.show(
+    io::IO,
+    ::MIME"text/html",
+    obj::T,
+) where {
+    T<:Union{
+        <:TimeExpandedTerm,
+        <:Vector{<:FormulaTerm},
+        <:FormulaTerm,
+        <:BasisFunction,
+        <:UnfoldModel,
+        <:Vector{<:AbstractDesignMatrix},
+        <:Vector{<:Pair{<:Any,<:Tuple}},
+    },
+}
+    #show(IOContext(io, :highlight => false, "text/plain", obj))
+    is_pluto = get(io, :is_pluto, false)
+    if is_pluto
+        show(Base.stdout, "text/plain", obj)
+    else
+        show(io, "text/plain", obj)
+    end
+end
+
+
 #----- TimeExpandedTerm
 function Base.show(io::IO, p::TimeExpandedTerm)
     t = times(p.basisfunction)
@@ -13,7 +40,6 @@ function Base.show(io::IO, p::TimeExpandedTerm)
 end
 function Base.show(io::IO, f::FormulaTerm{<:Union{<:InterceptTerm,TimeExpandedTerm}})
     tprint(io, f.rhs)
-
 end
 
 function Base.show(io::IO, f::Vector{<:FormulaTerm}; eventnames = repeat([""], length(f)))
@@ -100,6 +126,7 @@ function Base.show(io::IO, ::MIME"text/plain", obj::T) where {T<:UnfoldModel}
     println(io)
 
     tprint(
+        io,
         "{gray}Useful functions:{/gray} `design(uf)`, `designmatrix(uf)`, `coef(uf)`, `coeftable(uf)`",
     )
 
@@ -119,18 +146,6 @@ function Base.show(io::IO, design::Vector{<:Pair{<:Any,<:Tuple}})
     print(io, Term.grid(basisList))
 end
 
-# function Base.show(io::IO, obj::UnfoldModel)
-#     println(io, "Unfold-Type: $(typeof(obj)) \n")
-#     println(io, "formula: $(obj.design)")
-#     println(
-#         io,
-#         "Useful functions:\n 
-#     design(uf) \t\t(returns Dict of event => (formula,times/basis))  \n
-#     designmatrix(uf) \t(returns DesignMatrix with events) \n
-#     modelfit(uf) \t\t(returns modelfit object) \n
-#     coeftable(uf) \t\t(returns tidy result dataframe) \n",
-#     )
-# end
 
 function Base.show(io::IO, ::MIME"text/plain", d::Vector{<:AbstractDesignMatrix})
     Term.tprintln(io, "Vector of length $(length(d)), $(unique(typeof.(d)))")

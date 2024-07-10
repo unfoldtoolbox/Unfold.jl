@@ -17,7 +17,7 @@ nothing;#hide
 This notebook is similar to the Linear Model with Overlap Correction tutorial, but fits **mixed** models with overlap correction
 
 !!! warning 
-    **Limitation**: This is not ready for use at all. There are still a lot of things to find out and tinker with. Don't use this if you haven't looked under the hood of the toolbox!
+    **Limitation**: This functionality is not ready for general use. There are still a lot of things to find out and tinker with. Don't use this if you haven't looked under the hood of the toolbox! Be aware of crashes / timeouts for non-trivial problems
 
 
 ## Get some data
