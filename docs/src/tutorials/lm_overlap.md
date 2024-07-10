@@ -13,6 +13,7 @@ using Unfold
 using UnfoldSim
 using UnfoldMakie,CairoMakie
 using DataFrames
+using DisplayAs # hide
 
 data, evts = UnfoldSim.predef_eeg()
 nothing # hide
@@ -51,6 +52,7 @@ nothing #hide
 The formula and basisfunction is not enough on their own. We also need to specify which event and which formula matches - this is important in cases where there are multiple events with different formulas
 ```@example Main
 bf_vec = [Any=>(f,basisfunction)]
+bf_vec|> DisplayAs.withcontext(:is_pluto=>true) # hide
 ```
 !!! note
       The `Any` means to use all rows in `evts`. In case you have multiple events, you'd want to specify multiple basisfunctions e.g. 

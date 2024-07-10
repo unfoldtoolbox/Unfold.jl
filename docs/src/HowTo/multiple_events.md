@@ -9,6 +9,7 @@ using UnfoldMakie, CairoMakie
 using DataFrames
 using StatsModels
 using MixedModels
+using DisplayAs # hide
 
 include(joinpath(dirname(pathof(Unfold)), "../test/test_utilities.jl")) # to load data
 dat, evts = loadtestdata("test_case_4b");
@@ -23,6 +24,7 @@ The `type` column of table `evts` contains two conditions: `eventA`` and `eventB
 
 bf1 = firbasis(τ = (-0.4, 0.8), sfreq = 50)
 bf2 = firbasis(τ = (-0.2, 1.2), sfreq = 50)
+bf2|> DisplayAs.withcontext(:is_pluto=>true) # hide
 ```
 For each event, a basis function and formula must be specified. The same basis and formulas may be used.
 ```@example main
@@ -34,6 +36,8 @@ For each event, we must specify the formula and basis function to be used.
 
 bfDict = [ "eventA" => (f, bf1),
            "eventB" => (f, bf2) ]
+
+bfDict |> DisplayAs.withcontext(:is_pluto=>true) # hide
 ```
 
 Finally, fitting & plotting works the same way as always
@@ -48,5 +52,5 @@ m = Unfold.fit(
     eventcolumn = "type",
 )
 results = coeftable(m)
-plot_erp(results; stderror = true, mapping = (; col = :group))
+plot_erp(results; stderror = true, mapping = (; col = :eventname))
 ``` 

@@ -97,6 +97,7 @@ nothing #hide
 Inspect the fitted model:
 ```@example Main
 m
+m|> DisplayAs.withcontext(:is_pluto=>true) # hide
 ```
 Note these functions to discover the model: `design`, `designmatrix`, `modelfit` and most importantly, `coeftable`. 
 
