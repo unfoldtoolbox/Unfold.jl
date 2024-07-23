@@ -142,6 +142,7 @@ You are very welcome to raise issues and start pull requests!
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/suddha-bpn"><img src="https://avatars.githubusercontent.com/u/7974144?v=4?s=100" width="100px;" alt="suddha-bpn"/><br /><sub><b>suddha-bpn</b></sub></a><br /><a href="#bug-suddha-bpn" title="Bug reports">🐛</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/vladdez"><img src="https://avatars.githubusercontent.com/u/33777074?v=4?s=100" width="100px;" alt="Vladimir Mikheev"/><br /><sub><b>Vladimir Mikheev</b></sub></a><br /><a href="#bug-vladdez" title="Bug reports">🐛</a> <a href="#doc-vladdez" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/carmenamme"><img src="https://avatars.githubusercontent.com/u/100191854?v=4?s=100" width="100px;" alt="carmenamme"/><br /><sub><b>carmenamme</b></sub></a><br /><a href="#doc-carmenamme" title="Documentation">📖</a></td>
     </tr>
   </tbody>
 </table>
