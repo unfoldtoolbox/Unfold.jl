@@ -66,4 +66,4 @@
 # The Raw data doesn't include these time samples, meaning that the first sample is the beginning of the data aquisition.
 # From the Raw object you can obtain an events array from the annotations through [mne.events_from_annotations()](https://mne.tools/stable/generated/mne.events_from_annotations.html).
 # The events array, however, does include first_samp, meaning that the annotated events in events array don't match the Raw object anymore.
-# 
+# Alternatively, it might be easier to convert the annotations to a pandas dataframe directly (`to_data_frame()`), or even better, load the "*_events.tsv" from a BIDS dataset. In the latter case, all columns will be preserved, which MNE's read_annotation drops.
