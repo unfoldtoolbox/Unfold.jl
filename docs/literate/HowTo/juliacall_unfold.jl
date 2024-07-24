@@ -60,3 +60,10 @@
 # which is clearly easier to read :)
 #
 # **`UnfoldSim.design`**: we need a `Dict` with a `Symbol` , one has to do something like `condition_dict_jl = {convert(jl.Symbol,"condA"):["car", "face"]}` to do so. We will [try to allow strings}(https://github.com/unfoldtoolbox/UnfoldSim.jl/issues/96) here as well, removing this constraint.
+#
+# When preprocessing your raw data through MNE Python, take the following into consideration:
+# The [Raw object](https://mne.tools/stable/generated/mne.io.Raw.html) contains the [first_samp](https://mne.tools/stable/documentation/glossary.html#term-first_samp) attribute which is an integer representing the number of time samples that passed between the onset of the hardware acquisition system and the time when data recording started.
+# The Raw data doesn't include these time samples, meaning that the first sample is the beginning of the data aquisition.
+# From the Raw object you can obtain an events array from the annotations through [mne.events_from_annotations()](https://mne.tools/stable/generated/mne.events_from_annotations.html).
+# The events array, however, does include first_samp, meaning that the annotated events in events array don't match the Raw object anymore.
+# Alternatively, it might be easier to convert the annotations to a pandas dataframe directly (`to_data_frame()`), or even better, load the "*_events.tsv" from a BIDS dataset. In the latter case, all columns will be preserved, which MNE's read_annotation drops.
