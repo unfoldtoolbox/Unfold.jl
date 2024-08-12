@@ -28,8 +28,6 @@ For MixedModels, the returned effects are based on the "typical" subject, i.e. a
 ```
  will result in 6 predicted values: A/-2, A/0, A/2, B/-2, B/0, B/2.
 """
-
-
 function effects(design::AbstractDict, model::T; typical = mean) where {T<:UnfoldModel}
     if isempty(design)
         return effects(Dict(:dummy=>[:dummy]),model;typical)
