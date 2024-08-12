@@ -9,7 +9,7 @@ using Effects
 
 
 """
-effects(design::AbstractDict, model::UnfoldModel;typical=mean)
+    effects(design::AbstractDict, model::UnfoldModel; typical = mean)
 
 Calculates marginal effects for all term-combinations in `design`.
 
