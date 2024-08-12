@@ -30,7 +30,7 @@ For MixedModels, the returned effects are based on the "typical" subject, i.e. a
 """
 function effects(design::AbstractDict, model::T; typical = mean) where {T<:UnfoldModel}
     if isempty(design)
-        return effects(Dict(:dummy=>[:dummy]),model;typical)
+        return effects(Dict(:dummy => [:dummy]), model; typical)
     end
     reference_grid = expand_grid(design)
     form = Unfold.formulas(model) # get formula
