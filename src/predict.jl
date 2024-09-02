@@ -201,6 +201,7 @@ function predict(
     kwargs...,
     #eventcolumn = :event,
 )
+    @assert !((!isempty(keep_basis) | !isempty(exclude_basis)) & (basisname(Unfold.formulas(uf))[1] == Any)) "No way to calculate partial overlap if basisname is Any; please revise model " 
     @assert !(!isempty(keep_basis) & !isempty(exclude_basis)) "choose either to keep events, or to exclude, but not both"
 
 
@@ -261,7 +262,7 @@ end
     # Partial overlap! we reconstruct with some basisfunctions deactivated
     if !isempty(keep_basis)
         if !isa(keep_basis, Vector); keep_basis = [keep_basis]; end # Check if keep_basis is a vector
-        @assert !isempty(intersect(basisname(Unfold.formulas(uf)), keep_basis)) "Couldn't find (any of) $keep_basis in the models basisnames"
+        @assert !isempty(intersect(basisname(Unfold.formulas(uf)), keep_basis)) "Couldn't find (any of) $keep_basis in the models basisnames; you can check which basisnames are available in your model using Unfold.basisname(Unfold.formulas(uf))"
         basisnames = keep_basis
 
     else
