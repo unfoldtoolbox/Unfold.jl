@@ -29,9 +29,9 @@ size(signal)
 
 # Next we define three different models: **linear**, **4 splines** and **10 splines**.
 # Note difference in formulas: one `x`, the other `spl(x, 4)`.
-design_linear = [Any => (@formula(0 ~ 1 + x), [0])] #hide
-design_spl3 = [Any => (@formula(0 ~ 1 + spl(x, 4)), [0])] #hide
-design_spl10 = [Any => (@formula(0 ~ 1 + spl(x, 10)), [0])] #hide
+design_linear = [Any => (@formula(0 ~ 1 + x), [0])];
+design_spl3 = [Any => (@formula(0 ~ 1 + spl(x, 4)), [0])];
+design_spl10 = [Any => (@formula(0 ~ 1 + spl(x, 10)), [0])];
 
 # Next, fit the parameters.
 uf_linear = fit(UnfoldModel, design_linear, evts, signal);
