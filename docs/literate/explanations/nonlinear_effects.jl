@@ -60,7 +60,7 @@ pl
 #
 # The most important bit to understand is, that we are replacing `x` by a set of coefficients `spl(x)`.
 # These new coefficients each tile the range of `x` (in our case, from [0-1]) in overlapping areas, while each will be fit by one coefficient.
-# Because the ranges are overlapping, we use smoothing function.
+# Because the ranges are overlapping, we get a smooth function.
 #
 # Maybe this becomes clear after looking at a `basisfunction`:
 
