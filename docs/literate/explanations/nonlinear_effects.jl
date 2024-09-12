@@ -70,7 +70,6 @@ term_spl = Unfold.formulas(uf_spl10)[1].rhs.terms[2]
 typeof(term_spl)
 
 # 
-# It has a field `.fun` which is the spline function. We can evaluate it at a point.
 const splFunction = Base.get_extension(Unfold, :UnfoldBSplineKitExt).splFunction
 splFunction([0.2], term_spl)
 
