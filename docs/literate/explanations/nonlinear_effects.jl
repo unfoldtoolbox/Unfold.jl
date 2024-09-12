@@ -66,7 +66,7 @@ pl
 
 term_spl = Unfold.formulas(uf_spl10)[1].rhs.terms[2]
 
-# This is the spline term. Note, that a special type for it generated in Unfold.jl
+# This is the spline term. Note, this is a special type available in the BSplineKit.jl extension in Unfold.jl. It's abstract type is `AbstractSplineTerm` defined in Unfold.jl
 typeof(term_spl)
 
 # 
