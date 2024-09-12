@@ -201,7 +201,10 @@ function predict(
     kwargs...,
     #eventcolumn = :event,
 )
-    @assert !((!isempty(keep_basis) | !isempty(exclude_basis)) & (basisname(Unfold.formulas(uf))[1] == Any)) "No way to calculate partial overlap if basisname is Any; please revise model " 
+    @assert !(
+        (!isempty(keep_basis) | !isempty(exclude_basis)) &
+        (basisname(Unfold.formulas(uf))[1] == Any)
+    ) "No way to calculate partial overlap if basisname is Any; please revise model "
     @assert !(!isempty(keep_basis) & !isempty(exclude_basis)) "choose either to keep events, or to exclude, but not both"
 
 
