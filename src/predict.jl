@@ -264,7 +264,9 @@ end
     @assert !(!isempty(keep_basis) & !isempty(exclude_basis)) "can't have no overlap & specify keep/exclude at the same time. decide for either case"
     # Partial overlap! we reconstruct with some basisfunctions deactivated
     if !isempty(keep_basis)
-        if !isa(keep_basis, Vector); keep_basis = [keep_basis]; end # Check if keep_basis is a vector
+        if !isa(keep_basis, Vector)
+            keep_basis = [keep_basis]
+        end # Check if keep_basis is a vector
         @assert !isempty(intersect(basisname(Unfold.formulas(uf)), keep_basis)) "Couldn't find (any of) $keep_basis in the models basisnames; you can check which basisnames are available in your model using Unfold.basisname(Unfold.formulas(uf))"
         basisnames = keep_basis
 
