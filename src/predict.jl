@@ -267,9 +267,9 @@ end
         if !isa(keep_basis, Vector) # Check if keep_basis is a vector
             basisnames = [keep_basis]
         else
-            basisnames = keep_basis    
-        end 
-        @assert !isempty(intersect(basisname(Unfold.formulas(uf)), basisnames)) "Couldn't find (any of) $keep_basis in the models basisnames; you can check which basisnames are available in your model using Unfold.basisname(Unfold.formulas(uf))" 
+            basisnames = keep_basis
+        end
+        @assert !isempty(intersect(basisname(Unfold.formulas(uf)), basisnames)) "Couldn't find (any of) $keep_basis in the models basisnames; you can check which basisnames are available in your model using Unfold.basisname(Unfold.formulas(uf))"
     else
         basisnames = basisname(Unfold.formulas(uf))
         basisnames = setdiff(basisnames, exclude_basis)
