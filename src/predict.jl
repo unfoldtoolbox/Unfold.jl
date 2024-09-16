@@ -202,8 +202,7 @@ function predict(
     #eventcolumn = :event,
 )
     @assert !(
-        (!isempty(keep_basis) || !isempty(exclude_basis)) &&
-        (length(formulas(uf)) == 1)
+        (!isempty(keep_basis) || !isempty(exclude_basis)) && (length(formulas(uf)) == 1)
     ) "No way to calculate partial overlap if basisnames is Any; please revise model "
 
     @assert !(!isempty(keep_basis) & !isempty(exclude_basis)) "choose either to keep events, or to exclude, but not both"
