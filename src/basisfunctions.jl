@@ -220,6 +220,7 @@ kernel(basis::BasisFunction, e) = basis.kernel(e)
 
 basisname(fs::Vector{<:FormulaTerm}) = [name(f.rhs.basisfunction) for f in fs]
 basisname(uf::UnfoldModel) = basisname(formulas(uf))
+basisname(uf::UnfoldLinearModel) = first.(design(uf)) # for linear models we dont save it in the formula
 
 kernel(basis::FIRBasis, e) =
     basis.interpolate ? firkernel(e, basis.times[1:end-1]; interpolate = true) :
