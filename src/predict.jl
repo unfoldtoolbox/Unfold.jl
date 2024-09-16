@@ -201,10 +201,11 @@ function predict(
     kwargs...,
     #eventcolumn = :event,
 )
-    @assert !(
+    @assert (
         (!isempty(keep_basis) | !isempty(exclude_basis)) &
         (basisname(Unfold.formulas(uf))[1] == Any)
-    ) "No way to calculate partial overlap if basisname is Any; please revise model "
+    ) "No way to calculate partial overlap if basisnames is Any; please revise model "
+
     @assert !(!isempty(keep_basis) & !isempty(exclude_basis)) "choose either to keep events, or to exclude, but not both"
 
 
@@ -416,7 +417,7 @@ returns a boolean vector with length spanning all coefficients, which coefficien
 """
 get_basis_indices(uf, basisnames::Vector) =
     reduce(vcat, Unfold.get_basis_names(uf)) .∈ Ref(basisnames)
-get_basis_indices(uf, basisname) = get_basis_indices(uf, [basisname])
+get_basis_indices(uf, basisnames) = get_basis_indices(uf, [basisnames])
 
 """
     predicttable(model<:UnfoldModel,events=Unfold.events(model),args...;kwargs...)
