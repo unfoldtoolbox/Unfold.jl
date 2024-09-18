@@ -201,6 +201,10 @@ function predict(
     kwargs...,
     #eventcolumn = :event,
 )
+    @assert !(
+        (!isempty(keep_basis) || !isempty(exclude_basis)) && (length(formulas(uf)) == 1)
+    ) "No way to calculate partial overlap if basisnames is Any; please revise model "
+
     @assert !(!isempty(keep_basis) & !isempty(exclude_basis)) "choose either to keep events, or to exclude, but not both"
 
 
@@ -260,7 +264,12 @@ end
     @assert !(!isempty(keep_basis) & !isempty(exclude_basis)) "can't have no overlap & specify keep/exclude at the same time. decide for either case"
     # Partial overlap! we reconstruct with some basisfunctions deactivated
     if !isempty(keep_basis)
-        basisnames = keep_basis
+        if !isa(keep_basis, Vector) # Check if keep_basis is a vector
+            basisnames = [keep_basis]
+        else
+            basisnames = keep_basis
+        end
+        @assert !isempty(intersect(basisname(Unfold.formulas(uf)), basisnames)) "Couldn't find (any of) $keep_basis in the models basisnames; you can check which basisnames are available in your model using Unfold.basisname(Unfold.formulas(uf))"
     else
         basisnames = basisname(Unfold.formulas(uf))
         basisnames = setdiff(basisnames, exclude_basis)
@@ -407,7 +416,7 @@ returns a boolean vector with length spanning all coefficients, which coefficien
 """
 get_basis_indices(uf, basisnames::Vector) =
     reduce(vcat, Unfold.get_basis_names(uf)) .∈ Ref(basisnames)
-get_basis_indices(uf, basisname) = get_basis_indices(uf, [basisname])
+get_basis_indices(uf, basisnames) = get_basis_indices(uf, [basisnames])
 
 """
     predicttable(model<:UnfoldModel,events=Unfold.events(model),args...;kwargs...)
