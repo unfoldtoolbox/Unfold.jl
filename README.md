@@ -162,7 +162,7 @@ Contributions of any kind welcome!
 
 For now, please cite
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6423476.svg)](https://doi.org/10.5281/zenodo.6423476) or [Ehinger & Dimigen](https://peerj.com/articles/7838/)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5759066.svg)](https://doi.org/10.5281/zenodo.5759066) and/or [Ehinger & Dimigen](https://peerj.com/articles/7838/)
 
 ## Acknowledgements
 
