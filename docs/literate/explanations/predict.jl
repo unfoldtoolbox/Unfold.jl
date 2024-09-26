@@ -48,7 +48,7 @@ p = predict(m, epoch_to = ["car"], eventcolumn = :condition)
 series(range(-0.5, 1, step = 1 / 100), p[1, :, 1:3]', solid_color = :orange)
 
 # ### Partial-overlap
-# We can also include/exclude certain events with "partial-overlap"
+# We can also include/exclude certain events with "partial-overlap", i.e. only overlap with kept events.
 p_car = predict(m, keep_basis = ["car"], eventcolumn = :condition)
 p_face = predict(m, exclude_basis = ["car"], eventcolumn = :condition) # same as keep_basis=["face"]
 f = lines(p_car[1, 1:1000])
