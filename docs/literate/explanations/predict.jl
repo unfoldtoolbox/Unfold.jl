@@ -10,7 +10,7 @@ design = [
     "face" => (@formula(0 ~ 1 + continuous), firbasis(τ = (-0.3, 0.5), sfreq = 100)),
 ]
 
-m = fit(UnfoldModel, design, evts, dat; eventcolumn = :condition)
+m = fit(UnfoldModel, design, evts, dat; eventcolumn = :condition);
 
 # # Overview
 # In a linear model $EEG = Xβ + e$, predictions boil down to finding $\hat{EEG} = Xβ$, thus EEG data without any error term. 
