@@ -33,7 +33,7 @@ lines(p[1, 1:1000])
 # We can also predict each epoch without any overlap - This results in one prediction Array per event (in our case we have two events "car" and "face", thus ```size(p[1]) = 2```
 p = predict(m, overlap = false)
 size(p)
-# Each has the size:
+# Each Array has the size (1, samples, epochs):
 size(p[1])
 
 # Visualizing the 1000 events
