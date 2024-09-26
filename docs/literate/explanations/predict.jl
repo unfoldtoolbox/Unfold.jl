@@ -45,7 +45,7 @@ current_figure()
 # ### with-overlap, epoched
 # Sometimes helpful is to add in the overlap we removed via the deconvolution.
 p = predict(m, epoch_to = ["car"], eventcolumn = :condition)
-series(range(-0.5, 1, step = 1 / 100), p[1, :, :]', solid_color = :orange)
+series(range(-0.5, 1, step = 1 / 100), p[1, :, 1:3]', solid_color = :orange)
 
 # ### Partial-overlap
 # We can also include/exclude certain events with "partial-overlap"
