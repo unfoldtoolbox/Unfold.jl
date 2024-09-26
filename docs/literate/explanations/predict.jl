@@ -21,7 +21,7 @@ m = fit(UnfoldModel, design, evts, dat; eventcolumn = :condition);
 #
 # # Different types of predictions
 # ## TimeContinuous case
-# We start with the cases, where the EEG was not epoched before Unfold, thus analysed with e.g. FIR-deconvolution
+# Let's start with the cases, where the EEG was not epoched before using Unfold, i.e. the EEG was analysed with e.g. FIR-deconvolution
 
 # ### Continuous EEG
 # This returns $EEG = Xβ$ - the continuous modelled EEG
