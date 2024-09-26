@@ -24,7 +24,7 @@ m = fit(UnfoldModel, design, evts, dat; eventcolumn = :condition);
 # Let's start with the cases, where the EEG was not epoched before using Unfold, i.e. the EEG was analysed with e.g. FIR-deconvolution
 
 # ### Continuous EEG
-# This returns $EEG = Xβ$ - the continuous modelled EEG
+# In the most simple case, we can predict the continuously modelled EEG - This returns $EEG = Xβ$
 p = predict(m) # same as predict(m, overlap = true)
 lines(p[1, 1:1000])
 
