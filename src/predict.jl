@@ -162,7 +162,7 @@ predict(uf::UnfoldModel, evts::DataFrame; overlap = false, kwargs...) = predict(
         uf::UnfoldModel,
         f::Vector{<:FormulaTerm},
         evts::Vector{<:DataFrame};
-        overlap = true,
+        overlap::Bool = true,
         kwargs...
     )
 Returns a predicted ("y_hat = X*b") `Array`. 
