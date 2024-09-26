@@ -41,7 +41,9 @@ series(range(-0.5, 1, step = 1 / 100), p[1][1, :, :]', solid_color = :orange)
 series!(range(-0.3, 0.5, step = 1 / 100), p[2][1, :, :]', solid_color = :teal)
 current_figure()
 
-# At ~0.3s we can see a split between the predicted EEG single trials into 10 "strands" - this is the granularity of our continuous predictor. You could use `effects` to improve upon this granularity / customize it.
+# !!! note
+#      At ~0.3s we can see a split between the predicted EEG single trials into 10 "strands" - this is the granularity of our continuous predictor. You could use `effects` to improve upon this granularity / customize it.
+#
 # ### with-overlap, epoched
 # Sometimes helpful is to add in the overlap we removed via the deconvolution.
 p = predict(m, epoch_to = ["car"], eventcolumn = :condition)
