@@ -47,7 +47,7 @@ current_figure()
 p = predict(m, epoch_to = ["car"], eventcolumn = :condition)
 series(range(-0.5, 1, step = 1 / 100), p[1, :, :]', solid_color = :orange)
 
-# ### partial-overlap
+# ### Partial-overlap
 # We can also include/exclude certain events with "partial-overlap"
 p_car = predict(m, keep_basis = ["car"], eventcolumn = :condition)
 p_face = predict(m, exclude_basis = ["car"], eventcolumn = :condition) # same as keep_basis=["face"]
