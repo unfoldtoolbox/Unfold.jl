@@ -20,7 +20,7 @@ m = fit(UnfoldModel, design, evts, dat; eventcolumn = :condition);
 #     We simulated only a single channel, all results generalize to the multi channel case
 #
 # # Different types of predictions
-# ## TimeContinuous case
+# ## Time-Continuous case
 # Let's start with the cases, where the EEG was not epoched before using Unfold, i.e. the EEG was analysed with e.g. FIR-deconvolution
 
 # ### Continuous EEG
