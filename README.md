@@ -50,6 +50,9 @@ Pkg.add("Unfold")
 
 Please check out [the documentation](https://unfoldtoolbox.github.io/Unfold.jl/dev) for extensive tutorials, explanations and more!
 
+### Tipp on Docs
+You can either read the docs online ![Docs][Doc-img]][Doc-url] or use the `?fit`, `?effects` interface. To get a bit more specific docs, use e.g. `?fit(::UnfoldModel)`
+
 Here is a quick overview on what to expect.
 
 ### What you need
