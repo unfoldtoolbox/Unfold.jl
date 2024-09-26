@@ -57,4 +57,4 @@ f
 # In the plot, we see the two partial predictions for car and face. They are respectively "0" outsie the basisfunction windows
 
 # !!! note
-#      The above optios can be combined as well, e.g. to get an `epoch_to`, `exclude_basis` version. `epoch_timewindow` can be specified as well.
+#      The above options can be combined as well, e.g. to get an `epoch_to`, `exclude_basis` version. `epoch_timewindow` can be specified as well.
