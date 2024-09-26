@@ -55,7 +55,7 @@ f = lines(p_car[1, 1:1000])
 lines!(p_face[1, 1:1000])
 f
 
-# In the plot, we see the two partial predictions for car and face. They are respectively "0" outsie the basisfunction windows
+# In the plot, we see the two partial predictions for car and face. They are respectively "0" outside the basisfunction windows
 
 # !!! note
 #      The above options can be combined as well, e.g. to get an `epoch_to`, `exclude_basis` version. `epoch_timewindow` can be specified as well.
