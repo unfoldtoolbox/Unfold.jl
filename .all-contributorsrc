@@ -116,6 +116,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "maxvanmigem",
+      "name": "Maximilien Van Migem",
+      "avatar_url": "https://avatars.githubusercontent.com/u/115144441?v=4",
+      "profile": "https://github.com/maxvanmigem",
+      "contributions": [
+        "bug"
+      ]
     }
   ]
 }

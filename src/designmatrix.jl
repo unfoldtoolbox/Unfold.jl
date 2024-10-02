@@ -310,6 +310,12 @@ function extend_to_larger(modelmatrix1::SparseMatrixCSC, modelmatrix2::SparseMat
     end
     return hcat(modelmatrix1, modelmatrix2)
 end
+
+
+"""
+    StatsModels.modelmatrix(uf::UnfoldLinearModelContinuousTime, basisfunction = true)
+Setting the optional second args to false, will return the modelmatrix without the timeexpansion / basisfunction applied.
+"""
 function StatsModels.modelmatrix(uf::UnfoldLinearModelContinuousTime, basisfunction = true)
     if basisfunction
         return modelmatrix(designmatrix(uf))
