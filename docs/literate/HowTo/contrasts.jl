@@ -17,7 +17,8 @@ eeg, evts = UnfoldSim.predef_eeg(noiselevel = 0)
 f = @formula 0 ~ 1 + condition
 basis = firbasis((-0.1, 0.6), 100)
 m_dummy = fit(UnfoldModel, f, evts, eeg, basis)
-m_effec = fit(UnfoldModel, f, evts, eeg, basis; contrasts = Dict(:condition => SumCoding()))
+m_effec =
+    fit(UnfoldModel, f, evts, eeg, basis; contrasts = Dict(:condition => EffectsCoding()))
 
 
 # we could directly inspect the designmatrix
