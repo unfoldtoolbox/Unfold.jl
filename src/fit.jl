@@ -38,17 +38,20 @@ timesvector = range(-0.1,3,step=1/100)
 ## Examples
 Mass Univariate Linear
 ```julia-repl
-julia> data,evts = loadtestdata("testCase1")
-julia> data_r = reshape(data,(1,:))
-julia> data_e,times = Unfold.epoch(data=data_r,tbl=evts,τ=(-1.,1.9),sfreq=10) # cut the data into epochs. data_e is now ch x times x epoch
+julia> data,evts = UnfoldSim.predef_eeg()
+julia> data_e,times = Unfold.epoch(data=data,tbl=evts,τ=(-1.,1.9),sfreq=100) # cut the data into epochs. data_e is now ch x times x epoch
 
-julia> f  = @formula 0~1+continuousA+continuousB # 1
+julia> f  = @formula 0~1+continuousA+continuousB 
 julia> model = fit(UnfoldModel,f,evts,data_e,times)
+# or:
+julia> model = fit(UnfoldModel,[Any=>(f,times)],evts,data_e)
 ```
 Timexpanded Univariate Linear
 ```julia-repl
-julia> basisfunction = firbasis(τ=(-1,1),sfreq=10,name="A")
-julia> model = fit(UnfoldModel,[Any=>(f,basisfunction],evts,data_r)
+julia> basisfunction = firbasis(τ=(-1,1),sfreq=10)
+julia> model = fit(UnfoldModel,f,evts,data,basisfunction)
+# or
+julia> model = fit(UnfoldModel,[Any=>(f,basisfunction],evts,data)
 ```
 
 """
