@@ -43,8 +43,11 @@ function FileIO.save(file, uf::T; compress = false) where {T<:UnfoldModel}
     end
 end
 
+"""
+    empty_modelmatrix(d::AbstractDesignMatrix)
+returns an empty modelmatrix of the type DesignMatrix type of `d`
+"""
 function empty_modelmatrix(d::AbstractDesignMatrix)
-
     return typeof(d)().modelmatrix
 end
 
