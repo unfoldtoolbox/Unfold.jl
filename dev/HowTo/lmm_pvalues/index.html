@@ -11,77 +11,77 @@ f1 = @formula 0 ~ 1 + A + B + (1 + A | subject); # could also differ in random e
 
 m0 = fit(UnfoldModel,[Any=&gt;(f0,times)],evts,data_epoch);
 m1 = fit(UnfoldModel,[Any=&gt;(f1,times)],evts,data_epoch);</code></pre><h2 id="Likelihood-ratio"><a class="docs-heading-anchor" href="#Likelihood-ratio">Likelihood ratio</a><a id="Likelihood-ratio-1"></a><a class="docs-heading-anchor-permalink" href="#Likelihood-ratio" title="Permalink"></a></h2><pre><code class="language-julia hljs">uf_lrt = likelihoodratiotest(m0, m1)
-uf_lrt[1]</code></pre><table><tr><th align="left"></th><th align="right">model-dof</th><th align="right">deviance</th><th align="right">χ²</th><th align="right">χ²-dof</th><th align="left">P&#40;&gt;χ²&#41;</th></tr><tr><td align="left">&#91;38;2;144;202;249m1&#91;39m &#91;38;2;239;83;80m&#43;&#91;39m A &#91;38;2;239;83;80m&#43;&#91;39m &#40;&#91;38;2;144;202;249m1&#91;39m &#91;38;2;239;83;80m&#43;&#91;39m A &#91;38;2;239;83;80m|&#91;39m subject&#41;</td><td align="right">6</td><td align="right">6189</td><td align="right"> </td><td align="right"> </td><td align="left"> </td></tr><tr><td align="left">&#91;38;2;144;202;249m1&#91;39m &#91;38;2;239;83;80m&#43;&#91;39m A &#91;38;2;239;83;80m&#43;&#91;39m B &#91;38;2;239;83;80m&#43;&#91;39m &#40;&#91;38;2;144;202;249m1&#91;39m &#91;38;2;239;83;80m&#43;&#91;39m A &#91;38;2;239;83;80m|&#91;39m subject&#41;</td><td align="right">7</td><td align="right">6188</td><td align="right">0</td><td align="right">1</td><td align="left">0.5115</td></tr></table>
+uf_lrt[1]</code></pre><table><tr><th align="left"></th><th align="right">model-dof</th><th align="right">deviance</th><th align="right">χ²</th><th align="right">χ²-dof</th><th align="left">P&#40;&gt;χ²&#41;</th></tr><tr><td align="left">&#91;38;2;144;202;249m1&#91;39m &#91;38;2;239;83;80m&#43;&#91;39m A &#91;38;2;239;83;80m&#43;&#91;39m &#40;&#91;38;2;144;202;249m1&#91;39m &#91;38;2;239;83;80m&#43;&#91;39m A &#91;38;2;239;83;80m|&#91;39m subject&#41;</td><td align="right">6</td><td align="right">6404</td><td align="right"> </td><td align="right"> </td><td align="left"> </td></tr><tr><td align="left">&#91;38;2;144;202;249m1&#91;39m &#91;38;2;239;83;80m&#43;&#91;39m A &#91;38;2;239;83;80m&#43;&#91;39m B &#91;38;2;239;83;80m&#43;&#91;39m &#40;&#91;38;2;144;202;249m1&#91;39m &#91;38;2;239;83;80m&#43;&#91;39m A &#91;38;2;239;83;80m|&#91;39m subject&#41;</td><td align="right">7</td><td align="right">6403</td><td align="right">1</td><td align="right">1</td><td align="left">0.3905</td></tr></table>
 <p>As you can see, we have some likelihood ratio outcomes, exciting!</p><h4 id="Extract-p-values"><a class="docs-heading-anchor" href="#Extract-p-values">Extract p-values</a><a id="Extract-p-values-1"></a><a class="docs-heading-anchor-permalink" href="#Extract-p-values" title="Permalink"></a></h4><pre><code class="language-julia hljs">pvalues(uf_lrt)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">100-element Vector{Vector{Float64}}:
- [0.511455717458945]
- [0.637941796064881]
- [0.5540668244816294]
- [0.5502097524931825]
- [0.362546264884788]
- [0.35494238658866406]
- [0.29035542852494334]
- [0.1782510271318645]
- [0.08368531129824638]
- [0.03072016496904737]
+ [0.39049722252065544]
+ [0.3429247501956857]
+ [0.3155962312563677]
+ [0.34350071746311484]
+ [0.2969289614490519]
+ [0.20505807272063944]
+ [0.1346944620685089]
+ [0.08216193103815202]
+ [0.05773667473785587]
+ [0.022738364518859185]
  ⋮
- [0.17770403001354876]
- [0.33688149917579724]
- [0.4664701704477222]
- [0.5260221394554021]
- [0.6236465364380881]
- [0.9176409352787988]
- [0.9845498321443239]
- [0.9090829816880928]
- [0.9105533234565882]</code></pre><p>We have extracted the p-values and now need to make them usable.     The solution can be found in the documentation under <code>?pvalues</code>.</p><pre><code class="language-julia hljs">pvals_lrt = vcat(pvalues(uf_lrt)...)
+ [0.5532200726406681]
+ [0.6585764566537168]
+ [0.8258599045036381]
+ [0.9793783325628428]
+ [0.9099626271420586]
+ [0.7778718606979242]
+ [0.8187320694459129]
+ [0.7892491016925438]
+ [0.7246465619220344]</code></pre><p>We have extracted the p-values and now need to make them usable.     The solution can be found in the documentation under <code>?pvalues</code>.</p><pre><code class="language-julia hljs">pvals_lrt = vcat(pvalues(uf_lrt)...)
 nchan = 1
 ntime = length(times)
 reshape(pvals_lrt, ntime, nchan)&#39; # note the last transpose via &#39; !</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1×100 adjoint(::Matrix{Float64}) with eltype Float64:
- 0.511456  0.637942  0.554067  0.55021  …  0.98455  0.909083  0.910553</code></pre><p>Perfecto, these are the LRT p-values of a model <code>condA</code> vs. <code>condA+condB</code> with same random effect structure.</p><h2 id="Walds-T-Test"><a class="docs-heading-anchor" href="#Walds-T-Test">Walds T-Test</a><a id="Walds-T-Test-1"></a><a class="docs-heading-anchor-permalink" href="#Walds-T-Test" title="Permalink"></a></h2><p>This method is easier to calculate but has limitations in accuracy and scope. It may also be less accurate due to the liberal estimation of degrees of freedom. Testing is limited in this case, as random effects cannot be tested and only single predictors can be used, which may not be appropriate for spline effects. It is important to note that this discussion is beyond the scope of this LMM package. </p><pre><code class="language-julia hljs">res = coeftable(m1)
+ 0.390497  0.342925  0.315596  0.343501  …  0.818732  0.789249  0.724647</code></pre><p>Perfecto, these are the LRT p-values of a model <code>condA</code> vs. <code>condA+condB</code> with same random effect structure.</p><h2 id="Walds-T-Test"><a class="docs-heading-anchor" href="#Walds-T-Test">Walds T-Test</a><a id="Walds-T-Test-1"></a><a class="docs-heading-anchor-permalink" href="#Walds-T-Test" title="Permalink"></a></h2><p>This method is easier to calculate but has limitations in accuracy and scope. It may also be less accurate due to the liberal estimation of degrees of freedom. Testing is limited in this case, as random effects cannot be tested and only single predictors can be used, which may not be appropriate for spline effects. It is important to note that this discussion is beyond the scope of this LMM package. </p><pre><code class="language-julia hljs">res = coeftable(m1)
 # only fixed effects: what is not in a ranef group is a fixef.
 res = res[isnothing.(res.group), :]
 # calculate t-value
 res[:, :tvalue] = res.estimate ./ res.stderror</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">300-element Vector{Float64}:
-  8.753118942611785
-  8.822489307544313
-  8.78980028648741
-  8.846062744090224
-  8.838764488011073
-  8.864859807828397
-  8.791044719802002
-  8.699423870284289
-  8.707512203323395
-  8.67515737784441
+  4.446708326696426
+  4.437580860011641
+  4.446435058073349
+  4.492672997803976
+  4.494599457419684
+  4.4880483252027075
+  4.439652303422133
+  4.45518635490581
+  4.623068236549389
+  4.663764726700654
   ⋮
-  1.3351971683803914
-  0.9511374554947897
-  0.7212681368883016
-  0.628063090859258
-  0.4859472324613865
-  0.10240562623839347
-  0.019175819533040064
- -0.11308577669944529
-  0.11125437202896354</code></pre><p>We obtained Walds t, but how to translate them to a p-value?</p><p>Determining the necessary degrees of freedom for the t-distribution is a complex issue with much debate surrounding it.  One approach is to use the number of subjects as an upper bound for the p-value (your df will be between <span>$n_{subject}$</span> and <span>$\sum{n_{trials}}$</span>).</p><pre><code class="language-julia hljs">df = length(unique(evts.subject))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">40</code></pre><p>Plug it into the t-distribution. </p><pre><code class="language-julia hljs">using Distributions
+  0.5870708293447756
+  0.43759939804174963
+  0.2172917074185397
+  0.025591530320948425
+ -0.11195974844949615
+ -0.28040792854804225
+ -0.22668554132390997
+ -0.2646530795209725
+ -0.3492299276363734</code></pre><p>We obtained Walds t, but how to translate them to a p-value?</p><p>Determining the necessary degrees of freedom for the t-distribution is a complex issue with much debate surrounding it.  One approach is to use the number of subjects as an upper bound for the p-value (your df will be between <span>$n_{subject}$</span> and <span>$\sum{n_{trials}}$</span>).</p><pre><code class="language-julia hljs">df = length(unique(evts.subject))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">40</code></pre><p>Plug it into the t-distribution. </p><pre><code class="language-julia hljs">using Distributions
 res.pvalue = pdf.(TDist(df),res.tvalue)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">300-element Vector{Float64}:
- 1.1797789286642877e-10
- 9.532416386007859e-11
- 1.0539217380332435e-10
- 8.867261063748567e-11
- 9.06801277015405e-11
- 8.370671134551291e-11
- 1.0498987308942673e-10
- 1.3919798969210152e-10
- 1.35769976519841e-10
- 1.5001726460588368e-10
+ 0.00010520592926163251
+ 0.00010817494439425095
+ 0.00010529365405567558
+ 9.142141916777313e-5
+ 9.088393516836884e-5
+ 9.272440215982806e-5
+ 0.00010749405443829126
+ 0.00010251943544603832
+ 6.122445474960627e-5
+ 5.398423858898151e-5
  ⋮
- 0.1621760047001079
- 0.25065891658087713
- 0.30419518984628147
- 0.32421124621818975
- 0.35139082706874725
- 0.3943321435847846
- 0.3963822188121128
- 0.3938674346679318
- 0.39395035182029153</code></pre><h2 id="Comparison-of-methods"><a class="docs-heading-anchor" href="#Comparison-of-methods">Comparison of methods</a><a id="Comparison-of-methods-1"></a><a class="docs-heading-anchor-permalink" href="#Comparison-of-methods" title="Permalink"></a></h2><p>Cool! Let&#39;s compare both methods of p-value calculation!</p><pre><code class="language-julia hljs">df = DataFrame(:walds =&gt; res[res.coefname.==&quot;B: b_tiny&quot;, :pvalue], :lrt =&gt; pvals_lrt)
+ 0.33251660178615255
+ 0.3594809847897533
+ 0.38698410798874533
+ 0.39632387743397085
+ 0.39391857391788004
+ 0.38081351375847516
+ 0.38615884540577883
+ 0.3824900521283194
+ 0.37247026276880874</code></pre><h2 id="Comparison-of-methods"><a class="docs-heading-anchor" href="#Comparison-of-methods">Comparison of methods</a><a id="Comparison-of-methods-1"></a><a class="docs-heading-anchor-permalink" href="#Comparison-of-methods" title="Permalink"></a></h2><p>Cool! Let&#39;s compare both methods of p-value calculation!</p><pre><code class="language-julia hljs">df = DataFrame(:walds =&gt; res[res.coefname.==&quot;B: b_tiny&quot;, :pvalue], :lrt =&gt; pvals_lrt)
 f = Figure()
 
 scatter(f[1,1],times,res[res.coefname .== &quot;B: b_tiny&quot;,:estimate],axis=(;xlabel=&quot;time&quot;,title=&quot;coef: B:b_tiny&quot;))
@@ -89,4 +89,4 @@ scatter(f[1,2],df.walds,df.lrt,axis=(;title=&quot;walds-t pvalue&quot;,ylabel=&q
 scatter(f[2,1],times,df.walds,axis=(;title=&quot;walds-t pvalue&quot;,xlabel=&quot;time&quot;))
 scatter(f[2,2],times,df.lrt,axis=(;title=&quot;lrt pvalue&quot;,xlabel=&quot;time&quot;))
 
-f</code></pre><img src="b4367dab.png" alt="Example block output"/><p>Look pretty similar! Note that the Walds-T is typically too liberal (LRT also, but to a lesser exted). Best is to use the forthcoming MixedModelsPermutations.jl or go the route via R and use KenwardRoger (data not yet published)</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../generated/HowTo/juliacall_unfold/">« 🐍 Calling Unfold.jl directly from Python</a><a class="docs-footer-nextpage" href="../../generated/HowTo/effects/">Marginal effects (focus on non-linear predictors) »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.7.0 on <span class="colophon-date" title="Friday 20 September 2024 11:03">Friday 20 September 2024</span>. Using Julia version 1.10.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+f</code></pre><img src="e28a2b23.png" alt="Example block output"/><p>Look pretty similar! Note that the Walds-T is typically too liberal (LRT also, but to a lesser exted). Best is to use the forthcoming MixedModelsPermutations.jl or go the route via R and use KenwardRoger (data not yet published)</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../generated/HowTo/juliacall_unfold/">« 🐍 Calling Unfold.jl directly from Python</a><a class="docs-footer-nextpage" href="../../generated/HowTo/effects/">Marginal effects (focus on non-linear predictors) »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.7.0 on <span class="colophon-date" title="Thursday 10 October 2024 10:11">Thursday 10 October 2024</span>. Using Julia version 1.11.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
