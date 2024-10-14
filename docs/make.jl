@@ -58,6 +58,5 @@ makedocs(
 deploydocs(;
     repo = "github.com/unfoldtoolbox/Unfold.jl",
     push_preview = true,
-    # devbranch = "main",
-    versions = ["stable" => "v^", "v#.#.#"],
+    devbranch = "main",
 )
