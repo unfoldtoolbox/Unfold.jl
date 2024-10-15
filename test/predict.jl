@@ -112,7 +112,7 @@ pt = Unfold.result_to_table(m, p, repeat([evts], 2))
 
     # time expanded
     m = fit(UnfoldModel, [Any => (@formula(0 ~ 1), firbasis((-0.1, 1), 100))], evts, data;)
-    @test size(Unfold.residuals(m, data)) == (1, 6170)
+    @test size(Unfold.residuals(m, data)) == (1, length(data))
 
     # time expanded + multichannel
     m = fit(
@@ -121,7 +121,7 @@ pt = Unfold.result_to_table(m, p, repeat([evts], 2))
         evts,
         repeat(data, 1, 3)';
     )
-    @test size(Unfold.residuals(m, data)) == (3, 6170)
+    @test size(Unfold.residuals(m, data)) == (3, length(data))
 
 
     # time expanded, data longer 
@@ -132,7 +132,7 @@ pt = Unfold.result_to_table(m, p, repeat([evts], 2))
         repeat(data, 1, 3)';
     )
     resids = Unfold.residuals(m, repeat(data, 1, 3)')
-    @test size(resids) == (3, 6170)
+    @test size(resids) == (3, length(data))
     @test all(resids[1, end-2:end] .≈ data[end-2:end])
 
     # 
@@ -143,7 +143,7 @@ pt = Unfold.result_to_table(m, p, repeat([evts], 2))
 
 
     times = 1:size(data_e, 1)
-    m_mul = fit(UnfoldModel, f, evts, data_e, times)
+    m_mul = fit(UnfoldModel, @formula(0 ~ 1), evts, data_e, times)
     resids_e = Unfold.residuals(m_mul, data_e)
 
     @test size(resids_e)[2:3] == size(data_e)
