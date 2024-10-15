@@ -3,7 +3,7 @@
 [![Docs][Doc-img]][Doc-url] ![semver][semver-img] [![Build Status][build-img]][build-url]
 
 [Doc-img]: https://img.shields.io/badge/docs-main-blue.svg
-[Doc-url]: https://unfoldtoolbox.github.io/Unfold.jl/dev
+[Doc-url]: https://unfoldtoolbox.github.io/Unfold.jl/stable
 [semver-img]: https://img.shields.io/badge/semantic-versioning-green
 [build-img]: https://github.com/unfoldtoolbox/UnfoldSim.jl/workflows/CI/badge.svg
 [build-url]: https://github.com/unfoldtoolbox/UnfoldSim.jl/workflows/CI.yml
