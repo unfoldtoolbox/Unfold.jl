@@ -8,8 +8,8 @@
     f0 = @formula 0 ~ 1 + condition + (1 | subject)
     f1 = @formula 0 ~ 1 + condition + continuous + (1 | subject)
 
-    m0 = fit(UnfoldModel, Dict(Any => (f0, times)), evts, data)
-    m1 = fit(UnfoldModel, Dict(Any => (f1, times)), evts, data)
+    m0 = fit(UnfoldModel, [Any => (f0, times)], evts, data)
+    m1 = fit(UnfoldModel, [Any => (f1, times)], evts, data)
 
     tix = 4
     evts[!, :y] = data[1, tix, :]
@@ -23,7 +23,7 @@
     uf_lrt = likelihoodratiotest(m0, m1)
     mm_lrt = MixedModels.likelihoodratiotest(lmm0, lmm1)
 
-    @test mm_lrt.pvalues ≈ uf_lrt[tix].pvalues
+    @test isapprox(mm_lrt.pvalues, uf_lrt[tix].pvalues, atol = 1e-20)
 
 
 
