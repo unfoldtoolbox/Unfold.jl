@@ -40,6 +40,7 @@ makedocs(
             "Marginal effects (focus on non-linear predictors)" => "generated/HowTo/effects.md",
             #"Time domain basis functions"=>"generated/HowTo/timesplines.md",
             "Save and load Unfold models" => "generated/HowTo/unfold_io.md",
+            "Change contrasts / coding schema" => "generated/HowTo/contrasts.md",
         ],
         "Explanations" => [
             "About basisfunctions" => "./explanations/basisfunctions.md",
