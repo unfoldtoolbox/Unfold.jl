@@ -46,6 +46,7 @@ makedocs(
             "About basisfunctions" => "./explanations/basisfunctions.md",
             "Non-Linear effects" => "./generated/explanations/nonlinear_effects.md",
             "Window Length Effect" => "./generated/explanations/window_length.md",
+            "Predictions" => "./generated/explanations/predict.md",
         ],
         "Reference" => [
             "Overview of package extensions" => "references/extensions.md",
