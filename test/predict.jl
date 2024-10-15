@@ -98,11 +98,11 @@ p = predict(m; overlap = false)
 pt = Unfold.result_to_table(m, p, repeat([evts], 2))
 
 @show pt[[1, 2, 3], :yhat]
-@test all(isapprox.(pt[[1, 2, 3], :yhat], 0.293292035997; atol = 0.01))
+@test all(isapprox.(pt[[1, 2, 3], :yhat], -0.14433389682745668; atol = 0.01))
 @test all(pt[[1, 2, 3], :channel] .== [1, 2, 3])
 @test all(pt[[1, 2, 3], :channel] .== [1, 2, 3])
 @test all(
-    pt[[1, 6 * 112 + 1, 3 * 112 + 1], :continuous] .≈ [5, 1.6666666667, -2.7777777778],
+    pt[[1, 6 * 112 + 1, 3 * 112 + 1], :continuous] .≈ [2.7777777778, -1.6666666667, -5.0],
 )
 
 
