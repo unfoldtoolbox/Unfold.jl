@@ -11,7 +11,7 @@
     m0 = fit(UnfoldModel, [Any => (f0, times)], evts, data)
     m1 = fit(UnfoldModel, [Any => (f1, times)], evts, data)
 
-    tix = 4
+    tix = 1
     evts[!, :y] = data[1, tix, :]
 
     f0 = @formula y ~ 1 + condition + (1 | subject)

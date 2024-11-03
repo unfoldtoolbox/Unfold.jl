@@ -67,12 +67,17 @@ struct LinearModelFit{T,N} <: AbstractModelFit{T,N}
     standarderror::Array{T,N}
 end
 
-LinearModelFit() = LinearModelFit(Float64[], [], Float64[])
-LinearModelFit(estimate) = LinearModelFit(estimate, [])
-LinearModelFit(estimate::Array{T,2}, info) where {T} =
-    LinearModelFit(estimate, info, similar(Array{T}, 0, 0))
-LinearModelFit(estimate::Array{T,3}, info) where {T} =
-    LinearModelFit(estimate, info, similar(Array{T}, 0, 0, 0))
+LinearModelFit() =
+    error("Please specify type and dimensionality, e.g. LinearModelFit{Float64,2}()")
+
+LinearModelFit{T,N}() where {T,N} = LinearModelFit(Array{T,N}[], [], Array{T,N}[])
+LinearModelFit(estimate::Array{T,N}) where {T,N} = LinearModelFit{T,N}(estimate, [])
+LinearModelFit{T,N}(estimate) where {T,N} = LinearModelFit{T,N}(estimate, [])
+LinearModelFit{T,N}(estimate::Array{T,N}, info) where {T,N} =
+    LinearModelFit{T,N}(estimate, info, similar(Array{T,N}, zeros(Int, N)...))
+#LinearModelFit{T,N}(estimate, info, similar(Array{T}, 0, 0))
+#LinearModelFit{T,N}(estimate::Array{T,3}, info) where {T,N} =
+#    LinearModelFit{T,N}(estimate, info, similar(Array{T}, 0, 0, 0))
 
 
 

@@ -1,4 +1,3 @@
-using StatsBase: var
 
 function _lsmr!(beta, X::SparseMatrixCSC, data::AbstractArray{<:Number}, ch)
     _, h = lsmr!(@view(beta[ch, :]), X, @view(data[ch, :]); log = true)
@@ -82,62 +81,4 @@ function solver_default(
 end
 
 
-function calculate_stderror(
-    Xdc,
-    data::AbstractMatrix,
-    beta::AbstractArray{T},
-) where {T<:Union{Missing,<:Number}}
-
-    # remove missings
-    ix = any(.!ismissing.(data), dims = 1)[1, :]
-    if length(ix) != size(data, 2)
-        @warn(
-            "Limitation: Missing data are calculated over all channels for standard error"
-        )
-    end
-
-    data = data[:, ix]
-    Xdc = Xdc[ix, :]
-
-    # Hat matrix only once
-    hat_prime = inv(disallowmissing(Matrix(Xdc' * Xdc)))
-    # Calculate residual variance
-    @warn(
-        "Autocorrelation was NOT taken into account. Therefore SE are UNRELIABLE. Use at your own discretion"
-    )
-
-    se = Array{T}(undef, size(data, 1), size(Xdc, 2))
-    for ch = 1:size(data, 1)
-        residualVar = var(data[ch, :] .- Xdc * beta[ch, :])
-        @assert(!isnan(residualVar), "residual Variance was NaN")
-        hat = hat_prime .* residualVar
-        #se = sqrt(diag(cfg.contrast(:,:)*hat*cfg.contrast(:,:)'));
-        se[ch, :] = sqrt.(diag(hat))
-    end
-    return se
-end
-function calculate_stderror(
-    X,
-    data::AbstractArray{T1,3},
-    beta::AbstractArray{T2},
-) where {T1<:Union{Missing,<:Number},T2<:Union{Missing,<:Number}}
-    #function calculate_stderror(Xdc,data::AbstractArray{T,2},beta) where {T<:Union{Missing, <:Number}}  
-    X = disallowmissing(X)
-    # Hat matrix
-    hat_prime = inv(Matrix(X' * X))
-
-    se = Array{T2}(undef, size(data, 1), size(data, 2), size(X, 2))
-    for ch = 1:size(data, 1)
-        for t = 1:size(data, 2)
-            ix = .!ismissing.(data[ch, t, :])
-            # Calculate residual variance
-            residualVar = var(data[ch, t, ix] .- X[ix, :] * beta[ch, t, :])
-            @assert(!isnan(residualVar), "residual Variance was NaN")
-            hat = hat_prime .* residualVar
-            #se = sqrt(diag(cfg.contrast(:,:)*hat*cfg.contrast(:,:)'));
-            se[ch, t, :] = sqrt.(diag(hat))
-        end
-    end
-    return se
-end
 
