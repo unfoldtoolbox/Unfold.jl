@@ -20,9 +20,9 @@ function _solver_min(X, data; prepare_fun, solver_fun!)
             solver_fun!(view(Ĥ, ch, :, t), view(dataP, :, ch, t), prepared...)
         end
     end
-    stderror ? calculate_stderror(X, data, Ĥ) : nothing
+    modelfit = stderror ? calculate_stderror(X, data, Ĥ) : nothing
 
-    return Ĥ
+    return modelfit
 
 end
 
