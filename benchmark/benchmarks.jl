@@ -34,11 +34,8 @@ for (ix, k) in
     evts_epochs[!, k] = rand(StableRNG(ix), size(evts_epochs, 1))
 end
 
-ba1 = firbasis(τ = (0, 1), sfreq = sfreq)
-ba2 = firbasis(τ = (0, 1), sfreq = sfreq)
-
-f1_lmm = @formula 0 ~ 1 + A + (1 + A | subject)
-f2_lmm = @formula 0 ~ 1 + A + (1 + A | item)
+ba1 = firbasis(τ = (-0.1, 1), sfreq = sfreq)
+ba2 = firbasis(τ = (-0.2, 1), sfreq = sfreq)
 
 f1 = @formula 0 ~ 1 + A
 f1_spl = @formula 0 ~
@@ -51,11 +48,15 @@ f1_spl = @formula 0 ~
     spl(continuousE, 5)
 f2 = @formula 0 ~ 1 + B
 
+f1_lmm = @formula 0 ~ 1 + A + (1 + A | subject)
+f2_lmm = @formula 0 ~ 1 + A + (1 + A | item)
 dict_lin = Dict(0 => (f1, ba1), 1 => (f2, ba2))
 dict_spl = Dict(0 => (f1_spl, ba1), 1 => (f1_spl, ba2))
 dict_lmm = Dict(0 => (f1_lmm, ba1), 1 => (f2_lmm, ba2))
 
 times = 1:size(data_epochs, 1)
+
+
 
 #---
 m_epoch_lin_f1 = fit(UnfoldModel, f1, evts_epochs, data_epochs, times)
@@ -106,3 +107,15 @@ SUITE["effects"]["lin_spl"] = @benchmarkable effects(
 )
 
 #SUITE["fit"]["debugging"] = @benchmarkable read(run(`git diff Project.toml`))
+#---
+if 1 == 0
+    @benchmark designmatrix(UnfoldLinearModelContinuousTime, f1_spl, evts, ba1)
+
+    ba1 = firbasis(τ = (-0.1, 1), sfreq = sfreq)
+    ba1_int = firbasis(τ = (-0.1, 1), sfreq = sfreq, interpolate = true)
+    using BenchmarkTools
+    @benchmark X = designmatrix(UnfoldLinearModelContinuousTime, f1_spl, evts, ba1)
+    @benchmark X2 = designmatrix(UnfoldLinearModelContinuousTime, f1_spl, evts, ba1_int)
+
+
+end
