@@ -13,10 +13,7 @@ function _solver_min(X, data; prepare_fun, solver_fun!, stderror = false)
     Ĥ, dataP, prepared = prepare_fun(X, data)
     for ch = 1:size(dataP, 2)
         for t = 1:size(dataP, 3)
-            # init solver with previous fit
             ch == 1 || copyto!(view(Ĥ, ch, :, t), view(Ĥ, ch - 1, :, t))
-
-
             solver_fun!(view(Ĥ, ch, :, t), view(dataP, :, ch, t), prepared...)
         end
     end
