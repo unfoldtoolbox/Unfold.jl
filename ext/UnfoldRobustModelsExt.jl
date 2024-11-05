@@ -43,7 +43,7 @@ function solver_robust(
     end
 
 
-    modelfit = Unfold.LinearModelFit(beta, ["solver_robust"])
+    modelfit = Unfold.LinearModelFit{T,3}(beta, ["solver_robust"])
 
     return modelfit
 end

@@ -145,11 +145,28 @@ designmatrix(uf::UnfoldModel) = uf.designmatrix
         contrasts = Dict{Symbol,Any}(),
         kwargs...,
     
-Main function, generates the designmatrix, returns a list of `<:AbstractDesignMatrix`
+Main function called from `fit(UnfoldModel...)`, generates the designmatrix, returns a list of `<:AbstractDesignMatrix`
+
+"""
+designmatrix(uf::UnfoldModel, tbl; kwargs...) =
+    designmatrix(typeof(uf), design(uf), tbl; kwargs...)
+
+
+"""
+    designmatrix(
+        T::Type{<:UnfoldModel},
+        design_array::Vector{<:Pair},
+        tbl;
+        eventcolumn = :event,
+        contrasts = Dict{Symbol,Any}(),
+        kwargs...,
+    
+iteratively calls `designmatrix` for each event in the design_array, and returns a list of `<:AbstractDesignMatrix`
 
 """
 function designmatrix(
-    uf::UnfoldModel,
+    T::Type{<:UnfoldModel},
+    design_array::Vector{<:Pair},
     tbl;
     eventcolumn = :event,
     contrasts = Dict{Symbol,Any}(),
@@ -157,8 +174,7 @@ function designmatrix(
 )
 
     X = nothing
-    fDict = design(uf)
-    for (eventname, f) in fDict
+    for (eventname, f) in design_array
 
         @debug "Eventname, X:", eventname, X
         if eventname == Any
@@ -197,7 +213,7 @@ function designmatrix(
 
             X =
                 X + designmatrix(
-                    typeof(uf),
+                    T,
                     f[fIx],
                     eventTbl,
                     collect(f[bIx])[1];
@@ -210,7 +226,7 @@ function designmatrix(
             @debug f
             X =
                 X + designmatrix(
-                    typeof(uf),
+                    T,
                     f[fIx],
                     eventTbl;
                     contrasts = contrasts,

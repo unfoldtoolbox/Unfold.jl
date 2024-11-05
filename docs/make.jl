@@ -8,7 +8,7 @@ using Glob
 
 GENERATED = joinpath(@__DIR__, "src", "generated")
 SOURCE = joinpath(@__DIR__, "literate")
-for subfolder ∈ ["explanations", "HowTo", "tutorials"]
+for subfolder ∈ ["explanations", "HowTo", "tutorials", "references"]
     local SOURCE_FILES = Glob.glob(subfolder * "/*.jl", SOURCE)
     foreach(fn -> Literate.markdown(fn, GENERATED * "/" * subfolder), SOURCE_FILES)
 
@@ -51,6 +51,7 @@ makedocs(
         "Reference" => [
             "Overview of package extensions" => "references/extensions.md",
             "Development environment" => "explanations/development.md",
+            "Solver/optimizer implementations" => "./generated/references/solver.md",
             "API: Types" => "references/types.md",
             "API: Functions" => "references/functions.md",
         ],

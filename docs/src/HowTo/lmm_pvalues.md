@@ -28,7 +28,7 @@ m1|> DisplayAs.withcontext(:is_pluto=>true) # hide
 
 ## Likelihood ratio
 ```@example Main
-uf_lrt = likelihoodratiotest(m0, m1)
+uf_lrt = likelihoodratiotest(data_epoch, m0, m1)
 uf_lrt[1]
 ```
 As you can see, we have some likelihood ratio outcomes, exciting!

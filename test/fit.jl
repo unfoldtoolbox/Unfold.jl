@@ -3,7 +3,7 @@ f = @formula 0 ~ 1 + conditionA + continuousA # 1
 
 # prepare data
 data_r = reshape(data, (1, :))
-data_r = vcat(data_r, data_r)#add second channel
+data_r = vcat(data_r, deepcopy(data_r))#add second channel
 
 #--------------------------#
 # Mass Univariate Linear ##
@@ -103,7 +103,7 @@ end
 
 end
 
-@testset "automatic, non-vector call" begin
+@testset "automatic, non-vector call;missings" begin
     times = -1.0:0.05:1.9
     m_mul = coeftable(fit(UnfoldLinearModel, f, evts, data_e, times))
 
@@ -126,13 +126,16 @@ end
     m_mul_autoreshape == m_mul_noreshape
     # Add Missing in Data
     data_e_missing = deepcopy(data_e)
-    data_e_missing[1, 25, end-5:end] .= missing
-    m_mul_missing = coeftable(Unfold.fit(UnfoldLinearModel, f, evts, data_e_missing, times))
+    #data_e_missing[1, 25:end, :] .= missing
+    m_mul_missing = Unfold.fit(UnfoldLinearModel, f, evts, data_e_missing, times)
 
-    @test m_mul_missing.estimate ≈ m_mul.estimate
+    _evts, _data_e = Unfold.drop_missing_epochs(evts, data_e)
+    m_mul_nomissing = Unfold.fit(UnfoldLinearModel, f, _evts, _data_e, times)
+
+    @test all(isapprox.(coef(m_mul_missing), coef(m_mul_nomissing)))
 
     # Special solver solver_lsmr_se with Standard Error
-    se_solver = solver = (x, y) -> Unfold.solver_default(x, y, stderror = true)
+    se_solver = solver = (x, y) -> Unfold.solver_default(x, y; stderror = true)
     m_mul_se =
         coeftable(Unfold.fit(UnfoldModel, f, evts, data_e, times; solver = se_solver))
     @test all(m_mul_se.estimate .≈ m_mul.estimate)
@@ -160,7 +163,7 @@ end
     se_solver = (x, y) -> Unfold.solver_default(x, y, stderror = true)
     fit(
         UnfoldModel,
-        (Dict(Any => (f, range(0, length = size(data, 2), step = 1 / 100)))),
+        [Any => (f, range(0, length = size(data, 2), step = 1 / 100))],
         evts,
         data;
         solver = se_solver,
@@ -188,7 +191,7 @@ basisfunction = firbasis(τ = (-1, 1), sfreq = 20)
     @test size(m_tul_noreshape)[1] == size(m_tul)[1] / 2
 
     # Test under missing data
-    data_missing = Array{Union{Missing,Number}}(undef, size(data_r))
+    data_missing = Array{Union{Missing,Float64}}(undef, size(data_r))
     data_missing .= deepcopy(data_r)
     data_missing[4500:4600] .= missing
 

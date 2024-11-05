@@ -113,11 +113,14 @@ function StatsModels.fit(
     uf::UnfoldModel,
     tbl::AbstractDataFrame,
     data::AbstractArray;
+    fit = true,
     kwargs...,
 )
     @debug "adding desigmatrix!"
     designmatrix!(uf, tbl; kwargs...)
+    if fit
     fit!(uf, data; kwargs...)
+    end
 
     return uf
 end
