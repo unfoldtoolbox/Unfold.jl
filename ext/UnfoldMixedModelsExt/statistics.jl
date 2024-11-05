@@ -4,7 +4,11 @@ $(SIGNATURES)
 Returns a partial LMM model (non-functional due to lacking data) to be used in likelihoodratiotests.
 `k` to selcet which of the modelfit's to fake
 """
-function fake_lmm(data::AbstractArray{<:Number,3}, m::UnfoldLinearMixedModel, k::Int)
+function fake_lmm(
+    data::AbstractArray{<:Number,N},
+    m::UnfoldLinearMixedModel,
+    k::Int,
+) where {N}
     mm = modelmatrix(m)
     @assert length(mm) == 1 "LRT is currently not implemented for fitting multiple events at the same time"
     fcoll = Unfold.modelfit(m)
@@ -12,8 +16,12 @@ function fake_lmm(data::AbstractArray{<:Number,3}, m::UnfoldLinearMixedModel, k:
     #reterm = mm[2:end]
     #fakeY = zeros(size(feterm, 1))
     channel = fcoll.fits[k].channel
-    time_ix = fcoll.fits[k].timeIX
-    y = data[channel, time_ix, :]
+    if N == 3
+        time_ix = fcoll.fits[k].timeIX
+        y = data[channel, time_ix, :]
+    else
+        y = data[channel, :]
+    end
     lmm = LinearMixedModel_wrapper(Unfold.formulas(m), y, mm[1])
 
     lmm.optsum.feval = 1

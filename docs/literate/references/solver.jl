@@ -7,9 +7,9 @@ using LinearAlgebra: cholesky
 # ## Solver main
 # This function gis a eneral purpose solver-wrapper function. It calls  `prepare_fun` and iterates over the first dimension of `data`, repeatedly calling the `solver_fun`.
 #
-# Without any bells and whistles (progress, history etc.) the function looks like this:
+# Without any bells and whistles (progress, history etc.) the function roughly looks like this:
 
-function _solver_min(X, data; prepare_fun, solver_fun!)
+function _solver_min(X, data; prepare_fun, solver_fun!, stderror = false)
     Ĥ, dataP, prepared = prepare_fun(X, data)
     for ch = 1:size(dataP, 2)
         for t = 1:size(dataP, 3)
