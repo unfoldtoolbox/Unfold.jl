@@ -224,7 +224,21 @@ get_basis_colnames(formulas::AbstractArray{<:FormulaTerm}) = get_basis_colnames.
         events::Vector{<:DataFrame},
         times::Vector{<:Vector{<:Number}},
         eventnames::Vector)
-Converts an array-result (prediction or coefficient) together with the events, to a tidy dataframe
+    result_to_table(
+        eff::Vector{<:AbstractArray},
+        events::Vector{<:DataFrame},
+        times::Vector,
+        eventnames::Vector,
+    )
+Converts an array-result (prediction or coefficient) together with the events, to a tidy dataframe.
+
+To support multi-event models, we expect everything to be put into `Vectors` - this should be refactored at some point to be compatible with broadcasting, but it is not right now.
+
+## args
+`eff`: Contains the array(s) to be converted to a tidy dataframe. Should be 3D, with channel x time x predictor
+`events`: A vector of event-dataframes, each need to match `size(eff,3)`
+`times`: A vector of time-vectors, each need to match `size(eff,2)`
+`eventnames`: A vector of eventnames, either symbols or strings, should be a single entry per event
 """
 result_to_table(model, eff, events::Vector{<:DataFrame}) =
     result_to_table(eff, events, times(model), eventnames(model))
