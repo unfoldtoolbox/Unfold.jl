@@ -1,3 +1,4 @@
+using DataFrames: Markdown, MarkdownHighlighter, MarkdownDecoration
 using UnfoldSim
 using Krylov, CUDA
 using TimerOutputs, ProgressMeter
@@ -21,7 +22,7 @@ function unfold_benchmarks(;
     n_repeats,
     n_splines,
     max_seconds = 1000,
-    overlap = (0.5, 0.2),
+    overlap = (0.2, 0.2),
 )
     X, y = benchmark_data(; n_channels, sfreq, n_repeats, n_splines, overlap)
 
@@ -43,12 +44,13 @@ function unfold_benchmarks(;
         ],
         [:method, :res, :gpu, :min],
     )
-
+    df_res.comment .= ""
     #df_res = DataFrame()
     res = []
     for gpu in [false, true]
         for s in [:cg, :pinv, :intern, :qr, :cholesky]#, :krylov_cg]
             @info "solver $s - gpu:$gpu"
+            comment = ""
             try
                 y_solver = gpu ? cu(y) : y
                 res = @be _ Unfold.solver_predefined(
@@ -60,14 +62,23 @@ function unfold_benchmarks(;
                     GC.gc()
                     CUDA.reclaim()
                 end seconds = max_seconds
-            catch err
-                @info "ERROR!!!" typeof(err) gpu s
 
-                continue
+            catch err
+                @info "error!!" "gpu:$gpu solver:$s"
+                @info "ERROR!!!" typeof(err)
+                comment = string(err)
+                #continue
+                res = @be sum([1, 2])
             end
             df_res = vcat(
                 df_res,
-                DataFrame(:method => s, :gpu => gpu, :res => res, :min => minimum(res)),
+                DataFrame(
+                    :method => s,
+                    :gpu => gpu,
+                    :res => res,
+                    :min => minimum(res),
+                    :comment => comment,
+                ),
             )
 
         end
@@ -103,7 +114,7 @@ case_default = unfold_benchmarks(
     n_repeats = 200;
     max_seconds = 5,
 )
-case_sfreq = unfold_benchmarks(
+#=case_sfreq = unfold_benchmarks(
     n_channels = 1,
     sfreq = 1000,
     n_splines = 4,
@@ -117,6 +128,7 @@ case_tall = unfold_benchmarks(
     n_repeats = 2000;
     max_seconds = 1,
 )
+    =#
 #case_wide = unfold_benchmarks(
 #    n_channels = 1,
 #    sfreq = 100,
@@ -141,13 +153,51 @@ case_large = unfold_benchmarks(
 )
 
 
-case_wide = unfold_benchmarks(
-    n_channels = 128,
-    sfreq = 100,
-    n_splines = 4,
-    n_repeats = 200,
-    overlap = (0.5, 0.2),
-    max_seconds = 2,
-)
+
+#---- print markdown
+
+function df_to_md(data)
+    data_subset = data[
+        :,
+        [
+            :method,
+            :gpu,
+            :min_time,
+            :min_bytes,
+            :sizeDesign,
+            :n_channels,
+            :sfreq,
+            :n_repeats,
+            :n_splines,
+            :overlap,
+            :nnz,
+            :comment,
+        ],
+    ]
+    data_subset.min_bytes = data_subset.min_bytes / 1024 / 1024 / 1024
+    data_subset.percent_X_filled = data_subset.nnz ./ prod.(data_subset.sizeDesign)
+    rename!(data_subset, :min_bytes => :GB, :min_time => :time)
+
+    data_subset = data_subset[:, Not([:nnz, :sfreq, :n_repeats, :n_splines])]
+    hl_time = MarkdownHighlighter(
+        (d, i, j) ->
+            isa(d[i, j], Float64) &&
+                (d[i, j] ≈ minimum(data_subset.time[data_subset[:, :comment].==""])),
+        MarkdownDecoration(bold = true),
+    )
+    hl_alloc = MarkdownHighlighter(
+        (d, i, j) ->
+            isa(d[i, j], Float64) &&
+                (d[i, j] ≈ minimum(data_subset.GB[data_subset[:, :comment].==""])),
+        MarkdownDecoration(bold = true),
+    )
+    pretty_table(
+        data_subset,
+        backend = Val(:markdown),
+        header = names(data_subset),
+        highlighters = (hl_alloc, hl_time),
+    )
+end
 
 
+df_to_md.([case_small, case_default, case_multichannel, case_large])
