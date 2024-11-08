@@ -52,6 +52,7 @@ makedocs(
             "Overview of package extensions" => "references/extensions.md",
             "Development environment" => "explanations/development.md",
             "Solver/optimizer implementations" => "./generated/references/solver.md",
+            "Solver benchmarks" => "./references/benchmarks.md",
             "API: Types" => "references/types.md",
             "API: Functions" => "references/functions.md",
         ],

@@ -20,6 +20,7 @@ on:
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+    if: "!(contains(github.event.pull_request.labels.*.name, 'dont run tests'))"
     strategy:
       matrix:
         julia-version: [1] # 1 without specifier uses the current release
@@ -29,11 +30,11 @@ jobs:
       - uses: actions/checkout@v4
       - run: pwd
       - name: Setup julia
-        uses: julia-actions/setup-julia@v1
+        uses: julia-actions/setup-julia@v2
         with:
           version:  ${{ matrix.julia-version }}
       - name: cache
-        uses: julia-actions/cache@v1
+        uses: julia-actions/cache@v2
       - name: Install registered dependencies
         uses: julia-actions/julia-buildpkg@v1
       - name: Run tests

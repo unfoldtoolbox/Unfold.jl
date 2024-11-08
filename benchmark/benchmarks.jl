@@ -8,37 +8,47 @@ using CategoricalArrays
 using MixedModels
 using BSplineKit
 #const SUITE = BenchmarkGroup()
-Random.seed!(3)
+#Random.seed!(3)
 
 
 #---
 
 
 sfreq = 100
-data, evts = UnfoldSim.predef_2x2(StableRNG(1); n_subjects = 20, signalsize = sfreq)
-data_epochs, evts_epochs = UnfoldSim.predef_2x2(
+data_multsub, evts_multsub =
+    UnfoldSim.predef_2x2(StableRNG(1); n_subjects = 20, signalsize = sfreq)
+data_multsub_epochs, evts_multsub_epochs = UnfoldSim.predef_2x2(
     StableRNG(1);
     n_subjects = 20,
     signalsize = sfreq,
     return_epoched = true,
 )
-data = data[:]
-data_epochs = reshape(data_epochs, size(data_epochs, 1), :)
-transform!(evts, :subject => categorical => :subject)
-transform!(evts, :item => categorical => :item)
-evts.type = rand(StableRNG(1), [0, 1], nrow(evts))
+data, evts = UnfoldSim.predef_2x2(StableRNG(1); n_subjects = 1, signalsize = sfreq)
+data_epochs, evts_epochs = UnfoldSim.predef_2x2(
+    StableRNG(1);
+    n_subjects = 1,
+    signalsize = sfreq,
+    return_epoched = true,
+)
+
+
+data_multsub = data_multsub[:]
+data_multsub_epochs = reshape(data_multsub_epochs, size(data_multsub_epochs, 1), :)
+transform!(evts_multsub, :subject => categorical => :subject)
+transform!(evts_multsub, :item => categorical => :item)
+evts.type = rand(StableRNG(1), ["A", "B"], nrow(evts))
+evts_multsub.type = rand(StableRNG(1), ["A", "B"], nrow(evts_multsub))
 
 for (ix, k) in
     enumerate([:continuousA, :continuousB, :continuousC, :continuousD, :continuousE])
     evts[!, k] = rand(StableRNG(ix), size(evts, 1))
+    evts_multsub[!, k] = rand(StableRNG(ix), size(evts_multsub, 1))
     evts_epochs[!, k] = rand(StableRNG(ix), size(evts_epochs, 1))
+    evts_multsub_epochs[!, k] = rand(StableRNG(ix), size(evts_multsub_epochs, 1))
 end
 
-ba1 = firbasis(τ = (0, 1), sfreq = sfreq)
-ba2 = firbasis(τ = (0, 1), sfreq = sfreq)
-
-f1_lmm = @formula 0 ~ 1 + A + (1 + A | subject)
-f2_lmm = @formula 0 ~ 1 + A + (1 + A | item)
+ba1 = firbasis(τ = (-0.1, 1), sfreq = sfreq, name = "A") # names explicitly given due to benchmark?
+ba2 = firbasis(τ = (-0.2, 1), sfreq = sfreq, name = "B")
 
 f1 = @formula 0 ~ 1 + A
 f1_spl = @formula 0 ~
@@ -51,11 +61,15 @@ f1_spl = @formula 0 ~
     spl(continuousE, 5)
 f2 = @formula 0 ~ 1 + B
 
-dict_lin = Dict(0 => (f1, ba1), 1 => (f2, ba2))
-dict_spl = Dict(0 => (f1_spl, ba1), 1 => (f1_spl, ba2))
-dict_lmm = Dict(0 => (f1_lmm, ba1), 1 => (f2_lmm, ba2))
+f1_lmm = @formula 0 ~ 1 + A + (1 + A | subject)
+f2_lmm = @formula 0 ~ 1 + A + (1 + A | item)
+dict_lin = Dict("A" => (f1, ba1), "B" => (f2, ba2))
+dict_spl = Dict("A" => (f1_spl, ba1), "B" => (f1_spl, ba2))
+dict_lmm = Dict("A" => (f1_lmm, ba1), "B" => (f2_lmm, ba2))
 
 times = 1:size(data_epochs, 1)
+
+
 
 #---
 m_epoch_lin_f1 = fit(UnfoldModel, f1, evts_epochs, data_epochs, times)
@@ -83,7 +97,7 @@ SUITE["designmat"]["lin"] =
 SUITE["designmat"]["lmm"] = @benchmarkable designmatrix(
     ext.UnfoldLinearMixedModelContinuousTime,
     $f1_lmm,
-    $evts,
+    $evts_multsub,
     $ba1,
 )
 
@@ -91,7 +105,13 @@ SUITE["designmat"]["lmm"] = @benchmarkable designmatrix(
 SUITE["fit"]["lin"] =
     @benchmarkable fit(UnfoldModel, $f1, $evts_epochs, $data_epochs, $times)
 SUITE["fit"]["lmm"] =
-    @benchmarkable fit(UnfoldModel, $f1_lmm, $evts_epochs, $data_epochs, $times)
+    @benchmarkable fit(
+        UnfoldModel,
+        $f1_lmm,
+        $evts_multsub_epochs,
+        $data_multsub_epochs,
+        $times,
+    )
 SUITE["fit"]["lin_deconv"] =
     @benchmarkable fit(UnfoldModel, $dict_lin, $evts, $data, eventcolumn = "type");
 #SUITE["fit"]["lmm_deconv"] =
@@ -99,10 +119,23 @@ SUITE["fit"]["lin_deconv"] =
 
 
 SUITE["effects"]["lin"] =
-    @benchmarkable effects($(Dict(:A => ["a_small", "a_big"])), $m_lin_f1)
+    @benchmarkable effects($(Dict("A" => ["a_small", "a_big"])), $m_lin_f1)
 SUITE["effects"]["lin_spl"] = @benchmarkable effects(
     $(Dict(:continuousA => collect(range(0.1, 0.9, length = 15)))),
     $m_lin_f1_spl,
 )
 
 #SUITE["fit"]["debugging"] = @benchmarkable read(run(`git diff Project.toml`))
+
+if 1 == 0
+    @benchmark designmatrix(UnfoldLinearModelContinuousTime, f1_spl, evts, ba1)
+
+    ba1 = firbasis(τ = (-0.1, 1), sfreq = sfreq)
+    ba1_int = firbasis(τ = (-0.1, 1), sfreq = sfreq, interpolate = true)
+    using BenchmarkTools
+    @benchmark X = designmatrix(UnfoldLinearModelContinuousTime, f1_spl, evts, ba1)
+    @benchmark X2 = designmatrix(UnfoldLinearModelContinuousTime, f1_spl, evts, ba1_int)
+
+
+
+end

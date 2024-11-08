@@ -5,19 +5,23 @@ ENV["MATLAB_ROOT"] = "/opt/common/apps/matlab/r2021a/"
 using MATLAB
 using BSplineKit, Unfold, UnfoldSim
 using Random
+using Chairmarks
 
 mat"addpath('/store/users/skukies/unfold_duration_backup/lib/eeglab')" # Add EEGLAB?
 mat"addpath('/store/users/skukies/unfold_duration_backup/lib/unfold')" #" Add Unfold?
 mat"init_unfold"
 
 # Matlab function for comparison
+srate = 500
+
+
 function calc_matlab(datajl, eventsjl)
     mat"
         
         EEG = eeg_emptyset();
         
         EEG.data = $datajl;
-        EEG.srate = 100;
+        EEG.srate = double($srate);
     "
 
     mat_events = mxarray(
@@ -54,7 +58,6 @@ function calc_matlab(datajl, eventsjl)
     "
 end
 
-
 #" Setting up data
 # data, events = UnfoldSim.predef_eeg()
 design =
@@ -65,16 +68,16 @@ design =
         ),
     ) |> x -> RepeatDesign(x, 50);
 
-p1 = LinearModelComponent(; basis = p100(), formula = @formula(0 ~ 1), β = [5]);
+p1 = LinearModelComponent(; basis = p100(sfreq = srate), formula = @formula(0 ~ 1), β = [5]);
 
 n1 = LinearModelComponent(;
-    basis = n170(),
+    basis = n170(sfreq = srate),
     formula = @formula(0 ~ 1 + condition),
     β = [5, -3],
 );
 
 p3 = LinearModelComponent(;
-    basis = p300(),
+    basis = p300(sfreq = srate),
     formula = @formula(0 ~ 1 + continuous),
     β = [5, 1],
 );
@@ -84,30 +87,36 @@ data, events = UnfoldSim.simulate(
     MersenneTwister(1),
     design,
     components,
-    UniformOnset(; width = 50, offset = 20),
+    UniformOnset(; width = srate, offset = Int(srate * 0.2)),
     PinkNoise(),
 );
+data = reshape(data, 1, :)
 
-# Run fit two times; once for compilation and once for actual timing
-for k = 1:2
-    @time m = fit(
+## fitting part
+# julia
+@time(
+    m = fit(
         UnfoldModel,
         [
             Any => (
                 @formula(0 ~ 1 + condition + spl(continuous, 5)),
-                firbasis(τ = [-1, 1], sfreq = 100, name = "basis"),
+                firbasis(τ = [-1, 1], sfreq = srate),
             ),
         ],
         events,
         data,
     )
-end
+)
+
 ## Matlab part
 
 calc_matlab(data, events)
 @mget(t_fit)
+@mget t_design
 # Above tested 2023/11/22; Julia: 0.12 sec ; Matlab: 0.15sec
-# Above tested 2024/04/18: Julia: 0.4 ; Matlab: 0.24s
+# Above tested 2024/04/18: Julia: 0.35 ; Matlab: 0.4s
+# above tested with 500hz => Jl: 1.5s ; Matlab: 2.5s
+
 ## Multichannel w/ headmodel
 
 c = LinearModelComponent(;
@@ -148,3 +157,17 @@ calc_matlab(data_mc, events_mc)
 
 # Above tested 2023/11/22; Julia: ca.8.9 sec ; Matlab: ca. 10.5sec
 # Above tested 2024/04/18: Julia: ca. 4s ; Matlab: ca. 66s
+
+
+@time m = fit(
+    UnfoldModel,
+    [
+        Any => (
+            @formula(0 ~ 1 + condition + spl(continuous, 5)),
+            firbasis(τ = [-1, 1], sfreq = 100),
+        ),
+    ],
+    events_mc,
+    data_mc;
+    solver = (x, y) -> Unfold.solver_krylov(x, y; GPU = true),
+);

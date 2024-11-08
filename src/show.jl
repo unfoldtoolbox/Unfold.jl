@@ -110,7 +110,7 @@ function Base.show(io::IO, ::MIME"text/plain", obj::T) where {T<:UnfoldModel}
 
 
     empty_uf = T()
-    is_not_fit = modelfit(obj) == modelfit(empty_uf)
+    is_not_fit = length(coef(obj)) == 0#modelfit(obj) == modelfit(empty_uf)
 
 
 
@@ -119,7 +119,7 @@ function Base.show(io::IO, ::MIME"text/plain", obj::T) where {T<:UnfoldModel}
     println(io)
     Term.tprintln(
         io,
-        is_not_fit ? "{red}❌{/red]} model not fit" :
+        is_not_fit ? "{red}❌{/red} model not fit. Use fit!(uf,data) to fit it." :
         "{bold green}✔{/bold green} model is fit. {blue_light} size(coefs) $(size(coef(obj))){/blue_light}",
     )
     #println(io, "Design: $(design(obj))")

@@ -23,12 +23,12 @@ end
 
 function prepare(X, data::AbstractArray{<:Number,3})
     Ĥ = zeros(eltype(data), size(data, 1), size(X, 2), size(data, 2))
-    return Ĥ, permutedims(data, [3, 1, 2]), (collect(X),)
+    return Ĥ, permutedims(data, [3, 1, 2]), (X,)
 end
 
 function prepare(X, data::AbstractArray{<:Number,2})
     Ĥ = zeros(eltype(data), size(data, 1), size(X, 2))
-    return Ĥ, collect(data'), (collect(X),)
+    return Ĥ, (data'), (X,)
 end
 
 """
@@ -37,10 +37,11 @@ instead of solving y = Xb, we solve X'Xb = X'y. This function calculates X'X and
 
 """
 prepare_XTX(all::Tuple) = prepare_XTX(all...)
-prepare_XTX(Ĥ, data, all::Tuple) = prepare_XTX(Ĥ, data, all...)
+prepare_XTX(Ĥ, data::AbstractArray, all::Tuple) = prepare_XTX(Ĥ, data, all...)
+prepare_XTX(Ĥ, data::Adjoint, X::Tuple) = prepare_XTX(Ĥ, collect(data), X)
 function prepare_XTX(Ĥ, data::T1, X::T2) where {T1,T2}
     Xt = X'
-    R_xx = T1(Xt * X)#
+    R_xx = T1(Xt * X)
     R_xy = similar(data, size(X, 2))
     return Ĥ, data, (Xt, R_xx, R_xy)
 end

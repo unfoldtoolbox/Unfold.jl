@@ -64,9 +64,9 @@ function solver_krylov(
     finish!(p)
     if stderror
         stderror = Unfold.calculate_stderror(X, data, beta)
-        modelfit = Unfold.LinearModelFit(beta, ["krylov_lsmr", minfo], stderror)
+        modelfit = Unfold.LinearModelFit{T,2}(beta, ["krylov_lsmr", minfo], stderror)
     else
-        modelfit = Unfold.LinearModelFit(beta, ["krylov_lsmr", minfo])
+        modelfit = Unfold.LinearModelFit{T,2}(beta, ["krylov_lsmr", minfo])
     end
     return modelfit
 end

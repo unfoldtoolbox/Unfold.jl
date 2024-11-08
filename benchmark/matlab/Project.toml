@@ -1,0 +1,6 @@
+[deps]
+BSplineKit = "093aae92-e908-43d7-9660-e50ee39d5a0a"
+Chairmarks = "0ca39b1e-fe0b-4e98-acfc-b1656634c4de"
+MATLAB = "10e44e05-a98a-55b3-a45b-ba969058deb6"
+StableRNGs = "860ef19b-820b-49d6-a774-d7a799459cd3"
+UnfoldSim = "ed8ae6d2-84d3-44c6-ab46-0baf21700804"
