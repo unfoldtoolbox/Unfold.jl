@@ -1,15 +1,17 @@
 """
 See FIRBasis for an examples
 
-    a BasisFunction should implement:
-    kernel() 
-    collabel() [default "colname_basis"] # name for 
-    colnames() # unique names of expanded columns
-    times() # vector of times along expanded columns
-    name() # name of basis
-    width() # expansion to how many columns
+a BasisFunction should implement:
+- kernel() # kernel(b::BasisFunction,sample) => returns the designmatrix for that event
+- height() # number of samples in continuous time
+- width()  # number of coefficient columns (e.g. HRF 1 to 3, FIR=height(),except if interpolate=true )
 
-    shiftOnset() [default 0]
+- colnames() # unique names of expanded columns
+- times() # vector of times along expanded columns, length = height()
+
+- name() # name of basisfunction
+- collabel() [default "colname_basis"] # name for coeftable
+- shift_onset() [default 0]
 """
 abstract type BasisFunction end
 
@@ -25,63 +27,54 @@ $(FIELDS)
 (tipp: most users would you want to call firbasis, not generate it manually)
 # Examples
 ```julia-repl
-julia>  b = FIRBasis(kernelfunction,"derivative",["f(x)"],range(0,(length(kernelfunction([0, 1]))-1)*TR,step=TR),"hrf_kernel","basis_A",0)
+julia>  b = FIRBasis(range(0,1,length=10),"basisA",-1)
 ```
 """
-struct FIRBasis <: BasisFunction
-    "a design-matrix kernel function used to timeexpand, given a timepoint in 'sample' timeunits"
-    kernel::Function
-
-    " vector of times along rows of kernel-output (in seconds)"
-    times::AbstractVector
-    "name of the event, random 1:1000 if unspecified"
-    name::String
+mutable struct FIRBasis <: BasisFunction
+    "vector of times along rows of kernel-output (in seconds)"
+    times::Vector
+    "name of the event, should be the actual eventName in `eventcolumn` of the dataframes later"
+    name::Any
     "by how many samples do we need to shift the event onsets? This number is determined by how many 'negative' timepoints the basisfunction defines"
-    shiftOnset::Integer
+    shift_onset::Int64
+    "should we linearly interpolate events not on full samples?"
+    interpolate::Bool
 end
-
+# default dont interpolate
+FIRBasis(times, name, shift_onset) = FIRBasis(times, name, shift_onset, false)
+@deprecate FIRBasis(kernel::Function, times, name, shift_onset) FIRBasis(
+    times,
+    name,
+    shift_onset,
+)
 collabel(basis::FIRBasis) = :time
-colnames(basis::FIRBasis) = basis.times[1:end-1]
+colnames(basis::FIRBasis) = basis.interpolate ? basis.times[1:end-1] : basis.times[1:end]
 
 
-struct SplineBasis <: BasisFunction
-    "a design-matrix kernel function used to timeexpand, given a timepoint in 'sample' timeunits"
+mutable struct SplineBasis <: BasisFunction
     kernel::Function
-    "name of column dimension (e.g 'time' for FIR, 'derivative', for HRF etc.)"
 
     "vector of names along columns of kernel-output"
     colnames::AbstractVector
     " vector of times along rows of kernel-output (in seconds)"
-    times::AbstractVector
+    times::Vector
     "name of the event, random 1:1000 if unspecified"
     name::String
     "by how many samples do we need to shift the event onsets? This number is determined by how many 'negative' timepoints the basisfunction defines"
-    shiftOnset::Integer
+    shift_onset::Int64
 end
 
 
-struct HRFBasis <: BasisFunction
-    "a design-matrix kernel function used to timeexpand, given a timepoint in 'sample' timeunits"
+mutable struct HRFBasis <: BasisFunction
     kernel::Function
     "vector of names along columns of kernel-output"
     colnames::AbstractVector
     " vector of times along rows of kernel-output (in seconds)"
-    times::AbstractVector
+    times::Vector
     "name of the event, random 1:1000 if unspecified"
     name::String
 end
 
-
-
-
-function Base.show(io::IO, obj::BasisFunction)
-    println(io, "name: $(name(obj))")
-    println(io, "collabel: $(collabel(obj))")
-    println(io, "colnames: $(colnames(obj))")
-    println(io, "kerneltype: $(typeof(obj))")
-    println(io, "times: $(times(obj))")
-    println(io, "shiftOnset: $(shiftOnset(obj))")
-end
 
 
 
@@ -90,8 +83,13 @@ end
 $(SIGNATURES)
 Generate a sparse FIR basis around the *τ* timevector at sampling rate *sfreq*. This is useful if you cannot make any assumptions on the shape of the event responses. If unrounded events are supplied, they are split between samples. E.g. event-latency = 1.2 will result in a "0.8" and a "0.2" entry.
 
+
 Advanced: second input can be duration in samples - careful: `times(firbasis)` always assumes duration = 1. Therefore, 
 issues with LMM and predict will appear!
+
+# keyword arguments
+`interpolate` (Bool, default false): if true, interpolates events between samples linearly. This results in `predict` functions to return a trailling 0
+
 
 # Examples
 Generate a FIR basis function from -0.1s to 0.3s at 100Hz
@@ -104,21 +102,27 @@ julia>  f(103.3)
 ```
 
 """
-function firbasis(τ, sfreq, name::String)
+function firbasis(τ, sfreq, name = ""; interpolate = false, max_height=nothing)
     τ = round_times(τ, sfreq)
-    times = range(τ[1], stop = τ[2]+1 ./ sfreq, step = 1 ./ sfreq) # stop + 1 step, because we support fractional event-timings
+    if interpolate
+        # stop + 1 step, because we support fractional event-timings
+        τ = (τ[1], τ[2] + 1 ./ sfreq)
+    end
+  if !isnothing(max_height)
+        τ = (τ[1], τ[2] + max_height)
+  end
+    times = range(τ[1], stop = τ[2], step = 1 ./ sfreq)
 
-    kernel = e -> firkernel(e, times[1:end-1])
+    shift_onset = Int64(floor(τ[1] * sfreq))
 
+    return FIRBasis(times, name, shift_onset, interpolate)
 
-    shiftOnset = Int64(floor(τ[1] * sfreq))
-
-    return FIRBasis(kernel, times, name, shiftOnset)
 end
 # cant multiple dispatch on optional arguments
 #firbasis(;τ,sfreq)           = firbasis(τ,sfreq)
-firbasis(; τ, sfreq, name) = firbasis(τ, sfreq, name)
-firbasis(τ, sfreq) = firbasis(τ, sfreq, "basis_" * string(rand(1:10000)))
+firbasis(; τ, sfreq, name = "", kwargs...) = firbasis(τ, sfreq, name; kwargs...)
+
+
 
 """
 $(SIGNATURES)
@@ -134,26 +138,33 @@ julia>  f = firkernel(103.3,range(-0.1,step=0.01,stop=0.31))
 julia>  f_dur = firkernel([103.3 4],range(-0.1,step=0.01,stop=0.31))
 ```
 """
-function firkernel(e, times)
-    @assert ndims(e) <= 1 #either single onset or a row vector where we will take the first one :)
+function firkernel(ev, times; interpolate = false)
+    @assert ndims(ev) <= 1 #either single onset or a row vector where we will take the first one :)
 
     # duration is 1 for FIR and duration is duration (in samples!) if e is vector
-    dur = size(e, 1) == 1 ? 1 : Int.(ceil(e[2]))
-       
+    e = ev[1] # latency in samples  
+    dur = size(ev, 1) == 1 ? 1 : Int.(ceil(ev[2]))
+    
+    ksize = length(times) #isnothing(maxsize) ? length(times) : max_height # kernelsize
+  
+    # if interpolatethe first and last entry is split, depending on whether we have "half" events
+    eboth = interpolate ? [1 .- (e .% 1) e .% 1] : [e]
+  
+     values =[eboth[1] ; repeat([1],dur-1); eboth[2:end]] 
+     values[isapprox.(eboth, 0, atol = 1e-15)] .= 0 # keep sparsity pattern
+  
+     # without interpolation, remove last entry again, which should be 0 anyway
+  # values = interpolate ? values : values[1:end-1]  # commented out if the eboth[2:end] trick works
         
-    ksize = length(times) # kernelsize
-
-    # the first and last entry is split, depending on whether we have "half" events
-    values =[1 .- (e[1] .% 1); repeat([1],dur-1); e[1] .% 1] 
-    values[isapprox.(values, 0, atol = 1e-15)] .= 0 # force to 0 to get sparsity back
-
-    # build the matrix, we define it by diagonals which go from 0, -1, -2 ...
+        # build the matrix, we define it by diagonals which go from 0, -1, -2 ...
     pairs = [x => repeat([y],ksize) for (x,y) = zip(.-range(0,dur),values)]
-    kernel = spdiagm(ksize + dur, ksize, pairs...)
-
-    return kernel
-
-end
+            return spdiagm(
+            ksize + interpolate ? 1 : 0,
+            ksize,
+          pairs...
+        )
+    
+    end
 
 
 splinebasis(; τ, sfreq, nsplines, name) = splinebasis(τ, sfreq, nsplines, name)
@@ -166,23 +177,10 @@ function splinebasis(τ, sfreq, nsplines, name::String)
     times = range(τ[1], stop = τ[2], step = 1 ./ sfreq)
     kernel = e -> splinekernel(e, times, nsplines - 2)
 
-    shiftOnset = Int64(floor(τ[1] * sfreq))
-    colnames = spl_breakpoints(times, nsplines)
-    return SplineBasis(kernel, colnames, times, name, shiftOnset)
+
 end
 
 
-
-function spl_breakpoints(times, nsplines)
-    # calculate the breakpoints, evenly spaced
-    return collect(range(minimum(times), stop = maximum(times), length = nsplines))
-end
-
-function splinekernel(e, times, nsplines)
-    breakpoints = spl_breakpoints(times, nsplines)
-    basis = BSplineBasis(4, breakpoints)  # 4= cubic
-    return sparse(Unfold.splFunction(times, basis))
-end
 
 
 """
@@ -211,11 +209,7 @@ julia>  f(103.3,4.1)
 
 
 """
-function hrfbasis(
-    TR::Float64;
-    parameters = [6.0 16.0 1.0 1.0 6.0 0.0 32.0],
-    name::String = "basis_" * string(rand(1:10000)),
-)
+function hrfbasis(TR::Float64; parameters = [6.0 16.0 1.0 1.0 6.0 0.0 32.0], name = "")
     # Haemodynamic response function adapted from SPM12b "spm_hrf.m"
     # Parameters:
     #                                                           defaults
@@ -228,31 +222,50 @@ function hrfbasis(
     #        p(6) - onset {seconds}                                0
     #        p(7) - length of kernel {seconds}                    32
     kernel = e -> hrfkernel(e, TR, parameters)
-    return HRFBasis(kernel,["f(x)"],range(0, (length(kernel([0, 1])) - 1) * TR, step = TR),name)
+    return HRFBasis(
+        kernel,
+        ["f(x)"],
+        range(0, (length(kernel([0, 1])) - 1) * TR, step = TR),
+        name,
+    )
 end
 
-shiftOnset(basis::HRFBasis) = 0
+shift_onset(basis::HRFBasis) = 0
 
 collabel(basis::HRFBasis) = :derivative
 collabel(basis::SplineBasis) = :splineTerm
 
-collabel(uf::UnfoldModel) = collabel(formula(uf))
+collabel(uf::UnfoldModel) = collabel(formulas(uf))
 collabel(form::FormulaTerm) = collabel(form.rhs)
 collabel(t::Tuple) = collabel(t[1]) # MixedModels has Fixef+ReEf
 collabel(term::Array{<:AbstractTerm}) = collabel(term[1].rhs)  # in case of combined formulas
 #collabel(form::MatrixTerm) = collabel(form[1].rhs)
 
 # typical defaults
+
+shift_onset(basis::BasisFunction) = basis.shift_onset
 colnames(basis::BasisFunction) = basis.colnames
-kernel(basis::BasisFunction) = basis.kernel
+kernel(basis::BasisFunction, e) = basis.kernel(e)
+@deprecate kernel(basis::BasisFunction) basis.kernel
+
+
+basisname(fs::Vector{<:FormulaTerm}) = [name(f.rhs.basisfunction) for f in fs]
+basisname(uf::UnfoldModel) = basisname(formulas(uf))
+basisname(uf::UnfoldLinearModel) = first.(design(uf)) # for linear models we dont save it in the formula
+
+kernel(basis::FIRBasis, e) =
+    basis.interpolate ? firkernel(e, basis.times[1:end-1]; interpolate = true) :
+    firkernel(e, basis.times; interpolate = false)
 
 times(basis::BasisFunction) = basis.times
 name(basis::BasisFunction) = basis.name
 
-StatsModels.width(basis::BasisFunction) = length(times(basis))
+StatsModels.width(basis::BasisFunction) = height(basis)
+StatsModels.width(basis::FIRBasis) = basis.interpolate ? height(basis) - 1 : height(basis)
+height(basis::FIRBasis) = length(times(basis))
 
-StatsModels.width(basis::FIRBasis) = length(times(basis))
-
+StatsModels.width(basis::HRFBasis) = 1
+times(basis::HRFBasis) = NaN
 
 """
 $(SIGNATURES)
@@ -292,12 +305,43 @@ function hrfkernel(e, TR, p)
 
     # hrf = hrf([0:floor(p(7)/RT)]*fMRI_T + 1);
     hrf = hrf ./ sum(hrf)
-    hrf = conv(box_mt, hrf)'
+    hrf = conv1D(box_mt, hrf)'
     #println(box_mt)
     hrf = hrf[((range(0, stop = Int(floor(p[7] ./ TR + duration)))*mt)).+1]
 
 
 
     return (SparseMatrixCSC(sparse(hrf)))
+
+end
+
+
+
+# taken from https://codereview.stackexchange.com/questions/284537/implementing-a-1d-convolution-simd-friendly-in-julia
+# to replace the DSP.conv function
+function conv1D!(vO::Array{T,1}, vA::Array{T,1}, vB::Array{T,1})::Array{T,1} where {T<:Real}
+
+    lenA = length(vA)
+    lenB = length(vB)
+
+    fill!(vO, zero(T))
+    for idxB = 1:lenB
+        for idxA = 1:lenA
+            @inbounds vO[idxA+idxB-1] += vA[idxA] * vB[idxB]
+        end
+    end
+
+    return vO
+
+end
+
+function conv1D(vA::Array{T,1}, vB::Array{T,1})::Array{T,1} where {T<:Real}
+
+    lenA = length(vA)
+    lenB = length(vB)
+
+    vO = Array{T,1}(undef, lenA + lenB - 1)
+
+    return conv1D!(vO, vA, vB)
 
 end

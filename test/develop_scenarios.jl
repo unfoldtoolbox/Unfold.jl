@@ -26,7 +26,7 @@ f = @formula 0 ~ 1 + condA + condB + (1 + condA + condB | subject)
 # cut the data into epochs
 # TODO This ignores subject bounds
 data_e, times = Unfold.epoch(data = data, tbl = evts, τ = (-1.0, 1.9), sfreq = 10)
-evts_e, data_e = Unfold.dropMissingEpochs(evts, data_e)
+evts_e, data_e = Unfold.drop_missing_epochs(evts, data_e)
 
 ##
 

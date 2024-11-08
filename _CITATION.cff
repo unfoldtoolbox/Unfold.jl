@@ -1,0 +1,35 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: Unfold
+message: 'If you use this page, please cite it as below.'
+type: software
+authors:
+  - given-names: Benedikt
+    family-names: Ehinger
+    orcid: 'https://orcid.org/0000-0002-6276-3332'
+  - given-names: Judith
+    family-names: Schepers
+  - given-names: René
+    family-names: Skukies
+    orcid: 'https://orcid.org/0000-0002-4124-4584'
+
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.6423476
+repository-code: 'https://github.com/unfoldtoolbox/Unfold.jl'
+version: 0.6.2
+date-released: '2021-09-28'
+preferred-citation:
+  type: article
+  authors:
+  - given-names: Benedikt
+    family-names: Ehinger
+    orcid: 'https://orcid.org/0000-0002-6276-3332'
+  - given-names: Olaf
+    family-names: Dimigen
+  year: 2019
+  doi: "https://doi.org/10.7717/peerj.7838"
+  journal: "PeerJ"
+  title: "Unfold: an integrated toolbox for overlap correction, non-linear modeling, and regression-based EEG analysis"

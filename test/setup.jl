@@ -1,13 +1,16 @@
+
 using Test
-using Unfold
 using StatsModels
 using DataFrames
+using DataFramesMeta
 using Statistics
 using Random
 using CategoricalArrays
 using StatsBase
+using Missings
 
-using MixedModels
+using MixedModels, RobustModels, BSplineKit # extensionTriggers
 using SparseArrays
+using UnfoldSim
 
 include("test_utilities.jl")

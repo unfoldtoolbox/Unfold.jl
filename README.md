@@ -1,98 +1,175 @@
-# Unfold.jl
+# [![Unfold.jl EEG toolbox](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/3cbe57c1-e1a7-4150-817a-ce3dcc844485)](https://github.com/unfoldtoolbox/Unfold.jl)
 
-<img align="right" width="33%" src="https://www.unfoldtoolbox.org/_images/unfold_800x377.png">
+[![Docs][Doc-img]][Doc-url] ![semver][semver-img] [![Build Status][build-img]][build-url]
 
+[Doc-img]: https://img.shields.io/badge/docs-main-blue.svg
+[Doc-url]: https://unfoldtoolbox.github.io/Unfold.jl/stable
+[semver-img]: https://img.shields.io/badge/semantic-versioning-green
+[build-img]: https://github.com/unfoldtoolbox/UnfoldSim.jl/workflows/CI/badge.svg
+[build-url]: https://github.com/unfoldtoolbox/UnfoldSim.jl/workflows/CI.yml
 
+|Estimation|Visualisation|Simulation|BIDS pipeline|Decoding|Statistics|
+|---|---|---|---|---|---|
+| <a href="https://github.com/unfoldtoolbox/Unfold.jl/tree/main"><img src="https://github-production-user-asset-6210df.s3.amazonaws.com/10183650/277623787-757575d0-aeb9-4d94-a5f8-832f13dcd2dd.png"></a> | <a href="https://github.com/unfoldtoolbox/UnfoldMakie.jl"><img  src="https://github-production-user-asset-6210df.s3.amazonaws.com/10183650/277623793-37af35a0-c99c-4374-827b-40fc37de7c2b.png"></a>|<a href="https://github.com/unfoldtoolbox/UnfoldSim.jl"><img src="https://github-production-user-asset-6210df.s3.amazonaws.com/10183650/277623795-328a4ccd-8860-4b13-9fb6-64d3df9e2091.png"></a>|<a href="https://github.com/unfoldtoolbox/UnfoldBIDS.jl"><img src="https://github-production-user-asset-6210df.s3.amazonaws.com/10183650/277622460-2956ca20-9c48-4066-9e50-c5d25c50f0d1.png"></a>|<a href="https://github.com/unfoldtoolbox/UnfoldDecode.jl"><img src="https://github-production-user-asset-6210df.s3.amazonaws.com/10183650/277622487-802002c0-a1f2-4236-9123-562684d39dcf.png"></a>|<a href="https://github.com/unfoldtoolbox/UnfoldStats.jl"><img  src="https://github-production-user-asset-6210df.s3.amazonaws.com/10183650/277623799-4c8f2b5a-ea84-4ee3-82f9-01ef05b4f4c6.png"></a>|
 
-**Beta** Toolbox to perform linear regression on biological signals. 
+Toolbox to perform linear / GAM / hierarchical / deconvolution regression on biological signals.
 
+This kind of modelling is also known as encoding modeling, linear deconvolution, Temporal Response Functions (TRFs), linear system identification, and probably under other names. fMRI models with HRF-basis functions and pupil-dilation bases are also supported.
 
-[![Docs](https://img.shields.io/badge/docs-dev-blue.svg)](https://unfoldtoolbox.github.io/Unfold.jl/dev)
-![](https://github.com/unfoldtoolbox/Unfold.jl/workflows/CI/badge.svg)
+## Getting started
 
-This tool combines mass-univariate linear (mixed) models with overlap correction.
+### 🐍Python User?
+We clearly recommend Julia 😉 - but [Python users can use juliacall/Unfold directly from python!](https://unfoldtoolbox.github.io/Unfold.jl/dev/generated/HowTo/juliacall_unfold/)
 
-This kind of overlap correction is also known as encoding modeling, linear deconvolution, Temporal Response Functions (TRFs) and probably under other names. fMRI models with HRF-basis functions are also supported.
+### Julia installation
+<details>
+<summary>Click to expand</summary>
 
-## Citation
-Please cite
+The recommended way to install julia is [juliaup](https://github.com/JuliaLang/juliaup).
+It allows you to, e.g., easily update Julia at a later point, but also test out alpha/beta versions etc.
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6423476.svg)](https://doi.org/10.5281/zenodo.6423476) or [Ehinger & Dimigen](https://peerj.com/articles/7838/)
+TL:DR; If you dont want to read the explicit instructions, just copy the following command
 
-## Relation to Unfold (matlab)
-I regularly use Unfold.jl in my research, but there are likely more hard corners there compared to the matlab version (but julia is more flexible and has some unique features)
+#### Windows
 
-| Feature                 | Unfold | unmixed | Unfold.jl |
-|-------------------------|--------|---------|-----------|
-| overlap correction      | x      | x       | x         |
-| non-linear splines      | x      | x       | x         |
-| plotting tools          | x      |         | UnfoldMakie.jl - beta        |
-| sanity checks           | x      |         |           |
-| tutorials               | x      |         | x       |
-| speed                   | x      |         | x         |
-| unittests               | x      |         | x         |
-| HRF (fMRI) basis        |        |         | x         |
-| mix different basisfunctions      |        |         | x         |
-| different timewindows per event   |        |         | x         |
-| mixed models            |        | x       | x         |
-| item & subject effects  |        | x       | x         |
-| decoding  |        |        | back2back regression         |
+AppStore -> JuliaUp,  or `winget install julia -s msstore` in CMD
 
-## Install
+#### Mac & Linux
+
+`curl -fsSL https://install.julialang.org | sh` in any shell
+</details>
+
+### Unfold.jl installation
+
 ```julia
-]add Unfold
+using Pkg
+Pkg.add("Unfold")
 ```
 
 ## Usage
-For a quickstart:
+
+Please check out [the documentation](https://unfoldtoolbox.github.io/Unfold.jl/dev) for extensive tutorials, explanations and more!
+
+### Tipp on Docs
+You can read the docs online: [![Docs][Doc-img]][Doc-url]  - or use the `?fit`, `?effects` julia-REPL feature. To filter docs, use e.g. `?fit(::UnfoldModel)`
+
+Here is a quick overview on what to expect.
+
+### What you need
 
 ```julia
+using Unfold
+
+events::DataFrame
+
+# formula with or without random effects
 f = @formula 0~1+condA
 fLMM = @formula 0~1+condA+(1|subject) + (1|item)
-events::DataFrame
+
+# in case of [overlap-correction] we need continuous data plus per-eventtype one basisfunction (typically firbasis)
 data::Array{Float64,2}
+basis = firbasis(τ=(-0.3,0.5),srate=250) # for "timeexpansion" / deconvolution
+
+# in case of [mass univariate] we need to epoch the data into trials, and a accompanying time vector
 epochs::Array{Float64,3} # channel x time x epochs (n-epochs == nrows(events))
 times = range(0,length=size(epochs,3),step=1/sampling_rate)
-
-basisfunction::Unfold.BasisFunction
-basis = firbasis(τ=(-0.3,0.5),srate=250)
 ```
 
+To fit any of the models, Unfold.jl offers a unified syntax:
 
-1. Timeexpansion **No**, Mixed **No**  : `fit(UnfoldModel,Dict(Any=>(f,times)),evts,data_epoch)`
-1. Timeexpansion **Yes**, Mixed **No** : `fit(UnfoldModel,Dict(Any=>(f,basis)),evts,data)`
-1. Timeexpansion **No**, Mixed **Yes** : `fit(UnfoldModel,Dict(Any=>(fLMM,times)),evts,data_epoch)`
-1. Timeexpansion **Yes**, Mixed **Yes**: `fit(UnfoldModel,Dict(Any=>(fLMM,basis)),evts,data)`
+| Overlap-Correction | Mixed Modelling | julia syntax |
+|:---:|:---:|---|
+|  |  | `fit(UnfoldModel,[Any=>(f,times)),evts,data_epoch]` |
+| x |  | `fit(UnfoldModel,[Any=>(f,basis)),evts,data]` |
+|  | x | `fit(UnfoldModel,[Any=>(fLMM,times)),evts,data_epoch]` |
+| x | x | `fit(UnfoldModel,[Any=>(fLMM,basis)),evts,data]` |
+
+## Comparison to Unfold (matlab)
+<details>
+<summary>Click to expand</summary>
+
+The matlab version is still maintained, but active development happens in Julia.
+
+| Feature                 | Unfold | unmixed (defunct) | Unfold.jl |
+|-------------------------|--------|---------|-----------|
+| overlap correction      | x      | x       | x         |
+| non-linear splines      | x      | x       | x         |
+| speed |       |  🐌      | ⚡ 2-100x        |
+| GPU support | | | 🚀|
+| plotting tools          | x      |         | [UnfoldMakie.jl](https://unfoldtoolbox.github.io/UnfoldMakie.jl/dev/)  |
+| Interactive plotting  |       |         | stay tuned - coming soon! |
+| simulation tools          | x      |         | [UnfoldSim.jl](https://unfoldtoolbox.github.io/UnfoldSim.jl)  |
+| BIDS support          | x      |         | alpha: [UnfoldBIDS.jl](https://github.com/ReneSkukies/UnfoldBIDS.jl/))  |
+| sanity checks           | x      |         | x         |
+| tutorials               | x      |         | x       |
+| unittests               | x      |         | x         |
+| Alternative bases e.g. HRF (fMRI)        |        |         | x         |
+| mix different basisfunctions      |        |         | x         |
+| different timewindows per event   |        |         | x         |
+| mixed models            |        | x       | x         |
+| item & subject effects  |        | (x)       | x         |
+| decoding  |        |        | UnfoldDecode.jl         |
+| outlier-robust fits  |        |        |  [many options (but slower)](https://unfoldtoolbox.github.io/Unfold.jl/dev/HowTo/custom_solvers/#Robust-Solvers)   |
+| 🐍Python support | | | [via juliacall](https://unfoldtoolbox.github.io/Unfold.jl/dev/generated/HowTo/pyjulia_unfold/)|
+</details>
+
+## Contributions
+
+Contributions are very welcome. These could be typos, bugreports, feature-requests, speed-optimization, new solvers, better code, better documentation.
+
+### How-to Contribute
+
+You are very welcome to raise issues and start pull requests!
+
+### Adding Documentation
+
+1. We recommend to write a Literate.jl document and place it in `docs/literate/FOLDER/FILENAME.jl` with `FOLDER` being `HowTo`, `Explanation`, `Tutorial` or `Reference` ([recommended reading on the 4 categories](https://documentation.divio.com/)).
+2. Literate.jl converts the `.jl` file to a `.md` automatically and places it in `docs/src/generated/FOLDER/FILENAME.md`.
+3. Edit [make.jl](https://github.com/unfoldtoolbox/Unfold.jl/blob/main/docs/make.jl) with a reference to `docs/src/generated/FOLDER/FILENAME.md`.
+
+## Contributors 
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/jschepers"><img src="https://avatars.githubusercontent.com/u/22366977?v=4?s=100" width="100px;" alt="Judith Schepers"/><br /><sub><b>Judith Schepers</b></sub></a><br /><a href="#bug-jschepers" title="Bug reports">🐛</a> <a href="#code-jschepers" title="Code">💻</a> <a href="#doc-jschepers" title="Documentation">📖</a> <a href="#tutorial-jschepers" title="Tutorials">✅</a> <a href="#ideas-jschepers" title="Ideas, Planning, & Feedback">🤔</a> <a href="#test-jschepers" title="Tests">⚠️</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://www.benediktehinger.de"><img src="https://avatars.githubusercontent.com/u/10183650?v=4?s=100" width="100px;" alt="Benedikt Ehinger"/><br /><sub><b>Benedikt Ehinger</b></sub></a><br /><a href="#bug-behinger" title="Bug reports">🐛</a> <a href="#code-behinger" title="Code">💻</a> <a href="#doc-behinger" title="Documentation">📖</a> <a href="#tutorial-behinger" title="Tutorials">✅</a> <a href="#ideas-behinger" title="Ideas, Planning, & Feedback">🤔</a> <a href="#test-behinger" title="Tests">⚠️</a> <a href="#infra-behinger" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="#test-behinger" title="Tests">⚠️</a> <a href="#maintenance-behinger" title="Maintenance">🚧</a> <a href="#review-behinger" title="Reviewed Pull Requests">👀</a> <a href="#question-behinger" title="Answering Questions">💬</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://reneskukies.de/"><img src="https://avatars.githubusercontent.com/u/57703446?v=4?s=100" width="100px;" alt="René Skukies"/><br /><sub><b>René Skukies</b></sub></a><br /><a href="#bug-ReneSkukies" title="Bug reports">🐛</a> <a href="#doc-ReneSkukies" title="Documentation">📖</a> <a href="#tutorial-ReneSkukies" title="Tutorials">✅</a> <a href="#code-ReneSkukies" title="Code">💻</a> <a href="#ideas-ReneSkukies" title="Ideas, Planning, & Feedback">🤔</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://reboreexplore.github.io/"><img src="https://avatars.githubusercontent.com/u/43548330?v=4?s=100" width="100px;" alt="Manpa Barman"/><br /><sub><b>Manpa Barman</b></sub></a><br /><a href="#infra-ReboreExplore" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://www.phillipalday.com"><img src="https://avatars.githubusercontent.com/u/1677783?v=4?s=100" width="100px;" alt="Phillip Alday"/><br /><sub><b>Phillip Alday</b></sub></a><br /><a href="#code-palday" title="Code">💻</a> <a href="#infra-palday" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://davekleinschmidt.com"><img src="https://avatars.githubusercontent.com/u/135920?v=4?s=100" width="100px;" alt="Dave Kleinschmidt"/><br /><sub><b>Dave Kleinschmidt</b></sub></a><br /><a href="#doc-kleinschmidt" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ssaket"><img src="https://avatars.githubusercontent.com/u/27828189?v=4?s=100" width="100px;" alt="Saket Saurabh"/><br /><sub><b>Saket Saurabh</b></sub></a><br /><a href="#bug-ssaket" title="Bug reports">🐛</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/suddha-bpn"><img src="https://avatars.githubusercontent.com/u/7974144?v=4?s=100" width="100px;" alt="suddha-bpn"/><br /><sub><b>suddha-bpn</b></sub></a><br /><a href="#bug-suddha-bpn" title="Bug reports">🐛</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/vladdez"><img src="https://avatars.githubusercontent.com/u/33777074?v=4?s=100" width="100px;" alt="Vladimir Mikheev"/><br /><sub><b>Vladimir Mikheev</b></sub></a><br /><a href="#bug-vladdez" title="Bug reports">🐛</a> <a href="#doc-vladdez" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/carmenamme"><img src="https://avatars.githubusercontent.com/u/100191854?v=4?s=100" width="100px;" alt="carmenamme"/><br /><sub><b>carmenamme</b></sub></a><br /><a href="#doc-carmenamme" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/maxvanmigem"><img src="https://avatars.githubusercontent.com/u/115144441?v=4?s=100" width="100px;" alt="Maximilien Van Migem"/><br /><sub><b>Maximilien Van Migem</b></sub></a><br /><a href="#bug-maxvanmigem" title="Bug reports">🐛</a></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
 
 
-## Documentation
-Most functions have documentation, e.g. `?Unfold.fit`
 
-Tutorials see [the documentation](https://unfoldtoolbox.github.io/Unfold.jl/dev/)
+This project follows the [all-contributors](https://allcontributors.org/docs/en/specification) specification. 
 
+Contributions of any kind welcome!
 
+## Citation
 
-## Contributors (alphabetically)
-- **Phillip Alday**
-- **Benedikt Ehinger**
-- **Dave Kleinschmidt**
-- **Judith Schepers**
-- **Felix Schröder**
-- **René Skukies**
+For now, please cite
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5759066.svg)](https://doi.org/10.5281/zenodo.5759066) and/or [Ehinger & Dimigen](https://peerj.com/articles/7838/)
 
 ## Acknowledgements
-This work was supported by the Center for Interdisciplinary Research, Bielefeld (ZiF) Cooperation Group "Statistical models for psychological and linguistic data".
+
+This work was initially supported by the Center for Interdisciplinary Research, Bielefeld (ZiF) Cooperation Group "Statistical models for psychological and linguistic data".
 
 Funded by Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) under Germany´s Excellence Strategy – EXC 2075 – 390740016
-
-## Research notice
-Please note that this repository is participating in a study into sustainability
- of open source projects. Data will be gathered about this repository for
- approximately the next 12 months, starting from June 2021.
-
-Data collected will include number of contributors, number of PRs, time taken to
- close/merge these PRs, and issues closed.
-
-For more information, please visit
-[our informational page](https://sustainable-open-science-and-software.github.io/) or download our [participant information sheet](https://sustainable-open-science-and-software.github.io/assets/PIS_sustainable_software.pdf).
