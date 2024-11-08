@@ -2,6 +2,8 @@
 
 A solver takes an Unfold-specified DesignMatrix and the data, and typically solves the equation system `y = Xb` (in the case of Linear Models). There are many different ways how one can approach this problem, depending if the matrix is sparse, if it is 2D or 3D, if one wants to use GPU etc.
 
+Most implemented solvers ultimately make use of `solver_main` for their main loop. See the `reference` tutorial for more information if that is interesting to you.
+
 ### Setup some data
 
 ```@Example main
@@ -15,8 +17,19 @@ designDict = Dict(Any => (f, range(0, 1, length = size(dat, 1))))
 ```
 
 ### GPU Solvers
-GPU solvers can significantly speed up your model fitting, with observed improvements of up to a factor of 30!
+GPU solvers can significantly speed up your model fitting, with observed improvements of up to a factor of 30-100!
 
+### fastest GPU solver
+Empirically we found that solving `X'Xb = X'y` is the fastest way to solve for `b`. To achieve this, you can run:
+```julia
+using CUDA
+gpu_solver =(x, y) -> Unfold.solver_predefined(x, y; solver=:qr)
+m = Unfold.fit(UnfoldModel, designDict, evts, cu(dat), solver = gpu_solver)
+```
+Where the `cu` is the magic that moves the data to the GPU. Internatlly, the solver function will move the matrix as well and pre-calculate some matrices (especially `X'X`, `X'` and allocate `X'y`). 
+
+#### lsmr GPU solver
+the `Krylov.lsmr` implementation directly solves `y = Xb`, but allows for running on the GPU.
 ```julia
 using Krylov, CUDA # necessary to load the right package extension
 gpu_solver =(x, y) -> Unfold.solver_krylov(x, y; GPU = true)
