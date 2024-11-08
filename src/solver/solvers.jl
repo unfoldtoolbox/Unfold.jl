@@ -56,7 +56,8 @@ end
 prepare_qr(all::Tuple) = prepare_qr(all...)
 prepare_qr(a, b::AbstractArray, all::Tuple) = prepare_qr(a, b, all...)
 function prepare_qr(Ĥ, data, Xt, R_xx, R_xy)
-    R_xx_qr = qr(R_xx)
+    #@info typeof(R_xx) typeof(R_xy) typeof(Xt)
+    @time R_xx_qr = qr(R_xx)
     return Ĥ, data, (Xt, R_xx_qr, R_xy)
 end
 
