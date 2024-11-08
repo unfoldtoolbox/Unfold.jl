@@ -7,9 +7,10 @@
 Generates Designmatrix & fits model, either mass-univariate (one model per epoched-timepoint) or time-expanded (modeling linear overlap).
 
 ## keyword arguments
+- `fit::Bool` (default: `true`) - fit the model after constructing the designmatrix. Setting this to `false` is sometimes helpful if you only want to inspect the designmatrix.
 - `contrasts::Dict`: (default: `Dict()`) contrast to be applied to formula. Example: `Dict(:my_condition=>EffectsCoding())`. More information here: https://juliastats.org/StatsModels.jl/stable/contrasts/
 - `eventcolumn::Union{Symbol,String}` (default `:event`) - the column in `tbl` to differentiate the basisfunctions as defined in `d::Vector{Pair}`
-- `solver::function`: (default: `solver_defaut`). The solver used for `y=Xb`, e.g. `(X,y;kwargs...) -> solver_default(X,y;kwargs...)`
+- `solver::function`: (default: `solver_default`). The solver used for `y=Xb`, e.g. `(X,y;kwargs...) -> solver_default(X,y;kwargs...)`. There are faster & alternative solvers available, see `solver_predefined` for a list of options, see `solver benchmark` in the online documentation. To use the GPU, you can provide the data as a `CuArray` after `using CUDA`. Please change the solver to e.g. `solver_predef(X,y;solver=:qr)` as lsmr+cuda => crash typically. It's worth though, speed increases >100x possible
 - `show_progress::Bool` (default `true`) - show progress via ProgressMeter - passed to `solver`
 - `eventfields::Array: (optional, default `[:latency]`) Array of symbols, representing column names in `tbl`, which are passed to basisfunction event-wise. First field of array always defines eventonset in samples.
 
@@ -119,7 +120,7 @@ function StatsModels.fit(
     @debug "adding desigmatrix!"
     designmatrix!(uf, tbl; kwargs...)
     if fit
-    fit!(uf, data; kwargs...)
+        fit!(uf, data; kwargs...)
     end
 
     return uf
