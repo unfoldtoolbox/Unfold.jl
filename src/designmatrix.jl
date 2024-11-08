@@ -287,6 +287,17 @@ function StatsModels.modelmatrix(uf::UnfoldLinearModel, basisfunction)
     end
 end
 
+
+""" 
+    $(SIGNATURES)
+
+typically takes two modelmatrices, a vector of modelmatrices or a tuple of modelmatrices and horizontally concatenates them. Because for ContinuousTime models the matrices are typically sparse, we try to be more efficient in concatenating them
+
+- For `UnfoldLinearModel` the matrices have to be equal in size already, and we just return the vector
+- In case of the `UnfoldLinearMixedModelContinuousTime` case, we recursively call `extend_to_larger` on the FeMat and the ReMats and iteratively adjust the sizes one after another until no `ReMats` are left
+
+"""
+
 # catch all case
 extend_to_larger(modelmatrix::AbstractMatrix) = modelmatrix
 
@@ -582,7 +593,7 @@ function time_expand_firdiag(Xorg::AbstractMatrix{T}, basisfunction, onsets) whe
             colptr_offset = (ix_X - 1) * (w * size(Xorg, 1) + neg_fix),
         )
 
-  end
+    end
     colptr[end] = length(V) + 1
 
 

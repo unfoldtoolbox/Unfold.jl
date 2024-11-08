@@ -246,6 +246,19 @@ function predict(
         return predict_no_overlap(uf, coefs, f, evts)
     end
 end
+
+
+"""
+    $(SIGNATURES)
+
+Returns predicted time-continuous values, but only for a subset of events. This is achieved by excluding the part of the designmatrix that belongs to the basisfunctions/events you do not want to have in your model.
+
+Typically called via `predict`, for configuration, keyword-arguments and usage see there.
+
+One difference is, that we require the `coefs(uf::UnfoldModel)` already exctracted. 
+
+Due to the time-continuous nature, running it with a model not containing the `ContinuousTimeTrait` it will throw an error.
+"""
 @traitfn predict_partial_overlap(
     uf::T,
     args;
@@ -304,6 +317,14 @@ end
 
 end
 
+
+"""
+    $(SIGNATURES)
+in ContinuousTime case (typically the deconvolution model), we return idealized predictions without overlap between events.
+
+in the Not-ContinuousTime case (typically the MassUnivariate model), we return predictions for each event independently. In that case, the function is unfortunately a missnomer, as overlap cannot be removed from mass-univariate models.
+
+"""
 @traitfn function predict_no_overlap(
     uf::T,
     coefs,

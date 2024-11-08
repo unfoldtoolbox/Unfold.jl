@@ -1,8 +1,12 @@
 """
     $(SIGNATURES)
-default solvers
-- If data is continuous (2D), we solve X'Xb = X'y via a QR decomposition
+default solvers.
+- If data is continuous (2D), we solve Xb = y via lsmr
 - If data is epoched (3D) we solve Xb = y via pinv
+
+We highly recommend to check out `solver_predefined` for faster options by rather solving X'Xb = X'y via QR, cholesky, pinv or `\`-solver. A benchmark is available in the online documentation.
+
+Please see `?solver_main` for keyword arguments of the solver (like `stderror`, `multithreading`, `show_time`, `show_progress`)
 
 """
 solver_default(X, y::AbstractMatrix; kwargs...) = solver_main(X, y; kwargs...)
@@ -17,6 +21,23 @@ function solver_default(X, y::AbstractArray{T,3}; kwargs...) where {T}
 end
 #---
 
+"""
+    $(SIGNATURES)
+
+helper function that returns solver with appropriate prepare-pipelines and fitting solver-functions. X is a (typically sparse) designmatrix, y is a 2D or 3D array.
+
+`solver` : one of `:cg`, `:pinv`, `:intern`, `:qr`, `:cholesky`, `:lsmr` (default)
+
+Only `lsmr` solves Xb = y via an iterative solver and should be more accurate in principle.
+
+The other predefined-solvers solve X'Xb = X'y which is often computationally much cheaper, and because X'X can be precalculated, it should be cheaper to apply.
+
+Testing this empirically is somewhat complicated, as depending on your sparsity structure (≈ your design) and the size of your data (sfreq & minutes) the best solver and the reached accuracy can change quite a bit.
+
+##  GPU
+All solvers except :lsmr support GPU calculations. For lsmr on the GPU try `solver_krylov` instead
+
+"""
 function solver_predefined(X, y_in::AbstractMatrix; solver = :lsmr, kwargs...)
     prepare_fun = if solver ∈ [:cg, :intern]
         (x, y) -> prepare(x, y) |> prepare_XTX

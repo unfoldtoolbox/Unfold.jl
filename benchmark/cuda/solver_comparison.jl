@@ -249,4 +249,4 @@ function df_to_md(data)
 end
 
 
-df_to_md.([case_small, case_default, case_multichannel, case_large])
+df_to_md.([case_small, case_multichannel, case_multichannel_32, case_large])
