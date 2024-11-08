@@ -11,6 +11,7 @@ jobs:
   Documenter:
     name: Documentation
     runs-on: ubuntu-latest
+    if: "!(contains(github.event.pull_request.labels.*.name, 'dont run documenter'))"
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v1

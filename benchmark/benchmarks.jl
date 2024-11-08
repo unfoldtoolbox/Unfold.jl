@@ -36,8 +36,8 @@ data_multsub = data_multsub[:]
 data_multsub_epochs = reshape(data_multsub_epochs, size(data_multsub_epochs, 1), :)
 transform!(evts_multsub, :subject => categorical => :subject)
 transform!(evts_multsub, :item => categorical => :item)
-evts.type = rand(StableRNG(1), [:A, :B], nrow(evts))
-evts_multsub.type = rand(StableRNG(1), [:A, :B], nrow(evts_multsub))
+evts.type = rand(StableRNG(1), ["A", "B"], nrow(evts))
+evts_multsub.type = rand(StableRNG(1), ["A", "B"], nrow(evts_multsub))
 
 for (ix, k) in
     enumerate([:continuousA, :continuousB, :continuousC, :continuousD, :continuousE])
@@ -47,8 +47,8 @@ for (ix, k) in
     evts_multsub_epochs[!, k] = rand(StableRNG(ix), size(evts_multsub_epochs, 1))
 end
 
-ba1 = firbasis(τ = (-0.1, 1), sfreq = sfreq, name = :A) # names explicitly given due to benchmark?
-ba2 = firbasis(τ = (-0.2, 1), sfreq = sfreq, name = :B)
+ba1 = firbasis(τ = (-0.1, 1), sfreq = sfreq, name = "A") # names explicitly given due to benchmark?
+ba2 = firbasis(τ = (-0.2, 1), sfreq = sfreq, name = "B")
 
 f1 = @formula 0 ~ 1 + A
 f1_spl = @formula 0 ~
@@ -63,9 +63,9 @@ f2 = @formula 0 ~ 1 + B
 
 f1_lmm = @formula 0 ~ 1 + A + (1 + A | subject)
 f2_lmm = @formula 0 ~ 1 + A + (1 + A | item)
-dict_lin = Dict(:A => (f1, ba1), :B => (f2, ba2))
-dict_spl = Dict(:A => (f1_spl, ba1), :B => (f1_spl, ba2))
-dict_lmm = Dict(:A => (f1_lmm, ba1), :B => (f2_lmm, ba2))
+dict_lin = Dict("A" => (f1, ba1), "B" => (f2, ba2))
+dict_spl = Dict("A" => (f1_spl, ba1), "B" => (f1_spl, ba2))
+dict_lmm = Dict("A" => (f1_lmm, ba1), "B" => (f2_lmm, ba2))
 
 times = 1:size(data_epochs, 1)
 
@@ -119,7 +119,7 @@ SUITE["fit"]["lin_deconv"] =
 
 
 SUITE["effects"]["lin"] =
-    @benchmarkable effects($(Dict(:A => ["a_small", "a_big"])), $m_lin_f1)
+    @benchmarkable effects($(Dict("A" => ["a_small", "a_big"])), $m_lin_f1)
 SUITE["effects"]["lin_spl"] = @benchmarkable effects(
     $(Dict(:continuousA => collect(range(0.1, 0.9, length = 15)))),
     $m_lin_f1_spl,
@@ -135,6 +135,7 @@ if 1 == 0
     using BenchmarkTools
     @benchmark X = designmatrix(UnfoldLinearModelContinuousTime, f1_spl, evts, ba1)
     @benchmark X2 = designmatrix(UnfoldLinearModelContinuousTime, f1_spl, evts, ba1_int)
+
 
 
 end
