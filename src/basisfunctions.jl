@@ -102,15 +102,17 @@ julia>  f(103.3)
 ```
 
 """
-function firbasis(τ, sfreq, name = ""; interpolate = false, max_height=nothing)
+function firbasis(τ, sfreq, name = ""; interpolate = false, max_duration = nothing)
     τ = round_times(τ, sfreq)
     if interpolate
         # stop + 1 step, because we support fractional event-timings
         τ = (τ[1], τ[2] + 1 ./ sfreq)
     end
-  if !isnothing(max_height)
-        τ = (τ[1], τ[2] + max_height)
-  end
+    if !isnothing(max_duration)
+        τ = (τ[1], max_duration)
+        #τ = (τ[1], τ[2] + max_height./sfreq)
+
+    end
     times = range(τ[1], stop = τ[2], step = 1 ./ sfreq)
 
     shift_onset = Int64(floor(τ[1] * sfreq))
@@ -142,33 +144,31 @@ function firkernel(ev, times; interpolate = false)
     @assert ndims(ev) <= 1 #either single onset or a row vector where we will take the first one :)
 
     # duration is 1 for FIR and duration is duration (in samples!) if e is vector
-    e = ev[1] # latency in samples  
+    e = ev[1]
     dur = size(ev, 1) == 1 ? 1 : Int.(ceil(ev[2]))
-    
+
     ksize = length(times) #isnothing(maxsize) ? length(times) : max_height # kernelsize
-  
+
     # if interpolatethe first and last entry is split, depending on whether we have "half" events
     eboth = interpolate ? [1 .- (e .% 1) e .% 1] : [e]
-  
-     values =[eboth[1] ; repeat([1],dur-1); eboth[2:end]] 
-     values[isapprox.(eboth, 0, atol = 1e-15)] .= 0 # keep sparsity pattern
-  
-     # without interpolation, remove last entry again, which should be 0 anyway
-  # values = interpolate ? values : values[1:end-1]  # commented out if the eboth[2:end] trick works
-        
-        # build the matrix, we define it by diagonals which go from 0, -1, -2 ...
-    pairs = [x => repeat([y],ksize) for (x,y) = zip(.-range(0,dur),values)]
-            return spdiagm(
-            ksize + interpolate ? 1 : 0,
-            ksize,
-          pairs...
-        )
-    
-    end
+
+    values = [eboth[1]; repeat([ev[1]], dur - 1); eboth[2:end]]
+    values[isapprox.(values, 0, atol = 1e-15)] .= 0 # keep sparsity pattern
+
+    # without interpolation, remove last entry again, which should be 0 anyway
+    # values = interpolate ? values : values[1:end-1]  # commented out if the eboth[2:end] trick works
+
+    # build the matrix, we define it by diagonals which go from 0, -1, -2 ...
+    pairs = [x => repeat([y], ksize) for (x, y) in zip(.-range(0, dur), values)]
+    #return pairs, ksize
+    return spdiagm(ksize + length(pairs) - 1, ksize, pairs...)
+
+end
 
 
 splinebasis(; τ, sfreq, nsplines, name) = splinebasis(τ, sfreq, nsplines, name)
-splinebasis(τ, sfreq, nsplines) = splinebasis(τ, sfreq, nsplines, "basis_" * string(rand(1:10000)))
+splinebasis(τ, sfreq, nsplines) =
+    splinebasis(τ, sfreq, nsplines, "basis_" * string(rand(1:10000)))
 
 shiftOnset(basis::Union{SplineBasis,FIRBasis}) = basis.shiftOnset
 
