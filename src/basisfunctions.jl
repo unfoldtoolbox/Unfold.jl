@@ -150,7 +150,7 @@ function firkernel(ev, times; interpolate = false)
     ksize = length(times) #isnothing(maxsize) ? length(times) : max_height # kernelsize
 
     # if interpolatethe first and last entry is split, depending on whether we have "half" events
-    eboth = interpolate ? [1 .- (e .% 1) e .% 1] : [e]
+    eboth = interpolate ? [1 .- (e .% 1) e .% 1] : [1]
 
     values = [eboth[1]; repeat([ev[1]], dur - 1); eboth[2:end]]
     values[isapprox.(values, 0, atol = 1e-15)] .= 0 # keep sparsity pattern
@@ -165,20 +165,6 @@ function firkernel(ev, times; interpolate = false)
 
 end
 
-
-splinebasis(; τ, sfreq, nsplines, name) = splinebasis(τ, sfreq, nsplines, name)
-splinebasis(τ, sfreq, nsplines) =
-    splinebasis(τ, sfreq, nsplines, "basis_" * string(rand(1:10000)))
-
-shiftOnset(basis::Union{SplineBasis,FIRBasis}) = basis.shiftOnset
-
-function splinebasis(τ, sfreq, nsplines, name::String)
-    τ = Unfold.round_times(τ, sfreq)
-    times = range(τ[1], stop = τ[2], step = 1 ./ sfreq)
-    kernel = e -> splinekernel(e, times, nsplines - 2)
-
-
-end
 
 
 
@@ -262,7 +248,7 @@ name(basis::BasisFunction) = basis.name
 
 StatsModels.width(basis::BasisFunction) = height(basis)
 StatsModels.width(basis::FIRBasis) = basis.interpolate ? height(basis) - 1 : height(basis)
-height(basis::FIRBasis) = length(times(basis))
+height(basis::BasisFunction) = length(times(basis))
 
 StatsModels.width(basis::HRFBasis) = 1
 times(basis::HRFBasis) = NaN

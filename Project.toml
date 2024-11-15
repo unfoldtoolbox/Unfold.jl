@@ -13,6 +13,7 @@ DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 Effects = "8f03c58b-bd97-4933-a826-f71b64d2cca2"
 FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 GLM = "38e38edf-8417-5370-95a0-9cbb8c7f171a"
+Interpolations = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
 IterativeSolvers = "42fd0dbc-a981-5370-80f2-aaf504508153"
 JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 Krylov = "ba0b0d4f-ebba-5204-a429-3ac8c609bfb7"
@@ -47,10 +48,10 @@ RobustModels = "d6ea1423-9682-4bbd-952f-b1577cbf8c98"
 
 [extensions]
 UnfoldBSplineKitExt = "BSplineKit"
+UnfoldCUDAExt = "CUDA"
 UnfoldKrylovExt = ["Krylov", "CUDA"]
 UnfoldMixedModelsExt = "MixedModels"
 UnfoldRobustModelsExt = "RobustModels"
-UnfoldCUDAExt = "CUDA"
 
 [compat]
 BSplineKit = "0.16,0.17"
@@ -62,6 +63,7 @@ DocStringExtensions = "0.9"
 Effects = "0.1,1"
 FileIO = "1"
 GLM = "1"
+Interpolations = "0.15.1"
 IterativeSolvers = "0.9"
 JLD2 = "0.5"
 Krylov = "0.9"
