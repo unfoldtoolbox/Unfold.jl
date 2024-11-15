@@ -9,6 +9,7 @@ function benchmark_data(;
     n_splines = 10,
     n_channels = 50,
     overlap = (0.2, 0.2),
+    return_events_too = false,
 )
     data, evts = UnfoldSim.predef_eeg(StableRNG(1); n_repeats, sfreq)
     evts = evts[1:end-2, :]
@@ -53,6 +54,9 @@ function benchmark_data(;
     data_one = data[1:1, 1:size(X, 1)] # cute the data to have same length
     data20 = repeat(data_one, n_channels)
     data20 .= data20 .+ rand(StableRNG(1), size(data20)...) .* 20
-
-    return X, data20
+    if return_events_too
+        return X, data20, evts
+    else
+        return X, data20
+    end
 end
