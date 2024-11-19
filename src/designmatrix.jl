@@ -472,7 +472,10 @@ see also timeexpand_rows timeexpand_vals
 function timeexpand_cols(basisfunction, bases, ncolsBasis, ncolsX)
     # we can generate the columns much faster, if all bases output the same number of columns 
     fastpath = time_expand_allBasesSameCols(basisfunction, bases, ncolsBasis)
+    #fastpath = false
 
+    @debug "fastpath" fastpath
+    #    @debug isa(basisfunction.scale_duration, Bool)
     if fastpath
         return timeexpand_cols_allsamecols(bases, ncolsBasis, ncolsX)
     else
@@ -484,7 +487,7 @@ function timeexpand_cols_generic(bases, ncolsBasis, ncolsX)
     # it could happen, e.g. for bases that are duration modulated, that each event has different amount of columns
     # in that case, we have to go the slow route
     cols = Vector{Int64}[]
-
+    @debug ncolsBasis
     for Xcol = 1:ncolsX
         for b = 1:length(bases)
             coloffset = (Xcol - 1) * ncolsBasis
@@ -536,14 +539,16 @@ function time_expand(Xorg::AbstractArray, term::TimeExpandedTerm, tbl)
     time_expand(Xorg, term.basisfunction, onsets)
 end
 function time_expand(Xorg::AbstractArray, basisfunction::FIRBasis, onsets)
-    if basisfunction.interpolate
+    #    @debug basisfunction
+    if basisfunction.interpolate || size(onsets, 2) > 1
         # code doubling, but I dont know how to do the multiple dispatch otherwise
         # this is the "old" way, pre 0.7.1
         #bases = kernel.(Ref(basisfunction), eachrow(onsets))
-        if size(onsets, 2) != 1
-            @error "not implemented"
-        end
-        bases = kernel.(Ref(basisfunction), onsets[!, 1])
+        #if size(onsets, 2) != 1
+        #    error("not implemented")
+        #end
+        #bases = kernel.(Ref(basisfunction), onsets[!, 1])
+        bases = kernel.(Ref(basisfunction), eachrow(onsets))
         return time_expand(Xorg, basisfunction, onsets[!, 1], bases)
 
     else
@@ -745,18 +750,28 @@ function time_expand(Xorg::AbstractArray, basisfunction::BasisFunction, onsets)
 end
 
 function time_expand(Xorg, basisfunction::BasisFunction, onsets, bases)
-    ncolsBasis = size(kernel(basisfunction, 0), 2)::Int64
+    ncolsBasis = width(basisfunction)#size(kernel(basisfunction, 0), 2)::Int64
+
     X = reshape(Xorg, size(Xorg, 1), :) # why is this necessary?
     ncolsX = size(X)[2]::Int64
 
     rows = timeexpand_rows(onsets, bases, shift_onset(basisfunction), ncolsX)
+    @debug "cols" size(bases) ncolsBasis ncolsX
     cols = timeexpand_cols(basisfunction, bases, ncolsBasis, ncolsX)
 
+    @debug "sizes" size(X) size(rows) size(cols) ncolsX size(bases) ncolsBasis
     vals = timeexpand_vals(bases, X, size(cols), ncolsX)
+
 
     #vals = vcat(vals...)
     ix = rows .> 0 #.&& vals .!= 0.
-    A = @views sparse(rows[ix], cols[ix], vals[ix])
+    A = @views sparse(
+        rows[ix],
+        cols[ix],
+        vals[ix],
+        maximum(rows),
+        ncolsX * width(basisfunction), # we need this, else we loose potential last empty columns
+    )
     dropzeros!(A)
 
     return A
@@ -765,8 +780,10 @@ end
 """
 Helper function to decide whether all bases have the same number of columns per event
 """
-time_expand_allBasesSameCols(b::FIRBasis, bases, ncolBasis) = true # FIRBasis is always fast!
+time_expand_allBasesSameCols(b::FIRBasis, bases, ncolBasis) =
+    isa(b.scale_duration, Bool) ? true : false  # FIRBasis is always fast if scale_duration = false
 function time_expand_allBasesSameCols(basisfunction, bases, ncolsBasis)
+    @debug "time_expand_allBasesSameCols generic reached"
     fastpath = true
     for b in eachindex(bases)
         if length(unique(length.(nzrange.(Ref(bases[b]), 1:ncolsBasis)))) != 1

@@ -223,7 +223,8 @@ function predict(
                 @debug "new dataframe predict"
                 # predict of new data-table with a latency column. First generate new designmatrix, then off-the-shelf X*b predict
                 @assert length(f) == length(evts) "please provide the same amount of formulas (currently $(length(f)) as event-dataframes (currently $(length(evts)))"
-                X_new = modelcols.(f, evts) |> Unfold.extend_to_larger
+
+                X_new = _modelcols.(f, evts) |> x -> Unfold.extend_to_larger(x)
                 @debug typeof(X_new) typeof(modelcols.(f, evts))
                 return predict(X_new, coefs)
             end
@@ -363,13 +364,13 @@ end
         X_singles = map(x -> _modelcols(fi, DataFrame(x)), eachrow(e))
         coefs_view = matrix_by_basisname(coefs, (uf), (basisname([fi])))
 
-        yhat_single = similar(
-            coefs_view,
+        yhat_single = missings(
+            eltype(coefs_view),
             size(coefs_view, 1),
-            size(X_singles[1], 1),
+            maximum(size.(X_singles, 1)),
             length(X_singles),
         )
-
+        @debug coefs_view
         for ev = 1:length(X_singles)
             p = predict(X_singles[ev], coefs_view)
             if has_missings || isa(p, AbstractArray{<:Union{<:Missing,<:Number}})
@@ -378,7 +379,7 @@ end
                 has_missings = true
                 yhat_single = allowmissing(yhat_single)
             end
-            yhat_single[:, :, ev] .= p
+            yhat_single[:, 1:length(p), ev] .= p
         end
 
 

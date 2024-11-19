@@ -41,6 +41,7 @@ makedocs(
             #"Time domain basis functions"=>"generated/HowTo/timesplines.md",
             "Save and load Unfold models" => "generated/HowTo/unfold_io.md",
             "Change contrasts / coding schema" => "generated/HowTo/contrasts.md",
+            "Duration-scaled basisfunctions (Hassall-style)" => "generated/HowTo/FIRduration.md",
         ],
         "Explanations" => [
             "About basisfunctions" => "./explanations/basisfunctions.md",
