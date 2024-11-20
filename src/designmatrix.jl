@@ -475,6 +475,7 @@ function timeexpand_cols(basisfunction, bases, ncolsBasis, ncolsX)
     #fastpath = false
 
     @debug "fastpath" fastpath
+    fastpath = false
     #    @debug isa(basisfunction.scale_duration, Bool)
     if fastpath
         return timeexpand_cols_allsamecols(bases, ncolsBasis, ncolsX)
@@ -487,8 +488,7 @@ function timeexpand_cols_generic(bases, ncolsBasis, ncolsX)
     # it could happen, e.g. for bases that are duration modulated, that each event has different amount of columns
     # in that case, we have to go the slow route
     cols = Vector{Int64}[]
-    @debug ncolsBasis
-    for Xcol = 1:ncolsX
+    for Xcol = 1:ncolsX # TODO: potential speedup is to calculate the loop only once and duplicate, only the coloffset is different per 1:ncolsX
         for b = 1:length(bases)
             coloffset = (Xcol - 1) * ncolsBasis
             for c = 1:ncolsBasis
@@ -760,7 +760,7 @@ function time_expand(Xorg, basisfunction::BasisFunction, onsets, bases)
     cols = timeexpand_cols(basisfunction, bases, ncolsBasis, ncolsX)
 
     @debug "sizes" size(X) size(rows) size(cols) ncolsX size(bases) ncolsBasis
-    vals = timeexpand_vals(bases, X, size(cols), ncolsX)
+    vals = timeexpand_vals(bases, X, size(rows), ncolsX)
 
 
     #vals = vcat(vals...)
