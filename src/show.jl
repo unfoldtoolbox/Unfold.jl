@@ -93,7 +93,7 @@ function renderable(obj::BasisFunction; title = "::BasisFunction")
     show(
         IOContext(io, :limit => true, :displaysize => (40, 40)),
         "text/plain",
-        kernel(obj, 0),
+        obj.scale_duration == false ? kernel(obj, 0) : kernel(obj, [0, width(obj) ÷ 2]),
     )
 
     s = String(take!(io))
