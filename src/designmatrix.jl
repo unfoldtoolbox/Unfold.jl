@@ -12,7 +12,7 @@ julia>  basisfunction1 = firbasis(τ=(0,1),sfreq = 10,name="basis1")
 julia>  basisfunction2 = firbasis(τ=(0,0.5),sfreq = 10,name="basis2")
 julia>  Xdc1          = designmatrix(UnfoldLinearModelContinuousTime([Any=>(@formula 0~1,basisfunction1)],tbl_1)
 julia>  Xdc2          = designmatrix(UnfoldLinearModelContinuousTime([Any=>(@formula 0~1,basisfunction2)],tbl_2)
-julia>  Xdc = Xdc1+Xdc2 
+julia>  Xdc = Xdc1+Xdc2
 ```
 
 """
@@ -52,7 +52,7 @@ Return a *DesignMatrix* used to fit the models.
 - tbl: Events (usually a data frame) to be modelled
 - basisfunction::BasisFunction: basisfunction to be used in modeling (if specified)
 - contrasts::Dict: (optional) contrast to be applied to formula
-- eventfields::Array: (optional) Array of symbols which are passed to basisfunction event-wise. 
+- eventfields::Array: (optional) Array of symbols which are passed to basisfunction event-wise.
 First field of array always defines eventonset in samples. Default is [:latency]
 
 # Examples
@@ -83,7 +83,7 @@ function designmatrix(
         if e isa ArgumentError
             error(
                 e.msg *
-                "\n we tried to get rid of a event-column declared as type Union{Missing,T}. But there seems to be some actual missing values in there. 
+                "\n we tried to get rid of a event-column declared as type Union{Missing,T}. But there seems to be some actual missing values in there.
     You have to replace them yourself (e.g. replace(tbl.colWithMissingValue,missing=>0)) or impute them otherwise.",
             )
         else
@@ -144,7 +144,7 @@ designmatrix(uf::UnfoldModel) = uf.designmatrix
         eventcolumn = :event,
         contrasts = Dict{Symbol,Any}(),
         kwargs...,
-    
+
 Main function called from `fit(UnfoldModel...)`, generates the designmatrix, returns a list of `<:AbstractDesignMatrix`
 
 """
@@ -160,7 +160,7 @@ designmatrix(uf::UnfoldModel, tbl; kwargs...) =
         eventcolumn = :event,
         contrasts = Dict{Symbol,Any}(),
         kwargs...,
-    
+
 iteratively calls `designmatrix` for each event in the design_array, and returns a list of `<:AbstractDesignMatrix`
 
 """
@@ -288,7 +288,7 @@ function StatsModels.modelmatrix(uf::UnfoldLinearModel, basisfunction)
 end
 
 
-""" 
+"""
     $(SIGNATURES)
 
 typically takes two modelmatrices, a vector of modelmatrices or a tuple of modelmatrices and horizontally concatenates them. Because for ContinuousTime models the matrices are typically sparse, we try to be more efficient in concatenating them
@@ -379,7 +379,7 @@ formulas(design::Pair{<:Any,<:Tuple}) = last(design)[1]
 
 """
     formulas(uf::UnfoldModel)
-    formulas(d::Vector{<:AbstractDesignMatrix}) 
+    formulas(d::Vector{<:AbstractDesignMatrix})
 returns vector of formulas, **after** timeexpansion / apply_schema has been used.
 """
 
@@ -470,7 +470,7 @@ calculates in which rows the individual event-basisfunctions should go in Xdc
 see also timeexpand_rows timeexpand_vals
 """
 function timeexpand_cols(basisfunction, bases, ncolsBasis, ncolsX)
-    # we can generate the columns much faster, if all bases output the same number of columns 
+    # we can generate the columns much faster, if all bases output the same number of columns
     fastpath = time_expand_allBasesSameCols(basisfunction, bases, ncolsBasis)
 
     if fastpath
@@ -524,7 +524,7 @@ performs the actual time-expansion in a sparse way.
  - Get the non-timeexpanded designmatrix X from StatsModels.
  - evaluate the basisfunction kernel at each event
  - calculate the necessary rows, cols and values for the sparse matrix
- Returns SparseMatrixCSC 
+ Returns SparseMatrixCSC
 """
 
 function time_expand(Xorg::AbstractArray, term::TimeExpandedTerm, tbl)
@@ -629,7 +629,7 @@ This directly constructs the CSC required fields, thus it is possible to do Spar
 Use at your own discretion!!
 
 
-e.g. 
+e.g.
 > sz = 5
 > ix = [1,3,10]
 > vals = [4,1,2]
@@ -698,7 +698,7 @@ end
 Speed improved version of spdiagm, takes a single float value instead of a vector, like a version of spdiagm that takes in a UniformScaling
 
 
-e.g. 
+e.g.
 > sz = 5
 > ix = [1,3,10]
 > spdiagm_diag(sz,(.-ix.=>1)...)
@@ -713,7 +713,7 @@ function spdiagm_diag(diagsz, kv::Pair{<:Integer,T}...) where {T}
     m = 0
     n = 0
     for p in kv
-        k = p.first # e.g. -1 
+        k = p.first # e.g. -1
         v = p.second # e.g. [1,2,3,4,5]
         if k < 0
             row = -k
@@ -818,7 +818,3 @@ end
 function StatsModels.coefnames(terms::AbstractArray{<:FormulaTerm})
     return coefnames.(Base.getproperty.(terms, :rhs))
 end
-
-
-
-

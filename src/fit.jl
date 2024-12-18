@@ -42,7 +42,7 @@ Mass Univariate Linear
 julia> data,evts = UnfoldSim.predef_eeg()
 julia> data_e,times = Unfold.epoch(data=data,tbl=evts,τ=(-1.,1.9),sfreq=100) # cut the data into epochs. data_e is now ch x times x epoch
 
-julia> f  = @formula 0~1+continuousA+continuousB 
+julia> f  = @formula 0~1+continuousA+continuousB
 julia> model = fit(UnfoldModel,f,evts,data_e,times)
 # or:
 julia> model = fit(UnfoldModel,[Any=>(f,times)],evts,data_e)
@@ -176,7 +176,7 @@ function StatsModels.fit!(
 
         coefs = []
         for m = 1:length(X)
-            # the main issue is, that the designmatrices are subsets of the event table - we have 
+            # the main issue is, that the designmatrices are subsets of the event table - we have
             # to do the same for the data, but data and designmatrix dont know much about each other.
             # Thus we use parentindices() to get the original indices of the @view events[...] from desigmatrix.jl
             @debug typeof(X) typeof(events(d)[m])

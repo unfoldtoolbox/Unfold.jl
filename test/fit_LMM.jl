@@ -144,7 +144,7 @@
     )
 
 end
-## Condense check for multi channel, multi 
+## Condense check for multi channel, multi
 @testset "LMM multi channel, multi basisfunction" begin
     data, evts = loadtestdata("testCase3", dataPath = (@__DIR__) * "/data")
     transform!(evts, :subject => categorical => :subject)

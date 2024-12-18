@@ -16,7 +16,7 @@ end
 Basic function to epoch data; all input also available as kwargs.
 
 Additional kwarg: `eventtime`=:latency, which defines the column in `evts` that is used to cut the data (in samples). For uneven sample-times we use `round()``
- 
+
 """
 function epoch(data::Array{T,1}, evts, τ, sfreq; kwargs...) where {T<:Union{Missing,Number}}
     data_r = reshape(data, (1, :))

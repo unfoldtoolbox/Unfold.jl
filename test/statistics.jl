@@ -17,13 +17,13 @@
 
     #---
     for tix = 1:3
-    evts[!, :y] = data[1, tix, :]
+        evts[!, :y] = data[1, tix, :]
 
-    f0 = @formula y ~ 1 + condition + (1 | subject)
-    f1 = @formula y ~ 1 + condition + continuous + (1 | subject)
+        f0 = @formula y ~ 1 + condition + (1 | subject)
+        f1 = @formula y ~ 1 + condition + continuous + (1 | subject)
 
-    lmm0 = fit(MixedModel, f0, evts)
-    lmm1 = fit(MixedModel, f1, evts)
+        lmm0 = fit(MixedModel, f0, evts)
+        lmm1 = fit(MixedModel, f1, evts)
 
 
 

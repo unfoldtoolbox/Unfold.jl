@@ -36,7 +36,7 @@ function benchmark_data(;
             evts[:, spl_name] .= rand(MersenneTwister(k), size(evts, 1))
             s_basic.args[1] = Term(spl_name)
             s_basic.args[2] = ConstantTerm(s)
-            #            s_basic.exorig = 
+            #            s_basic.exorig =
             s_basic = FunctionTerm(s_basic.f, s_basic.args, :(spl($spl_name, $s)))
             f1 = FormulaTerm(f1.lhs, f1.rhs + s_basic)
             f2 = FormulaTerm(f2.lhs, f2.rhs + s_basic)

@@ -1,5 +1,5 @@
 #  # [Marginal effects](@id effects)
-# [Marginal effect plots](https://library.virginia.edu/data/articles/a-beginners-guide-to-marginal-effects) are useful for understanding model fits. 
+# [Marginal effect plots](https://library.virginia.edu/data/articles/a-beginners-guide-to-marginal-effects) are useful for understanding model fits.
 
 # If you are an EEG researcher, you can think of the coefficients as the 'difference waves' and the (marginal) effects as the 'modelled ERP evaluated at a certain predictor value combination'.
 # In some way, we are fitting a model with coefficients, receiving intercepts and slopes, and then try to recover the 'classical' ERPs in their "data-domain", typically with some effect adjustment, overlap removal, or similar.
@@ -29,17 +29,17 @@ m |> DisplayAs.withcontext(:is_pluto => true) # hide
 # Plot the results
 plot_erp(coeftable(m))
 
-#= 
+#=
 The coefficients are represented by three lines on a figure:
 - the intercept showing the reference category for a typical p1/n1/p3 ERP components;
 - the slope of continuous variables with 1µV range;
-- the effect of categorical variabe with 3µV range. 
+- the effect of categorical variabe with 3µV range.
 =#
 
 # ### Effects function
 # In order to better understand the actual predicted ERP curves, often researchers had to do manual contrasts. Remember that a linear model is `y = X * b`, which allows (after `b` was estimated) to input a so-called `contrast` vector for X. You might know this in the form of `[1, 0, -1, 1]` or similar form. However, for larger models, this method can be prone to errors.
 
-# The `effects` function is a convenient way to specify contrast vectors by providing the actual levels of the experimental design. It can be used to calculate all possible combinations of multiple variables. 
+# The `effects` function is a convenient way to specify contrast vectors by providing the actual levels of the experimental design. It can be used to calculate all possible combinations of multiple variables.
 
 # If a predictor-variable is not specified here, the function will automatically set it to its typical value. This value is usually the `mean`, but for categorical variables, it could be something else. The R package `emmeans` has a lot of discussion on this topic.
 

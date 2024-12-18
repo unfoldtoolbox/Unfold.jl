@@ -45,5 +45,3 @@ function prepare_XTX(Ĥ, data::T1, X::T2) where {T1,T2}
     R_xy = similar(data, size(X, 2))
     return Ĥ, data, (Xt, R_xx, R_xy)
 end
-
-

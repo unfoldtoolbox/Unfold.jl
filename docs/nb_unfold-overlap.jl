@@ -55,7 +55,7 @@ md"""### Plotting the results"""
 
 # ╔═╡ 9a4c715a-7a51-411d-a354-f79ec2369cb7
 let
-    md"""change window size τ = (-0.3, $(@bind τ2 Slider(0:0.1:5,default=2, show_value=true))) 
+    md"""change window size τ = (-0.3, $(@bind τ2 Slider(0:0.1:5,default=2, show_value=true)))
     """
 end
 

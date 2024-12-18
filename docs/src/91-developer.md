@@ -136,4 +136,3 @@ Here is how you do it:
    1. Press backspace to leave `pkg` mode
 1. Run `julia> using LiveServer`
 1. Run `julia> servedocs()`
-
