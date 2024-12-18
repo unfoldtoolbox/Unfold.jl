@@ -1,12 +1,18 @@
 # [![Unfold.jl EEG toolbox](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/3cbe57c1-e1a7-4150-817a-ce3dcc844485)](https://github.com/unfoldtoolbox/Unfold.jl)
 
-[![Docs][Doc-img]][Doc-url] ![semver][semver-img] [![Build Status][build-img]][build-url]
+[![Stable Documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://unfoldtoolbox.github.io/Unfold.jl/stable)
+[![In development documentation](https://img.shields.io/badge/docs-dev-blue.svg)](https://unfoldtoolbox.github.io/Unfold.jl/dev)
+[![Build Status](https://github.com/unfoldtoolbox/Unfold.jl/workflows/Test/badge.svg)](https://github.com/unfoldtoolbox/Unfold.jl/actions)
+[![Test workflow status](https://github.com/unfoldtoolbox/Unfold.jl/actions/workflows/Test.yml/badge.svg?branch=main)](https://github.com/unfoldtoolbox/Unfold.jl/actions/workflows/Test.yml?query=branch%3Amain)
+[![Lint workflow Status](https://github.com/unfoldtoolbox/Unfold.jl/actions/workflows/Lint.yml/badge.svg?branch=main)](https://github.com/unfoldtoolbox/Unfold.jl/actions/workflows/Lint.yml?query=branch%3Amain)
+[![Docs workflow Status](https://github.com/unfoldtoolbox/Unfold.jl/actions/workflows/Docs.yml/badge.svg?branch=main)](https://github.com/unfoldtoolbox/Unfold.jl/actions/workflows/Docs.yml?query=branch%3Amain)
+[![Coverage](https://codecov.io/gh/unfoldtoolbox/Unfold.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/unfoldtoolbox/Unfold.jl)
+[![DOI](https://zenodo.org/badge/DOI/FIXME)](https://doi.org/FIXME)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
+[![All Contributors](https://img.shields.io/github/all-contributors/unfoldtoolbox/Unfold.jl?labelColor=5e1ec7&color=c0ffee&style=flat-square)](#contributors)
 
-[Doc-img]: https://img.shields.io/badge/docs-main-blue.svg
-[Doc-url]: https://unfoldtoolbox.github.io/Unfold.jl/stable
-[semver-img]: https://img.shields.io/badge/semantic-versioning-green
-[build-img]: https://github.com/unfoldtoolbox/UnfoldSim.jl/workflows/CI/badge.svg
-[build-url]: https://github.com/unfoldtoolbox/UnfoldSim.jl/workflows/CI.yml
+ 
+
 
 |Estimation|Visualisation|Simulation|BIDS pipeline|Decoding|Statistics|
 |---|---|---|---|---|---|
