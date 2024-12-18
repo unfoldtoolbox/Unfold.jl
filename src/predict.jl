@@ -370,7 +370,7 @@ end
             maximum(size.(X_singles, 1)),
             length(X_singles),
         )
-        @debug coefs_view
+        @debug size(coefs_view)
         for ev = 1:length(X_singles)
             p = predict(X_singles[ev], coefs_view)
             if has_missings || isa(p, AbstractArray{<:Union{<:Missing,<:Number}})
@@ -379,7 +379,7 @@ end
                 has_missings = true
                 yhat_single = allowmissing(yhat_single)
             end
-            yhat_single[:, 1:length(p), ev] .= p
+            yhat_single[:, 1:size(p, 2), ev] .= p
         end
 
 
