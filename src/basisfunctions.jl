@@ -41,13 +41,13 @@ mutable struct FIRBasis <: BasisFunction
     interpolate::Bool
     "should we scale kernel to the duration? If yes, with which method"
     scale_duration::Any
-    FIRBasis(times, name, shift_onset, interpolate, scale_duration::Bool) = new(
-        times,
-        name,
-        shift_onset,
-        interpolate,
-        scale_duration ? Interpolations.Linear() : false,
-    )
+    #FIRBasis(times, name, shift_onset, interpolate, scale_duration::Bool) = new(
+    #    times,
+    #    name,
+    #    shift_onset,
+    #    interpolate,
+    #    scale_duration ? Interpolations.Linear() : false,
+    #)
 end
 # default dont interpolate
 FIRBasis(times, name, shift_onset) = FIRBasis(times, name, shift_onset, false)
@@ -99,8 +99,10 @@ Advanced: second input can be duration in samples - careful: `times(firbasis)` a
 issues with LMM and predict will appear!
 
 # keyword arguments
-`interpolate` (Bool, default false): if true, interpolates events between samples linearly. This results in `predict` functions to return a trailling 0
-
+`interpolate` (Bool, default false): if true, interpolates events between samples linearly. This results in `predict` functions to return a trailling 0`
+`scale_duration` (Union{Bool,Interpolations-Interpolator}, default false): 
+    if true, scales the response by the fit-kwargs `eventfields` second entry. That is, the FIR becomes a stepfunction instead of a impulse response.
+    if Interpolations.interpolator, e.g. `Interpolations.Linear()` - uses the fit-kwargs `eventfields` second entry to stretch the FIR kernel based on `imresize`. This implements Hassall
 
 # Examples
 Generate a FIR basis function from -0.1s to 0.3s at 100Hz
@@ -163,7 +165,12 @@ function firkernel(ev, times; interpolate = false, scale_duration = false)
 
     # duration is 1 for FIR and duration is duration (in samples!) if e is vector
     e = interpolate ? ev[1] : 1
-    dur = (scale_duration != false || size(ev, 1) == 1) ? 1 : Int.(ceil(ev[2]))
+    dur = (scale_duration == true && size(ev, 1) > 1) ? Int.(ceil(ev[2])) : 1
+
+    #scale_duration == false => 1
+    #scale_duration => true
+    #dur = (scale_duration == true || (scale_duration != false || size(ev, 1) > 1) ? Int.(ceil(ev[2])) : 1
+
 
     ksize = interpolate ? length(times) - 1 : length(times) #isnothing(maxsize) ? length(times) : max_height # kernelsize
 
@@ -181,9 +188,10 @@ function firkernel(ev, times; interpolate = false, scale_duration = false)
     #return pairs, ksize
     #@debug pairs
     x_single = spdiagm(ksize + length(pairs) - 1, ksize, pairs...)
-    if scale_duration == false
+    if scale_duration == false || scale_duration == true
         return x_single
     else
+        #@show "imresize"
         return imresize(x_single, ratio = (ev[2] / ksize, 1), method = scale_duration)
     end
 
@@ -276,10 +284,12 @@ name(basis::BasisFunction) = basis.name
 
 StatsModels.width(basis::BasisFunction) = height(basis)
 function StatsModels.width(basis::FIRBasis)
-    if basis.interpolate
-        return height(basis) - 1
-    elseif isa(basis.scale_duration, Bool)
-        return height(basis)
+    if basis.scale_duration == false#isa(basis.scale_duration, Bool)
+        if basis.interpolate
+            return height(basis) - 1
+        else
+            return height(basis)
+        end
     else
         return length(times(basis))
     end
