@@ -58,9 +58,7 @@ include("utilities.jl")
 include("condense.jl")
 #include("solver.jl")
 include("predict.jl")
-include("splinepredictors.jl")
 include("effects.jl")
-include("statistics.jl")
 include("io.jl")
 include("show.jl") # pretty printing
 
