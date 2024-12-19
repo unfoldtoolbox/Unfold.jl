@@ -12,5 +12,6 @@ using Missings
 using MixedModels, RobustModels, BSplineKit # extensionTriggers
 using SparseArrays
 using UnfoldSim
+using Interpolations
 
 include("test_utilities.jl")

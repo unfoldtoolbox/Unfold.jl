@@ -28,6 +28,8 @@ import Term: Tree  # to display Dicts
 using PooledArrays
 using TypedTables # DataFrames loose the pooled array, so we have to do it differently for now...
 
+using Interpolations # for FIR duration scaling
+using ImageTransformations # for FIR duration scaling
 #using Tullio
 #using BSplineKit # for spline predictors
 

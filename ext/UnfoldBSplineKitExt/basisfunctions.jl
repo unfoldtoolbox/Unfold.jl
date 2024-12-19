@@ -28,3 +28,5 @@ function splinekernel(e, times, nsplines)
     basis = BSplineKit.BSplineBasis(BSplineOrder(4), breakpoints)  # 4= cubic
     return sparse(splFunction(times, basis))
 end
+
+Unfold.width(b::SplineBasis) = length(b.colnames)

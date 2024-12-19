@@ -3,7 +3,7 @@ See FIRBasis for an examples
 
 a BasisFunction should implement:
 - kernel() # kernel(b::BasisFunction,sample) => returns the designmatrix for that event
-- height() # number of samples in continuous time
+- height() # number of samples in continuous time, NaN if not defined
 - width()  # number of coefficient columns (e.g. HRF 1 to 3, FIR=height(),except if interpolate=true )
 
 - colnames() # unique names of expanded columns
@@ -39,9 +39,20 @@ mutable struct FIRBasis <: BasisFunction
     shift_onset::Int64
     "should we linearly interpolate events not on full samples?"
     interpolate::Bool
+    "should we scale kernel to the duration? If yes, with which method"
+    scale_duration::Any
+    #FIRBasis(times, name, shift_onset, interpolate, scale_duration::Bool) = new(
+    #    times,
+    #    name,
+    #    shift_onset,
+    #    interpolate,
+    #    scale_duration ? Interpolations.Linear() : false,
+    #)
 end
 # default dont interpolate
 FIRBasis(times, name, shift_onset) = FIRBasis(times, name, shift_onset, false)
+FIRBasis(times, name, shift_onset, interpolate) =
+    FIRBasis(times, name, shift_onset, interpolate, false)
 @deprecate FIRBasis(kernel::Function, times, name, shift_onset) FIRBasis(
     times,
     name,
@@ -83,8 +94,15 @@ end
 $(SIGNATURES)
 Generate a sparse FIR basis around the *τ* timevector at sampling rate *sfreq*. This is useful if you cannot make any assumptions on the shape of the event responses. If unrounded events are supplied, they are split between samples. E.g. event-latency = 1.2 will result in a "0.8" and a "0.2" entry.
 
+
+Advanced: second input can be duration in samples - careful: `times(firbasis)` always assumes duration = 1. Therefore,
+issues with LMM and predict will appear!
+
 # keyword arguments
-`interpolate` (Bool, default false): if true, interpolates events between samples linearly. This results in `predict` functions to return a trailling 0
+`interpolate` (Bool, default false): if true, interpolates events between samples linearly. This results in `predict` functions to return a trailling 0`
+`scale_duration` (Union{Bool,Interpolations-Interpolator}, default false):
+    if true, scales the response by the fit-kwargs `eventfields` second entry. That is, the FIR becomes a stepfunction instead of a impulse response.
+    if Interpolations.interpolator, e.g. `Interpolations.Linear()` - uses the fit-kwargs `eventfields` second entry to stretch the FIR kernel based on `imresize`. This implements Hassall
 
 # Examples
 Generate a FIR basis function from -0.1s to 0.3s at 100Hz
@@ -97,17 +115,29 @@ julia>  f(103.3)
 ```
 
 """
-function firbasis(τ, sfreq, name = ""; interpolate = false)
+function firbasis(
+    τ,
+    sfreq,
+    name = "";
+    interpolate = false,
+    #max_duration = nothing,
+    scale_duration = false,
+)
     τ = round_times(τ, sfreq)
     if interpolate
         # stop + 1 step, because we support fractional event-timings
         τ = (τ[1], τ[2] + 1 ./ sfreq)
     end
+    #if !isnothing(max_duration)
+    #    τ = (τ[1], max_duration)
+    #τ = (τ[1], τ[2] + max_height./sfreq)
+
+    #end
     times = range(τ[1], stop = τ[2], step = 1 ./ sfreq)
 
     shift_onset = Int64(floor(τ[1] * sfreq))
 
-    return FIRBasis(times, name, shift_onset, interpolate)
+    return FIRBasis(times, name, shift_onset, interpolate, scale_duration)
 
 end
 # cant multiple dispatch on optional arguments
@@ -119,35 +149,54 @@ firbasis(; τ, sfreq, name = "", kwargs...) = firbasis(τ, sfreq, name; kwargs..
 """
 $(SIGNATURES)
 Calculate a sparse firbasis
+
+second input can be duration in samples - careful: `times(firbasis)` always assumes duration = 1. Therefore,
+issues with LMM and predict will appear!
+
 # Examples
 
 ```julia-repl
 julia>  f = firkernel(103.3,range(-0.1,step=0.01,stop=0.31))
+julia>  f_dur = firkernel([103.3 4],range(-0.1,step=0.01,stop=0.31))
 ```
 """
-function firkernel(e, times; interpolate = false)
-    @assert ndims(e) <= 1 #either single onset or a row vector where we will take the first one :)
-    if size(e, 1) > 1
-        # XXX we will soon assume that the second entry would be the duration
-        e = Float64(e[1])
-    end
-    ksize = length(times) # kernelsize
-    if interpolate
-        eboth = [1 .- (e .% 1) e .% 1]
-        eboth[isapprox.(eboth, 0, atol = 1e-15)] .= 0
-        return spdiagm(
-            ksize + 1,
-            ksize,
-            0 => repeat([eboth[1]], ksize),
-            -1 => repeat([eboth[2]], ksize),
-        )
-    else
-        #eboth = Int(round(e))
-        return spdiagm(ksize, ksize, 0 => repeat([1], ksize))
-    end
+function firkernel(ev, times; interpolate = false, scale_duration = false)
+    @assert ndims(ev) <= 1 #either single onset or a row vector where we will take the first one :)
 
+    # duration is 1 for FIR and duration is duration (in samples!) if e is vector
+    e = interpolate ? ev[1] : 1
+    dur = (scale_duration == true && size(ev, 1) > 1) ? Int.(ceil(ev[2])) : 1
+
+    #scale_duration == false => 1
+    #scale_duration => true
+    #dur = (scale_duration == true || (scale_duration != false || size(ev, 1) > 1) ? Int.(ceil(ev[2])) : 1
+
+
+    ksize = interpolate ? length(times) - 1 : length(times) #isnothing(maxsize) ? length(times) : max_height # kernelsize
+
+    # if interpolatethe first and last entry is split, depending on whether we have "half" events
+    eboth = interpolate ? [1 .- (e .% 1) e .% 1] : [1]
+    #@show eboth dur
+    values = [eboth[1]; repeat([e], dur - 1); eboth[2:end]]
+    values[isapprox.(values, 0, atol = 1e-15)] .= 0 # keep sparsity pattern
+
+    # without interpolation, remove last entry again, which should be 0 anyway
+    # values = interpolate ? values : values[1:end-1]  # commented out if the eboth[2:end] trick works
+
+    # build the matrix, we define it by diagonals which go from 0, -1, -2 ...
+    pairs = [x => repeat([y], ksize) for (x, y) in zip(.-range(0, dur), values)]
+    #return pairs, ksize
+    #@debug pairs
+    x_single = spdiagm(ksize + length(pairs) - 1, ksize, pairs...)
+    if scale_duration == false || scale_duration == true
+        return x_single
+    else
+        #@show "imresize"
+        return imresize(x_single, ratio = (ev[2] / ksize, 1), method = scale_duration)
+    end
 
 end
+
 
 
 
@@ -222,19 +271,35 @@ basisname(fs::Vector{<:FormulaTerm}) = [name(f.rhs.basisfunction) for f in fs]
 basisname(uf::UnfoldModel) = basisname(formulas(uf))
 basisname(uf::UnfoldLinearModel) = first.(design(uf)) # for linear models we dont save it in the formula
 
-kernel(basis::FIRBasis, e) =
-    basis.interpolate ? firkernel(e, basis.times[1:end-1]; interpolate = true) :
-    firkernel(e, basis.times; interpolate = false)
+kernel(basis::FIRBasis, e) = firkernel(
+    e,
+    basis.times[1:end];
+    interpolate = basis.interpolate,
+    scale_duration = basis.scale_duration,
+)
+
 
 times(basis::BasisFunction) = basis.times
 name(basis::BasisFunction) = basis.name
 
 StatsModels.width(basis::BasisFunction) = height(basis)
-StatsModels.width(basis::FIRBasis) = basis.interpolate ? height(basis) - 1 : height(basis)
-height(basis::FIRBasis) = length(times(basis))
+function StatsModels.width(basis::FIRBasis)
+    if basis.scale_duration == false#isa(basis.scale_duration, Bool)
+        if basis.interpolate
+            return height(basis) - 1
+        else
+            return height(basis)
+        end
+    else
+        return length(times(basis))
+    end
+end
+height(basis::BasisFunction) = length(times(basis))
+
+height(basis::FIRBasis) = isa(basis.scale_duration, Bool) ? length(times(basis)) : NaN
 
 StatsModels.width(basis::HRFBasis) = 1
-times(basis::HRFBasis) = NaN
+times(basis::HRFBasis) = NaN # I guess this could also return 1:32 or something?
 
 """
 $(SIGNATURES)
