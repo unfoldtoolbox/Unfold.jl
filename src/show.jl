@@ -173,4 +173,3 @@ function Base.show(io::IO, d::AbstractDesignMatrix)
     )
     Term.tprintln(io, "Fields: `.formula`, `.modelmatrix`, `.events`")
 end
-

@@ -34,7 +34,7 @@ function StatsModels.coefnames(term::MixedModels.ZeroCorr)
 end
 
 function lmm_combine_modelmatrices!(Xcomb, X1, X2)
-    # we have random effects                
+    # we have random effects
     # combine REMats in single-eventtpe formulas ala y ~ (1|x) + (a|x)
     modelmatrix1 = MixedModels._amalgamate([X1.modelmatrix[2:end]...], Float64)
     modelmatrix2 = MixedModels._amalgamate([X2.modelmatrix[2:end]...], Float64)

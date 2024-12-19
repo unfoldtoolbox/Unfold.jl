@@ -19,9 +19,9 @@ mat"init_unfold"
 
 function calc_matlab(datajl, eventsjl)
     mat"
-        
+
         EEG = eeg_emptyset();
-        
+
         EEG.data = $datajl;
         EEG.srate = double($srate);
     "
@@ -46,7 +46,7 @@ function calc_matlab(datajl, eventsjl)
 
     mat"EEG = eeg_checkset(EEG)"
 
-    mat"    
+    mat"
         cfgDesign = [];
         cfgDesign.eventtypes = {'fixation'};
         cfgDesign.formula = 'y ~ 1+ cat(condition)+spl(continuous,5)';
@@ -64,12 +64,12 @@ end
 # New benchmark comparison to cuda/solver_comparison.jl
 
 include("../generate_data.jl")
-srate = 100
+srate = 500
 X, y, events = benchmark_data(
     n_channels = 128,
     sfreq = srate,
     n_splines = (4, 4),
-    n_repeats = 100,
+    n_repeats = 500,
     return_events_too = true,
 )
 
@@ -113,4 +113,7 @@ using CUDA
     )
 )
 
-#2024-11-15: 1.2-1.4s
+# 2024-11-20:
+# Julia: 6642s
+# Matlab: 5761s
+# Julia-GPU: 47s / 13s -> 30gb GPU

@@ -65,6 +65,6 @@ obs_cluster = pymne_cluster(z_obs, clusterFormingThreshold)
 #gen_han(τ,fs,3)
 if 1 == 0
     # plot some design bits
-    map = mapping(:subj, :dv, color = :stimType)#,linestyle=:channel) 
+    map = mapping(:subj, :dv, color = :stimType)#,linestyle=:channel)
     AlgebraOfGraphics.data(evt) * visual(Scatter) * map |> draw
 end

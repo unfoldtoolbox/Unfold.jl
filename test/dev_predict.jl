@@ -60,4 +60,3 @@ predict(
 eff = effects(Dict(:continuous => [0, 1, 2]), uf)
 
 plot_erp(eff; mapping = (; color = :continuous, col = :eventname))
-

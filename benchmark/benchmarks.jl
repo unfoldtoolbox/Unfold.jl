@@ -104,14 +104,13 @@ SUITE["designmat"]["lmm"] = @benchmarkable designmatrix(
 # Model Fit
 SUITE["fit"]["lin"] =
     @benchmarkable fit(UnfoldModel, $f1, $evts_epochs, $data_epochs, $times)
-SUITE["fit"]["lmm"] =
-    @benchmarkable fit(
-        UnfoldModel,
-        $f1_lmm,
-        $evts_multsub_epochs,
-        $data_multsub_epochs,
-        $times,
-    )
+SUITE["fit"]["lmm"] = @benchmarkable fit(
+    UnfoldModel,
+    $f1_lmm,
+    $evts_multsub_epochs,
+    $data_multsub_epochs,
+    $times,
+)
 SUITE["fit"]["lin_deconv"] =
     @benchmarkable fit(UnfoldModel, $dict_lin, $evts, $data, eventcolumn = "type");
 #SUITE["fit"]["lmm_deconv"] =

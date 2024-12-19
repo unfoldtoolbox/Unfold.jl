@@ -10,7 +10,7 @@ data_e, times = Unfold.epoch(data = data_r, tbl = evts, τ = (-1.0, 1.0), sfreq 
 m_mul = coeftable(fit(UnfoldModel, f, evts, data_e, times))
 m_mul_spl = coeftable(fit(UnfoldModel, f_spl, evts, data_e, times))
 
-# asking for 4 splines should generate 4 splines 
+# asking for 4 splines should generate 4 splines
 @test length(unique(m_mul_spl.coefname)) == 5
 
 s = Unfold.formulas(fit(UnfoldModel, f_spl, evts, data_e, times))[1].rhs.terms[3]
@@ -42,7 +42,7 @@ end
 end
 #@test_broken all(ismissing.)
 
-#evts_grid = gridexpand() 
+#evts_grid = gridexpand()
 # results from timeexpanded and non should be equal
 #yhat_tul  = predict(m_tul_spl,evts_grid)
 #yhat_mul  = predict(m_mul_spl,evts_grid)

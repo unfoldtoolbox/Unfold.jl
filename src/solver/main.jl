@@ -80,14 +80,14 @@ general purpose solver function. Calls  `prepare_fun` and iterates over the firs
 
 ## Keyword Arguments
 - `prepare_fun` : `(X,data)->prepare(X,data)` by default. Can be easily used to chain multiple preparation steps and thereby overload the solver.
-Example: `prepare_fun = (X,data)-> prepare(X,data) |> prepare_XTX |> prepare_qr`. 
+Example: `prepare_fun = (X,data)-> prepare(X,data) |> prepare_XTX |> prepare_qr`.
 Each `prepare` function needs to `return Ĥ, data, (Xt, R_xx)` where `Ĥ` is used to save the solver results, data is a permuted version of the data (following X x ch x time, with X being continuous time, and length(time) = 1 for 2D arrays, and X being trials for 3D arrays and length(time) = length of epochs)
 
 - `solver_fun!` : a function taking the inputs `(Ĥ::vectorview(Matrix),data::vectorview(Array),prepared::Tuple)`, the output of the `prepare_fun`, but along a single channel & `time` (in case of 3D data)
 - `multithreading` : `true` by default. Multithread over channels? Not recommended for GPU calculations
 - `show_time` : `false` by default. Timer-Outputs for prepare and channel stage. Helpful to select best performing solver
 - `show_progress` : `true` by default. Show progressbar over channels / timepoints (for 3D)
-- `stderror` : `false` by default. Calculate the stderror. Warning: for 2D arrays, the stderror is very likely too small as autocorrelation is not taking into account! 
+- `stderror` : `false` by default. Calculate the stderror. Warning: for 2D arrays, the stderror is very likely too small as autocorrelation is not taking into account!
 
 """
 
@@ -193,7 +193,7 @@ function calculate_stderror(
     data::AbstractArray{T1,3},
     beta::AbstractArray{T2},
 ) where {T1<:Union{Missing,<:Number},T2<:Union{Missing,<:Number}}
-    #function calculate_stderror(Xdc,data::AbstractArray{T,2},beta) where {T<:Union{Missing, <:Number}}  
+    #function calculate_stderror(Xdc,data::AbstractArray{T,2},beta) where {T<:Union{Missing, <:Number}}
     X = disallowmissing(X)
     # Hat matrix
     hat_prime = inv(Matrix(X' * X))
@@ -213,5 +213,3 @@ function calculate_stderror(
     end
     return se
 end
-
-

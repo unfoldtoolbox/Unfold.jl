@@ -97,7 +97,7 @@ function StatsModels.fit!(
     #@debug println("uniquelength: $(length(unique(β_names))) / $(length(β_names))")
     # for each channel
     prog = Progress(nchan * ntime, 0.1)
-    #@showprogress .1 
+    #@showprogress .1
     for ch in range(1, stop = nchan)
         # for each time
         for t in range(1, stop = ntime)

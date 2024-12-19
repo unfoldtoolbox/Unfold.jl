@@ -201,7 +201,7 @@ intercept2.effectsize = 3;
 
 signals{1} = intercept1;
 signals{2} = intercept2;
-            
+
 EEG_sim_test_case_4a = simulate_data(signals,'noise',0,'srate',20);
 save_data(EEG_sim_test_case_4a,'test_case_4a')
 
@@ -222,7 +222,7 @@ intercept2.effectsize = 3;
 
 signals{1} = intercept1;
 signals{2} = intercept2;
-            
+
 EEG_sim_test_case_4b = simulate_data(signals,'noise',0,'srate',20);
 save_data(EEG_sim_test_case_4b,'test_case_4b')
 
@@ -233,7 +233,7 @@ function save_data(EEG_sim,file_name)
     if ~exist(data_path, 'dir')
        mkdir(data_path)
     end
-    
+
     writematrix(EEG_sim.data,strcat(data_path,file_name,'_data.csv'));
     writetable(struct2table(EEG_sim.event),strcat(data_path,file_name,'_events.csv'));
 end

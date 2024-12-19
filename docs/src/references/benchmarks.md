@@ -3,12 +3,13 @@
 We ran benchmarks on 2024-11-07 as described in `./benchmark/cuda/solver_comparison.jl`. Given that some were run on a GPU, we cannot run them on continuous-integration online.
 
 !!! important
-    - Allocations are only CPU allocations - GPU allocations were not counted. 
+    - Allocations are only CPU allocations - GPU allocations were not counted.
     - Solvers other than `default_multi` are currently *NOT* multi-threaded
     - Solvers other than `default_multi` and `krylov_gpu` solve $X'Xb = X'y$ instead of $Xb=y$ directly. They are likely less accurate, but should be faster for multi-channel data, as we can precalulate cholesky, qr or similar & the to-be-inverted matrix is much smaller.
 
 ## Small Model
-```julia  
+
+```julia
 n_channels = 1,
 sfreq = 10,
 n_splines = 4,
@@ -31,13 +32,16 @@ n_repeats = 10;
 | true    | krylov\_gpu    | Float64      | 0.032       | 0.0013      | 0.068                  | (1190, 130)    | 1               | (0.2, 0.2)  |                     |
 
 ## small-to-midsize: multi-channel
-```julia   
+
+```julia
 n_channels = 128,
 sfreq = 100,
 n_splines = 4,
 n_repeats = 200;
 ```
+
 ### Float64
+
 | **gpu** | **method**     | **el\_type** | **time** | **GB**   | **percent\_X\_filled** | **sizeDesign** | **n\_channels** | **overlap** | **comment**         |
 |--------:|---------------:|-------------:|---------:|---------:|-----------------------:|---------------:|----------------:|------------:|--------------------:|
 | true    | cholesky       | Float64      |          |          | 0.0068                 | (239522, 1210) | 128             | (0.2, 0.2)  | PosDefException(-1) |
@@ -54,6 +58,7 @@ n_repeats = 200;
 | false   | intern         | Float64      | 13.0     | 1.7      | 0.0068                 | (239522, 1210) | 128             | (0.2, 0.2)  |                     |
 
 ### Float32
+
 | **gpu** | **method**     | **el\_type** | **time**   | **GB**     | **percent\_X\_filled** | **sizeDesign** | **n\_channels** | **overlap** | **comment**         |
 |--------:|---------------:|-------------:|-----------:|-----------:|-----------------------:|---------------:|----------------:|------------:|--------------------:|
 | true    | cholesky       | Float32      |            |            | 0.0068                 | (239522, 1210) | 128             | (0.2, 0.2)  | PosDefException(-1) |
@@ -69,14 +74,15 @@ n_repeats = 200;
 | false   | intern         | Float32      | 13.0       | 0.86       | 0.0068                 | (239522, 1210) | 128             | (0.2, 0.2)  |                     |
 | false   | default\_multi | Float32      | 13.0       | 0.97       | 0.0068                 | (239522, 1210) | 128             | (0.2, 0.2)  |                     |
 
+## large, realistic model
 
-# large, realistic model
 ```julia
     n_channels = 128,
     sfreq = 500,
     n_splines = (4, 4),
     n_repeats = 500,
 ```
+
 | **gpu** | **method**     | **el\_type** | **time** | **GB**  | **percent\_X\_filled** | **sizeDesign**  | **n\_channels** | **overlap** | **comment**             |
 |--------:|---------------:|-------------:|---------:|--------:|-----------------------:|----------------:|----------------:|------------:|------------------------:|
 | true    | cholesky       | Float64      |          |         | 0.0015                 | (3001479, 9616) | 128             | (0.2, 0.2)  | PosDefException(-1)     |

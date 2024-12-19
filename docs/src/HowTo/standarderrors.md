@@ -1,6 +1,6 @@
 # [Standard Errors](@id standard_errors)
 
-### Setup some data
+## Setup some data
 
 ```@Example main
 using Unfold
@@ -20,6 +20,6 @@ m = Unfold.fit(UnfoldModel, designDict, evts, dat, solver = se_solver)
 results = coeftable(m)
 plot_erp(results; stderror = true)
 ```
+
 !!! warning
     **In case of overlap-correction:** Use single-subject standard errors on your own risk. EEG data is autocorrelated, which means that standard errors are typically too small.
-

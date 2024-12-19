@@ -1,11 +1,13 @@
 # Basis Functions
+
 ```@setup main
 using CairoMakie
 ```
 
 This document will give you an explanation of basis functions. We start with basis functions for fMRI because they are very popular.
 
-#### HRF / BOLD
+## HRF / BOLD
+
 We want to define a basis function. There are currently only few basisfunctions implemented in Unfold.jl, but your imagination knows no borders!
 
 We first have a look at the BOLD-HRF basisfunction aka [Blood Oxygenation Level Dependent Hemodynamic Response Function](https://en.wikipedia.org/wiki/Blood-oxygen-level-dependent_imaging):
@@ -19,11 +21,13 @@ eventonset = 1.3
 bold_kernel = e -> Unfold.kernel(bold, e)
 lines(bold_kernel(eventonset)[:,1]) # returns a matrix, thus [:, 1]
 ```
+
 This is the shape that is assumed to reflect the activity for an event. Generally, we would like to know how much to scale this response shape per condition, e.g. in `condA` we might scale it by 0.7, in `condB` by 1.2.
 
 But let's start at the beginning and first simulate an fMRI signal. Then you will also appreciate why we need to deconvolve it later.
 
 ### Convolving a response shape to get a "recorded" fMRI signal
+
 We start by convolving this HRF function with an impulse vector at event onsets.
 
 ```@example main
@@ -34,6 +38,7 @@ y[[37]] .= 1.2 # 1 events at given for condition B
 y_conv = conv(y, bold_kernel(0)) # convolve!
 lines(y_conv[:,1])
 ```
+
 Next, we would add some noise:
 
 ```@example main
@@ -41,15 +46,15 @@ using Random
 y_conv += randn(size(y_conv))
 lines(y_conv[:,1])
 ```
+
 🎉 - we did it, we simulated fMRI data.
 
 Now you can see that the conditions overlap in time. To get back to the original amplitude values, we need to specify a basis function and use Unfold to deconvolve the signals.
 
-!!! note 
+!!! note
     Events can fall between TR (the sampling rate). Some packages subsample the time signal, but in `Unfold` we can call the `bold.kernel` function directly at a given event time, which allows us to use non-TR multiples.
 
-
-### FIR Basis Function
+## FIR Basis Function
 
 Okay, let's have a look at a different basis function: The FIR basisfunction. FIR stands for [Finite-Impulse-Response](https://en.wikipedia.org/wiki/Finite_impulse_response) and is a term taken from the filtering literature.
 
@@ -74,6 +79,7 @@ To make it clear better show it in 2D:
 ```@example main
 fir_kernel(0)[1:10,1:10]
 ```
+
 (all `.` are `0`'s)
 
 The FIR basis set consists of multiple basis functions. That is, each event is now *time-expanded* to multiple predictors, each with a certain time delay to the event onset.

@@ -17,7 +17,7 @@ abstract type AbstractDesignMatrix{T} end
 
 """
     DesignMatrix
-Type that keeps an Array of  `formulas`, designmatrices `modelmatrix` (Array or Array of Arrays in case of MixedModel) and `events`-dataframe 
+Type that keeps an Array of  `formulas`, designmatrices `modelmatrix` (Array or Array of Arrays in case of MixedModel) and `events`-dataframe
 """
 struct DesignMatrixLinearModel{T} <: AbstractDesignMatrix{T}
     formula::FormulaTerm # "Array of formulas"
