@@ -6,7 +6,7 @@ using UnfoldMakie, CairoMakie
 using DataFrames
 using DisplayAs # hide
 
-data, evts = UnfoldSim.predef_eeg(sfreq = 5, n_repeats = 1)
+data, evts = UnfoldSim.predef_eeg(sfreq = 10, n_repeats = 1)
 
 evts.duration = 5:24
 
@@ -33,7 +33,6 @@ heatmap(Matrix(modelmatrix(m))')
 
 # We can predict overlap-corrected results
 p = predict(m; overlap = false)[1]
-
 heatmap(p[1, :, :])
 # note the `missings` which are displayed as white pixels.
 
@@ -53,10 +52,7 @@ bf_vec = [Any => (f, basisfunction)]
 m = fit(UnfoldModel, bf_vec, evts, data; eventfields = [:latency, :duration]);
 
 
-## currently bugged for small matrices
-## plot_designmatrix(designmatrix(m))
-## thus using
 heatmap(Matrix(modelmatrix(m))')
-
+# as one can see, now the designmatrix is not stretched - but rather "block"-ed
 p = predict(m; overlap = false)[1]
 heatmap(p[1, :, :])
