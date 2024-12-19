@@ -19,7 +19,7 @@ signal = -(3 * (evts.x .- 0.5)) .^ 2 .+ 0.5 .* rand(rng, n)
 
 plot(evts.x, signal)
 #
-# Looks perfectly non-linear. Great! 
+# Looks perfectly non-linear. Great!
 #
 # # Compare linear & non-linear fit
 # First, we have to reshape `signal` data to a 3d array, so it will fit to Unfold format:  1 channel x 1 timepoint x 20 datapoints.
@@ -56,7 +56,7 @@ pl
 
 
 # ## Looking under the hood
-# Let's have a brief look how the splines manage what they are managing. 
+# Let's have a brief look how the splines manage what they are managing.
 #
 # The most important bit to understand is, that we are replacing `x` by a set of coefficients `spl(x)`.
 # These new coefficients each tile the range of `x` (in our case, from [0-1]) in overlapping areas, while each will be fit by one coefficient.
@@ -69,7 +69,7 @@ term_spl = Unfold.formulas(uf_spl10)[1].rhs.terms[2]
 # This is the spline term. Note, this is a special type available in the BSplineKit.jl extension in Unfold.jl. It's abstract type is `AbstractSplineTerm` defined in Unfold.jl
 typeof(term_spl)
 
-# 
+#
 const splFunction = Base.get_extension(Unfold, :UnfoldBSplineKitExt).splFunction
 splFunction([0.2], term_spl)
 
@@ -89,7 +89,7 @@ ax = Axis(Figure()[1, 1])
 current_figure()
 
 # Notice how we flipped the plot around, i.e. now on the x-axis we do not plot the coefficients, but the `x`-values.
-# Now each line is one basis-function of the spline. 
+# Now each line is one basis-function of the spline.
 #
 # Unfold returns us one coefficient per basis-function
 β = coef(uf_spl10)[1, 1, :]
@@ -107,7 +107,7 @@ ax = Axis(Figure()[1, 1])
 current_figure()
 
 
-# Now sum them up. 
+# Now sum them up.
 lines(sum(weighted, dims = 1)[1, :])
 plot!(X * β, color = "gray") #(same as matrixproduct X*β directly!)
 current_figure()

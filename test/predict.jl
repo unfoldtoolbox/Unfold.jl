@@ -124,7 +124,7 @@ pt = Unfold.result_to_table(m, p, repeat([evts], 2))
     @test size(Unfold.residuals(m, data)) == (3, length(data))
 
 
-    # time expanded, data longer 
+    # time expanded, data longer
     m = fit(
         UnfoldModel,
         [Any => (@formula(0 ~ 1), firbasis((-0.1, 0.1), 100))],
@@ -135,7 +135,7 @@ pt = Unfold.result_to_table(m, p, repeat([evts], 2))
     @test size(resids) == (3, length(data))
     @test all(resids[1, end-2:end] .≈ data[end-2:end])
 
-    # 
+    #
 
     data_e, evts =
         UnfoldSim.predef_eeg(; n_repeats = 5, noiselevel = 0.8, return_epoched = true)

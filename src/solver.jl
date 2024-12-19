@@ -79,6 +79,3 @@ function solver_default(
     end
     return modelfit
 end
-
-
-

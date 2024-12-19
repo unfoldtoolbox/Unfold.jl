@@ -14,15 +14,15 @@ using ColorSchemes, Colors
 set_theme!(theme_ggthemr(:fresh))
 
 # As opposed to classical averaged ERPs overlap corrected regression ERPs can be influenced by the chosen window length:
-# Long estimation windows might capture all relevant event-related activity, but might introduce artifacts due to overfit, 
+# Long estimation windows might capture all relevant event-related activity, but might introduce artifacts due to overfit,
 # short estimation windows might not overfit, but also might not capture all (overlapping) activity, and thereby introduce bias.
 #
-# Thus a common question we get is, how to specify the length of the estimation windows. 
+# Thus a common question we get is, how to specify the length of the estimation windows.
 
 
 # # Init functions
 
-# First we need a function that simulates some continous data; conviently we can use UnfoldSim for this 
+# First we need a function that simulates some continous data; conviently we can use UnfoldSim for this
 function gen_data(rng, noiselevel, sfreq)
     noise = PinkNoise(; noiselevel = noiselevel)
 
@@ -97,7 +97,7 @@ df_gt = DataFrame(
 
 
 
-# And append ground truth to our results df	
+# And append ground truth to our results df
 res_gt = vcat(res, df_gt);
 
 

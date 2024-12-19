@@ -118,7 +118,7 @@ end
 
 _split_data(y::AbstractMatrix, n) = return @view(y[:, 1:n]), @view(y[:, n+1:end])
 _split_data(y::AbstractArray, n) = return @view(y[:, 1:n, :]), @view(y[:, n+1:end, :])
-#@traitfn 
+#@traitfn
 function _residuals(::Type{T}, yhat, y) where {T<:UnfoldModel}#; ContinuousTimeTrait{T}}
 
     #_split_data(y::AbstractVector, n) = return @view(y[1:n]), @view(y[n+1:end])
@@ -165,7 +165,7 @@ predict(uf::UnfoldModel, evts::DataFrame; overlap = false, kwargs...) = predict(
         overlap::Bool = true,
         kwargs...
     )
-Returns a predicted ("y_hat = X*b") `Array`. 
+Returns a predicted ("y_hat = X*b") `Array`.
 
 - `uf` is an `<:UnfoldModel`
 - `f` is a (vector of) formulas, typically `Unfold.formulas(uf)`, but formulas can be modified e.g. by `effects`.
@@ -173,7 +173,7 @@ Returns a predicted ("y_hat = X*b") `Array`.
 
 
 ## kwargs:
-if `overlap = true` (default), overlap based on the `latency` column of `evts` will be simulated, or in the case of `!ContinuousTimeTrait` just X*coef is returned. 
+if `overlap = true` (default), overlap based on the `latency` column of `evts` will be simulated, or in the case of `!ContinuousTimeTrait` just X*coef is returned.
 
 if `overlap = false`, returns predictions without overlap (models with `ContinuousTimeTrait` (=> with basisfunction / deconvolution) only), via `predict_no_overlap`
 
@@ -255,7 +255,7 @@ Returns predicted time-continuous values, but only for a subset of events. This 
 
 Typically called via `predict`, for configuration, keyword-arguments and usage see there.
 
-One difference is, that we require the `coefs(uf::UnfoldModel)` already exctracted. 
+One difference is, that we require the `coefs(uf::UnfoldModel)` already exctracted.
 
 Due to the time-continuous nature, running it with a model not containing the `ContinuousTimeTrait` it will throw an error.
 """
@@ -500,4 +500,3 @@ function times(
     @assert all(all_times .== all_times[1:1]) "all times need to be equal in a mass univariate model"
     return all_times
 end
-

@@ -7,14 +7,14 @@
 % testcase 2 should have overlap
 % Tastcase 15 is complex
 for k = 6;5;[1 2 3 4 5 15];
-    
+
     rng(1);
-    
+
     switch k
-            
+
         case 1
             %%
-            
+
             % Basis functions
             intercept = struct();
             intercept.eventname = 'stimulus2';
@@ -22,7 +22,7 @@ for k = 6;5;[1 2 3 4 5 15];
             intercept.predictorName = 'intercept';
             intercept.overlap = 0; % note that 0, means that the AVERAGE overlap is exactly one signal-length (i.e. 1s in our simulations). That means if we do not want ANY overlap, we specify -1 here!
             intercept.effectsize = 3;
-            
+
             cont = struct();
             cont.eventname = 'stimulusA';
             cont.type = 'continuous';
@@ -30,7 +30,7 @@ for k = 6;5;[1 2 3 4 5 15];
             cont.predictorName = 'continuousA';
             cont.effectsize = 1;
             cont.range = [0,100];
-            
+
             signals{1} = intercept;
             signals{1}.range = nan;
             signals{1}.overlap = -1;
@@ -42,19 +42,19 @@ for k = 6;5;[1 2 3 4 5 15];
             signals{1}(3).predictorName = 'continuousB';
             signals{1}(3).overlap = -1;
             signals{1}(3).effectsize= -1.5;
-            
+
             EEGsim = simulate_data(signals,'noise',0);
-            
+
             %' Formula: y ~ 1  + continuousA + continuousB'
             %' Overlap: y ~ -1 +  -1         + -1 => no overlap
-            %' EffectS: y ~ 3  +  2.5        + -1.5   
+            %' EffectS: y ~ 3  +  2.5        + -1.5
             %' Shape: 'box', noise: 0
-            
+
             %' Overlap: y ~ 0.5 +  0        + 0 => overlap
-            %' 
+            %'
             % stim: y~1
             % button: y~1
-            
+
             % event: y~1 + cat(is_button)
             % event (stim) => y~stimERP
             % event (button) => y~stimERP + (stimERP-buttonEffect)
@@ -67,7 +67,7 @@ for k = 6;5;[1 2 3 4 5 15];
             intercept.predictorName = 'intercept';
             intercept.overlap = 0.5; % note that 0, means that the AVERAGE overlap is exactly one signal-length (i.e. 1s in our simulations). That means if we do not want ANY overlap, we specify -1 here!
             intercept.effectsize = 3;
-            
+
             cat= struct();
             cat.eventname = 'stimulusA';
             cat.type = '1x2';
@@ -75,7 +75,7 @@ for k = 6;5;[1 2 3 4 5 15];
             cat.predictorName = 'conditionA';
             cat.effectsize = 1;
             cat.range = [0,100];
-            
+
             signals{1} = intercept;
             signals{1}.range = nan;
             signals{1}.overlap = 0;
@@ -86,12 +86,12 @@ for k = 6;5;[1 2 3 4 5 15];
             signals{1}(3).predictorName = 'conditionB';
             signals{1}(3).overlap = 0.1;
             signals{1}(3).effectsize= -1.5;
-            
+
             EEGsim = simulate_data(signals,'noise',0.5,'basis','posneg');
-            
+
             %' Formula: y ~ 1  + conditionA + conditionB'
             %' Overlap: y ~ 0  +  0         + 0.1
-            %' EffectS: y ~ 3  +  2.5       + -1.5  
+            %' EffectS: y ~ 3  +  2.5       + -1.5
             %' Shape: 'posneg', noise: 0.5
         case 3
             %%
@@ -121,33 +121,33 @@ for k = 6;5;[1 2 3 4 5 15];
                     'overlapparam',[1 0 0 0;2 0 0 0],...
                     'randomItem',0 ...
                     );
-                
-                
+
+
             end
-            
-            
-            
+
+
+
             %%
-            
+
             cfgDesign = struct();
             cfgDesign.inputGroupingName='subject';
             cfgDesign.eventtypes= 'sim';
             %             cfgDesign.formula = 'y~1+cat(condA)+cat(condB)+(1+condA+condB|subject)';%+(1|stimulus)';
             cfgDesign.formula = 'y~1+cat(condA)+cat(condB)+(1|subject)';%+(1|stimulus)';
             cfgDesign.codingschema = 'effects';
-            
+
             [EEG,EEG_fixef] = um_designmat(input,cfgDesign);
-            
+
             EEG= um_timeexpandDesignmat(EEG,'timelimits',[-.15,0.4]);
             EEG = um_mmfit(EEG,input)
             x = um_condense(EEG)
             %%
             EEGsim.data = cellfun(@(x)squeeze(x.data(1,:,:)),input,'UniformOutput',0);
-            
+
             y = cat(2,EEGsim.data{:});
             EEGsim.event = EEG_fixef.event;
-            
-            
+
+
         case 4
             % long example
             %%
@@ -158,7 +158,7 @@ for k = 6;5;[1 2 3 4 5 15];
             intercept.predictorName = 'intercept';
             intercept.overlap = 0.5; % note that 0, means that the AVERAGE overlap is exactly one signal-length (i.e. 1s in our simulations). That means if we do not want ANY overlap, we specify -1 here!
             intercept.effectsize = 3;
-            
+
             cat= struct();
             cat.eventname = 'stimulusA';
             cat.type = '1x2';
@@ -166,7 +166,7 @@ for k = 6;5;[1 2 3 4 5 15];
             cat.predictorName = 'conditionA';
             cat.effectsize = 1;
             cat.range = [0,100];
-            
+
             signals{1} = intercept;
             signals{1}.range = nan;
             signals{1}.overlap = -1;
@@ -177,14 +177,14 @@ for k = 6;5;[1 2 3 4 5 15];
             signals{1}(3).predictorName = 'conditionB';
             signals{1}(3).overlap = 0.1;
             signals{1}(3).effectsize= -1.5;
-            
+
             EEGsim = simulate_data(signals,'noise',0.5,'basis','posneg','srate',1000,'datalength',50*60);% 50min
-            
+
             %' Formula: y ~ 1  + conditionA + conditionB'
-            %' Overlap: y ~ -1 +  0.5       + 0.1 
-            %' EffectS: y ~ 3  +  2.5       + -1.5 
+            %' Overlap: y ~ -1 +  0.5       + 0.1
+            %' EffectS: y ~ 3  +  2.5       + -1.5
             %' Shape: 'posneg', noise: 0.5
-            
+
             if 1 == 0
                 %%
                 EEG = uf_designmat(EEGsim,'formula','y~1+conditionA+conditionB','eventtypes','stimulus2');
@@ -208,7 +208,7 @@ for k = 6;5;[1 2 3 4 5 15];
             intercept.predictorName = 'intercept';
             intercept.overlap = 0.5; % note that 0, means that the AVERAGE overlap is exactly one signal-length (i.e. 1s in our simulations). That means if we do not want ANY overlap, we specify -1 here!
             intercept.effectsize = 3;
-            
+
             cat= struct();
             cat.eventname = 'stimulusA';
             cat.type = '1x2';
@@ -216,7 +216,7 @@ for k = 6;5;[1 2 3 4 5 15];
             cat.predictorName = 'conditionA';
             cat.effectsize = 1;
             cat.range = [0,100];
-            
+
             signals{1} = intercept;
             signals{1}.range = nan;
             signals{1}.overlap = 0.5;
@@ -227,14 +227,14 @@ for k = 6;5;[1 2 3 4 5 15];
             signals{1}(3).predictorName = 'conditionB';
             signals{1}(3).overlap = 0.1;
             signals{1}(3).effectsize= -1.5;
-            
+
             EEGsim = simulate_data(signals,'noise',0.5,'basis','posneg','srate',1000,'datalength',50*60);% 50min
-            
+
             %' Formula: y ~ 1  + conditionA + conditionB'
-            %' Overlap: y ~ 0.5 +  0.5       + 0.1 
-            %' EffectS: y ~ 3  +  2.5       + -1.5 
+            %' Overlap: y ~ 0.5 +  0.5       + 0.1
+            %' EffectS: y ~ 3  +  2.5       + -1.5
             %' Shape: 'posneg', noise: 0.5
-            
+
             if 1 == 0
                 %%
                 EEG = uf_designmat(EEGsim,'formula','y~1+conditionA+conditionB','eventtypes','stimulus2');
@@ -249,12 +249,12 @@ for k = 6;5;[1 2 3 4 5 15];
                 toc
             end
         case 15
-            
+
             EEGsim = simulate_test_case(15,'noise',0,'basis','posneg');
             % Stim1 : y~1
             % stim2 : y~1+cat+cont
             % stim3 : y~1+splA+splB
-            
+
         case 6 %'lmm_sub-item_realistic'
                         rng(1)
             input = [];
@@ -290,22 +290,22 @@ for k = 6;5;[1 2 3 4 5 15];
             %             cfgDesign.formula = 'y~1+cat(condA)+cat(condB)+(1+condA+condB|subject)';%+(1|stimulus)';
             cfgDesign.formula = 'y~1+cat(condA)+(1+condA|subject)+(1+condA|stimulus)';
             cfgDesign.codingschema = 'effects';
-            
+
             [EEG,EEG_fixef] = um_designmat(input,cfgDesign);
-            
+
 %             EEG= um_timeexpandDesignmat(EEG,'timelimits',[-.15,0.4]);
 %             EEG = um_mmfit(EEG,input)
 %             x = um_condense(EEG)
             %
             EEGsim.data = cellfun(@(x)squeeze(x.data(1,:,:)),input,'UniformOutput',0);
-            
+
             y = cat(2,EEGsim.data{:});
             EEGsim.event = EEG_fixef.event;
-            
+
     end
     dlmwrite(sprintf('../test/data/testCase%i_data.csv',k),EEGsim.data,'precision','%.10f')
     writetable(struct2table(EEGsim.event),sprintf('../test/data/testCase%i_events.csv',k))
-    
-    
-    
+
+
+
 end

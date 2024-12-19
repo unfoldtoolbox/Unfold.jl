@@ -27,7 +27,7 @@ function solver_robust(
             # 	copyto!(view(beta, ch,t, :), view(beta, ch,t-1, :))
             #end
 
-            X_local = disallowmissing((X[ix, :])) # view crashes robust model here. XXX follow up once 
+            X_local = disallowmissing((X[ix, :])) # view crashes robust model here. XXX follow up once
             # https://github.com/JuliaStats/GLM.jl/issues/470 received a satisfying result
             y_local = disallowmissing(@view(data[ch, t, ix]))
 

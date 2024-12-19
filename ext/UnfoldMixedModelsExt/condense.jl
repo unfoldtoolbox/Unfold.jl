@@ -114,7 +114,7 @@ function Unfold.make_estimate(
         ranef_group = permutedims(ranef_group, [2, 1])
 
         #@debug size(ranef_group)
-        # 
+        #
         #ranef_group = repeat(["ranef"], size(coefs, 1), size(ranef(m), 2))
         #@debug size(ranef_group)
         stderror = fill(nothing, size(estimate))

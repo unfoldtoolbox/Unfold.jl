@@ -33,7 +33,7 @@ end
 In the circular case, we do not use quantiles, (circular quantiles are difficult)
 """
 function genSpl_breakpoints(p::PeriodicBSplineTerm, x)
-    # periodic case - 
+    # periodic case -
     return range(p.low, p.high, length = p.df + 2)
 end
 
@@ -210,7 +210,7 @@ function StatsModels.modelcols(p::AbstractSplineTerm, d::NamedTuple)
     #X = Splines2.bs(col, df=p.df+1,intercept=true)
     X = splFunction(col, p)
 
-    # remove middle X to negate intercept = true, generating a pseudo effect code 
+    # remove middle X to negate intercept = true, generating a pseudo effect code
     return X[:, Not(Int(ceil(end / 2)))]
 end
 

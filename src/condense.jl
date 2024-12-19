@@ -25,7 +25,7 @@ function coeftable2(uf)
 
     # XXX stderror, group, coefname
     coefs_views = [@view(coefs[:, i]) for i in ix]
-    XXX = DataFrame() # specify the coefficient dataframe somehow?! 
+    XXX = DataFrame() # specify the coefficient dataframe somehow?!
     result_to_table(uf, coefs_views, XXX)
 end
 =#
@@ -36,7 +36,7 @@ end
     coefsRaw = get_coefnames(uf) |> poolArray
     coefs = extract_coef_info(coefsRaw, 2) |> poolArray
     #colnames_basis_raw = get_basis_colnames(formulas(uf))# this is unconverted basisfunction basis,
-    colnames_basis = extract_coef_info(coefsRaw, 3) |> poolArray # this is converted to strings! 
+    colnames_basis = extract_coef_info(coefsRaw, 3) |> poolArray # this is converted to strings!
     basisnames = extract_coef_info(coefsRaw, 1) |> poolArray
 
     nchan = size(coef(uf), 1)

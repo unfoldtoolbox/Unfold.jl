@@ -5,7 +5,8 @@
 
 The easiest way to install julia is using [`juliaup`](https://github.com/JuliaLang/juliaup)
 
-TLDR; 
+TLDR;
+
 - Windows: `winget install julia -s msstore`
 - Mac/Linux: `curl -fsSL https://install.julialang.org | sh`
 
@@ -19,12 +20,11 @@ This should result in `(currentFolder) pkg>` (with `currentFolder` being the pro
 
 !!! hint
     if you see `(@v1.9) pkg>` instead, you still have to activate your environment. This can be done using:
-    
+
     `cd("/path/to/your/project")`
-     and `]activate .` 
-     
+     and `]activate .`
+
      or alternatively `]activate /path/to/your/project/`
-    
 
 Now you can do
 `pkg> add Unfold`

@@ -44,7 +44,7 @@
 #
 # **`@formula`**: we havent found a way to call macros yet, even though we think it should be possible. For now please use `f = jl.seval("@formula(0~1+my+cool+design)")`. Later versions might support something like `f = @formula("0~1+my+cool+design)"` directly
 #
-# **Specifying the design**: Since Unfold 0.7 we officially switched to the 
+# **Specifying the design**: Since Unfold 0.7 we officially switched to the
 # ```julia
 # ["eventtypeA"=>(formula,basisfunction),
 # "eventtypeB"=>(otherformula,otherbasisfunction)]
@@ -53,7 +53,7 @@
 # ```python
 # jl.convert(jl.Pair,(formula,basisfunction))
 # ```
-# which makes the code less readable. We are thinking of ways to remedy this - but right now there is now way around. For now, it is also possible to use the old syntax e.g. in python 
+# which makes the code less readable. We are thinking of ways to remedy this - but right now there is now way around. For now, it is also possible to use the old syntax e.g. in python
 # ```python
 # {"eventtypeA"=>(formula,basisfunction),"eventtypeB"=>(otherformula,otherbasisfunction)}
 # ```

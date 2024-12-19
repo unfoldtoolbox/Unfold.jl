@@ -12,7 +12,7 @@ Alternative implementation of LSMR using Krylov.jl
 The fastest solver (x30 in some cases) with GPU = true
 
 To activate you have to do:
-> using Krylov,CUDA 
+> using Krylov,CUDA
 
 Difference to solver_default: No suport for per-channel missings. If one sample is missing in any channel, whole channel is removed due a lack of support for Missings in Krylov.
 
