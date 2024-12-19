@@ -14,7 +14,7 @@ evts.duration = 5:24
 # putting `scale_duration = Interpolation.Linear()` will introduce a Cameron-Hassall 2022 PNAS- Style basisfunction, that scales with the `:duration` column
 basisfunction = firbasis(τ = (-1, 2), sfreq = 5, scale_duration = Interpolations.Linear())
 
-# Two examples with `duration = 10` 
+# Two examples with `duration = 10`
 Unfold.kernel(basisfunction, [0, 10])
 # and `duration = 20`
 Unfold.kernel(basisfunction, [0, 20])
@@ -42,7 +42,7 @@ heatmap(p[1, :, :])
 
 # putting `scale_duration = Interpolation.Linear()` will introduce a Cameron-Hassall 2022 PNAS- Style basisfunction, that scales with the `:duration` column
 basisfunction = firbasis(τ = (-1, 2), sfreq = 5, scale_duration = true)
-# Two examples with `duration = 10` 
+# Two examples with `duration = 10`
 Unfold.kernel(basisfunction, [0, 10])
 # and `duration = 20`
 Unfold.kernel(basisfunction, [0, 20])
