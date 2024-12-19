@@ -25,10 +25,10 @@ makedocs(
         "index.md",
         "Installing Julia + Unfold.jl" => "installation.md",
         "Tutorials" => [
-            "Mass univariate LM" => "tutorials/lm_mu.md",
-            "LM overlap correction" => "tutorials/lm_overlap.md",
-            "Mass univariate Mixed Model" => "tutorials/lmm_mu.md",
-            "LMM + overlap correction" => "tutorials/lmm_overlap.md",
+            "rERP (mass univariate)" => "tutorials/lm_mu.md",
+            "rERP (overlap correction)" => "tutorials/lm_overlap.md",
+            "lmmERP (mass univariate)" => "tutorials/lmm_mu.md",
+            "lmmERP (overlap correction)" => "tutorials/lmm_overlap.md",
         ],
         "HowTo" => [
             "Multiple events" => "HowTo/multiple_events.md",
