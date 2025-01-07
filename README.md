@@ -117,7 +117,7 @@ The matlab version is still maintained, but active development happens in Julia.
 | item & subject effects  |        | (x)       | x         |
 | decoding  |        |        | UnfoldDecode.jl         |
 | outlier-robust fits  |        |        |  [many options (but slower)](https://unfoldtoolbox.github.io/Unfold.jl/dev/HowTo/custom_solvers/#Robust-Solvers)   |
-| 🐍Python support | | | [via juliacall](https://unfoldtoolbox.github.io/Unfold.jl/dev/generated/HowTo/pyjulia_unfold/)|
+| 🐍Python support | | | [via juliacall](https://unfoldtoolbox.github.io/Unfold.jl/dev/generated/HowTo/juliacall_unfold/)|
 
 </details>
 
