@@ -127,6 +127,16 @@
       "contributions": [
         "bug"
       ]
+    },
+    {
+      "login": "Till223",
+      "name": "Till Prölß",
+      "avatar_url": "https://avatars.githubusercontent.com/u/29772145?v=4",
+      "profile": "https://github.com/Till223",
+      "contributions": [
+        "doc",
+        "bug"
+      ]
     }
   ]
 }
