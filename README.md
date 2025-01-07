@@ -6,7 +6,7 @@
 [![Lint workflow Status](https://github.com/unfoldtoolbox/Unfold.jl/actions/workflows/Lint.yml/badge.svg?branch=main)](https://github.com/unfoldtoolbox/Unfold.jl/actions/workflows/Lint.yml?query=branch%3Amain)
 [![Docs workflow Status](https://github.com/unfoldtoolbox/Unfold.jl/actions/workflows/Docs.yml/badge.svg?branch=main)](https://github.com/unfoldtoolbox/Unfold.jl/actions/workflows/Docs.yml?query=branch%3Amain)
 [![Coverage](https://codecov.io/gh/unfoldtoolbox/Unfold.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/unfoldtoolbox/Unfold.jl)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5759066)](https://doi.org/10.5281/zenodo.5759066)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5759066.svg)](https://doi.org/10.5281/zenodo.5759066)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 [![All Contributors](https://img.shields.io/github/all-contributors/unfoldtoolbox/Unfold.jl?labelColor=5e1ec7&color=c0ffee&style=flat-square)](#contributors)
 
