@@ -2,9 +2,6 @@
 function epoch(; data, evts = nothing, tbl = nothing, τ, sfreq, kwargs...)
     @assert (isnothing(evts) | isnothing(tbl))
     evts = isnothing(evts) ? tbl : evts
-    @show isnothing(evts), isnothing(tbl)
-
-
     epoch(data, evts, τ, sfreq; kwargs...)
 end
 
