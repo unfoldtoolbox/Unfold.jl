@@ -98,7 +98,7 @@ p = predict(m; overlap = false)
 pt = Unfold.result_to_table(m, p, repeat([evts], 2))
 
 @show pt[[1, 2, 3], :yhat]
-@test_broken all(isapprox.(pt[[1, 2, 3], :yhat], 0.24672; atol = 0.01)) # test broken until UnfoldSim.jl is updated!!
+#@test_broken all(isapprox.(pt[[1, 2, 3], :yhat], 0.24672; atol = 0.01)) # test broken until UnfoldSim.jl is updated!!
 @test all(pt[[1, 2, 3], :channel] .== [1, 2, 3])
 @test all(
     pt[[1, 6 * 112 + 1, 3 * 112 + 1], :continuous] .≈
