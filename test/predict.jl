@@ -82,7 +82,7 @@ p = predict(m_mul, DataFrame(:Cond => [1, 2, 3]))
 @test size(p[2]) == (1, 20, 3)
 
 ## result_to_table
-data, evts = UnfoldSim.predef_eeg(; n_repeats = 5, noiselevel = 0.8)
+data, evts = UnfoldSim.predef_eeg(StableRNG(1); n_repeats = 5, noiselevel = 0.8)
 m = fit(
     UnfoldModel,
     [
@@ -98,17 +98,17 @@ p = predict(m; overlap = false)
 pt = Unfold.result_to_table(m, p, repeat([evts], 2))
 
 @show pt[[1, 2, 3], :yhat]
-@test_broken all(isapprox.(pt[[1, 2, 3], :yhat], 0.037948289225701606; atol = 0.001)) # test broken until UnfoldSim.jl is updated!!
-@test all(pt[[1, 2, 3], :channel] .== [1, 2, 3])
+#@test_broken all(isapprox.(pt[[1, 2, 3], :yhat], 0.24672; atol = 0.01)) # test broken until UnfoldSim.jl is updated!!
 @test all(pt[[1, 2, 3], :channel] .== [1, 2, 3])
 @test all(
-    pt[[1, 6 * 112 + 1, 3 * 112 + 1], :continuous] .≈ [2.7777777778, -1.6666666667, -5.0],
+    pt[[1, 6 * 112 + 1, 3 * 112 + 1], :continuous] .≈
+    [-0.5555555555555556, 2.7777777777777777, 3.888888888888889],
 )
 
 
 
 @testset "residuals" begin
-    data, evts = UnfoldSim.predef_eeg(; n_repeats = 5, noiselevel = 0.8)
+    data, evts = UnfoldSim.predef_eeg(StableRNG(1); n_repeats = 5, noiselevel = 0.8)
 
     # time expanded
     m = fit(UnfoldModel, [Any => (@formula(0 ~ 1), firbasis((-0.1, 1), 100))], evts, data;)

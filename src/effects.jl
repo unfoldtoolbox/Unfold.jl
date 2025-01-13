@@ -121,6 +121,3 @@ end
     return out
 
 end
-# mixedModels case - just use the FixEff, ignore the ranefs
-Effects.typify(reference_grid, form, m::Tuple; typical) =
-    typify(reference_grid, form, m[1]; typical)

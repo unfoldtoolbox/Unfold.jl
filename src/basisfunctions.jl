@@ -255,7 +255,7 @@ collabel(basis::SplineBasis) = :splineTerm
 
 collabel(uf::UnfoldModel) = collabel(formulas(uf))
 collabel(form::FormulaTerm) = collabel(form.rhs)
-collabel(t::Tuple) = collabel(t[1]) # MixedModels has Fixef+ReEf
+
 collabel(term::Array{<:AbstractTerm}) = collabel(term[1].rhs)  # in case of combined formulas
 #collabel(form::MatrixTerm) = collabel(form[1].rhs)
 

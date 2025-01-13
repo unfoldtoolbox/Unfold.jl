@@ -15,11 +15,6 @@ end
     include("fit.jl")
 end
 
-@testset "fit LMMs" begin
-    include("fit_LMM.jl")
-end
-
-
 @testset "Designmatrix" begin
     include("designmatrix.jl")
 end
@@ -36,9 +31,6 @@ end
     include("effects.jl")
 end
 
-@testset "Statistics" begin
-    include("statistics.jl")
-end
 
 @testset "Utilities" begin
     include("utilities.jl")

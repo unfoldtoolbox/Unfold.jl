@@ -1,7 +1,7 @@
 name = "Unfold"
 uuid = "181c99d8-e21b-4ff3-b70b-c233eddec679"
 authors = ["Benedikt Ehinger <science@benediktehinger.de>"]
-version = "0.7.9"
+version = "0.8.0-dev"
 
 [deps]
 BSplineKit = "093aae92-e908-43d7-9660-e50ee39d5a0a"
@@ -22,7 +22,6 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
 MLBase = "f0e99cf1-93fa-52ec-9ecc-5026115318e0"
 Missings = "e1d29d7a-bbdc-5cf2-9ac0-f12de2c33e28"
-MixedModels = "ff71e718-51f3-5ec2-a782-8ffcbfa3c316"
 OrderedCollections = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
 PooledArrays = "2dfb63ee-cc39-5dd5-95bd-886bf059d720"
 ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
@@ -44,14 +43,12 @@ TypedTables = "9d95f2ec-7b3d-5a63-8d20-e2491e220bb9"
 BSplineKit = "093aae92-e908-43d7-9660-e50ee39d5a0a"
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 Krylov = "ba0b0d4f-ebba-5204-a429-3ac8c609bfb7"
-MixedModels = "ff71e718-51f3-5ec2-a782-8ffcbfa3c316"
 RobustModels = "d6ea1423-9682-4bbd-952f-b1577cbf8c98"
 
 [extensions]
 UnfoldBSplineKitExt = "BSplineKit"
 UnfoldCUDAExt = "CUDA"
 UnfoldKrylovExt = ["Krylov", "CUDA"]
-UnfoldMixedModelsExt = "MixedModels"
 UnfoldRobustModelsExt = "RobustModels"
 
 [compat]
@@ -73,7 +70,6 @@ LinearAlgebra = "1"
 Logging = "1"
 MLBase = "0.9"
 Missings = "1"
-MixedModels = "4"
 OrderedCollections = "1"
 PooledArrays = "1"
 ProgressMeter = "1"
