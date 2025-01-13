@@ -27,8 +27,6 @@ makedocs(
         "Tutorials" => [
             "rERP (mass univariate)" => "tutorials/lm_mu.md",
             "rERP (overlap correction)" => "tutorials/lm_overlap.md",
-            "lmmERP (mass univariate)" => "tutorials/lmm_mu.md",
-            "lmmERP (overlap correction)" => "tutorials/lmm_overlap.md",
         ],
         "HowTo" => [
             "Multiple events" => "HowTo/multiple_events.md",
@@ -37,7 +35,6 @@ makedocs(
             "Marginal effects (must read re: splines)" => "generated/HowTo/effects.md",
             "Alternative Solvers (Robust, GPU, B2B)" => "HowTo/custom_solvers.md",
             #"Time domain basis functions"=>"generated/HowTo/timesplines.md",
-            "P-values for mixedModels" => "HowTo/lmm_pvalues.md",
             "Save and load Unfold models" => "generated/HowTo/unfold_io.md",
             "Duration-scaled basisfunctions (Hassall-style)" => "generated/HowTo/FIRduration.md",
             "🐍 Import EEG with PyMNE.jl" => "HowTo/pymne.md",
