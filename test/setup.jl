@@ -8,6 +8,7 @@ using Random
 using CategoricalArrays
 using StatsBase
 using Missings
+using StableRNGs
 
 using RobustModels, BSplineKit # extensionTriggers
 using SparseArrays
