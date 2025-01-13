@@ -9,7 +9,7 @@ using CategoricalArrays
 using StatsBase
 using Missings
 
-using MixedModels, RobustModels, BSplineKit # extensionTriggers
+using RobustModels, BSplineKit # extensionTriggers
 using SparseArrays
 using UnfoldSim
 using Interpolations

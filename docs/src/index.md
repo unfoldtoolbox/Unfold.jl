@@ -17,8 +17,32 @@ There are four main model types
 1. Timeexpansion **No**, Mixed **Yes** : `fit(UnfoldModel, [Any=>(fLMM, -0.1:0.01:0.5)], evts, data_epoch)`
 1. Timeexpansion **Yes**, Mixed **Yes**: `fit(UnfoldModel, [Any=>(fLMM, basisfunction)], evts, data)`
 
+## rERP model
+
 ```julia
+using Unfold
+using UnfoldSim
+data, evts = UnfoldSim.predef_eeg()
+
 f = @formula 0 ~ 1 + condition
+basisfunction = firbasis(τ = (-0.1,0.5), sfreq = 100)
+fit(UnfoldModel, [Any=>(f, basisfunction)], evts, data)
+nothing #hide
+```
+
+## MixedModels
+
+It is also possible to fit Linear Mixed Models using the sister-package `UnfoldMixedModels.jl`
+
+```julia
+using UnfoldMixedModels
+using UnfoldSim
+data, evts = UnfoldSim.predef_eeg(10;return_epoched=true) # 10 subjects
+data = reshape(data,size(data,1),:) # concatenate subjects
+
+times = range(-0.1,0.5,size(data,1)) # arbitrary time-vector
+
 fLMM = @formula 0 ~ 1 + condition + (1|subject) + (1|item)
-basisfunction = firbasis(τ = (-0.1,0.5), sfreq = 100))
+fit(UnfoldModel, [Any=>(f, times)], evts, data)
+nothing #hide
 ```

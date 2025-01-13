@@ -3,15 +3,6 @@
 In  Julia 1.9 Package Extensions were introduced. Unfold.jl is making use of them in four ways.
 Prior to using some functionality, you have to add + load specific package(s) for the functionality to be available. The reason for this is, that if you don't need e.g. GPU-support, you also will not need to install it.
 
-## MixedModels
-
-To use formulas like `@formula(0~1+condition+(1+condition|subject))` you have to load MixedModels. e.g.
-
-```julia
-using MixedModels
-using Unfold
-```
-
 ## GPU: Krylov,CUDA
 
 To use gpu support as described in @Ref(custom_solvers) you have to:

@@ -70,12 +70,7 @@ end
         Any => (@formula(0 ~ 1 + A), firbasis(τ = (-1, 1), sfreq = 20)),
     ],) == UnfoldLinearModelContinuousTime
 
-    ext = Base.get_extension(Unfold, :UnfoldMixedModelsExt)
-    @test Unfold.design_to_modeltype([Any => (@formula(0 ~ 1 + (1 | test)), 0:10)]) ==
-          ext.UnfoldLinearMixedModel
-    @test Unfold.design_to_modeltype([
-        Any => (@formula(0 ~ 1 + (1 | test)), firbasis(τ = (-1, 1), sfreq = 20)),
-    ],) == ext.UnfoldLinearMixedModelContinuousTime
+
 end
 
 @testset "Bad Input" begin

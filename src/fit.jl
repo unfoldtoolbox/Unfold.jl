@@ -228,24 +228,6 @@ end
 check_data(uf::Type{<:UnfoldModel}, data) = data
 
 
-isa_lmm_formula(f::FormulaTerm) = isa_lmm_formula(f.rhs)
-isa_lmm_formula(f::Tuple) = any(isa_lmm_formula.(f))
-
-isa_lmm_formula(f::InteractionTerm) = false
-isa_lmm_formula(f::ConstantTerm) = false
-isa_lmm_formula(f::StatsModels.Term) = false
-#isa_lmm_formula(f::FunctionTerm) = false
-function isa_lmm_formula(f::FunctionTerm)
-    try
-        isa_lmm_formula(f.f)
-    catch
-        isa_lmm_formula(f.forig) # StatsMoels  <0.7
-    end
-end
-isa_lmm_formula(f::Function) = false  # catch all
-
-isa_lmm_formula(f::typeof(|)) = true
-
 
 function design_to_modeltype(design)
     #@debug design
@@ -253,29 +235,12 @@ function design_to_modeltype(design)
     tmp = last(design[1])
     f = tmp[1] # formula
     t = tmp[2] # Vector or BasisFunction
-
-    isMixedModel = isa_lmm_formula(f)
-    if isMixedModel
-        ext = Base.get_extension(@__MODULE__, :UnfoldMixedModelsExt)
-        if isnothing(ext)
-            throw(
-                "MixedModels is not loaded. Please use `]add MixedModels` and `using MixedModels` to install it prior to using",
-            )
-        end
-    end
-    if typeof(t) <: BasisFunction
-        if isMixedModel
-
-            UnfoldModelType = ext.UnfoldLinearMixedModelContinuousTime
-        else
-            UnfoldModelType = UnfoldLinearModelContinuousTime
-        end
-    else
-        if isMixedModel
-            UnfoldModelType = ext.UnfoldLinearMixedModel
-        else
-            UnfoldModelType = UnfoldLinearModel
-        end
-    end
-    return UnfoldModelType
+    design_to_modeltype(f, t)
 end
+
+"""
+ !!! Important:
+    this is an ugly hack dating back to the time where UnfoldMixedModels was still an extension. We are overloading this function in UnfoldMixedModels.jl with a more specific type, to switch between MixedModels-Unfold types and not...
+ """
+design_to_modeltype(f, t::BasisFunction) = UnfoldLinearModelContinuousTime
+design_to_modeltype(f, t::AbstractVector) = UnfoldLinearModel

@@ -89,13 +89,6 @@ if !isdefined(Base, :get_extension)
     include("../ext/UnfoldRobustModelsExt.jl")
     solver_robust = UnfoldRobustModelsExt.solver_robust
 
-    include("../ext/UnfoldMixedModelsExt/UnfoldMixedModelsExt.jl")
-    pvalues = UnfoldMixedModelsExt.pvalues
-    using MixedModels
-    rePCA = MixedModels.rePCA
-    lmm_combine_modelmatrices! = UnfoldMixedModelsExt.lmm_combine_modelmatrices!
-    likelihoodratiotest = UnfoldMixedModelsExt.likelihoodratiotest
-    check_groupsorting = UnfoldMixedModelsExt.check_groupsorting
 
     spl() = error("dummy / undefined")
     circspl() = error("dummy / undefined")
@@ -116,33 +109,7 @@ else
         msg = "RobustModels not loaded. Please use ]add RobustModels, using RobustModels to install it prior to using"
         isnothing(ext) ? throw(msg) : ext.solver_robust(args...; kwargs...)
     end
-    function pvalues(args...; kwargs...)
-        ext = checkFun(:UnfoldMixedModelsExt)
-        msg = "MixedModels not loaded. Please use ]add MixedModels, using MixedModels to install it prior to using"
-        isnothing(ext) ? throw(msg) : ext.pvalues(args...; kwargs...)
-    end
-    function likelihoodratiotest(args...; kwargs...)
-        ext = checkFun(:UnfoldMixedModelsExt)
-        msg = "MixedModels not loaded. Please use ]add MixedModels, using MixedModels to install it prior to using"
-        isnothing(ext) ? throw(msg) : ext.likelihoodratiotest(args...; kwargs...)
-    end
 
-    function rePCA(args...; kwargs...)
-        ext = checkFun(:UnfoldMixedModelsExt)
-        msg = "MixedModels not loaded. Please use ]add MixedModels, using MixedModels to install it prior to using"
-        isnothing(ext) ? throw(msg) : ext.rePCA(args...; kwargs...)
-    end
-
-    function check_groupsorting(args...; kwargs...)
-        ext = checkFun(:UnfoldMixedModelsExt)
-        msg = "MixedModels not loaded. Please use ]add MixedModels, using MixedModels to install it prior to using"
-        isnothing(ext) ? throw(msg) : ext.check_groupsorting(args...; kwargs...)
-    end
-    function lmm_combine_modelmatrices!(args...; kwargs...)
-        ext = checkFun(:UnfoldMixedModelsExt)
-        msg = "MixedModels not loaded. Please use ]add MixedModels, using MixedModels to install it prior to using"
-        isnothing(ext) ? throw(msg) : ext.lmm_combine_modelmatrices!(args...; kwargs...)
-    end
     function splinebasis(args...; kwargs...)
         ext = checkFun(:UnfoldBSplineKitExt)
         msg = "BSplineKit not loaded. Please use `]add BSplineKit, using BSplineKit` to install/load it, if you want to use splines"
@@ -178,8 +145,7 @@ end
 
 export spl, circspl
 
-export likelihoodratiotest # statistics.jl
-export pvalues # statistics.jl
+
 
 export effects # effects.jl
 import StatsModels.@formula # for exporting
