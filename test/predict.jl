@@ -150,4 +150,17 @@ pt = Unfold.result_to_table(m, p, repeat([evts], 2))
     @test maximum(abs.(data_e .- (resids_e.+predict(m_mul)[1])[1, :, :])) < 0.0000001
 
 
+    ##
+
+
+    @test all(Unfold._residuals(UnfoldModel, [1 2 3; 3 4 5], [1 2 3; 3 4 5]) .== 0)
+
+    #  y longer
+    res = Unfold._residuals(UnfoldModel, [1 2 3; 3 4 5], [1 2 3 4; 3 4 5 6])
+    @test all(res[:, 1:3] .== 0)
+    @test res[:, 4] == [4, 6]
+
+    # yhat longer
+    @test all(Unfold._residuals(UnfoldModel, [1 2 3 4; 3 4 5 6], [1 2 3; 3 4 5]) .== 0)
+
 end
