@@ -133,8 +133,8 @@ function _residuals(::Type{T}, yhat, y) where {T<:UnfoldModel}#; ContinuousTimeT
         @debug "n_y < n_yhat"
         yA, yB = _split_data(y, n_yhat)
         @debug size(yA) size(yB)
-        res = yA .- n_y
-        return cat(res, yB; dims = 2)
+        res = y .- yA
+        return cat(res, .-yB; dims = 2)
     end
 
 end
