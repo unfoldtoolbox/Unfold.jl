@@ -235,9 +235,9 @@ Converts an array-result (prediction or coefficient) together with the events, t
 To support multi-event models, we expect everything to be put into `Vectors` - this should be refactored at some point to be compatible with broadcasting, but it is not right now.
 
 ## args
-`eff`: Contains the array(s) to be converted to a tidy dataframe. Should be 3D, with channel x time x predictor
-`events`: A vector of event-dataframes, each need to match `size(eff,3)`
-`times`: A vector of time-vectors, each need to match `size(eff,2)`
+`eff`: A vector that contains the array(s) to be converted to a tidy dataframe. Each event in your events dataframe your have it's own array (i.e. the array should have `length(eff) == length(unique(events.event))`). Each array should be 3D, with channel x time x predictor
+`events`: A vector of event-dataframes, each need to match `size(eff,3)`. Each individual event (`unique(events.event)`) should have it's own dataframe. E.g. `[[df_event1::DataFrame], [df_event1::DataFrame]]
+`times`: A vector of time-vectors with `length(eff)`, each time-vector needs to match `size.(eff,2)`
 `eventnames`: A vector of eventnames, either symbols or strings, should be a single entry per event
 """
 result_to_table(model, eff, events::Vector{<:DataFrame}) =
