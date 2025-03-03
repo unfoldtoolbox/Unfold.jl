@@ -21,6 +21,7 @@ makedocs(
     #root = joinpath(dirname(pathof(Unfold)), "..", "docs"),
     #prettyurls = get(ENV, "CI", nothing) == "true",
     repo = Documenter.Remotes.GitHub("unfoldtoolbox", "Unfold.jl"),
+    pagesonly = true,
     format = Documenter.HTML(;
         prettyurls = get(ENV, "CI", "false") == "true",
         canonical = "https://unfoldtoolbox.github.io/Unfold.jl",
@@ -28,8 +29,9 @@ makedocs(
         sidebar_sitename = false,
         assets = String[],
     ),
+    warnonly=true,
     pages = [
-        "index.md",
+        "index.md",#=
         "Installing Julia + Unfold.jl" => "installation.md",
         "Tutorials" => [
             "rERP (mass univariate)" => "tutorials/lm_mu.md",
@@ -63,6 +65,7 @@ makedocs(
         ],
         "Contributing" => ["90-contributing.md"],
         "Developer Guide" => ["91-developer.md"],
+        =#
     ],
 )
 
