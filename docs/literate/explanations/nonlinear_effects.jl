@@ -2,7 +2,8 @@
 
 
 
-using BSplineKit, Unfold
+import BSplineKit
+using Unfold
 using CairoMakie
 using DataFrames
 using Random

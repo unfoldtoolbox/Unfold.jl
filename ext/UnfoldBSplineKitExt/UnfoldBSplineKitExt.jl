@@ -1,6 +1,6 @@
 module UnfoldBSplineKitExt
 using Unfold
-import BSplineKit: BSplineOrder, BSplineBasis, boundaries, period
+import BSplineKit: BSplineOrder, BSplineBasis, boundaries, period, PeriodicBSplineBasis
 using StatsModels
 import StatsModels: termvars, width, coefnames, modelcols, apply_schema
 import Base: show

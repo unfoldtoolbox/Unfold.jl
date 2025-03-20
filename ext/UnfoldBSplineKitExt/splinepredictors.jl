@@ -100,7 +100,7 @@ function splFunction(x::AbstractVector, spl::PeriodicBSplineTerm)
 end
 
 function splFunction(x::AbstractVector, spl::BSplineTerm)
-    basis = BSplineKit.BSplineBasis(BSplineOrder(spl.order), deepcopy(spl.breakpoints))
+    basis = BSplineBasis(BSplineOrder(spl.order), deepcopy(spl.breakpoints))
     _splFunction(x, basis)
 end
 #spl(x,df) = Splines2.bs(x,df=df,intercept=true) # assumes intercept
