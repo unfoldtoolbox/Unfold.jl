@@ -1,7 +1,7 @@
 name = "Unfold"
 uuid = "181c99d8-e21b-4ff3-b70b-c233eddec679"
 authors = ["Benedikt Ehinger <science@benediktehinger.de>"]
-version = "0.8.2"
+version = "0.8.3"
 
 [deps]
 BSplineKit = "093aae92-e908-43d7-9660-e50ee39d5a0a"
@@ -52,7 +52,7 @@ UnfoldKrylovExt = ["Krylov", "CUDA"]
 UnfoldRobustModelsExt = "RobustModels"
 
 [compat]
-BSplineKit = "0.16,0.17, 0.18"
+BSplineKit = "0.16,0.17"
 CUDA = "4,5"
 DSP = "0.7, 0.8"
 DataFrames = "1"
