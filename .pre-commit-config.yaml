@@ -40,7 +40,7 @@ repos:
         types_or: [yaml, json]
         exclude: ".copier-answers.yml"
   - repo: https://github.com/adrienverge/yamllint
-    rev: v1.36.0
+    rev: v1.36.2
     hooks:
       - id: yamllint
   - repo: https://github.com/domluna/JuliaFormatter.jl
