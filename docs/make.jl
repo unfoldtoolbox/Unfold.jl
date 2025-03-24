@@ -29,9 +29,9 @@ makedocs(
         sidebar_sitename = false,
         assets = String[],
     ),
-    warnonly=true,
+    warnonly = true,
     pages = [
-        "index.md",#=
+        "index.md",
         "Installing Julia + Unfold.jl" => "installation.md",
         "Tutorials" => [
             "rERP (mass univariate)" => "tutorials/lm_mu.md",
@@ -65,7 +65,6 @@ makedocs(
         ],
         "Contributing" => ["90-contributing.md"],
         "Developer Guide" => ["91-developer.md"],
-        =#
     ],
 )
 

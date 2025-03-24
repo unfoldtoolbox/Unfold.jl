@@ -1,3 +1,4 @@
+#  # [Contrast Coding](@id contrasts)
 using CairoMakie
 using Unfold
 using UnfoldMakie
