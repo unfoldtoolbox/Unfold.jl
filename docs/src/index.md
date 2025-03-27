@@ -93,7 +93,7 @@ nothing #hide
 
 ### 3. Advanced topics
 
-📌 Goal: There are a lot of advanced topics in Unfold.jl, learn how to use the GPU or outlier-robust solvers, or define your own solver
+📌 Goal: There are a lot of advanced topics in Unfold.jl, learn how to use the GPU or outlier-robust solvers, or define your own solver \
 🔗 [GPU and robust models](@ref custom_solvers) - [solver definition](@ref solver_implementation)
 
 ## Statement of need
