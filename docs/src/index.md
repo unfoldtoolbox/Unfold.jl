@@ -4,18 +4,10 @@ CurrentModule = Unfold
 
 # Unfold.jl Documentation
 
-Welcome to [Unfold.jl](https://github.com/unfoldtoolbox/Unfold.jl):
-
-For a quickstart and a **tutorial** roadmap, please see below.
-
-In case you want to understand the tools better, check out our **explanations**.
-
-Once you are familiar with the tools, check out further **how-to guides** for specific applications.
-
-In case you want to understand the toolbox better, we plan to offer **technical references**. This includes Benchmarks & Explorations.
+Welcome to [Unfold.jl](https://github.com/unfoldtoolbox/Unfold.jl): a Julia Package for regression and event-based time series analysis, with a focus on regression ERPs for EEG analysis. The modular approach allows for easy modification to other context, like iEEG, pupil dilation, fMRI etc. - while maintaining the speed of Julia!
 
 ```@raw html
-<div style="width:60%; margin: auto;">
+<div style="width:80%; margin: auto;">
 
 <img src="https://cloud.s-ccs.de/public.php/dav/files/nDQXYteFgFXrAjj/" style="width:40%;">
 <img src="https://cloud.s-ccs.de/public.php/dav/files/gAAaaRdSebCY4fd"  style="width:40%;">
@@ -26,9 +18,10 @@ In case you want to understand the toolbox better, we plan to offer **technical 
 ## Key features
 
 - **Overlap correction:** Multiple ways to model overlap between temporally close events
-- **Regression ERPs:** Fit linear and non-linear predictors, mass univariate models, define contrasts, calculate marginal effects
+- **📈 Regression ERPs:** Fit linear and non-linear predictors, mass univariate models, define contrasts, calculate marginal effects
 - **🧠 Intuitive:** Easy to specify models (`w~i+lcox` formulas), easy to get 🧹 tidy results
 - **⚡ Fast & modular:** Many solvers, GPU support, easily extensible
+- **🌍 Ecosystem:** A diverse ecosystem allows for mixed-models, decoding, statistics, plotting and simulation
 
 ## Installation
 
@@ -93,7 +86,7 @@ nothing #hide
 
 ### 3. Advanced topics
 
-📌 Goal: There are a lot of advanced topics in Unfold.jl, learn how to use the GPU or outlier-robust solvers, or define your own solver
+📌 Goal: There are a lot of advanced topics in Unfold.jl, learn how to use the GPU or outlier-robust solvers, or define your own solver \
 🔗 [GPU and robust models](@ref custom_solvers) - [solver definition](@ref solver_implementation)
 
 ## Statement of need
