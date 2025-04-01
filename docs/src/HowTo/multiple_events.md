@@ -1,4 +1,4 @@
-# How to model multiple events
+# [How to model multiple events](@id multievent)
 
 When dealing with overlapping data, it is often necessary to model multiple eventtypes (e.g. fixations, stimuli, responses).
 

@@ -1,3 +1,4 @@
+#  # [FIR-Scaled duration predictors](@id hassall-duration)
 using Unfold
 using Interpolations
 

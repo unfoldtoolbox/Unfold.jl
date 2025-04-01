@@ -58,8 +58,11 @@ plot_erp(results; stderror = true)
 
 ## Back2Back regression
 
-```@Example main
-b2b_solver = (x, y) -> Unfold.solver_b2b(x, y; ross_val_reps = 5)
+Since 2025, this solver requires `UnfoldDecode` - please find the tutorial and explanation there, the example here is for historic reasons and will be removed at a later point.
+
+```@Example
+using UnfoldDecode
+b2b_solver = (x, y) -> UnfoldDecode.solver_b2b(x, y; ross_val_reps = 5)
 dat_3d = permutedims(repeat(dat, 1, 1, 20), [3 1 2])
 m = Unfold.fit(UnfoldModel, designDict, evts, dat_3d; solver = b2b_solver)
 results = coeftable(m)
