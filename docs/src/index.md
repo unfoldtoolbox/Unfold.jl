@@ -4,7 +4,7 @@ CurrentModule = Unfold
 
 # Unfold.jl Documentation
 
-Welcome to [Unfold.jl](https://github.com/unfoldtoolbox/Unfold.jl): a Julia Package for regression and event-based time series analysis, with a focus on regression ERPs for EEG analysis. The modular approach allows for easy modification to other context, like iEEG, pupil dilation, fMRI etc. - while maintaining the speed of Julia!
+Welcome to [Unfold.jl](https://unfoldtoolbox.github.io/UnfoldDocs/Unfold.jl/stable/): a Julia Package for regression and event-based time series analysis, with a focus on regression ERPs for EEG analysis. The modular approach allows for easy modification to other context, like iEEG, pupil dilation, fMRI etc. - while maintaining the speed of Julia!
 
 ```@raw html
 <div style="width:100%; margin: auto;">
