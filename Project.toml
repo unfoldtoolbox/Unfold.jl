@@ -1,7 +1,7 @@
 name = "Unfold"
 uuid = "181c99d8-e21b-4ff3-b70b-c233eddec679"
 authors = ["Benedikt Ehinger <science@benediktehinger.de>"]
-version = "0.8.1"
+version = "0.8.4"
 
 [deps]
 AlgebraOfGraphics = "cbdf2221-f076-402e-a563-3d30da359d67"
@@ -21,11 +21,8 @@ IterativeSolvers = "42fd0dbc-a981-5370-80f2-aaf504508153"
 JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 Krylov = "ba0b0d4f-ebba-5204-a429-3ac8c609bfb7"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-<<<<<<< HEAD
-=======
 Literate = "98b081ad-f1c9-55d3-8b20-4c87d4299306"
 LiveServer = "16fef848-5104-11e9-1b77-fb7a48bbb589"
->>>>>>> 7f44b0a (Update doc links to the respective UnfoldDocs pages)
 Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
 MLBase = "f0e99cf1-93fa-52ec-9ecc-5026115318e0"
 Missings = "e1d29d7a-bbdc-5cf2-9ac0-f12de2c33e28"
@@ -61,6 +58,7 @@ UnfoldRobustModelsExt = "RobustModels"
 [compat]
 AlgebraOfGraphics = "0.9.4"
 BSplineKit = "0.16,0.17, 0.18"
+BSplineKit = "0.16,0.17"
 CUDA = "4,5"
 DSP = "0.7, 0.8"
 DataFrames = "1"
@@ -76,11 +74,8 @@ IterativeSolvers = "0.9"
 JLD2 = "0.5"
 Krylov = "0.9"
 LinearAlgebra = "1"
-<<<<<<< HEAD
-=======
 Literate = "2.20.1"
 LiveServer = "1.4.0"
->>>>>>> 7f44b0a (Update doc links to the respective UnfoldDocs pages)
 Logging = "1"
 MLBase = "0.9"
 Missings = "1"
