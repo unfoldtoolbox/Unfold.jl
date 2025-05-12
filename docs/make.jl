@@ -40,6 +40,7 @@ makedocs(
         "HowTo" => [
             "Multiple events" => "HowTo/multiple_events.md",
             "Change contrasts / coding schema" => "generated/HowTo/contrasts.md",
+            "Mark bad data segments" => "generated/HowTo/baddata.md",
             "Standard errors" => "HowTo/standarderrors.md",
             "Marginal effects (must read re: splines)" => "generated/HowTo/effects.md",
             "Alternative Solvers (Robust, GPU, B2B)" => "HowTo/custom_solvers.md",
