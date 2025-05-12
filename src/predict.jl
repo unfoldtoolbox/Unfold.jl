@@ -509,7 +509,7 @@ returns the coeficient of determination
 """
 function StatsAPI.r2(model::UnfoldModel, data::AbstractArray)
     res = residuals(model, data)
-    _data = reshape(data, :, size(data)...)
+    _data = size(res) != size(data) ? reshape(data, :, size(data)...) : data
 
     maxdim = length(size(res))
     null = var(_data, dims = maxdim)

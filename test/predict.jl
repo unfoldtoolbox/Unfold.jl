@@ -196,4 +196,24 @@ end
     @test all(_r2 .< 1)
     @test isapprox(_r2[1], 0.001, atol = 0.01)
     @test isapprox(_r2[16], 0.82, atol = 0.01)
+
+    data_reshape = reshape(data, 1, :)
+    data_e_reshape = reshape(data_e, 1, size(data_e)...)
+    m_reshape = fit(
+        UnfoldModel,
+        [Any => (@formula(0 ~ 1 + condition), firbasis((-0.1, 1), 100))],
+        evts,
+        data_reshape;
+    )
+    m_e_reshape = fit(
+        UnfoldModel,
+        [Any => (@formula(0 ~ 1 + condition), 1:size(data_e, 1))],
+        evts,
+        data_e_reshape;
+    )
+    _r2 = Unfold.r2(m_reshape, data_reshape)
+    @test length(_r2) == 1
+    _r2 = Unfold.r2(m_e_reshape, data_e_reshape)
+    @test length(_r2) == 45
+
 end
