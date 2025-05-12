@@ -13,6 +13,7 @@ using StatsBase
 using LinearAlgebra
 using Tables # not sure we need it
 using GLM # not sure we need it
+using StatsAPI # for r2
 
 using TimerOutputs # debugging fitting times etc. not strictly needed
 #using DSP
@@ -48,7 +49,7 @@ import StatsModels: terms
 import StatsBase.quantile
 
 import Base.show
-import Base.(+) # overwrite for DesignMatrices
+import Base.+ # overwrite for DesignMatrices
 using Distributions: Gamma, pdf # TODO replace this with direct implementation (used in basisfunction.jl)
 
 include("typedefinitions.jl")

@@ -28,8 +28,8 @@ yhat_tul = predict(m_tul, evts_grid)
 
 Unfold.result_to_table(m_mul, yhat_mul, [evts_grid])
 
-@test all(yhat_mul[1][:] .≈ mean(data[data.!=0]))
-@test all(yhat_tul[1][:] .≈ mean(data[data.!=0]))
+@test all(yhat_mul[1][:] .≈ mean(data[data .!= 0]))
+@test all(yhat_tul[1][:] .≈ mean(data[data .!= 0]))
 
 ## Case with multiple formulas
 f = @formula 0 ~ 1 + conditionA + continuousA# 1
@@ -133,7 +133,7 @@ pt = Unfold.result_to_table(m, p, repeat([evts], 2))
     )
     resids = Unfold.residuals(m, repeat(data, 1, 3)')
     @test size(resids) == (3, length(data))
-    @test all(resids[1, end-2:end] .≈ data[end-2:end])
+    @test all(resids[1, (end-2):end] .≈ data[(end-2):end])
 
     #
 
@@ -147,7 +147,7 @@ pt = Unfold.result_to_table(m, p, repeat([evts], 2))
     resids_e = Unfold.residuals(m_mul, data_e)
 
     @test size(resids_e)[2:3] == size(data_e)
-    @test maximum(abs.(data_e .- (resids_e.+predict(m_mul)[1])[1, :, :])) < 0.0000001
+    @test maximum(abs.(data_e .- (resids_e .+ predict(m_mul)[1])[1, :, :])) < 0.0000001
 
 
     ##
@@ -163,4 +163,37 @@ pt = Unfold.result_to_table(m, p, repeat([evts], 2))
     # yhat longer
     @test all(Unfold._residuals(UnfoldModel, [1 2 3 4; 3 4 5 6], [1 2 3; 3 4 5]) .== 0)
 
+end
+
+
+@testset "r2" begin
+    data, evts = UnfoldSim.predef_eeg(StableRNG(1); n_repeats = 1, noiselevel = 1)
+    data_e, _ = UnfoldSim.predef_eeg(
+        StableRNG(1);
+        n_repeats = 1,
+        noiselevel = 1,
+        return_epoched = true,
+    )
+
+    # time expanded
+    m = fit(
+        UnfoldModel,
+        [Any => (@formula(0 ~ 1 + condition), firbasis((-0.1, 1), 100))],
+        evts,
+        data;
+    )
+    m_e = fit(
+        UnfoldModel,
+        [Any => (@formula(0 ~ 1 + condition), 1:size(data_e, 1))],
+        evts,
+        data_e;
+    )
+    _r2 = Unfold.r2(m, data)
+    @test length(_r2) == 1
+    @test isapprox(_r2, 0.74, atol = 0.01)
+    _r2 = Unfold.r2(m_e, data_e)
+    @test length(_r2) == size(data_e, 1)
+    @test all(_r2 .< 1)
+    @test isapprox(_r2[1], 0.001, atol = 0.01)
+    @test isapprox(_r2[16], 0.82, atol = 0.01)
 end
