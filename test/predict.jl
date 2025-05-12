@@ -190,7 +190,7 @@ end
     )
     _r2 = Unfold.r2(m, data)
     @test length(_r2) == 1
-    @test isapprox(_r2, 0.74, atol = 0.01)
+    @test isapprox(_r2[1], 0.74, atol = 0.01)
     _r2 = Unfold.r2(m_e, data_e)
     @test length(_r2) == size(data_e, 1)
     @test all(_r2 .< 1)
