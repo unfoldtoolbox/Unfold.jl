@@ -43,6 +43,7 @@ c.group .= "with bad data"
 c_missing = coeftable(m_missing)
 c_missing.group .= "bad data removed"
 
-plot_erp(vcat(c, c_missing), mapping = (; color = :group))
-current_figure()
+plot_erp!(f[3, 1], vcat(c, c_missing), mapping = (; color = :group))
+f
+
 # Currently no helper function exists to translate e.g. MNE BAD segments/annotations automatically, but pull requests are very welcome!
