@@ -25,17 +25,11 @@ Now we can fit a simple `Unfold` model to it.
 First extract the data & convert it to Julia/Unfold requirements
 
 ```@Example main
-data = limo_epochs.get_data(picks="B11")
+data = pyconvert(Array,limo_epochs.get_data(picks="B11"))
 data  = permutedims(data,[2,3,1]) # get into ch x times x epochs
 
-function convert_pandas(df_pd)
-      df= DataFrame()
-    for col in df_pd.columns
-        df[!, col] = getproperty(df_pd, col).values
-    end
-    return df
-end
-events = convert_pandas(limo_epochs.metadata)
+events = DataFrame(PyTable(limo_epochs.metadata))
+
 rename!(events,2=>:coherence) # negative signs in formulas are not good ;)
 events.face = string.(events.face) # ugly names, but fast
 
@@ -44,7 +38,7 @@ events.face = string.(events.face) # ugly names, but fast
 Next fit an Unfold Model
 
 ```@Example main
-uf = fit(UnfoldModel,[Any=>(@formula(0~face+coherence),Float64.(limo_epochs.times))],events,data)
+uf = fit(UnfoldModel,[Any=>(@formula(0~face+coherence),pyconvert(Vector,limo_epochs.times))],events,data)
 results = coeftable(uf)
 ```
 

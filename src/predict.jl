@@ -15,7 +15,7 @@ function predict(X::Vector{<:AbstractMatrix}, coefs::AbstractArray{T,3}) where {
     len = size.(X, 2)
 
     @assert length(unique(len)) == 1 "all designmatrices need to be the same size in this case"
-    coefs_views = [@view(coefs[:, :, (i-1)*len[1]+1:i*len[1]]) for i = 1:length(len)]
+    coefs_views = [@view(coefs[:, :, ((i-1)*len[1]+1):(i*len[1])]) for i = 1:length(len)]
     predict.(X, coefs_views)
 end
 
@@ -47,7 +47,7 @@ function predict(
     )
     for event in eachindex(onsets)
 
-        event_range_temp = onsets[event]+timewindow[1]:onsets[event]+timewindow[2]
+        event_range_temp = (onsets[event]+timewindow[1]):(onsets[event]+timewindow[2])
 
         # Clip indices that are outside of the design matrix (i.e. before the start or after the end)
         #indices_inside_data = 0 .< event_range_temp .< size(data, 2)
@@ -76,7 +76,7 @@ function _residuals(
     )
     for event in eachindex(onsets)
 
-        event_range_temp = onsets[event]+timewindow[1]:onsets[event]+timewindow[2]
+        event_range_temp = (onsets[event]+timewindow[1]):(onsets[event]+timewindow[2])
 
         # Clip indices that are outside of the design matrix (i.e. before the start or after the end)
 
@@ -104,20 +104,20 @@ end
 @traitfn residuals(
     uf::T,
     data::AbstractArray,
-) where {T <: UnfoldModel; ContinuousTimeTrait{T}} =
+) where {T<:UnfoldModel;ContinuousTimeTrait{T}} =
     _residuals(T, predict(uf), check_data(T, data))
 @traitfn function residuals(
     uf::T,
     data::AbstractArray,
-) where {T <: UnfoldModel; !ContinuousTimeTrait{T}}
+) where {T<:UnfoldModel;!ContinuousTimeTrait{T}}
     pred = predict(uf)
     @assert length(pred) == 1 "residuals currently not supported for multi-event MassUnivariateModels. It is not hard to implement, but I ran out of time. Write an issue if you  need this functionality"
     _residuals(T, pred[1], check_data(T, data))
 
 end
 
-_split_data(y::AbstractMatrix, n) = return @view(y[:, 1:n]), @view(y[:, n+1:end])
-_split_data(y::AbstractArray, n) = return @view(y[:, 1:n, :]), @view(y[:, n+1:end, :])
+_split_data(y::AbstractMatrix, n) = return @view(y[:, 1:n]), @view(y[:, (n+1):end])
+_split_data(y::AbstractArray, n) = return @view(y[:, 1:n, :]), @view(y[:, (n+1):end, :])
 #@traitfn
 function _residuals(::Type{T}, yhat, y) where {T<:UnfoldModel}#; ContinuousTimeTrait{T}}
 
@@ -264,7 +264,7 @@ Due to the time-continuous nature, running it with a model not containing the `C
     uf::T,
     args;
     kwargs...,
-) where {T <: UnfoldModel; !ContinuousTimeTrait{T}} =
+) where {T<:UnfoldModel;!ContinuousTimeTrait{T}} =
     error("can't have partial overlap without Timecontinuous model")
 
 @traitfn function predict_partial_overlap(
@@ -276,7 +276,7 @@ Due to the time-continuous nature, running it with a model not containing the `C
     epoch_to = nothing,
     epoch_timewindow = nothing,
     eventcolumn = :event,
-) where {T <: UnfoldModel; ContinuousTimeTrait{T}}
+) where {T<:UnfoldModel;ContinuousTimeTrait{T}}
     @assert !(!isempty(keep_basis) & !isempty(exclude_basis)) "can't have no overlap & specify keep/exclude at the same time. decide for either case"
     # Partial overlap! we reconstruct with some basisfunctions deactivated
     if !isempty(keep_basis)
@@ -331,7 +331,7 @@ in the Not-ContinuousTime case (typically the MassUnivariate model), we return p
     coefs,
     f::Vector,
     evts::Vector,
-) where {T <: UnfoldModel; !ContinuousTimeTrait{T}}
+) where {T<:UnfoldModel;!ContinuousTimeTrait{T}}
     @debug "Not ContinuousTime yhat, Array"
     X = _modelcols.(f, evts)
     @debug typeof(X)
@@ -351,7 +351,7 @@ end
     coefs,
     f::Vector,
     evts::Vector,
-) where {T <: UnfoldModel; ContinuousTimeTrait{T}}
+) where {T<:UnfoldModel;ContinuousTimeTrait{T}}
 
     has_missings = false
     yhat = Array{eltype(coefs)}[]
@@ -427,7 +427,6 @@ end
 returns an integer range with the samples around `epoch_event` as defined in the corresponding basisfunction
 
 """
-
 function calc_epoch_timewindow(uf, epoch_event)
     basis_ix = findfirst(Unfold.basisname(formulas(uf)) .== epoch_event)
     basisfunction = formulas(uf)[basis_ix].rhs.basisfunction
@@ -478,10 +477,10 @@ eventnames(model::UnfoldModel) = first.(design(model))
     times(model<:UnfoldModel)
 returns arrays of time-vectors, one for each basisfunction / parallel-fitted-model (MassUnivarite case)
 """
-@traitfn times(model::T) where {T <: UnfoldModel; !ContinuousTimeTrait{T}} =
+@traitfn times(model::T) where {T<:UnfoldModel;!ContinuousTimeTrait{T}} =
     times(design(model))
 
-@traitfn times(model::T) where {T <: UnfoldModel; ContinuousTimeTrait{T}} =
+@traitfn times(model::T) where {T<:UnfoldModel;ContinuousTimeTrait{T}} =
     times(formulas(model))
 
 times(d::Vector) = times.(d)
@@ -501,3 +500,24 @@ function times(
     @assert all(all_times .== all_times[1:1]) "all times need to be equal in a mass univariate model"
     return all_times
 end
+
+
+
+"""
+    r2(model<:UnfoldModel)
+returns the coeficient of determination
+"""
+function StatsAPI.r2(model::UnfoldModel, data::AbstractArray)
+    res = residuals(model, data)
+    _data = size(res) != size(data) ? reshape(data, :, size(data)...) : data
+
+    maxdim = length(size(res))
+    null = var(_data, dims = maxdim)
+
+    return dropdims(1 .- var(res, dims = maxdim) ./ null, dims = maxdim)
+end
+
+
+_var(d::AbstractVector) = var(d) # cont-time only
+_var(d::AbstractMatrix) = var(d, dims = 2)[:, 1] # ch x conttime, or time x epoch
+_var(d::AbstractArray) = var(d, dims = 3)[:, :, 1] # ch x time x epoch
