@@ -155,6 +155,7 @@ You are very welcome to raise issues and start pull requests!
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/carmenamme"><img src="https://avatars.githubusercontent.com/u/100191854?v=4?s=100" width="100px;" alt="carmenamme"/><br /><sub><b>carmenamme</b></sub></a><br /><a href="#doc-carmenamme" title="Documentation">📖</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/maxvanmigem"><img src="https://avatars.githubusercontent.com/u/115144441?v=4?s=100" width="100px;" alt="Maximilien Van Migem"/><br /><sub><b>Maximilien Van Migem</b></sub></a><br /><a href="#bug-maxvanmigem" title="Bug reports">🐛</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/Till223"><img src="https://avatars.githubusercontent.com/u/29772145?v=4?s=100" width="100px;" alt="Till Prölß"/><br /><sub><b>Till Prölß</b></sub></a><br /><a href="#doc-Till223" title="Documentation">📖</a> <a href="#bug-Till223" title="Bug reports">🐛</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/LeonvonHaugwitz"><img src="https://avatars.githubusercontent.com/u/44725676?v=4?s=100" width="100px;" alt="Leon von Haugwitz"/><br /><sub><b>Leon von Haugwitz</b></sub></a><br /><a href="#bug-LeonvonHaugwitz" title="Bug reports">🐛</a></td>
     </tr>
   </tbody>
 </table>
