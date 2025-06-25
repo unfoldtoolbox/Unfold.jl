@@ -227,7 +227,12 @@ end
 
 check_data(uf::Type{<:UnfoldModel}, data) = data
 
-
+@traitfn check_data(
+    uf::Type{UF},
+    data::AbstractArray{T,3},
+) where {T,UF<:UnfoldModel;ContinuousTimeTrait{UF}} = error(
+    "A continuous-time model was request, but the data provided have 3 dimensions. Did you maybe provide epoched data instead of continuous data?",
+)
 
 function design_to_modeltype(design)
     #@debug design

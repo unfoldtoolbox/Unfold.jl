@@ -48,7 +48,7 @@ function spl_fillMat!(bs::PeriodicBSplineBasis, large::Matrix, x::AbstractVector
     x = deepcopy(x)
     x = mod.(x .- bnds[1], period(bs)) .+ bnds[1]
 
-    for k = -1:length(bs)+2
+    for k = -1:(length(bs)+2)
         ix = basis_to_array_index(bs, axes(large, 2), k)
         large[:, ix] .+= bs[k](x)
     end
@@ -180,8 +180,11 @@ function StatsModels.apply_schema(
 )
     @debug "BSpline Inner schema"
     term = apply_schema(t.term, sch, Mod)
-    isa(term, ContinuousTerm) ||
-        throw(ArgumentError("BSplineTerm only works with continuous terms (got $term)"))
+    isa(term, ContinuousTerm) || throw(
+        ArgumentError(
+            "BSplineTerm only works with continuous terms (but $term is a $(typeof(term))). Tipp: Check the type of your datacolumn via `typeof(events.$term))`, is it a numeric type like Float64, Int etc?",
+        ),
+    )
 
     if isa(t.df, ConstantTerm)
         try
@@ -218,6 +221,6 @@ end
 StatsModels.termvars(p::AbstractSplineTerm) = StatsModels.termvars(p.term)
 StatsModels.width(p::AbstractSplineTerm) = p.df - 1
 StatsModels.coefnames(p::BSplineTerm) =
-    "spl(" .* coefnames(p.term) .* "," .* string.(1:p.df-1) .* ")"
+    "spl(" .* coefnames(p.term) .* "," .* string.(1:(p.df-1)) .* ")"
 StatsModels.coefnames(p::PeriodicBSplineTerm) =
-    "circspl(" .* coefnames(p.term) .* "," .* string.(1:p.df-1) .* ",$(p.low):$(p.high))"
+    "circspl(" .* coefnames(p.term) .* "," .* string.(1:(p.df-1)) .* ",$(p.low):$(p.high))"
