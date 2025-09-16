@@ -6,6 +6,7 @@ mutable struct BSplineTerm{T,D} <: AbstractSplineTerm
     order::Int
     breakpoints::Vector
 end
+
 mutable struct PeriodicBSplineTerm{T,D} <: AbstractSplineTerm
     term::T
     df::D
