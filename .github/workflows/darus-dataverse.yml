@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     if: contains(github.event.pull_request.labels.*.name, 'sync darus')
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Synchronize to DV
         uses: SimTech-Research-Data-Management/dataverse-sync@main
         with:
