@@ -43,6 +43,7 @@ makedocs(
             "Mark bad data segments" => "generated/HowTo/baddata.md",
             "Standard errors" => "HowTo/standarderrors.md",
             "Marginal effects (must read re: splines)" => "generated/HowTo/effects.md",
+            "Circular splines" => "generated/HowTo/circular_splines.md",
             "Alternative Solvers (Robust, GPU, B2B)" => "HowTo/custom_solvers.md",
             #"Time domain basis functions"=>"generated/HowTo/timesplines.md",
             "Save and load Unfold models" => "generated/HowTo/unfold_io.md",
