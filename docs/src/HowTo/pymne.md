@@ -7,7 +7,7 @@ Unfold is generally agnostic to how you load your data. You only require a Matri
 ```@Example main
 using Unfold
 using UnfoldMakie,CairoMakie
-using PyMNE
+
 using DataFrames
 ```
 
@@ -15,30 +15,42 @@ using DataFrames
 
 The easiest way to showcase this is to simply use a demo-dataset from MNE.
 
+To extract the metadata, we need `Pandas` which is not installed by default, we therefore need to install it via `CondaPkg`
+```@Example main
+using CondaPkg
+CondaPkg.add("pandas")
+CondaPkg.add("mne") # due to a bug in PyMNE https://github.com/beacon-biosignals/PyMNE.jl/issues/38 - we have to add mne additionally
+using PyMNE
+```
+
+Now we are ready to load some data.
+
 ```@Example main
 limo_epochs = PyMNE.datasets.limo.load_data(subject=1,path="~/MNE/DATA",update_path=false)
 limo_epochs
 ```
 
-Now we can fit a simple `Unfold` model to it.
+After loading, we can fit an `Unfold` model to it.
 
 First extract the data & convert it to Julia/Unfold requirements
 
+
+
 ```@Example main
 data = pyconvert(Array,limo_epochs.get_data(picks="B11"))
-data  = permutedims(data,[2,3,1]) # get into ch x times x epochs
+data  = permutedims(data,[2,3,1]) # permute to ch x times x epochs Array format
 
 events = DataFrame(PyTable(limo_epochs.metadata))
+rename!(events,2 => :coherence)
+events.face = string.(events.face)
 
-rename!(events,2=>:coherence) # negative signs in formulas are not good ;)
-events.face = string.(events.face) # ugly names, but fast
-
+times = pyconvert(Vector,limo_epochs.times)
 ```
 
-Next fit an Unfold Model
+Next fit an Unfold Model:
 
 ```@Example main
-uf = fit(UnfoldModel,[Any=>(@formula(0~face+coherence),pyconvert(Vector,limo_epochs.times))],events,data)
+uf = fit(UnfoldModel,[Any=>(@formula(0~face+coherence),times)],events,data)
 results = coeftable(uf)
 ```
 

@@ -13,6 +13,7 @@ Generates Designmatrix & fits model, either mass-univariate (one model per epoch
 - `solver::function`: (default: `solver_default`). The solver used for `y=Xb`, e.g. `(X,y;kwargs...) -> solver_default(X,y;kwargs...)`. There are faster & alternative solvers available, see `solver_predefined` for a list of options, see `solver benchmark` in the online documentation. To use the GPU, you can provide the data as a `CuArray` after `using CUDA`. Please change the solver to e.g. `solver_predef(X,y;solver=:qr)` as lsmr+cuda => crash typically. It's worth though, speed increases >100x possible
 - `show_progress::Bool` (default `true`) - show progress via ProgressMeter - passed to `solver`
 - `eventfields::Array: (optional, default `[:latency]`) Array of symbols, representing column names in `tbl`, which are passed to basisfunction event-wise. First field of array always defines eventonset in samples.
+- `show_warnings::Bool` (default `true`) - show some additional warnings; setting to false does deactivate some warnings but not all (use e.g. Suppressor.jl for this)
 
 If a `Vector[Pairs]` is provided, it has to have one of the following structures:
 For **deconvolution** analyses (use `Any=>(f,bf)` to match all rows of `tbl` in one basis functions). Assumes `data` is a continuous EEG stream, either a `Vector` or a `ch x time` `Matrix`
@@ -113,13 +114,17 @@ end
 function StatsModels.fit(
     uf::UnfoldModel,
     tbl::AbstractDataFrame,
-    data::AbstractArray;
+    data::AbstractArray{T};
     fit = true,
+    show_warnings = true,
     kwargs...,
-)
+) where {T}
     @debug "adding desigmatrix!"
-    designmatrix!(uf, tbl; kwargs...)
+    designmatrix!(uf, tbl; show_warnings, kwargs...)
     if fit
+        if show_warnings && T === Any
+            @warn "Data is a $typeof(data) with eltype $T == Any. Likely this is not what you want, but you want to have Float-Numbers as data. We suggest to convert via e.g. `data = Float64.(data)` if possible"
+        end
         fit!(uf, data; kwargs...)
     end
 

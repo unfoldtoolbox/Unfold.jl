@@ -68,6 +68,7 @@ function designmatrix(
     basisfunction;
     contrasts = Dict{Symbol,Any}(),
     eventname = Any,
+    show_warnings = true,
     kwargs...,
 )
     @debug("generating DesignMatrix")
@@ -91,7 +92,12 @@ function designmatrix(
         end
     end
 
-
+    # check datatypes for an Any
+    any_ix = eltype.(eachcol(tbl[:, neededCols])) .== Any
+    if show_warnings && any(any_ix)
+        @warn "Careful, in your `evts` DataFrame you have a column with eltype `Any`: $(neededCols[any_ix]). This will automatically be cast to a Categorical Term -
+        if it is supposed to be a continuous term/column, be sure to explicitly cast it to e.g. `Float64` via `data.$(neededCols[any_ix][1]) = Float64.(data.$(neededCols[any_ix][1]))), or to a string if categorical."
+    end
 
     @debug "applying schema $unfoldmodeltype"
     form = unfold_apply_schema(unfoldmodeltype, f, schema(f, tbl_nomissing, contrasts))
@@ -188,7 +194,7 @@ function designmatrix(
                     join(names(tbl), ","),
                 )
             end
-            eventTbl = @view tbl[tbl[:, eventcolumn].==eventname, :] # we need a view so we can remap later if needed
+            eventTbl = @view tbl[tbl[:, eventcolumn] .== eventname, :] # we need a view so we can remap later if needed
         end
         if isempty(eventTbl)
             error(
@@ -452,7 +458,7 @@ end
 function timeexpand_cols_allsamecols(bases, ncolsBasis::Int, ncolsX)
     repeatEach = length(nzrange(bases[1], 1))
     cols_r = UnitRange{Int64}[
-        ((1:ncolsBasis) .+ ix * ncolsBasis) for ix in (0:ncolsX-1) for b = 1:length(bases)
+        ((1:ncolsBasis) .+ ix * ncolsBasis) for ix in (0:(ncolsX-1)) for b = 1:length(bases)
     ]
 
     cols = reduce(vcat, cols_r)
@@ -512,7 +518,7 @@ function timeexpand_vals(bases, X, nTotal, ncolsX)
             b_nz = nonzeros(b)
             l = length(b_nz)
 
-            vals[ix:ix+l-1] .= b_nz .* @view X[i, Xcol]
+            vals[ix:(ix+l-1)] .= b_nz .* @view X[i, Xcol]
             ix = ix + l
             #push!(vals, )
         end
@@ -567,7 +573,7 @@ function time_expand_firdiag(Xorg::AbstractMatrix{T}, basisfunction, onsets) whe
 
     @assert (minimum(onsets[!, 1]) + shift_onset(basisfunction) .- 1 + w) > 0
 
-    neg_fix = sum(adjusted_onsets[adjusted_onsets.<1] .- 1)
+    neg_fix = sum(adjusted_onsets[adjusted_onsets .< 1] .- 1)
     ncoeffs = w * size(Xorg, 1) * size(Xorg, 2) .+ neg_fix * size(Xorg, 2)
 
 
@@ -584,8 +590,8 @@ function time_expand_firdiag(Xorg::AbstractMatrix{T}, basisfunction, onsets) whe
         #ix = (1+size(Xorg, 1)*(ix_X-1)):size(Xorg, 1)*ix_X
         ol = w * size(Xorg, 1) + neg_fix
         #ix = 1:ol
-        ix = 1+(ix_X-1)*ol:ix_X*ol
-        ix_col = (1+(ix_X-1)*w):ix_X*w+1
+        ix = (1+(ix_X-1)*ol):(ix_X*ol)
+        ix_col = (1+(ix_X-1)*w):(ix_X*w+1)
 
         #@debug ix, ix_col size(I) size(colptr) size(V) w
         @views spdiagm_diag_colwise!(
@@ -681,7 +687,7 @@ function spdiagm_diag_colwise(diagsz, onsets, values::AbstractVector{T}) where {
     ncoeffs = diagsz * length(onsets)
     I = Vector{Int}(undef, ncoeffs)
     #J = Vector{Int}(undef, ncoeffs)
-    colptr = 1:length(onsets):ncoeffs+1 |> collect
+    colptr = 1:length(onsets):(ncoeffs+1) |> collect
     V = Vector{T}(undef, ncoeffs)
     r = 1
     for c = 1:diagsz
@@ -731,8 +737,8 @@ function spdiagm_diag(diagsz, kv::Pair{<:Integer,T}...) where {T}
             col = 0
         end
 
-        r = 1+i:diagsz+i
-        I[r], J[r] = (row+1:row+diagsz, col+1:col+diagsz)
+        r = (1+i):(diagsz+i)
+        I[r], J[r] = ((row+1):(row+diagsz), (col+1):(col+diagsz))
         #copyto!(view(V, r), v)
         view(V, r) .= v
 

@@ -6,6 +6,7 @@ mutable struct BSplineTerm{T,D} <: AbstractSplineTerm
     order::Int
     breakpoints::Vector
 end
+
 mutable struct PeriodicBSplineTerm{T,D} <: AbstractSplineTerm
     term::T
     df::D
@@ -108,6 +109,15 @@ Unfold.spl(x, df) = 0 # fallback
 
 # make a nice call if the function is called via REPL
 Unfold.spl(t::Symbol, d::Int) = BSplineTerm(term(t), d, 4, [])
+
+"""
+    circspl(t::Symbol, d::Int, low, high)
+Construct a circular spline. the d represents the number of designmatrix columns minus one (due to intercept).
+
+An order of 4 is used.
+
+
+"""
 Unfold.circspl(t::Symbol, d::Int, low, high) =
     PeriodicBSplineTerm(term(t), term(d), 4, low, high)
 
@@ -220,7 +230,8 @@ end
 #StatsModels.terms(p::BSplineTerm) = terms(p.term)
 StatsModels.termvars(p::AbstractSplineTerm) = StatsModels.termvars(p.term)
 StatsModels.width(p::AbstractSplineTerm) = p.df - 1
+StatsModels.width(p::PeriodicBSplineTerm) = p.df
 StatsModels.coefnames(p::BSplineTerm) =
     "spl(" .* coefnames(p.term) .* "," .* string.(1:(p.df-1)) .* ")"
 StatsModels.coefnames(p::PeriodicBSplineTerm) =
-    "circspl(" .* coefnames(p.term) .* "," .* string.(1:(p.df-1)) .* ",$(p.low):$(p.high))"
+    "circspl(" .* coefnames(p.term) .* "," .* string.(1:p.df) .* ",$(p.low):$(p.high))"
