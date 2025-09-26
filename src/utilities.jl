@@ -129,44 +129,28 @@ Equates the length of data and designmatrix by cutting the shorter one
 
 The reason we need this is because when generating the designmatrix, we do not know how long the data actually are. We only assume that event-latencies are synchronized with the data
 """
-function equalize_size(
+function _equalize_size(
     X::AbstractMatrix,
-    data::AbstractArray{T,2},
+    data::Union{AbstractMatrix{T},AbstractVector{T}},
 ) where {T<:Union{Missing,<:Number}}
-    @debug("2d equalize_size")
-    if size(X, 1) > size(data, 2)
-        X = @view X[1:size(data, 2), :]
-    else
-        data = @view data[:, 1:size(X, 1)]
-    end
-    return X, data
+	_get_data(data::AbstractMatrix,n) = @view data[:,1:n]
+	_get_data(data::AbstractVector,n) = @view data[1:n]
+	
+ 	n = min(size(X, 1), size(data)[end])
+	X_v = @view X[1:n,:]
+	data_v = _get_data(data,n)
+    return X_v, data_v
 end
-function equalize_size(
-    X::AbstractMatrix,
-    data::AbstractVector{T},
-) where {T<:Union{Missing,<:Number}}
-    @debug("1d equalize_size")
-    if size(X, 1) > length(data)
-        X = @view X[1:length(data), :]
-    else
-        data = @view data[1:size(X, 1)]
-    end
-    return X, data
-end
-
-function equalize_size(
+	
+function _equalize_size(
     X::AbstractMatrix,
     data::AbstractArray{T,3},
 ) where {T<:Union{Missing,<:Number}}
     @debug("3d equalize_size")
-
     @assert size(X, 1) == size(data, 3) "Your events are not of the same size as your last dimension of data"
 
     return X, data
 end
-
-
-
 function clean_data(
     data::AbstractArray{T,2},
     winrej::AbstractArray{<:Number,2},
