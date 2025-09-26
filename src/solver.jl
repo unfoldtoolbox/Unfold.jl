@@ -22,14 +22,15 @@ function solver_default(
     multithreading = true,
     show_progress = true,
 ) where {T<:Union{Missing,<:Number}}
-    n_channels = size(data,1)
-    n_predictors = size(X,2)
+    n_channels = size(data, 1)
+    n_predictors = size(X, 2)
     minfo = Array{IterativeSolvers.ConvergenceHistory,1}(undef, n_channels)
 
     beta = zeros(T, n_channels, n_predictors)
 
     p = Progress(n_channels; enabled = show_progress)
     X_sparse = SparseMatrixCSC(X) # X s often a SubArray, lsmr really doesnt like indexing into subarrays, one copy needed.
+
     @maybe_threads multithreading for ch = 1:n_channels
 
         # use the previous channel as a starting point
