@@ -2,13 +2,19 @@
 """
 copy field-info from source to closest target
 
-`match_fun` can be "closest", "s before t" (eq. "t after s") or "t before s" (eq. "s after t")
+## Arguments
+- `evts::DataFrame`
+- `fromTo::Pair` specifies from which entry to which entry to copy, e.g. "source"=>"target"
+- `field::String` name of the column that contains the data to be copied to other events. Can be a `pair` in order to copy to a new column and thereby not replace any entries
+## Keyword arguments
+- `match_fun::String` can be "closest", "s before t" (eq. "t after s") or "t before s" (eq. "s after t") - where s = source, and t = target
+- `column::String` (default `"trial_type"`) the column where the `fromTo` source and target events can be found in
 
 ## Example
-julia> # copy reaction time values from button press to closest stimulus immediately before button press
-julia> copy_eventinfo!(evts,"button"=>"stimulus",:reaction_time;match_fun="s after t")
+Copy reaction time values from button press to closest stimulus immediately before button press
+julia> copy_eventinfo!(evts,"button"=>"stimulus","reaction_time";match_fun="s after t")
 """
-function copy_eventinfo!(evts, fromTo, field; match_fun = "closest")
+function copy_eventinfo!(evts, fromTo::Pair, field; match_fun = "closest",column="trial_type")
 
     source = fromTo.first
     target = fromTo.second
@@ -20,11 +26,11 @@ function copy_eventinfo!(evts, fromTo, field; match_fun = "closest")
         source_field = field
         target_field = field
     end
-    source_ix = findall(isequal(source), evts.trial_type)
-    target_ix = findall(isequal(target), evts.trial_type)
+    source_ix = findall(isequal(source), evts[:,column])
+    target_ix = findall(isequal(target), evts[:,column])
 
-    isempty(source_ix) && error("couldnt find source entries ($source) in evts.trial_type")
-    isempty(target_ix) && error("couldnt find target entries ($target) in evts.trial_type")
+    isempty(source_ix) && error("couldnt find source entries ($source) in evts.$column")
+    isempty(target_ix) && error("couldnt find target entries ($target) in evts.$column")
 
     # for some matching functions we want to find the minimum, but no negative number
     filter_greaterzero = x -> x >= 0 ? x : Inf
