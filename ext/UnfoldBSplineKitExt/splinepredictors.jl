@@ -190,8 +190,11 @@ function StatsModels.apply_schema(
 )
     @debug "BSpline Inner schema"
     term = apply_schema(t.term, sch, Mod)
-    isa(term, ContinuousTerm) ||
-        throw(ArgumentError("BSplineTerm only works with continuous terms (got $term)"))
+    isa(term, ContinuousTerm) || throw(
+        ArgumentError(
+            "BSplineTerm only works with continuous terms (but $term is a $(typeof(term))). Tipp: Check the type of your datacolumn via `typeof(events.$term))`, is it a numeric type like Float64, Int etc?",
+        ),
+    )
 
     if isa(t.df, ConstantTerm)
         try
