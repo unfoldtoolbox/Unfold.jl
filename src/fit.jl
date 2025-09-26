@@ -211,32 +211,46 @@ end
 
 
 
-
+# (time,trial) => (1 x time x trial)
 @traitfn function check_data(
     uf::Type{UF},
-    data::AbstractArray{T,2},
+    data::AbstractMatrix{T},
 ) where {T,UF<:UnfoldModel;!ContinuousTimeTrait{UF}}
     @debug(" !ContinuousTimeTrait: data array is size (X,Y), reshaping to (1,X,Y)")
     data_r = reshape(data, 1, size(data)...)
     return data_r
 end
+
+# (time) => (1 x time)
 @traitfn check_data(
     uf::Type{UF},
-    data::AbstractArray{T,2},
+    data::AbstractVector{T},
 ) where {T,UF<:UnfoldModel;ContinuousTimeTrait{UF}} = data
 
-function check_data(uf::Type{<:UnfoldModel}, data::AbstractVector)
-    @debug("data array is size (X,), reshaping to (1,X)")
-    data = reshape(data, 1, :)
-end
 
-check_data(uf::Type{<:UnfoldModel}, data) = data
+@traitfn check_data(
+    uf::Type{UF},
+    data::AbstractVector{T},
+) where {T,UF<:UnfoldModel;ContinuousTimeTrait{UF}} = reshape(data, 1, :)
 
+
+
+check_data(type, uf::Type{<:UnfoldModel}, data) = data
+
+
+# (ch, time,trial) => error
 @traitfn check_data(
     uf::Type{UF},
     data::AbstractArray{T,3},
 ) where {T,UF<:UnfoldModel;ContinuousTimeTrait{UF}} = error(
     "A continuous-time model was request, but the data provided have 3 dimensions. Did you maybe provide epoched data instead of continuous data?",
+)
+# (ch, time,trial) => error
+@traitfn check_data(
+    uf::Type{UF},
+    data::AbstractVector{T},
+) where {T,UF<:UnfoldModel;!ContinuousTimeTrait{UF}} = error(
+    "A mass-univariate model on epoched data was request, but the data provided has only 1 dimensions. Did you maybe provide continuous data instead of epoched data?",
 )
 
 function design_to_modeltype(design)
