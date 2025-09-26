@@ -129,7 +129,7 @@ Equates the length of data and designmatrix by cutting the shorter one
 
 The reason we need this is because when generating the designmatrix, we do not know how long the data actually are. We only assume that event-latencies are synchronized with the data
 """
-function _equalize_size(
+function equalize_size(
     X::AbstractMatrix,
     data::Union{AbstractMatrix{T},AbstractVector{T}},
 ) where {T<:Union{Missing,<:Number}}
@@ -142,7 +142,7 @@ function _equalize_size(
     return X_v, data_v
 end
 	
-function _equalize_size(
+function equalize_size(
     X::AbstractMatrix,
     data::AbstractArray{T,3},
 ) where {T<:Union{Missing,<:Number}}
