@@ -12,7 +12,7 @@ using Chairmarks
 using LinearAlgebra
 using CUDA.CUSPARSE
 using SparseArrays
-
+using PrettyTables
 #--- Generate Data
 include("../generate_data.jl")
 
@@ -206,19 +206,19 @@ function df_to_md(data)
     rename!(data_subset, :min_bytes => :GB, :min_time => :time)
     #allowmissing!(data_subset, [:time, :GB])
 
-    data_subset.time[data_subset[:, :comment].!=""] .= 0
-    data_subset.GB[data_subset[:, :comment].!=""] .= 0
+    data_subset.time[data_subset[:, :comment] .!= ""] .= 0
+    data_subset.GB[data_subset[:, :comment] .!= ""] .= 0
     data_subset = data_subset[:, Not([:nnz, :sfreq, :n_repeats, :n_splines])]
     hl_time = MarkdownHighlighter(
         (d, i, j) ->
             isa(d[i, j], Float64) &&
-                (d[i, j] ≈ minimum(data_subset.time[data_subset[:, :comment].==""])),
+            (d[i, j] ≈ minimum(data_subset.time[data_subset[:, :comment] .== ""])),
         MarkdownDecoration(bold = true),
     )
     hl_alloc = MarkdownHighlighter(
         (d, i, j) ->
             isa(d[i, j], Float64) &&
-                (d[i, j] ≈ minimum(data_subset.GB[data_subset[:, :comment].==""])),
+            (d[i, j] ≈ minimum(data_subset.GB[data_subset[:, :comment] .== ""])),
         MarkdownDecoration(bold = true),
     )
     select!(
@@ -234,13 +234,13 @@ function df_to_md(data)
         :overlap,
         :comment,
     )
-    pretty_table(
+    PrettyTables.pretty_table(
         data_subset,
         backend = Val(:markdown),
         header = names(data_subset),
         highlighters = (hl_alloc, hl_time),
         formatters = (
-            ft_nomissing,
+            #ft_nomissing,
             (v, i, j) ->
                 (isa(v, Float64)) ?
                 (v > 10 ? round(v) : v == 0 ? "" : round(v; sigdigits = 2)) : v,
