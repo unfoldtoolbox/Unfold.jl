@@ -6,6 +6,7 @@ Julia code can be called from within R using `JuliaCall`. Here is a **barebone**
 
 ```{R}
 install.packages("JuliaCall")
+library("JuliaCall")
 install_julia() # installs Julia
 ```
 
@@ -14,6 +15,8 @@ Once JuliaCall and Julia are installed, we can start installing Unfold and calli
 Two ways to do so: The "proper" way, with a reproducible environment:
 
 ```{R}
+library("JuliaCall")
+
 julia <- julia_setup() # setup julia
 path_to_env = '/tmp/my_julia_env' # could be any path to a Julia Project.toml
 julia_eval(paste('import Pkg;','Pkg.activate("',path_to_env,'");Pkg.instantiate()'))
