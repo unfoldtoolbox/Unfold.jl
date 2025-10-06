@@ -48,6 +48,7 @@ makedocs(
             #"Time domain basis functions"=>"generated/HowTo/timesplines.md",
             "Save and load Unfold models" => "generated/HowTo/unfold_io.md",
             "Duration-scaled basisfunctions (Hassall-style)" => "generated/HowTo/FIRduration.md",
+            "Tools to modify/transform/translate events" => "generated/HowTo/eventhandling.md",
             "🐍 Import EEG with PyMNE.jl" => "HowTo/pymne.md",
             "🐍 Calling Unfold.jl directly from Python" => "generated/HowTo/juliacall_unfold.md",
             "R: Calling Unfold.jl directly from R" => "HowTo/R.md",
