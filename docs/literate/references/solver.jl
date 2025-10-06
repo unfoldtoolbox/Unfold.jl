@@ -1,4 +1,4 @@
-# # Solver implementation
+#  # [Solver implementation](@id solver_implementation)
 # This document describes how the `solver_main` is implemented and how to add custom solvers.
 
 # some setup

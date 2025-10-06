@@ -17,7 +17,7 @@ using Unfold
 To use robust (outlier-"safe") solvers support as described in @Ref(custom_solvers) you have to:
 
 ```julia
-using RobustSolvers
+import RobustSolvers
 using Unfold
 ```
 
@@ -26,7 +26,7 @@ using Unfold
 Finally to use non-linear effects/splines like in `@formula 0~1+spl(continuous,5)` you have to use:
 
 ```julia
-using BSplineKit
+import BSplineKit
 using Unfold
 ```
 

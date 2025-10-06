@@ -13,6 +13,7 @@ Generates Designmatrix & fits model, either mass-univariate (one model per epoch
 - `solver::function`: (default: `solver_default`). The solver used for `y=Xb`, e.g. `(X,y;kwargs...) -> solver_default(X,y;kwargs...)`. There are faster & alternative solvers available, see `solver_predefined` for a list of options, see `solver benchmark` in the online documentation. To use the GPU, you can provide the data as a `CuArray` after `using CUDA`. Please change the solver to e.g. `solver_predef(X,y;solver=:qr)` as lsmr+cuda => crash typically. It's worth though, speed increases >100x possible
 - `show_progress::Bool` (default `true`) - show progress via ProgressMeter - passed to `solver`
 - `eventfields::Array: (optional, default `[:latency]`) Array of symbols, representing column names in `tbl`, which are passed to basisfunction event-wise. First field of array always defines eventonset in samples.
+- `show_warnings::Bool` (default `true`) - show some additional warnings; setting to false does deactivate some warnings but not all (use e.g. Suppressor.jl for this)
 
 If a `Vector[Pairs]` is provided, it has to have one of the following structures:
 For **deconvolution** analyses (use `Any=>(f,bf)` to match all rows of `tbl` in one basis functions). Assumes `data` is a continuous EEG stream, either a `Vector` or a `ch x time` `Matrix`
@@ -113,13 +114,17 @@ end
 function StatsModels.fit(
     uf::UnfoldModel,
     tbl::AbstractDataFrame,
-    data::AbstractArray;
+    data::AbstractArray{T};
     fit = true,
+    show_warnings = true,
     kwargs...,
-)
+) where {T}
     @debug "adding desigmatrix!"
-    designmatrix!(uf, tbl; kwargs...)
+    designmatrix!(uf, tbl; show_warnings, kwargs...)
     if fit
+        if show_warnings && T === Any
+            @warn "Data is a $typeof(data) with eltype $T == Any. Likely this is not what you want, but you want to have Float-Numbers as data. We suggest to convert via e.g. `data = Float64.(data)` if possible"
+        end
         fit!(uf, data; kwargs...)
     end
 
@@ -206,28 +211,47 @@ end
 
 
 
-
+# (time,trial) => (1 x time x trial)
 @traitfn function check_data(
     uf::Type{UF},
-    data::AbstractArray{T,2},
+    data::AbstractMatrix{T},
 ) where {T,UF<:UnfoldModel;!ContinuousTimeTrait{UF}}
     @debug(" !ContinuousTimeTrait: data array is size (X,Y), reshaping to (1,X,Y)")
     data_r = reshape(data, 1, size(data)...)
     return data_r
 end
+
+# (time) => (1 x time)
 @traitfn check_data(
     uf::Type{UF},
-    data::AbstractArray{T,2},
+    data::AbstractVector{T},
 ) where {T,UF<:UnfoldModel;ContinuousTimeTrait{UF}} = data
 
-function check_data(uf::Type{<:UnfoldModel}, data::AbstractVector)
-    @debug("data array is size (X,), reshaping to (1,X)")
-    data = reshape(data, 1, :)
-end
 
-check_data(uf::Type{<:UnfoldModel}, data) = data
+@traitfn check_data(
+    uf::Type{UF},
+    data::AbstractVector{T},
+) where {T,UF<:UnfoldModel;ContinuousTimeTrait{UF}} = reshape(data, 1, :)
 
 
+
+check_data(type, uf::Type{<:UnfoldModel}, data) = data
+
+
+# (ch, time,trial) => error
+@traitfn check_data(
+    uf::Type{UF},
+    data::AbstractArray{T,3},
+) where {T,UF<:UnfoldModel;ContinuousTimeTrait{UF}} = error(
+    "A continuous-time model was request, but the data provided have 3 dimensions. Did you maybe provide epoched data instead of continuous data?",
+)
+# (ch, time,trial) => error
+@traitfn check_data(
+    uf::Type{UF},
+    data::AbstractVector{T},
+) where {T,UF<:UnfoldModel;!ContinuousTimeTrait{UF}} = error(
+    "A mass-univariate model on epoched data was request, but the data provided has only 1 dimensions. Did you maybe provide continuous data instead of epoched data?",
+)
 
 function design_to_modeltype(design)
     #@debug design

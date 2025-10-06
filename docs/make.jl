@@ -21,6 +21,7 @@ makedocs(
     #root = joinpath(dirname(pathof(Unfold)), "..", "docs"),
     #prettyurls = get(ENV, "CI", nothing) == "true",
     repo = Documenter.Remotes.GitHub("unfoldtoolbox", "Unfold.jl"),
+    pagesonly = true,
     format = Documenter.HTML(;
         prettyurls = get(ENV, "CI", "false") == "true",
         canonical = "https://unfoldtoolbox.github.io/Unfold.jl",
@@ -28,6 +29,7 @@ makedocs(
         sidebar_sitename = false,
         assets = String[],
     ),
+    warnonly = true,
     pages = [
         "index.md",
         "Installing Julia + Unfold.jl" => "installation.md",
@@ -38,14 +40,17 @@ makedocs(
         "HowTo" => [
             "Multiple events" => "HowTo/multiple_events.md",
             "Change contrasts / coding schema" => "generated/HowTo/contrasts.md",
+            "Mark bad data segments" => "generated/HowTo/baddata.md",
             "Standard errors" => "HowTo/standarderrors.md",
             "Marginal effects (must read re: splines)" => "generated/HowTo/effects.md",
+            "Circular splines" => "generated/HowTo/circular_splines.md",
             "Alternative Solvers (Robust, GPU, B2B)" => "HowTo/custom_solvers.md",
             #"Time domain basis functions"=>"generated/HowTo/timesplines.md",
             "Save and load Unfold models" => "generated/HowTo/unfold_io.md",
             "Duration-scaled basisfunctions (Hassall-style)" => "generated/HowTo/FIRduration.md",
             "🐍 Import EEG with PyMNE.jl" => "HowTo/pymne.md",
             "🐍 Calling Unfold.jl directly from Python" => "generated/HowTo/juliacall_unfold.md",
+            "R: Calling Unfold.jl directly from R" => "HowTo/R.md",
         ],
         "Explanations" => [
             "Non-Linear effects" => "./generated/explanations/nonlinear_effects.md",

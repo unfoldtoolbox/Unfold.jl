@@ -10,7 +10,7 @@ using StatsBase
 using Missings
 using StableRNGs
 
-using RobustModels, BSplineKit # extensionTriggers
+import RobustModels, BSplineKit # extensionTriggers
 using SparseArrays
 using UnfoldSim
 using Interpolations

@@ -55,7 +55,7 @@ end
 
     c = coeftable(uf)
     c2 = coeftable(uf_2events)
-    @test c2[c2.eventname.=="A", :] == c
+    @test c2[c2.eventname .== "A", :] == c
 
     e_uf = effects(Dict(:condtionA => [0, 1]), uf)
     e_uf2 = effects(Dict(:condtionA => [0, 1]), uf_2events)
@@ -102,7 +102,7 @@ end
     times = -1.0:0.05:1.9
     m_mul = coeftable(fit(UnfoldLinearModel, f, evts, data_e, times))
 
-    @test m_mul[(m_mul.channel.==1).&(m_mul.time.==0.1), :estimate] ≈ [2, 3, 4]
+    @test m_mul[(m_mul.channel .== 1) .& (m_mul.time .== 0.1), :estimate] ≈ [2, 3, 4]
 
 
 
@@ -111,7 +111,7 @@ end
     m_mul_noreshape = coeftable(fit(UnfoldLinearModel, f, evts, data_e_noreshape, times))
 
     @test m_mul_noreshape[
-        (m_mul_noreshape.channel.==1).&(m_mul_noreshape.time.==0.1),
+        (m_mul_noreshape.channel .== 1) .& (m_mul_noreshape.time .== 0.1),
         :estimate,
     ] ≈ [2, 3, 4]
     @test size(m_mul_noreshape)[1] == size(m_mul)[1] / 2
@@ -176,7 +176,7 @@ basisfunction = firbasis(τ = (-1, 1), sfreq = 20)
     m_tul = coeftable(fit(UnfoldModel, f, evts, data_r, basisfunction))
 
     @test isapprox(
-        m_tul[(m_tul.channel.==1).&(m_tul.time.==0.1), :estimate],
+        m_tul[(m_tul.channel .== 1) .& (m_tul.time .== 0.1), :estimate],
         [2, 3, 4],
         atol = 0.01,
     )
@@ -258,7 +258,7 @@ end
 @testset "automatic, non-dictionary call" begin
     m_mul = coeftable(fit(UnfoldLinearModel, f, evts, data_e, times))
 
-    @test m_mul[(m_mul.channel.==1).&(m_mul.time.==0.1), :estimate] ≈ [2, 3, 4]
+    @test m_mul[(m_mul.channel .== 1) .& (m_mul.time .== 0.1), :estimate] ≈ [2, 3, 4]
 end
 
 
@@ -297,4 +297,21 @@ end
     f = @formula 0 ~ 1 + condition + continuous
     # generate ModelStruct
     m = fit(UnfoldModel, [Any => (f, firbasis([-0.111, 0.2312], 100))], evts, data;)
+end
+
+
+@testset "check_data" begin
+    uf_l = UnfoldLinearModel
+    uf_cl = UnfoldLinearModelContinuousTime
+
+    data_1 = rand(10)
+    data_2 = rand(2, 10)
+    data_3 = rand(2, 10, 20)
+    @test length(size(Unfold.check_data(uf_l, data_3))) == 3 # returns dims 3
+    @test_throws ErrorException Unfold.check_data(uf_l, data_1) # should error
+    @test length(size(Unfold.check_data(uf_l, data_2))) == 3 # returns dims 3
+    @test length(size(Unfold.check_data(uf_cl, data_1))) == 2 # returns dims 2
+    @test length(size(Unfold.check_data(uf_cl, data_2))) == 2 # returns dims 2
+    @test_throws ErrorException Unfold.check_data(uf_cl, data_3) # cannot exist
+
 end

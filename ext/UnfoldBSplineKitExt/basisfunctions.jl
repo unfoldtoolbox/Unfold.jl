@@ -25,7 +25,7 @@ end
 
 function splinekernel(e, times, nsplines)
     breakpoints = spl_breakpoints(times, nsplines)
-    basis = BSplineKit.BSplineBasis(BSplineOrder(4), breakpoints)  # 4= cubic
+    basis = BSplineBasis(BSplineOrder(4), breakpoints)  # 4= cubic
     return sparse(splFunction(times, basis))
 end
 

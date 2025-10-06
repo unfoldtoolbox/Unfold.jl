@@ -1,7 +1,7 @@
 # [![Unfold.jl EEG toolbox](https://github.com/unfoldtoolbox/Unfold.jl/assets/10183650/3cbe57c1-e1a7-4150-817a-ce3dcc844485)](https://github.com/unfoldtoolbox/Unfold.jl)
 
-[![Stable Documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://unfoldtoolbox.github.io/Unfold.jl/stable)
-[![In development documentation](https://img.shields.io/badge/docs-dev-blue.svg)](https://unfoldtoolbox.github.io/Unfold.jl/dev)
+[![Stable Documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://unfoldtoolbox.github.io/UnfoldDocs/Unfold.jl/stable/)
+[![In development documentation](https://img.shields.io/badge/docs-dev-blue.svg)](https://unfoldtoolbox.github.io/UnfoldDocs/Unfold.jl/dev/)
 [![Test workflow status](https://github.com/unfoldtoolbox/Unfold.jl/actions/workflows/Test.yml/badge.svg?branch=main)](https://github.com/unfoldtoolbox/Unfold.jl/actions/workflows/Test.yml?query=branch%3Amain)
 [![Lint workflow Status](https://github.com/unfoldtoolbox/Unfold.jl/actions/workflows/Lint.yml/badge.svg?branch=main)](https://github.com/unfoldtoolbox/Unfold.jl/actions/workflows/Lint.yml?query=branch%3Amain)
 [![Docs workflow Status](https://github.com/unfoldtoolbox/Unfold.jl/actions/workflows/Docs.yml/badge.svg?branch=main)](https://github.com/unfoldtoolbox/Unfold.jl/actions/workflows/Docs.yml?query=branch%3Amain)
@@ -22,7 +22,7 @@ This kind of modelling is also known as encoding modeling, linear deconvolution,
 
 ### 🐍Python User?
 
-We clearly recommend Julia 😉 - but [Python users can use juliacall/Unfold directly from python!](https://unfoldtoolbox.github.io/Unfold.jl/dev/generated/HowTo/juliacall_unfold/)
+We clearly recommend Julia 😉 - but [Python users can use juliacall/Unfold directly from python!](https://unfoldtoolbox.github.io/UnfoldDocs/Unfold.jl/dev/generated/HowTo/juliacall_unfold/)
 
 ### Julia installation
 
@@ -52,11 +52,11 @@ Pkg.add("Unfold")
 
 ## Usage
 
-Please check out [the documentation](https://unfoldtoolbox.github.io/Unfold.jl/dev) for extensive tutorials, explanations and more!
+Please check out [the documentation](https://unfoldtoolbox.github.io/UnfoldDocs/Unfold.jl/dev) for extensive tutorials, explanations and more!
 
 ### Tipp on Docs
 
-You can read the docs online: [![Stable Documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://unfoldtoolbox.github.io/Unfold.jl/stable)  - or use the `?fit`, `?effects` julia-REPL feature. To filter docs, use e.g. `?fit(::UnfoldModel)`
+You can read the docs online: [![Stable Documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://unfoldtoolbox.github.io/UnfoldDocs/Unfold.jl/stable)  - or use the `?fit`, `?effects` julia-REPL feature. To filter docs, use e.g. `?fit(::UnfoldModel)`
 
 Here is a quick overview on what to expect.
 
@@ -102,10 +102,10 @@ The matlab version is still maintained, but active development happens in Julia.
 | non-linear splines      | x      | x       | x         |
 | speed |       |  🐌      | ⚡ 2-100x        |
 | GPU support | | | 🚀|
-| plotting tools          | x      |         | [UnfoldMakie.jl](https://unfoldtoolbox.github.io/UnfoldMakie.jl/dev/)  |
+| plotting tools          | x      |         | [UnfoldMakie.jl](https://unfoldtoolbox.github.io/UnfoldDocs/UnfoldMakie.jl/dev/)  |
 | Interactive plotting  |       |         | stay tuned - coming soon! |
-| simulation tools          | x      |         | [UnfoldSim.jl](https://unfoldtoolbox.github.io/UnfoldSim.jl)  |
-| BIDS support          | x      |         | alpha: [UnfoldBIDS.jl](https://github.com/ReneSkukies/UnfoldBIDS.jl/))  |
+| simulation tools          | x      |         | [UnfoldSim.jl](https://unfoldtoolbox.github.io/UnfoldDocs/UnfoldSim.jl)  |
+| BIDS support          | x      |         | alpha: [UnfoldBIDS.jl](https://unfoldtoolbox.github.io/UnfoldDocs/UnfoldBIDS.jl))  |
 | sanity checks           | x      |         | x         |
 | tutorials               | x      |         | x       |
 | unittests               | x      |         | x         |
@@ -114,9 +114,9 @@ The matlab version is still maintained, but active development happens in Julia.
 | different timewindows per event   |        |         | x         |
 | mixed models            |        | x       | x         |
 | item & subject effects  |        | (x)       | x         |
-| decoding  |        |        | UnfoldDecode.jl         |
-| outlier-robust fits  |        |        |  [many options (but slower)](https://unfoldtoolbox.github.io/Unfold.jl/dev/HowTo/custom_solvers/#Robust-Solvers)   |
-| 🐍Python support | | | [via juliacall](https://unfoldtoolbox.github.io/Unfold.jl/dev/generated/HowTo/juliacall_unfold/)|
+| decoding  |        |        | [UnfoldDecode.jl](https://unfoldtoolbox.github.io/UnfoldDocs/UnfoldDecode.jl)         |
+| outlier-robust fits  |        |        |  [many options (but slower)](https://unfoldtoolbox.github.io/UnfoldDocs/Unfold.jl/dev/HowTo/custom_solvers/#Robust-Solvers)   |
+| 🐍Python support | | | [via juliacall](https://unfoldtoolbox.github.io/UnfoldDocs/Unfold.jl/dev/generated/HowTo/juliacall_unfold/)|
 
 </details>
 
@@ -155,6 +155,7 @@ You are very welcome to raise issues and start pull requests!
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/carmenamme"><img src="https://avatars.githubusercontent.com/u/100191854?v=4?s=100" width="100px;" alt="carmenamme"/><br /><sub><b>carmenamme</b></sub></a><br /><a href="#doc-carmenamme" title="Documentation">📖</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/maxvanmigem"><img src="https://avatars.githubusercontent.com/u/115144441?v=4?s=100" width="100px;" alt="Maximilien Van Migem"/><br /><sub><b>Maximilien Van Migem</b></sub></a><br /><a href="#bug-maxvanmigem" title="Bug reports">🐛</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/Till223"><img src="https://avatars.githubusercontent.com/u/29772145?v=4?s=100" width="100px;" alt="Till Prölß"/><br /><sub><b>Till Prölß</b></sub></a><br /><a href="#doc-Till223" title="Documentation">📖</a> <a href="#bug-Till223" title="Bug reports">🐛</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/LeonvonHaugwitz"><img src="https://avatars.githubusercontent.com/u/44725676?v=4?s=100" width="100px;" alt="Leon von Haugwitz"/><br /><sub><b>Leon von Haugwitz</b></sub></a><br /><a href="#bug-LeonvonHaugwitz" title="Bug reports">🐛</a></td>
     </tr>
   </tbody>
 </table>

@@ -6,6 +6,7 @@ mutable struct BSplineTerm{T,D} <: AbstractSplineTerm
     order::Int
     breakpoints::Vector
 end
+
 mutable struct PeriodicBSplineTerm{T,D} <: AbstractSplineTerm
     term::T
     df::D
@@ -48,7 +49,7 @@ function spl_fillMat!(bs::PeriodicBSplineBasis, large::Matrix, x::AbstractVector
     x = deepcopy(x)
     x = mod.(x .- bnds[1], period(bs)) .+ bnds[1]
 
-    for k = -1:length(bs)+2
+    for k = -1:(length(bs)+2)
         ix = basis_to_array_index(bs, axes(large, 2), k)
         large[:, ix] .+= bs[k](x)
     end
@@ -100,7 +101,7 @@ function splFunction(x::AbstractVector, spl::PeriodicBSplineTerm)
 end
 
 function splFunction(x::AbstractVector, spl::BSplineTerm)
-    basis = BSplineKit.BSplineBasis(BSplineOrder(spl.order), deepcopy(spl.breakpoints))
+    basis = BSplineBasis(BSplineOrder(spl.order), deepcopy(spl.breakpoints))
     _splFunction(x, basis)
 end
 #spl(x,df) = Splines2.bs(x,df=df,intercept=true) # assumes intercept
@@ -108,6 +109,15 @@ Unfold.spl(x, df) = 0 # fallback
 
 # make a nice call if the function is called via REPL
 Unfold.spl(t::Symbol, d::Int) = BSplineTerm(term(t), d, 4, [])
+
+"""
+    circspl(t::Symbol, d::Int, low, high)
+Construct a circular spline. the d represents the number of designmatrix columns minus one (due to intercept).
+
+An order of 4 is used.
+
+
+"""
 Unfold.circspl(t::Symbol, d::Int, low, high) =
     PeriodicBSplineTerm(term(t), term(d), 4, low, high)
 
@@ -180,8 +190,11 @@ function StatsModels.apply_schema(
 )
     @debug "BSpline Inner schema"
     term = apply_schema(t.term, sch, Mod)
-    isa(term, ContinuousTerm) ||
-        throw(ArgumentError("BSplineTerm only works with continuous terms (got $term)"))
+    isa(term, ContinuousTerm) || throw(
+        ArgumentError(
+            "BSplineTerm only works with continuous terms (but $term is a $(typeof(term))). Tipp: Check the type of your datacolumn via `typeof(events.$term))`, is it a numeric type like Float64, Int etc?",
+        ),
+    )
 
     if isa(t.df, ConstantTerm)
         try
@@ -217,7 +230,8 @@ end
 #StatsModels.terms(p::BSplineTerm) = terms(p.term)
 StatsModels.termvars(p::AbstractSplineTerm) = StatsModels.termvars(p.term)
 StatsModels.width(p::AbstractSplineTerm) = p.df - 1
+StatsModels.width(p::PeriodicBSplineTerm) = p.df
 StatsModels.coefnames(p::BSplineTerm) =
-    "spl(" .* coefnames(p.term) .* "," .* string.(1:p.df-1) .* ")"
+    "spl(" .* coefnames(p.term) .* "," .* string.(1:(p.df-1)) .* ")"
 StatsModels.coefnames(p::PeriodicBSplineTerm) =
-    "circspl(" .* coefnames(p.term) .* "," .* string.(1:p.df-1) .* ",$(p.low):$(p.high))"
+    "circspl(" .* coefnames(p.term) .* "," .* string.(1:p.df) .* ",$(p.low):$(p.high))"
