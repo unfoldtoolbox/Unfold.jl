@@ -57,6 +57,7 @@ include("timeexpandedterm.jl")
 include("designmatrix.jl")
 include("fit.jl")
 include("utilities.jl")
+include("eventhandling.jl")
 include("condense.jl")
 #include("solver.jl")
 include("predict.jl")
@@ -82,6 +83,8 @@ export formulas, design, designmatrix, coef
 export coeftable, predicttable
 export modelfit
 export predict, residuals
+
+export copy_eventinfo, copy_eventinfo!
 
 
 if !isdefined(Base, :get_extension)
