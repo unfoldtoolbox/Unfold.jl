@@ -58,7 +58,7 @@ jobs:
 
       - name: Update UnfoldDocs
         if: github.ref == 'refs/heads/main'
-        uses: peter-evans/repository-dispatch@v3
+        uses: peter-evans/repository-dispatch@v4
         with:
           token: ${{ secrets.UNFOLDDOCSPAT }}
           repository: unfoldtoolbox/UnfoldDocs
