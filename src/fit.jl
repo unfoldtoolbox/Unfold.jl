@@ -222,11 +222,6 @@ end
 end
 
 # (time) => (1 x time)
-@traitfn check_data(
-    uf::Type{UF},
-    data::AbstractVector{T},
-) where {T,UF<:UnfoldModel;ContinuousTimeTrait{UF}} = data
-
 
 @traitfn check_data(
     uf::Type{UF},
