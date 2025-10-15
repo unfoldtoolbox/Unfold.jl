@@ -133,15 +133,15 @@ function equalize_size(
     X::AbstractMatrix,
     data::Union{AbstractMatrix{T},AbstractVector{T}},
 ) where {T<:Union{Missing,<:Number}}
-	_get_data(data::AbstractMatrix,n) = @view data[:,1:n]
-	_get_data(data::AbstractVector,n) = @view data[1:n]
-	
- 	n = min(size(X, 1), size(data)[end])
-	X_v = @view X[1:n,:]
-	data_v = _get_data(data,n)
+    _get_data(data::AbstractMatrix, n) = @view data[:, 1:n]
+    _get_data(data::AbstractVector, n) = @view data[1:n]
+
+    n = min(size(X, 1), size(data)[end])
+    X_v = @view X[1:n, :]
+    data_v = _get_data(data, n)
     return X_v, data_v
 end
-	
+
 function equalize_size(
     X::AbstractMatrix,
     data::AbstractArray{T,3},
