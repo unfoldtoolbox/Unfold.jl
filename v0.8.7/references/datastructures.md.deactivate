@@ -1,0 +1,55 @@
+
+## What is happening under the hood?
+
+#### Setup
+```@example main
+using Unfold
+using UnfoldMakie
+```
+
+#### Generate a Designmatrix
+```@example Main
+
+Xdc = designmatrix(UnfoldModel,f,evts,basisfunction)
+```
+
+
+Formula-Terms are wrapped with a `TimeExpandedTerm`, which upon calling `modelcols` will timeexpand the designmatrix.
+There is one TimeExpandedTerm for the FixedEffects and one for each RandomEffectsTerm.
+```@example Main
+typeof(Xdc.formulas.rhs)
+```
+
+Visualizing the designmatrix of fixef
+```@example Main
+plot(Xdc) # using UnfoldMakie
+```
+
+
+
+And finally, generate the linear mixed model manually & fit it.
+```@example Main
+mf = unfoldfit(Unfold.UnfoldLinearMixedModel,Xs,data)
+```
+
+The unfold model `mf` has four fields, accessible with accessors (;))
+
+#### Design
+```@example Main
+mf.design == design(mf)
+```
+A dict with the design formulas + basisfunctions / time vector
+
+
+#### Designmatrix
+```@example Main
+mf.Xs == designmatrix(mf)
+```
+The designmatrix as described before
+
+```@example Main
+
+```
+```@example Main
+
+```
