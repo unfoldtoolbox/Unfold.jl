@@ -137,7 +137,7 @@ function equalize_size(
     _get_data(data::AbstractVector, n) = @view data[1:n]
 
     n = min(size(X, 1), size(data)[end])
-    X_v = @view X[1:n, :]
+    X_v = X[1:n, :] # with view we got performance problems downstream, hotfixing this here
     data_v = _get_data(data, n)
     return X_v, data_v
 end
