@@ -31,6 +31,8 @@ using TypedTables # DataFrames loose the pooled array, so we have to do it diffe
 
 using Interpolations # for FIR duration scaling
 using ImageTransformations # for FIR duration scaling
+
+using Suppressor
 #using Tullio
 #using BSplineKit # for spline predictors
 
@@ -68,6 +70,8 @@ include("show.jl") # pretty printing
 include("solver/main.jl")
 include("solver/solvers.jl")
 include("solver/prepare.jl")
+
+include("precompile.jl")
 
 #include("plot.jl") # don't include for now
 export fit, fit!, designmatrix!
