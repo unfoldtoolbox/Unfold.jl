@@ -1,5 +1,5 @@
 ##---
-
+using DataFrames, StatsModels
 tbl = DataFrame([1 4]', [:latency])
 X = ones(size(tbl))
 shouldBeNeg = zeros(4, 4)
