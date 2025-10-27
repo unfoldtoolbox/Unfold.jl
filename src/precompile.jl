@@ -24,17 +24,16 @@ using PrecompileTools: @setup_workload, @compile_workload
 
 
         for m in [
-            @suppress(fit(UnfoldModel, f, evts, data_epochs, t)),
-            @suppress(fit(UnfoldModel, [Any => (f, t)], evts, data_epochs)),
-            @suppress(
-                fit(
-                    UnfoldModel,
-                    [Any => (f, t)],
-                    Unfold.drop_missing_epochs(evts, data_epochs)[1],
-                    Unfold.drop_missing_epochs(evts, data_epochs)[2],
-                )
-            ),
-            @suppress(fit(UnfoldModel, bf_vec, evts, data)),
+            (fit(UnfoldModel, f, evts, data_epochs, t; show_progress = false)),
+            (fit(UnfoldModel, [Any => (f, t)], evts, data_epochs; show_progress = false)),
+            (fit(
+                UnfoldModel,
+                [Any => (f, t)],
+                Unfold.drop_missing_epochs(evts, data_epochs)[1],
+                Unfold.drop_missing_epochs(evts, data_epochs)[2];
+                show_progress = false,
+            )),
+            (fit(UnfoldModel, bf_vec, evts, data; show_progress = false)),
         ]
             coef(m)
             coeftable(m)
