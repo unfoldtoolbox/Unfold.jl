@@ -536,15 +536,17 @@ performs the actual time-expansion in a sparse way.
  Returns SparseMatrixCSC
 """
 
-function time_expand(Xorg::AbstractArray, term::TimeExpandedTerm, tbl)
-
-    tbl = DataFrame(tbl)
-
+time_expand(Xorg::AbstractArray, term::TimeExpandedTerm, tbl) =
+    time_expand(Xorg, term, DataFrame(tbl))
+function time_expand(Xorg::AbstractArray, term::TimeExpandedTerm, tbl::DataFrame)
     # this extracts the predefined eventfield, usually "latency"
+    #coltable = DataFrames.Tables.columntable(tbl)
+    #onsets = coltable[term.eventfields]
     onsets = tbl[!, term.eventfields]
     time_expand(Xorg, term.basisfunction, onsets)
 end
-function time_expand(Xorg::AbstractArray, basisfunction::FIRBasis, onsets)
+
+function time_expand(Xorg::AbstractArray, basisfunction::FIRBasis, onsets::DataFrame)
     #    @debug basisfunction
     if basisfunction.interpolate || size(onsets, 2) > 1
         # code doubling, but I dont know how to do the multiple dispatch otherwise
@@ -559,19 +561,35 @@ function time_expand(Xorg::AbstractArray, basisfunction::FIRBasis, onsets)
 
     else
         # fast way
-        return time_expand_firdiag(Xorg, basisfunction, onsets)
+        return time_expand_firdiag(Xorg, basisfunction, onsets[:, 1])
     end
 
 end
 
-function time_expand_firdiag(Xorg::AbstractMatrix{T}, basisfunction, onsets) where {T}
 
+# Try to cast to MatrixType - except if ismissing
+time_expand_firdiag(
+    Xorg::AbstractMatrix{Union{Missing,T}},
+    basisfunction,
+    onsets::AbstractVector,
+) where {T} = time_expand_firdiag(Xorg, basisfunction, T.(onsets))
+time_expand_firdiag(
+    Xorg::AbstractMatrix{T},
+    basisfunction,
+    onsets::AbstractVector,
+) where {T} = time_expand_firdiag(Xorg, basisfunction, T.(onsets))
+function time_expand_firdiag(
+    Xorg::AbstractMatrix{T_mat},
+    basisfunction,
+    onsets::AbstractVector{T_index},
+) where {T_mat<:Union{T_index,Union{T_index,Missing}}} where {T_index}
+    @info typeof(onsets)
     #    @debug "Xorg eltype" T
     @assert width(basisfunction) == height(basisfunction)
     w = width(basisfunction)
-    adjusted_onsets = Int.(floor.(onsets[!, 1] .+ shift_onset(basisfunction)))
+    adjusted_onsets = Int.(floor.(onsets .+ shift_onset(basisfunction)))
 
-    @assert (minimum(onsets[!, 1]) + shift_onset(basisfunction) .- 1 + w) > 0
+    @assert (minimum(onsets) + shift_onset(basisfunction) .- 1 + w) > 0
 
     neg_fix = sum(adjusted_onsets[adjusted_onsets .< 1] .- 1)
     ncoeffs = w * size(Xorg, 1) * size(Xorg, 2) .+ neg_fix * size(Xorg, 2)
