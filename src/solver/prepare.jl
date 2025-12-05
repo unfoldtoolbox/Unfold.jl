@@ -10,13 +10,13 @@ where `Ĥ` is used to save the beta, `Y` is the data in format ch x repeat x ti
 - same datatype between X and data is enforced
 """
 function prepare(X, data::AbstractArray{<:Union{Missing,T},2}) where {T<:Number}
-    @warn "Missings in data - we remove any timepoint from data and designmatrix"
+    @info "Missings in data - we remove any timepoint from data and designmatrix"
     ix = .!any.(ismissing, eachslice(data; dims = 2))
     return prepare(disallowmissing(@view(X[ix, :])), disallowmissing(@view(data[:, ix])))##Array{T,2}(@view(data[:, ix])))
 end
 
 function prepare(X, data::AbstractArray{<:Union{Missing,T},3}) where {T<:Number}
-    @warn "Missings in data - we remove any trial from data and designmatrix"
+    @info "Missings in data - we remove any trial from data and designmatrix"
     ix = .!any.(ismissing, eachslice(data; dims = 3))
     return prepare(disallowmissing(@view(X[ix, :])), disallowmissing(@view(data[:, :, ix])))#Array{T,3}(@view(data[:, :, ix])))
 end

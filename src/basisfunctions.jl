@@ -40,7 +40,7 @@ mutable struct FIRBasis <: BasisFunction
     "should we linearly interpolate events not on full samples?"
     interpolate::Bool
     "should we scale kernel to the duration? If yes, with which method"
-    scale_duration::Any
+    scale_duration::Union{Bool,Interpolations.Degree,Interpolations.InterpolationType}
     #FIRBasis(times, name, shift_onset, interpolate, scale_duration::Bool) = new(
     #    times,
     #    name,
@@ -59,7 +59,7 @@ FIRBasis(times, name, shift_onset, interpolate) =
     shift_onset,
 )
 collabel(basis::FIRBasis) = :time
-colnames(basis::FIRBasis) = basis.interpolate ? basis.times[1:end-1] : basis.times[1:end]
+colnames(basis::FIRBasis) = basis.interpolate ? basis.times[1:(end-1)] : basis.times[1:end]
 
 
 mutable struct SplineBasis <: BasisFunction
@@ -273,7 +273,7 @@ basisname(uf::UnfoldLinearModel) = first.(design(uf)) # for linear models we don
 
 kernel(basis::FIRBasis, e) = firkernel(
     e,
-    basis.times[1:end];
+    basis.times;
     interpolate = basis.interpolate,
     scale_duration = basis.scale_duration,
 )
@@ -296,7 +296,7 @@ function StatsModels.width(basis::FIRBasis)
 end
 height(basis::BasisFunction) = length(times(basis))
 
-height(basis::FIRBasis) = isa(basis.scale_duration, Bool) ? length(times(basis)) : NaN
+height(basis::FIRBasis) = isa(basis.scale_duration, Bool) ? length(times(basis)) : 0
 
 StatsModels.width(basis::HRFBasis) = 1
 times(basis::HRFBasis) = NaN # I guess this could also return 1:32 or something?
@@ -341,7 +341,7 @@ function hrfkernel(e, TR, p)
     hrf = hrf ./ sum(hrf)
     hrf = conv1D(box_mt, hrf)'
     #println(box_mt)
-    hrf = hrf[((range(0, stop = Int(floor(p[7] ./ TR + duration)))*mt)).+1]
+    hrf = hrf[((range(0, stop = Int(floor(p[7] ./ TR+duration)))*mt)) .+ 1]
 
 
 

@@ -32,7 +32,6 @@ using TypedTables # DataFrames loose the pooled array, so we have to do it diffe
 using Interpolations # for FIR duration scaling
 using ImageTransformations # for FIR duration scaling
 
-using Suppressor
 #using Tullio
 #using BSplineKit # for spline predictors
 
