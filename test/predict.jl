@@ -214,6 +214,6 @@ end
     _r2 = Unfold.r2(m_reshape, data_reshape)
     @test length(_r2) == 1
     _r2 = Unfold.r2(m_e_reshape, data_e_reshape)
-    @test length(_r2) == 45
+    @test size(_r2) == (1, size(data_e_reshape, 2))
 
 end
