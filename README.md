@@ -165,7 +165,7 @@ You are very welcome to raise issues and start pull requests!
 
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
-This project follows the [all-contributors](https://allcontributors.org/docs/en/specification) specification.
+This project follows the [all-contributors](https://allcontributors.org/specification) specification.
 
 Contributions of any kind welcome!
 
