@@ -1559,6 +1559,12 @@ version = "0.8.8"
     Krylov = "ba0b0d4f-ebba-5204-a429-3ac8c609bfb7"
     RobustModels = "d6ea1423-9682-4bbd-952f-b1577cbf8c98"
 
+[[UnfoldMixedModels]]
+deps = ["DataFrames", "DocStringExtensions", "LinearAlgebra", "MixedModels", "ProgressMeter", "Reexport", "SimpleTraits", "SparseArrays", "StaticArrays", "StatsAPI", "StatsModels", "Unfold"]
+git-tree-sha1 = "48ba742e9ef1644cbe680ad558886d62831d85a6"
+uuid = "019ae9e0-8363-565c-86e5-97a5a2fe84f4"
+version = "0.1.3"
+
 [[UnfoldSim]]
 deps = ["Artifacts", "Automa", "DSP", "DataFrames", "Distributions", "FileIO", "HDF5", "ImageFiltering", "LinearAlgebra", "MixedModels", "MixedModelsSim", "Parameters", "Random", "SignalAnalysis", "Statistics", "StatsModels", "ToeplitzMatrices"]
 git-tree-sha1 = "8a4eeeec174d05b8488e5ee1f166309a06bbbe69"

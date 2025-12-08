@@ -3,6 +3,7 @@ using Random
 using StableRNGs
 using UnfoldSim
 using Unfold
+using UnfoldMixedModels
 using DataFrames
 using CategoricalArrays
 using MixedModels
@@ -52,13 +53,13 @@ ba2 = firbasis(τ = (-0.2, 1), sfreq = sfreq, name = "B")
 
 f1 = @formula 0 ~ 1 + A
 f1_spl = @formula 0 ~
-    1 +
-    A +
-    spl(continuousA, 5) +
-    spl(continuousB, 5) +
-    spl(continuousC, 5) +
-    spl(continuousD, 5) +
-    spl(continuousE, 5)
+         1 +
+         A +
+         spl(continuousA, 5) +
+         spl(continuousB, 5) +
+         spl(continuousC, 5) +
+         spl(continuousD, 5) +
+         spl(continuousE, 5)
 f2 = @formula 0 ~ 1 + B
 
 f1_lmm = @formula 0 ~ 1 + A + (1 + A | subject)
@@ -79,13 +80,14 @@ m_lin_f1 = fit(UnfoldModel, dict_lin, evts, data, eventcolumn = "type")
 
 
 m_lin_f1_spl = fit(UnfoldModel, dict_spl, evts, data, eventcolumn = "type")
+
 if 1 == 0
     m_lin_f1_spl_ch =
         fit(UnfoldModel, dict_spl, evts, repeat(data, 1, 100)', eventcolumn = "type")
 end
 #---
 
-ext = Base.get_extension(Unfold, :UnfoldMixedModelsExt)
+
 SUITE = BenchmarkGroup()
 SUITE["designmat"] = BenchmarkGroup(["designmat"])
 SUITE["fit"] = BenchmarkGroup(["fit"])
@@ -95,7 +97,7 @@ SUITE["effects"] = BenchmarkGroup(["effects"])
 SUITE["designmat"]["lin"] =
     @benchmarkable designmatrix(UnfoldLinearModelContinuousTime, $f1, $evts, $ba1)
 SUITE["designmat"]["lmm"] = @benchmarkable designmatrix(
-    ext.UnfoldLinearMixedModelContinuousTime,
+    UnfoldMixedModels.UnfoldLinearMixedModelContinuousTime,
     $f1_lmm,
     $evts_multsub,
     $ba1,
