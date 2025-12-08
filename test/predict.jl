@@ -107,9 +107,10 @@ pt = Unfold.result_to_table(
 @show pt[[1, 2, 3], :yhat]
 #@test_broken all(isapprox.(pt[[1, 2, 3], :yhat], 0.24672; atol = 0.01)) # test broken until UnfoldSim.jl is updated!!
 @test all(pt[[1, 2, 3], :channel] .== [1, 2, 3])
+# spot check to see if the order changed somehow
 @test all(
-    pt[[1, 6 * 112 + 1, 3 * 112 + 1], :continuous] .≈
-    [-0.5555555555555556, 2.7777777777777777, 3.888888888888889],
+    pt[[1, 5000, 25123], :yhat] .≈
+    [0.23833130331025282, 0.07879460692911115, 0.016934637133599384],
 )
 
 
