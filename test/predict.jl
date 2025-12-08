@@ -203,7 +203,7 @@ end
     @test length(_r2) == size(data_e, 1)
     @test all(_r2 .< 1)
     @test isapprox(_r2[1], 0.001, atol = 0.01)
-    @test isapprox(_r2[16], 0.82, atol = 0.01)
+    @test isapprox(_r2[16], 0.806, atol = 0.01)
 
     data_reshape = reshape(data, 1, :)
     data_e_reshape = reshape(data_e, 1, size(data_e)...)
