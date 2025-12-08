@@ -95,7 +95,14 @@ m = fit(
     show_progress = false,
 )
 p = predict(m; overlap = false)
-pt = Unfold.result_to_table(m, p, repeat([evts], 2))
+pt = Unfold.result_to_table(
+    m,
+    p,
+    [
+        subset(evts, :condition => ByRow(==("car"))),
+        subset(evts, :condition => ByRow(==("face"))),
+    ],
+) #repeat([evts], 2))
 
 @show pt[[1, 2, 3], :yhat]
 #@test_broken all(isapprox.(pt[[1, 2, 3], :yhat], 0.24672; atol = 0.01)) # test broken until UnfoldSim.jl is updated!!
