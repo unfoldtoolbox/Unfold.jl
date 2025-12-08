@@ -583,7 +583,6 @@ function time_expand_firdiag(
     basisfunction,
     onsets::AbstractVector{T_index},
 ) where {T_mat<:Union{T_index,Union{T_index,Missing}}} where {T_index}
-    @info typeof(onsets)
     #    @debug "Xorg eltype" T
     @assert width(basisfunction) == height(basisfunction)
     w = width(basisfunction)

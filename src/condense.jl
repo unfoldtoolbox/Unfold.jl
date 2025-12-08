@@ -303,6 +303,7 @@ function result_to_table(
 
         all_cols =
             merge(Dict(:yhat => single_yhat, :channel => single_channel), expanded_meta)
+
         push!(data_list, DataFrame(all_cols))
 
     end
