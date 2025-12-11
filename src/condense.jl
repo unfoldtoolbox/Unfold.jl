@@ -30,9 +30,7 @@ function coeftable2(uf)
 end
 =#
 
-@traitfn function StatsModels.coeftable(
-    uf::T,
-) where {T <: UnfoldModel; ContinuousTimeTrait{T}}
+@traitfn function StatsModels.coeftable(uf::T) where {T<:UnfoldModel;ContinuousTimeTrait{T}}
     coefsRaw = get_coefnames(uf) |> poolArray
     coefs = extract_coef_info(coefsRaw, 2) |> poolArray
     #colnames_basis_raw = get_basis_colnames(formulas(uf))# this is unconverted basisfunction basis,
@@ -67,7 +65,7 @@ end
 
         for (b, d) in zip(basiskeys, designkeys)
 
-            eventnames[basisnames.==b] .= d
+            eventnames[basisnames .== b] .= d
         end
     else
         @warn "No design found, falling back to basisnames instead of eventnames"
@@ -89,7 +87,7 @@ end
 
 @traitfn function StatsModels.coeftable(
     uf::T,
-) where {T <: UnfoldModel; !ContinuousTimeTrait{T}}
+) where {T<:UnfoldModel;!ContinuousTimeTrait{T}}
     # Mass Univariate Case
     coefnames = get_coefnames(uf)
 
@@ -183,7 +181,7 @@ Return the basisnames for all predictor terms as a vector.
 The returned vector contains the name of the event type/basis, repeated by their actual coefficient number (after StatsModels.apply_schema / timeexpansion).
 If a model has more than one event type (e.g. stimulus and fixation), the vectors are concatenated.
 """
-@traitfn function get_basis_names(m::T) where {T <: UnfoldModel; !ContinuousTimeTrait{T}}
+@traitfn function get_basis_names(m::T) where {T<:UnfoldModel;!ContinuousTimeTrait{T}}
 
     # Extract the event names from the design
     design_keys = first.((Unfold.design(m)))
@@ -197,7 +195,7 @@ If a model has more than one event type (e.g. stimulus and fixation), the vector
 end
 
 
-@traitfn get_basis_names(m::T) where {T <: UnfoldModel; ContinuousTimeTrait{T}} =
+@traitfn get_basis_names(m::T) where {T<:UnfoldModel;ContinuousTimeTrait{T}} =
     get_basis_names.(formulas(m))
 function get_basis_names(m::FormulaTerm)
     bf = m.rhs.basisfunction
@@ -213,7 +211,7 @@ end
 returns list of colnames - e.g. times for firbasis.
 
 """
-get_basis_colnames(formulas::AbstractArray{<:FormulaTerm}) = get_basis_colnames.(formula)
+get_basis_colnames(formulas::AbstractArray{<:FormulaTerm}) = get_basis_colnames.(formulas)
 
 
 
@@ -287,14 +285,27 @@ function result_to_table(
             ),
         )
 
-        # single_data = hcat(single_data, repeat(metadata, size(single_eff, 1)))
-        @debug size(metadata) size(single_eff) size(single_data)
-        @debug repeat(metadata, inner = size(single_eff, 1))[end]
-        @debug single_data[end]
+        single_yhat = single_data.yhat
+        single_channel = single_data.channel
 
-        single_data_comb =
-            map(merge, single_data, repeat(metadata, inner = size(single_eff, 1)))
-        push!(data_list, single_data_comb)
+        # get metadata columns as NamedTuple of vectors
+        meta_cols = Tables.columntable(metadata)
+        nchan = size(single_eff, 1)
+        @debug size(metadata) typeof(metadata)
+        # expand each metadata column by repeating each row for every channel
+        expanded_meta = Dict{Symbol,Any}()
+        for (k, v) in pairs(meta_cols)
+            #@debug k, v
+            key = isa(k, Symbol) ? k : Symbol(string(k))
+            expanded_meta[key] = repeat(v, inner = nchan)
+        end
+
+
+        all_cols =
+            merge(Dict(:yhat => single_yhat, :channel => single_channel), expanded_meta)
+
+        push!(data_list, DataFrame(all_cols))
+
     end
     return reduce(vcat, data_list) |> t -> DataFrame(columns(t))
 

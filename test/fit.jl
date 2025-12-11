@@ -315,3 +315,24 @@ end
     @test_throws ErrorException Unfold.check_data(uf_cl, data_3) # cannot exist
 
 end
+
+
+@testset "warn if evts::Any" begin
+    data, evts = UnfoldSim.predef_eeg()
+
+    evts.condition = convert(Vector{Any}, (evts.condition))
+
+    f = @formula 0 ~ 1 + condition + continuous
+    # generate ModelStruct
+    @test_warn "Careful, in your `evts`" fit(
+        UnfoldModel,
+        [Any => (f, firbasis([-0.111, 0.2312], 100))],
+        evts,
+        data;
+        fit = false,
+    )
+
+
+
+
+end

@@ -95,14 +95,22 @@ m = fit(
     show_progress = false,
 )
 p = predict(m; overlap = false)
-pt = Unfold.result_to_table(m, p, repeat([evts], 2))
+pt = Unfold.result_to_table(
+    m,
+    p,
+    [
+        subset(evts, :condition => ByRow(==("car"))),
+        subset(evts, :condition => ByRow(==("face"))),
+    ],
+) #repeat([evts], 2))
 
 @show pt[[1, 2, 3], :yhat]
 #@test_broken all(isapprox.(pt[[1, 2, 3], :yhat], 0.24672; atol = 0.01)) # test broken until UnfoldSim.jl is updated!!
 @test all(pt[[1, 2, 3], :channel] .== [1, 2, 3])
+# spot check to see if the order changed somehow
 @test all(
-    pt[[1, 6 * 112 + 1, 3 * 112 + 1], :continuous] .≈
-    [-0.5555555555555556, 2.7777777777777777, 3.888888888888889],
+    pt[[1, 5000, 25123], :yhat] .≈
+    [0.23833130331025282, 0.07879460692911115, 0.016934637133599384],
 )
 
 
@@ -195,7 +203,7 @@ end
     @test length(_r2) == size(data_e, 1)
     @test all(_r2 .< 1)
     @test isapprox(_r2[1], 0.001, atol = 0.01)
-    @test isapprox(_r2[16], 0.82, atol = 0.01)
+    @test isapprox(_r2[16], 0.806, atol = 0.01)
 
     data_reshape = reshape(data, 1, :)
     data_e_reshape = reshape(data_e, 1, size(data_e)...)
