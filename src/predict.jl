@@ -490,7 +490,7 @@ times(d::TimeExpandedTerm) = times(d.basisfunction)
 function times(
     d::Vector{
         <:Pair{
-            <:Union{<:DataType,<:AbstractString,<:Symbol},
+            <:Union{<:DataType,<:AbstractString,<:Symbol,<:Char},
             <:Tuple{<:AbstractTerm,<:AbstractVector},
         },
     },

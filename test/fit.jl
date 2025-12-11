@@ -336,3 +336,14 @@ end
 
 
 end
+
+@testset "massunivariate, char eventnames trigger error"begin
+    data, evts = UnfoldSim.predef_eeg(return_epoched=true)
+
+    f = @formula 0 ~ 1
+
+    evts.event = convert(Vector{Char}, map(x->x[1],evts.condition))
+times = 1:size(data,1)
+    m = fit(UnfoldModel, ['c'=>(f,times),'f'=>(f,times)], evts, data)
+    @test size(coef(m),3)==2
+end
