@@ -24,6 +24,7 @@ data_multsub_epochs, evts_multsub_epochs = UnfoldSim.predef_2x2(
     signalsize = sfreq,
     return_epoched = true,
 )
+
 data, evts = UnfoldSim.predef_2x2(StableRNG(1); n_subjects = 1, signalsize = sfreq)
 data_epochs, evts_epochs = UnfoldSim.predef_2x2(
     StableRNG(1);
@@ -64,9 +65,9 @@ f2 = @formula 0 ~ 1 + B
 
 f1_lmm = @formula 0 ~ 1 + A + (1 + A | subject)
 f2_lmm = @formula 0 ~ 1 + A + (1 + A | item)
-dict_lin = Dict("A" => (f1, ba1), "B" => (f2, ba2))
-dict_spl = Dict("A" => (f1_spl, ba1), "B" => (f1_spl, ba2))
-dict_lmm = Dict("A" => (f1_lmm, ba1), "B" => (f2_lmm, ba2))
+dict_lin = ["A" => (f1, ba1), "B" => (f2, ba2)]
+dict_spl = ["A" => (f1_spl, ba1), "B" => (f1_spl, ba2)]
+dict_lmm = ["A" => (f1_lmm, ba1), "B" => (f2_lmm, ba2)]
 
 times = 1:size(data_epochs, 1)
 
@@ -120,7 +121,7 @@ SUITE["fit"]["lin_deconv"] =
 
 
 SUITE["effects"]["lin"] =
-    @benchmarkable effects($(Dict("A" => ["a_small", "a_big"])), $m_lin_f1)
+    @benchmarkable effects($(Dict(:A => ["a_small", "a_big"])), $m_lin_f1)
 SUITE["effects"]["lin_spl"] = @benchmarkable effects(
     $(Dict(:continuousA => collect(range(0.1, 0.9, length = 15)))),
     $m_lin_f1_spl,
