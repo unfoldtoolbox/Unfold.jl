@@ -157,8 +157,8 @@ m_tul = fit(Unfold.UnfoldModel, Dict(Any => (f, firbasis([0, 0.05], 10))), evts,
 
     @test eff_m.yhat ≈ eff_t.yhat
     @test length(unique(eff_m.channel)) == 3
-    @test eff_m[eff_m.channel.==1, :yhat] ≈ eff_m[eff_m.channel.==2, :yhat] ./ 2
-    @test eff_m[eff_m.channel.==1, :yhat] ≈ [2, 5, 2, 5.0] # these are the perfect predicted values - note that we requested them twice
+    @test eff_m[eff_m.channel .== 1, :yhat] ≈ eff_m[eff_m.channel .== 2, :yhat] ./ 2
+    @test eff_m[eff_m.channel .== 1, :yhat] ≈ [2, 5, 2, 5.0] # these are the perfect predicted values - note that we requested them twice
 
 end
 
@@ -169,8 +169,7 @@ end
     evts[!, :continuousB] = rand(MersenneTwister(43), nrow(evts))
     ixA = evts.type .== "eventA"
     evts.continuousB[ixA] = evts.continuousB[ixA] .- mean(evts.continuousB[ixA]) .- 5
-    evts.continuousB[.!ixA] =
-        evts.continuousB[.!ixA] .- mean(evts.continuousB[.!ixA]) .+ 0.5
+    evts.continuousB[.!ixA] = evts.continuousB[.!ixA] .- mean(evts.continuousB[.!ixA]) .+ 0.5
     b1 = firbasis(τ = (0.0, 0.02), sfreq = 20, name = "eventA")
     b2 = firbasis(τ = (1.0, 1.02), sfreq = 20, name = "eventB")
     f1 = @formula 0 ~ 1 + continuousA # 1
@@ -222,7 +221,7 @@ end
     @test all(eff.eventname[4:end] .== "eventB")
     @test eff.yhat ≈ [
         0.0,
-        mean(evts.continuousB[evts.type.=="eventA"] .== "x") * coef(m_tul)[4] +
+        mean(evts.continuousB[evts.type .== "eventA"] .== "x") * coef(m_tul)[4] +
         1 * coef(m_tul)[2],
         0.0,
         0.0,
@@ -261,5 +260,34 @@ end
         m = fit(UnfoldModel, design, tbl, data)
         effects(Dict(:a => [1, 2, 3], :b => [1, 1.5]), m)
     end
+
+end
+
+
+@testset "custom eventfield #296 " begin
+    data, evts = UnfoldSim.predef_eeg(StableRNG(1))
+    evts.customeventfield = evts.latency
+    f = @formula 0 ~ 1 + continuous
+    di = Dict(:conditionA => [0, 1], :continuousA => [0])
+    # deconvolve case
+    uf = fit(
+        Unfold.UnfoldModel,
+        ["car" => (f, firbasis([0, 0.1], 10)), "face" => (f, firbasis([0, 0.1], 10))],
+        evts,
+        data,
+        eventcolumn = "condition",
+    )
+    eff = Unfold.effects(di, uf)
+    uf_cu = fit(
+        Unfold.UnfoldModel,
+        ["car" => (f, firbasis([0, 0.1], 10)), "face" => (f, firbasis([0, 0.1], 10))],
+        evts,
+        data,
+        eventcolumn = "condition",
+        eventfield = "customeventfield",
+    )
+    eff_cu = Unfold.effects(di, uf_cu)
+
+    @test eff == eff_cu
 
 end
