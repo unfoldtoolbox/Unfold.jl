@@ -32,15 +32,15 @@ ax = Axis(Figure()[1, 1])
 current_figure()</code></pre><img src="529bb8b3.png" alt="Example block output"/><p>Notice how we flipped the plot around, i.e. now on the x-axis we do not plot the coefficients, but the <code>x</code>-values. Now each line is one basis-function of the spline.</p><p>Unfold returns us one coefficient per basis-function</p><pre><code class="language-julia hljs">β = coef(uf_spl10)[1, 1, :]
 β = Float64.(disallowmissing(β))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">10-element Vector{Float64}:
  -0.43629459354570777
- -0.3477308181329039
-  0.4538614574712705
- -0.4065207930158745
-  0.734615857952435
-  0.9252913204020702
-  0.27167896791779617
- -0.04633587116080551
- -0.5822988416277808
- -0.620208289159283</code></pre><p>But because we used an intercept, we have to do some remodelling in the <code>basisSet</code>.</p><pre><code class="language-julia hljs">X = hcat(ones(size(basisSet, 1)), basisSet[:, 1:5], basisSet[:, 7:end])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">71×10 Matrix{Float64}:
+ -0.3477308181329035
+  0.4538614574712754
+ -0.4065207930158754
+  0.7346158579524353
+  0.9252913204020701
+  0.27167896791779556
+ -0.046335871160806175
+ -0.5822988416277803
+ -0.6202082891592833</code></pre><p>But because we used an intercept, we have to do some remodelling in the <code>basisSet</code>.</p><pre><code class="language-julia hljs">X = hcat(ones(size(basisSet, 1)), basisSet[:, 1:5], basisSet[:, 7:end])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">71×10 Matrix{Float64}:
  1.0  0.972634     0.027217  0.000148709  …  0.0         0.0       0.0
  1.0  0.705645     0.274339  0.0196948       0.0         0.0       0.0
  1.0  0.492619     0.438047  0.0670761       0.0         0.0       0.0
@@ -74,4 +74,4 @@ current_figure()</code></pre><img src="529bb8b3.png" alt="Example block output"/
 [lines!(weighted[k, :]) for k = 1:10]
 current_figure()</code></pre><img src="3acd00a0.png" alt="Example block output"/><p>Now sum them up.</p><pre><code class="language-julia hljs">lines(sum(weighted, dims = 1)[1, :])
 plot!(X * β, color = &quot;gray&quot;) #(same as matrixproduct X*β directly!)
-current_figure()</code></pre><img src="48eb0501.png" alt="Example block output"/><p>And this is how you can think about splines.</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../../HowTo/R/">« R: Calling Unfold.jl directly from R</a><a class="docs-footer-nextpage" href="../../../explanations/basisfunctions/">Basisfunctions »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Monday 8 December 2025 12:33">Monday 8 December 2025</span>. Using Julia version 1.12.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+current_figure()</code></pre><img src="48eb0501.png" alt="Example block output"/><p>And this is how you can think about splines.</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../../HowTo/R/">« R: Calling Unfold.jl directly from R</a><a class="docs-footer-nextpage" href="../../../explanations/basisfunctions/">Basisfunctions »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Thursday 11 December 2025 11:53">Thursday 11 December 2025</span>. Using Julia version 1.12.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
