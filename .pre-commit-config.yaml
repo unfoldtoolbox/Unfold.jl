@@ -26,7 +26,7 @@ repos:
       - id: check-merge-conflict
         args: [--assume-in-merge]
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.46.0
+    rev: v0.47.0
     hooks:
       - id: markdownlint-fix
   - repo: https://github.com/citation-file-format/cffconvert
@@ -40,7 +40,7 @@ repos:
         types_or: [yaml, json]
         exclude: ".copier-answers.yml"
   - repo: https://github.com/adrienverge/yamllint
-    rev: v1.37.1
+    rev: v1.38.0
     hooks:
       - id: yamllint
   - repo: https://github.com/domluna/JuliaFormatter.jl
