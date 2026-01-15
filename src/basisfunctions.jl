@@ -261,15 +261,22 @@ collabel(term::Array{<:AbstractTerm}) = collabel(term[1].rhs)  # in case of comb
 
 # typical defaults
 
-shift_onset(basis::BasisFunction) = basis.shift_onset
+shift_onset(basis::BasisFunction) = 0
 colnames(basis::BasisFunction) = basis.colnames
 kernel(basis::BasisFunction, e) = basis.kernel(e)
+
+times(basis::BasisFunction) = basis.times
+name(basis::BasisFunction) = basis.name
+
+
 @deprecate kernel(basis::BasisFunction) basis.kernel
 
 
 basisname(fs::Vector{<:FormulaTerm}) = [name(f.rhs.basisfunction) for f in fs]
 basisname(uf::UnfoldModel) = basisname(formulas(uf))
 basisname(uf::UnfoldLinearModel) = first.(design(uf)) # for linear models we dont save it in the formula
+StatsModels.width(basis::BasisFunction) = height(basis)
+height(basis::BasisFunction) = length(times(basis))
 
 kernel(basis::FIRBasis, e) = firkernel(
     e,
@@ -277,12 +284,10 @@ kernel(basis::FIRBasis, e) = firkernel(
     interpolate = basis.interpolate,
     scale_duration = basis.scale_duration,
 )
+shift_onset(basis::FIRBasis) = basis.shift_onset
 
 
-times(basis::BasisFunction) = basis.times
-name(basis::BasisFunction) = basis.name
 
-StatsModels.width(basis::BasisFunction) = height(basis)
 function StatsModels.width(basis::FIRBasis)
     if basis.scale_duration == false#isa(basis.scale_duration, Bool)
         if basis.interpolate
@@ -294,7 +299,7 @@ function StatsModels.width(basis::FIRBasis)
         return length(times(basis))
     end
 end
-height(basis::BasisFunction) = length(times(basis))
+
 
 height(basis::FIRBasis) = isa(basis.scale_duration, Bool) ? length(times(basis)) : 0
 
