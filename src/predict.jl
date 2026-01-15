@@ -141,15 +141,15 @@ end
 
 predict(uf::UnfoldModel, f::FormulaTerm, args...; kwargs...) =
     predict(uf, [f], args...; kwargs...)
-predict(uf::UnfoldModel, f::Vector, evts::DataFrame; kwargs...) =
+predict(uf::UnfoldModel, f::Vector, evts::AbstractDataFrame; kwargs...) =
     predict(uf, f, repeat([evts], length(f)); kwargs...)
 predict(uf::UnfoldModel; kwargs...) = predict(uf, formulas(uf), events(uf); kwargs...)
 predict(uf::UnfoldModel, f::Vector{<:FormulaTerm}; kwargs...) =
     predict(uf, f, events(uf); kwargs...)
-predict(uf::UnfoldModel, evts::Vector{<:DataFrame}; overlap = false, kwargs...) =
+predict(uf::UnfoldModel, evts::Vector{<:AbstractDataFrame}; overlap = false, kwargs...) =
     predict(uf, Unfold.formulas(uf), evts; overlap, kwargs...)
 
-predict(uf::UnfoldModel, evts::DataFrame; overlap = false, kwargs...) = predict(
+predict(uf::UnfoldModel, evts::AbstractDataFrame; overlap = false, kwargs...) = predict(
     uf,
     Unfold.formulas(uf),
     repeat([evts], length(Unfold.formulas(uf)));
@@ -161,7 +161,7 @@ predict(uf::UnfoldModel, evts::DataFrame; overlap = false, kwargs...) = predict(
     function predict(
         uf::UnfoldModel,
         f::Vector{<:FormulaTerm},
-        evts::Vector{<:DataFrame};
+        evts::Vector{<:AbstractDataFrame};
         overlap::Bool = true,
         kwargs...
     )
@@ -194,7 +194,7 @@ Hint: all `kwargs` can be `Vector`, or if e.g. `string` types are provided, will
 function predict(
     uf,
     f::Vector{<:FormulaTerm},
-    evts::Vector{<:DataFrame};
+    evts::Vector{<:AbstractDataFrame};
     overlap = true,
     keep_basis = [],
     exclude_basis = [],
@@ -215,7 +215,7 @@ function predict(
     if overlap
         if isnothing(epoch_to) && (isempty(keep_basis) & isempty(exclude_basis))
             @debug "full-overlap"
-            if events(uf) == evts
+            if isequal(events(uf), evts) # == doesnt work here because evts could contain missings
                 @debug "original design predict"
                 # off-the-shelf standard continuous predict, as you'd expect
                 return predict(modelmatrix(uf), coef(uf))
@@ -467,7 +467,7 @@ function predicttable(
     )
     return result_to_table(model, p, events)
 end
-predicttable(model, events::DataFrame) = predicttable(model, [events])
+predicttable(model, events::AbstractDataFrame) = predicttable(model, [events])
 eventnames(model::UnfoldModel) = first.(design(model))
 
 
