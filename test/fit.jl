@@ -337,7 +337,7 @@ end
 
 end
 
-@testset "massunivariate, char eventnames trigger error"begin
+@testset "massunivariate, char eventnames trigger error" begin
     data, evts = UnfoldSim.predef_eeg(return_epoched=true)
 
     f = @formula 0 ~ 1
