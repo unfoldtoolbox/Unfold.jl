@@ -94,7 +94,7 @@ function epoch(
 
     # Warn about out of bounds events
     if !isempty(out_of_bounds_events)
-        @warn "$(length(out_of_bounds_events)) event(s) at indices $(out_of_bounds_events) are completely out of bounds and result in epochs filled with missing values. This can happen when data was downsampled without adjusting event latencies."
+        @warn "$(length(out_of_bounds_events)) event(s) at indices $(out_of_bounds_events) are completely out of bounds and result in epochs filled with missing values. This often happens when data was downsampled without adjusting event latencies. Consider: (1) adjusting event latencies to match the downsampled data, or (2) filtering out invalid events before epoching."
     end
 
     return (epochs, times)
