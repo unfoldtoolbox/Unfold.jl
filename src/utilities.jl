@@ -63,11 +63,19 @@ function epoch(
     # User feedback
     @debug "Creating epochs: $numChans x $lenEpochs x $numEpochs"
 
+    out_of_bounds_events = Int[]
+
     for si = 1:size(evts, 1)
         #eventonset = evts[si,eventtime] # in samples
         #d_start = eventonset
         d_start = Int(round(evts[si, eventtime]) + times[1] .* sfreq)
         d_end = Int(round(evts[si, eventtime]) + times[end] .* sfreq)
+
+        # Check if event is completely out of bounds
+        if d_end < 1 || d_start > size(data, 2)
+            push!(out_of_bounds_events, si)
+            continue
+        end
 
         e_start = 1
         e_end = lenEpochs
@@ -83,6 +91,12 @@ function epoch(
         #println("d: $(size(data)),e: $(size(epochs)) | $d_start,$d_end,$e_start,$e_end | $(evts[si,eventtime])")
         epochs[:, e_start:e_end, si] = data[:, d_start:d_end]
     end
+
+    # Warn about out of bounds events
+    if !isempty(out_of_bounds_events)
+        @warn "$(length(out_of_bounds_events)) event(s) at indices $(out_of_bounds_events) are completely out of bounds and result in epochs filled with missing values. This can happen when data was downsampled without adjusting event latencies."
+    end
+
     return (epochs, times)
 end
 
