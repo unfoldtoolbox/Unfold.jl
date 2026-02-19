@@ -70,9 +70,23 @@ data = reshape(data,size(data,1),:) # concatenate subjects
 times = range(-0.1,0.5,size(data,1)) # arbitrary time-vector
 
 fLMM = @formula 0 ~ 1 + condition + (1|subject) + (1|item)
-fit(UnfoldModel, [Any=>(f, times)], evts, data)
+m = fit(UnfoldModel, [Any=>(fLMM, times)], evts, data)
+
+# Access fixed effects
+coeftable(m)  # fixed effects in tidy format
+
+# Access random effects - requires UnfoldMixedModels.jl
+using MixedModels
+ranef(m)  # random effects
+MixedModels.VarCorr(modelfit(m))  # variance-covariance of random effects
 nothing #hide
 ```
+
+!!! note "Accessing Mixed Model Components"
+    - **Fixed effects:** Use `coef(m)` or `coeftable(m)`
+    - **Random effects:** Use `ranef(m)` (requires `using UnfoldMixedModels`)
+    - **Correlations & variance components:** Use `MixedModels.VarCorr(modelfit(m))` or `MixedModels.tidyσs(m)`
+    - See [UnfoldMixedModels.jl documentation](https://unfoldtoolbox.github.io/UnfoldDocs/UnfoldMixedModels.jl/stable/) for more details
 
 ## Where to start: Learning roadmap
 

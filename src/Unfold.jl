@@ -78,8 +78,8 @@ export fit, fit!, designmatrix!
 export firbasis, hrfbasis
 export AbstractDesignMatrix, AbstractModelFit, UnfoldModel
 export UnfoldLinearModel,
-    UnfoldLinearMixedModel,
-    UnfoldLinearMixedModelContinuousTime,
+    UnfoldLinearMixedModel, # Defined in UnfoldMixedModels.jl - use that package for mixed models
+    UnfoldLinearMixedModelContinuousTime, # Defined in UnfoldMixedModels.jl - use that package for mixed models
     UnfoldLinearModelContinuousTime
 export FIRBasis, HRFBasis, SplineBasis
 export modelmatrix, modelmatrices

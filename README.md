@@ -89,6 +89,8 @@ To fit any of the models, Unfold.jl offers a unified syntax:
 |  | x | `fit(UnfoldModel,[Any=>(fLMM,times)),evts,data_epoch]` |
 | x | x | `fit(UnfoldModel,[Any=>(fLMM,basis)),evts,data]` |
 
+> **Note:** For mixed models with random effects, please use [**UnfoldMixedModels.jl**](https://github.com/unfoldtoolbox/UnfoldMixedModels.jl) instead. While `Unfold.jl` exports the types `UnfoldLinearMixedModel` and `UnfoldLinearMixedModelContinuousTime` for backwards compatibility, all mixed model-specific functionality (fitting, `ranef()`, correlations between random effects, etc.) is implemented in `UnfoldMixedModels.jl`.
+
 ## Comparison to Unfold (matlab)
 
 <details>
