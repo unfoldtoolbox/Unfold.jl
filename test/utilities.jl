@@ -28,4 +28,39 @@
     evt = DataFrame(:latency => (181603.5))
     ep = τ -> Unfold.epoch(d, evt, τ, 256.0)[1][1, :, 1]
     ep((-0.1, 0.8))
+
+    # test out of bounds events - bug #92
+    # event completely after data end
+    d = collect(1:100)
+    evt = DataFrame(:latency => [150])
+    ep, times = @test_logs (:warn, r"1 event.*completely out of bounds") Unfold.epoch(
+        d,
+        evt,
+        (0, 10.0),
+        1,
+    )
+    @test all(ismissing.(ep[1, :, 1]))
+
+    # event completely before data start  
+    evt = DataFrame(:latency => [-50])
+    ep, times = @test_logs (:warn, r"1 event.*completely out of bounds") Unfold.epoch(
+        d,
+        evt,
+        (0, 10.0),
+        1,
+    )
+    @test all(ismissing.(ep[1, :, 1]))
+
+    # multiple out of bounds events
+    evt = DataFrame(:latency => [50, 150, -50, 75])
+    ep, times = @test_logs (:warn, r"2 event.*completely out of bounds") Unfold.epoch(
+        d,
+        evt,
+        (0, 10.0),
+        1,
+    )
+    @test all(ismissing.(ep[1, :, 2]))  # second event (latency 150)
+    @test all(ismissing.(ep[1, :, 3]))  # third event (latency -50)
+    @test !any(ismissing.(ep[1, :, 1])) # first event should be fine
+    @test !any(ismissing.(ep[1, :, 4])) # fourth event should be fine
 end
