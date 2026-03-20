@@ -102,7 +102,7 @@ The matlab version is still maintained, but active development happens in Julia.
 | non-linear splines      | x      | x       | x         |
 | speed |       |  🐌      | ⚡ 2-100x        |
 | GPU support | | | 🚀|
-| plotting tools          | x      |         | [UnfoldMakie.jl](https://unfoldtoolbox.github.io/UnfoldDocs/UnfoldMakie.jl/dev/)  |
+| plotting tools          | x      |         | [UnfoldMakie.jl](https://unfoldtoolbox.github.io/UnfoldDocs/UnfoldMakie.jl/)  |
 | Interactive plotting  |       |         | stay tuned - coming soon! |
 | simulation tools          | x      |         | [UnfoldSim.jl](https://unfoldtoolbox.github.io/UnfoldDocs/UnfoldSim.jl)  |
 | BIDS support          | x      |         | alpha: [UnfoldBIDS.jl](https://unfoldtoolbox.github.io/UnfoldDocs/UnfoldBIDS.jl))  |
