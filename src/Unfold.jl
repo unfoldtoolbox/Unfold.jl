@@ -45,7 +45,7 @@ import StatsBase: modelmatrix
 import StatsBase: predict
 import StatsModels: width
 import StatsModels: terms
-
+using Random # for MersenneTwister
 
 import StatsBase.quantile
 
