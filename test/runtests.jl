@@ -39,6 +39,10 @@ end
 @testset "IO" begin
     include("io.jl")
 end
+
+@testset "solver_cv" begin
+    include("test_solver-cv.jl")
+end
 #@testset "ClusterPermutation" begin
 #include("clusterpermutation.jl")
 #end

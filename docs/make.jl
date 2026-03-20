@@ -45,6 +45,7 @@ makedocs(
             "Marginal effects (must read re: splines)" => "generated/HowTo/effects.md",
             "Circular splines" => "generated/HowTo/circular_splines.md",
             "Alternative Solvers (Robust, GPU, B2B)" => "HowTo/custom_solvers.md",
+            "Cross-validated Unfold models" => "generated/HowTo/solver_cv.md",
             #"Time domain basis functions"=>"generated/HowTo/timesplines.md",
             "Save and load Unfold models" => "generated/HowTo/unfold_io.md",
             "Duration-scaled basisfunctions (Hassall-style)" => "generated/HowTo/FIRduration.md",

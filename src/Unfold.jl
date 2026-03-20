@@ -45,13 +45,15 @@ import StatsBase: modelmatrix
 import StatsBase: predict
 import StatsModels: width
 import StatsModels: terms
-
+using Random # for MersenneTwister
 
 import StatsBase.quantile
 
 import Base.show
 import Base.+ # overwrite for DesignMatrices
 using Distributions: Gamma, pdf # TODO replace this with direct implementation (used in basisfunction.jl)
+using MLUtils # for solver_cv
+
 
 include("typedefinitions.jl")
 include("basisfunctions.jl")
@@ -71,6 +73,9 @@ include("solver/main.jl")
 include("solver/solvers.jl")
 include("solver/prepare.jl")
 
+include("solver/solver_cv.jl")
+
+
 include("precompile.jl")
 
 #include("plot.jl") # don't include for now
@@ -89,7 +94,7 @@ export modelfit
 export predict, residuals
 
 export copy_eventinfo, copy_eventinfo!
-
+export solver_cv, LinearModelFitCV
 
 if !isdefined(Base, :get_extension)
     ## Extension Compatabality with julia  pre 1.9

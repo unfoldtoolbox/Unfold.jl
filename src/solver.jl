@@ -44,9 +44,13 @@ function solver_default(
 
     if stderror
         stderror = calculate_stderror(X, data, beta)
-        modelfit = Unfold.LinearModelFit(beta, ["lsmr", minfo], stderror)
+        modelfit = Unfold.LinearModelFit(
+            estimate = beta,
+            info = ["lsmr", minfo],
+            stderror = stderror,
+        )
     else
-        modelfit = Unfold.LinearModelFit(beta, ["lsmr", minfo])
+        modelfit = Unfold.LinearModelFit(estimate = beta, info = ["lsmr", minfo])
     end
     return modelfit
 end
@@ -74,9 +78,10 @@ function solver_default(
     finish!(p)
     if stderror
         stderror = calculate_stderror(X, data, beta)
-        modelfit = LinearModelFit(beta, ["solver_default"], stderror)
+        modelfit =
+            LinearModelFit(estimate = beta, info = ["solver_default"], stderror = stderror)
     else
-        modelfit = LinearModelFit(beta, ["solver_default"])
+        modelfit = LinearModelFit(estimate = beta, info = ["solver_default"])
     end
     return modelfit
 end
