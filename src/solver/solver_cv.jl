@@ -3,6 +3,7 @@
 
 A cross-validation solver for Unfold. This function generates a solver that can be passed to `Unfold.fit` to perform k-fold cross-validation on the data.
 # Arguments
+- `rng`: A random number generator (e.g., `MersenneTwister(2)`) to use for shuffling the data if `shuffle=true` (default: `MersenneTwister()`! if you do not fix your seed manually, you will get a different shuffle each time).
 - `n_folds::Int`: Number of folds for cross-validation (default: 5).
 - `shuffle::Bool`: Whether to shuffle the data before splitting into folds (default: true).
 - `inner_solver::Function`: A function that takes a design matrix `X` and data `y` and returns a model fit. This is the solver that will be used for each fold (default: `Unfold.solver_default`).
