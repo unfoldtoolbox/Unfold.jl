@@ -55,11 +55,23 @@ function solver_cv(;
                              cat([r.estimate for r in test_results]..., dims = 4) :
                              nothing,
         )
-        return LinearModelFitCV(all_estimates, info_dict, all_stderror, fold_indices)
+        return LinearModelFitCV(
+            estimate = all_estimates,
+            info = info_dict,
+            standarderror = all_stderror,
+            folds = fold_indices,
+        )
     end
 
     return cv_kernel
 end
 
 coef(m::LinearModelFitCV) = dropdims(mean(m.estimate, dims = 4), dims = 4)
-stderror(m::LinearModelFitCV) = dropdims(mean(m.standarderror, dims = 4), dims = 4)
+#stderror(m::LinearModelFitCV) = dropdims(mean(m.standarderror, dims = 4), dims = 4)
+function stderror(m::LinearModelFitCV{T,N}) where {T,N}
+    if isempty(m.standarderror)
+        stderror = fill(nothing, size(m.estimate)[1:3])
+    else
+        stderror = dropdims(mean(T.(m.standarderror), dims = 4), dims = 4)
+    end
+end

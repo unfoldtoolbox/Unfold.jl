@@ -136,9 +136,16 @@ function solver_main(
     @timeit to "stderror&modelfit" if stderror
         _Ĥ = _permuteback(Ĥ)
         _stderror = calculate_stderror(X, data, _Ĥ)
-        modelfit = Unfold.LinearModelFit{T,N}(Array{T}(_Ĥ), fit_info, Array{T}(_stderror))
+        modelfit = Unfold.LinearModelFit{T,N}(
+            estimate = Array{T}(_Ĥ),
+            info = fit_info,
+            standarderror = Array{T}(_stderror),
+        )
     else
-        modelfit = Unfold.LinearModelFit{T,N}(Array{T}(_permuteback(Ĥ)), fit_info)
+        modelfit = Unfold.LinearModelFit{T,N}(
+            estimate = Array{T}(_permuteback(Ĥ)),
+            info = fit_info,
+        )
     end
 
     show_time ? begin

@@ -179,7 +179,7 @@ function StatsModels.fit!(
 
         # mass univariate with multiple events fitted at the same time
 
-        modelfits = typeof(uf.modelfit)[]
+        modelfits = []
         for m = 1:length(X)
             # the main issue is, that the designmatrices are subsets of the event table - we have
             # to do the same for the data, but data and designmatrix dont know much about each other.
@@ -187,8 +187,10 @@ function StatsModels.fit!(
             @debug typeof(X) typeof(events(d)[m])
             push!(modelfits, solver(X[m], @view data[:, :, parentindices(events(d)[m])[1]]))
         end
+
+        _modelfits = typeof(modelfits[1])[modelfits...]
         #@debug [size(c.estimate) for c in coefs]
-        uf.modelfit = _cat(modelfits) # concatenate along new 4th dimension (the models)
+        uf.modelfit = _cat(_modelfits) # concatenate along new 4th dimension (the models)
         return # we are done here
 
         #        elseif isa(d.events, SubDataFrame)
@@ -206,6 +208,7 @@ function StatsModels.fit!(
 end
 
 function _cat(modelfits::AbstractArray{T}) where {T<:LinearModelFit}
+
     T(
         cat([c.estimate for c in modelfits]..., dims = 3),
         [c.info for c in modelfits],
@@ -213,6 +216,7 @@ function _cat(modelfits::AbstractArray{T}) where {T<:LinearModelFit}
     )
 end
 function _cat(modelfits::AbstractArray{T}) where {T<:LinearModelFitCV}
+
     T(
         cat([c.estimate for c in modelfits]..., dims = 3),
         [c.info for c in modelfits],

@@ -61,13 +61,16 @@ DesignMatrixLinearModelContinuousTime{T}() where {T} =
 """
 Contains the results of linearmodels (continuous and not)
 """
-struct LinearModelFit{T,N} <: AbstractModelFit{T,N}
-    estimate::Array{T,N}
-    info::Any
-    standarderror::Array{T,N}
+@kwdef struct LinearModelFit{T,N} <: AbstractModelFit{T,N}
+    estimate::Array{T,N} = Array{T,N}(undef, ntuple(i -> 0, N))
+    info::Any = []
+    standarderror::Array{T,N} = Array{T,N}(undef, ntuple(i -> 0, N))
 end
+# for backwards copatability
+LinearModelFit{T,N}(estimate, info) where {T,N} =
+    LinearModelFit{T,N}(estimate, info, similar(Array{T,N}, 0, 0, 0))
 
-LinearModelFit() =
+#=LinearModelFit() =
     error("Please specify type and dimensionality, e.g. LinearModelFit{Float64,2}()")
 
 LinearModelFit{T,N}() where {T,N} = LinearModelFit(Array{T,N}[], [], Array{T,N}[])
@@ -78,7 +81,7 @@ LinearModelFit{T,N}(estimate::Array{T,N}, info) where {T,N} =
 #LinearModelFit{T,N}(estimate, info, similar(Array{T}, 0, 0))
 #LinearModelFit{T,N}(estimate::Array{T,3}, info) where {T,N} =
 #    LinearModelFit{T,N}(estimate, info, similar(Array{T}, 0, 0, 0))
-
+=#
 
 """
     LinearModelFitCV{T,N}
@@ -100,7 +103,7 @@ Concrete type to implement an Mass-Univariate LinearModel.
 mutable struct UnfoldLinearModel{T} <: UnfoldModel{T}
     design::Vector{<:Pair{<:Any,<:Tuple}}
     designmatrix::Vector{<:DesignMatrixLinearModel{T}}
-    modelfit::LinearModelFit{T,3}
+    modelfit::AbstractModelFit
 end
 
 # empty model
@@ -117,7 +120,7 @@ UnfoldLinearModel{T}(d::Vector{<:Pair}, X::AbstractDesignMatrix) where {T} =
     UnfoldLinearModel{T}(d, [X])
 # no modelfit
 UnfoldLinearModel{T}(d::Vector{<:Pair}, X::Vector{<:AbstractDesignMatrix{T}}) where {T} =
-    UnfoldLinearModel{T}(deepcopy(d), X, LinearModelFit(Array{T,3}(undef, 0, 0, 0)))
+    UnfoldLinearModel{T}(deepcopy(d), X, LinearModelFit{T,3}())
 
 
 
@@ -130,7 +133,7 @@ Concrete type to implement an deconvolution LinearModel.
 mutable struct UnfoldLinearModelContinuousTime{T} <: UnfoldModel{T}
     design::Vector{<:Pair{<:Any,<:Tuple}}
     designmatrix::Vector{<:DesignMatrixLinearModelContinuousTime{T}}
-    modelfit::LinearModelFit{T,2}
+    modelfit::AbstractModelFit
 end
 
 
@@ -153,11 +156,7 @@ UnfoldLinearModelContinuousTime{T}(d::Vector{<:Pair}, X::AbstractDesignMatrix) w
 UnfoldLinearModelContinuousTime{T}(
     d::Vector{<:Pair},
     X::Vector{<:AbstractDesignMatrix{T}},
-) where {T} = UnfoldLinearModelContinuousTime{T}(
-    deepcopy(d),
-    X,
-    LinearModelFit(Array{T,2}(undef, 0, 0)),
-)
+) where {T} = UnfoldLinearModelContinuousTime{T}(deepcopy(d), X, LinearModelFit{T,2}())
 
 #----
 # Traits definitions

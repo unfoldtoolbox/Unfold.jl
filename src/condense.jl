@@ -1,5 +1,4 @@
 
-
 function extract_coef_info(coefs, ix)
     # 1 = eventname, 2 = coefname, 3 = colname
     return [c[ix] for c in split.(coefs, " : ")]
@@ -18,19 +17,10 @@ StatsModels.coef(uf::UnfoldModel) = coef(modelfit(uf))
 StatsModels.coef(mf::LinearModelFit) = mf.estimate
 
 
-#=
-function coeftable2(uf)
-    coefs = coef(uf)
-    ix = get_basis_indices.(Ref(uf), eventnames(uf))
 
-    # XXX stderror, group, coefname
-    coefs_views = [@view(coefs[:, i]) for i in ix]
-    XXX = DataFrame() # specify the coefficient dataframe somehow?!
-    result_to_table(uf, coefs_views, XXX)
-end
-=#
-
-@traitfn function StatsModels.coeftable(uf::T) where {T<:UnfoldModel;ContinuousTimeTrait{T}}
+@traitfn function StatsModels.coeftable(
+    uf::T,
+) where {T <: UnfoldModel; ContinuousTimeTrait{T}}
     coefsRaw = get_coefnames(uf) |> poolArray
     coefs = extract_coef_info(coefsRaw, 2) |> poolArray
     #colnames_basis_raw = get_basis_colnames(formulas(uf))# this is unconverted basisfunction basis,
@@ -65,7 +55,7 @@ end
 
         for (b, d) in zip(basiskeys, designkeys)
 
-            eventnames[basisnames .== b] .= d
+            eventnames[basisnames.==b] .= d
         end
     else
         @warn "No design found, falling back to basisnames instead of eventnames"
@@ -87,7 +77,7 @@ end
 
 @traitfn function StatsModels.coeftable(
     uf::T,
-) where {T<:UnfoldModel;!ContinuousTimeTrait{T}}
+) where {T <: UnfoldModel; !ContinuousTimeTrait{T}}
     # Mass Univariate Case
     coefnames = get_coefnames(uf)
 
@@ -148,16 +138,16 @@ end
 
 stderror(m::UnfoldModel) = stderror(modelfit(m))
 
-function stderror(m::LinearModelFit)
+function stderror(m::AbstractModelFit{T,N}) where {T,N}
     if isempty(m.standarderror)
-        stderror = fill(nothing, size(coef(m)))
+        stderror = fill(nothing, size(m.estimate))
     else
-        stderror = Float64.(m.standarderror)
+        stderror = m.standarderror
     end
 end
 
-function make_estimate(uf::UnfoldModel)
-    return Float64.(coef(uf)), stderror(uf), fill(nothing, size(coef(uf))) |> poolArray
+function make_estimate(uf::UnfoldModel{T}) where {T}
+    return coef(uf), stderror(uf), fill(nothing, size(coef(uf))) |> poolArray
 end
 
 # Return the column names of the basis functions.
@@ -181,7 +171,7 @@ Return the basisnames for all predictor terms as a vector.
 The returned vector contains the name of the event type/basis, repeated by their actual coefficient number (after StatsModels.apply_schema / timeexpansion).
 If a model has more than one event type (e.g. stimulus and fixation), the vectors are concatenated.
 """
-@traitfn function get_basis_names(m::T) where {T<:UnfoldModel;!ContinuousTimeTrait{T}}
+@traitfn function get_basis_names(m::T) where {T <: UnfoldModel; !ContinuousTimeTrait{T}}
 
     # Extract the event names from the design
     design_keys = first.((Unfold.design(m)))
@@ -195,7 +185,7 @@ If a model has more than one event type (e.g. stimulus and fixation), the vector
 end
 
 
-@traitfn get_basis_names(m::T) where {T<:UnfoldModel;ContinuousTimeTrait{T}} =
+@traitfn get_basis_names(m::T) where {T <: UnfoldModel; ContinuousTimeTrait{T}} =
     get_basis_names.(formulas(m))
 function get_basis_names(m::FormulaTerm)
     bf = m.rhs.basisfunction
