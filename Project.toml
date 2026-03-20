@@ -1,6 +1,6 @@
 name = "Unfold"
 uuid = "181c99d8-e21b-4ff3-b70b-c233eddec679"
-version = "0.8.9"
+version = "0.8.10"
 authors = ["Benedikt Ehinger <science@benediktehinger.de>"]
 
 [deps]
