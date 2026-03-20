@@ -11,6 +11,7 @@ A cross-validation solver for Unfold. This function generates a solver that can 
 A function that can be used as a solver in `Unfold.fit`, which performs k-fold cross-validation and returns a `LinearModelFitCV` object containing the estimates, standard errors, and fold indices.
 """
 function solver_cv(;
+    rng = MersenneTwister(),
     n_folds = 5,
     shuffle = true,
     inner_solver = (X, y) -> Unfold.solver_default(X, y),
@@ -25,7 +26,7 @@ function solver_cv(;
         indices = 1:n_trials
 
         # Generate split indices
-        folds_iterator = kfolds(shuffle ? shuffleobs(indices) : indices, k = n_folds)
+        folds_iterator = kfolds(shuffle ? shuffleobs(rng, indices) : indices, k = n_folds)
 
         train_results = []
         test_results = [] # Only used if fit_test=true
