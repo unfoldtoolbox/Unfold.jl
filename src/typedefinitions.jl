@@ -80,6 +80,16 @@ LinearModelFit{T,N}(estimate::Array{T,N}, info) where {T,N} =
 #    LinearModelFit{T,N}(estimate, info, similar(Array{T}, 0, 0, 0))
 
 
+"""
+    LinearModelFitCV{T,N}
+A struct to hold the results of cross-validated model fits. This is returned by the `solver_cv` function and contains the estimates, standard errors, and fold indices for each fold of the cross-validation.
+"""
+@kwdef struct LinearModelFitCV{T,N} <: AbstractModelFit{T,N}
+    estimate::Array{T,N} = Array{T,N}(undef, ntuple(i -> 0, N))
+    info::Any = []
+    standarderror::Array{T,N} = Array{T,N}(undef, ntuple(i -> 0, N))
+    folds = []
+end
 
 """
 Concrete type to implement an Mass-Univariate LinearModel.
