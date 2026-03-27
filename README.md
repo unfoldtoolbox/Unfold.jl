@@ -158,6 +158,9 @@ You are very welcome to raise issues and start pull requests!
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/LeonvonHaugwitz"><img src="https://avatars.githubusercontent.com/u/44725676?v=4?s=100" width="100px;" alt="Leon von Haugwitz"/><br /><sub><b>Leon von Haugwitz</b></sub></a><br /><a href="#bug-LeonvonHaugwitz" title="Bug reports">🐛</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/jordandeakin"><img src="https://avatars.githubusercontent.com/u/48567988?v=4?s=100" width="100px;" alt="Jordan Deakin"/><br /><sub><b>Jordan Deakin</b></sub></a><br /><a href="#bug-jordandeakin" title="Bug reports">🐛</a></td>
     </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/CherryClementine"><img src="https://avatars.githubusercontent.com/u/156665249?v=4?s=100" width="100px;" alt="Sanaz "/><br /><sub><b>Sanaz </b></sub></a><br /><a href="#doc-CherryClementine" title="Documentation">📖</a></td>
+    </tr>
   </tbody>
 </table>
 
