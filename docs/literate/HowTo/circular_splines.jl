@@ -12,9 +12,10 @@ using UnfoldSim
 using BSplineKit
 using StableRNGs
 using CairoMakie, UnfoldMakie
+
+# ```@raw html
 # </details>
 # ```
-
 data, evts = UnfoldSim.predef_eeg(; return_epoched = true)
 evts.cycle = rand(StableRNG(1), size(evts, 1))
 times = range(0, 1, length = size(data, 1))
