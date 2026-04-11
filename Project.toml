@@ -57,7 +57,7 @@ UnfoldRobustModelsExt = "RobustModels"
 
 [compat]
 BSplineKit = "0.16,0.17, 0.19"
-CUDA = "4,5"
+CUDA = "4,5, 6"
 DSP = "0.7, 0.8"
 DataFrames = "1"
 Distributions = "0.25"
