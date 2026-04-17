@@ -81,3 +81,8 @@ end
     @test_throws AssertionError fit(UnfoldModel, f_spl, evts, data_e, times)
 
 end
+
+@testset "SplineBasis shift_onset" begin
+    bf = Unfold.splinebasis(τ = (-0.2, 1.0), sfreq = 100, nsplines = 10, name = "test")
+    @test Unfold.shift_onset(bf) == Int64(floor(-0.2 * 100)) # should be -20
+end
