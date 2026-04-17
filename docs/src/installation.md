@@ -10,8 +10,7 @@ TLDR;
 - Windows: `winget install julia -s msstore`
 - Mac/Linux: `curl -fsSL https://install.julialang.org | sh`
 
-We further recommend to use VSCode. Make sure to install the Julia-Plugin, and install Revise.jl - [a tutorial with screenshots can be found here](http://www.simtech-summerschool.de/installation/julia.html)
-
+We further recommend to use VSCode. Make sure to install the Julia-Plugin, and install Revise.jl.
 ## Installing Unfold.jl
 
 You can enter the package manager (similar to conda) using `]` in the REPL ("julia-commandline").
