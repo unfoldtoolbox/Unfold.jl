@@ -30,3 +30,4 @@ function splinekernel(e, times, nsplines)
 end
 
 Unfold.width(b::SplineBasis) = length(b.colnames)
+Unfold.shift_onset(b::SplineBasis) = b.shift_onset
