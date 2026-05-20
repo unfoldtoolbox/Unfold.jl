@@ -104,15 +104,26 @@ end
 @traitfn residuals(
     uf::T,
     data::AbstractArray,
-) where {T<:UnfoldModel;ContinuousTimeTrait{T}} =
+) where {T <: UnfoldModel; ContinuousTimeTrait{T}} =
     _residuals(T, predict(uf), check_data(T, data))
 @traitfn function residuals(
     uf::T,
     data::AbstractArray,
-) where {T<:UnfoldModel;!ContinuousTimeTrait{T}}
+) where {T <: UnfoldModel; !ContinuousTimeTrait{T}}
     pred = predict(uf)
-    @assert length(pred) == 1 "residuals currently not supported for multi-event MassUnivariateModels. It is not hard to implement, but I ran out of time. Write an issue if you  need this functionality"
-    _residuals(T, pred[1], check_data(T, data))
+    #@assert length(pred) == 1 "residuals currently not supported for multi-event MassUnivariateModels. It is not hard to implement, but I ran out of time. Write an issue if you  need this functionality. Also modify the r2 function!"
+    checked_data = check_data(T, data)
+    @debug "size checked data" size(checked_data)
+
+    parent_ix = [p[1] for p in parentindices.(Unfold.events(uf))]
+    # run residuals for each subset of pred + subset of data
+    res_combined = similar(checked_data)
+
+    for i in range(1, length(parent_ix))
+        res_combined[:, :, parent_ix[i]] .=
+            _residuals(T, pred[i], checked_data[:, :, parent_ix[i]])
+    end
+    return res_combined
 
 end
 
@@ -264,7 +275,7 @@ Due to the time-continuous nature, running it with a model not containing the `C
     uf::T,
     args;
     kwargs...,
-) where {T<:UnfoldModel;!ContinuousTimeTrait{T}} =
+) where {T <: UnfoldModel; !ContinuousTimeTrait{T}} =
     error("can't have partial overlap without Timecontinuous model")
 
 @traitfn function predict_partial_overlap(
@@ -276,7 +287,7 @@ Due to the time-continuous nature, running it with a model not containing the `C
     epoch_to = nothing,
     epoch_timewindow = nothing,
     eventcolumn = :event,
-) where {T<:UnfoldModel;ContinuousTimeTrait{T}}
+) where {T <: UnfoldModel; ContinuousTimeTrait{T}}
     @assert !(!isempty(keep_basis) & !isempty(exclude_basis)) "can't have no overlap & specify keep/exclude at the same time. decide for either case"
     # Partial overlap! we reconstruct with some basisfunctions deactivated
     if !isempty(keep_basis)
@@ -331,7 +342,7 @@ in the Not-ContinuousTime case (typically the MassUnivariate model), we return p
     coefs,
     f::Vector,
     evts::Vector,
-) where {T<:UnfoldModel;!ContinuousTimeTrait{T}}
+) where {T <: UnfoldModel; !ContinuousTimeTrait{T}}
     @debug "Not ContinuousTime yhat, Array"
     X = _modelcols.(f, evts)
     @debug typeof(X)
@@ -351,7 +362,7 @@ end
     coefs,
     f::Vector,
     evts::Vector,
-) where {T<:UnfoldModel;ContinuousTimeTrait{T}}
+) where {T <: UnfoldModel; ContinuousTimeTrait{T}}
 
     has_missings = false
     yhat = Array{eltype(coefs)}[]
@@ -477,10 +488,10 @@ eventnames(model::UnfoldModel) = first.(design(model))
     times(model<:UnfoldModel)
 returns arrays of time-vectors, one for each basisfunction / parallel-fitted-model (MassUnivarite case)
 """
-@traitfn times(model::T) where {T<:UnfoldModel;!ContinuousTimeTrait{T}} =
+@traitfn times(model::T) where {T <: UnfoldModel; !ContinuousTimeTrait{T}} =
     times(design(model))
 
-@traitfn times(model::T) where {T<:UnfoldModel;ContinuousTimeTrait{T}} =
+@traitfn times(model::T) where {T <: UnfoldModel; ContinuousTimeTrait{T}} =
     times(formulas(model))
 
 times(d::Vector) = times.(d)
@@ -504,20 +515,72 @@ end
 
 
 """
-    r2(model<:UnfoldModel)
-returns the coeficient of determination
+    r2(model<:UnfoldModel, data; skipmissing=false)
+Calculates the coeficient of determination. If skipmissing = true, ignore parts of the data that you removed to calculate the respective variances.
+
+Returns 1 .- residual-variance / data-variance
 """
-function StatsAPI.r2(model::UnfoldModel, data::AbstractArray)
-    res = residuals(model, data)
-    _data = size(res) != size(data) ? reshape(data, :, size(data)...) : data
+function Unfold.r2(
+    model::UnfoldModel,
+    data::AbstractArray;
+    skipmissing = true,
+    skip_notmodelled = false,
+)
+
+    @debug size(data)
+    data_resized = check_data(typeof(model), data)#size(res) != size(data) ? reshape(data, :, size(data)...) : data
+
+    res = residuals(model, data_resized)
+    @debug "data_resized" size(data_resized)
+    @debug "res" size(res)
+
+
+    if skip_notmodelled
+        @debug "skip notmodelling"
+        X = modelmatrix(model)
+
+
+        zero_ix = non_zero_rows(X)
+        zero_ix = zero_ix[zero_ix.<=size(data_resized)[end]]
+        @debug sort(zero_ix)[[1, end]]
+        if ndims(data_resized) == 2
+            _res = @view res[:, zero_ix]
+            _data = @view data_resized[:, zero_ix]
+        else
+            @warn "skip_notmodelled not useful for mass-univariate models, only applicable to TimeContinuous models"
+            _res = res#@view res[:, :, zero_ix]
+            _data = data_resized#@view data_resized[:, :, zero_ix]
+        end
+    else
+        _res = res
+        _data = data_resized
+    end
+
+
 
     maxdim = length(size(res))
-    null = var(_data, dims = maxdim)
+    if skipmissing
+        # can't use skipmissing directly, because it flattens everything
+        res_var = mapslices(x -> var(Base.skipmissing(x)), _res, dims = maxdim)
+        null_var = mapslices(x -> var(Base.skipmissing(x)), _data, dims = maxdim)
+    else
 
-    return dropdims(1 .- var(res, dims = maxdim) ./ null, dims = maxdim)
+        res_var = var(_res, dims = maxdim)
+        null_var = var(_data, dims = maxdim)
+    end
+
+
+    return dropdims(1 .- res_var ./ null_var, dims = maxdim)
 end
-
 
 _var(d::AbstractVector) = var(d) # cont-time only
 _var(d::AbstractMatrix) = var(d, dims = 2)[:, 1] # ch x conttime, or time x epoch
 _var(d::AbstractArray) = var(d, dims = 3)[:, :, 1] # ch x time x epoch
+
+"""
+Returns the rows in the designmatrix X that have only 0's. A useful heuristic to find out which parts of the data were actually modelled
+
+Warning: If no intercept is used, this might lead to false negatives (e.g. all predictors => 0 + no intercept)
+"""
+non_zero_rows(X::SparseMatrixCSC) = unique(X.rowval)
+non_zero_rows(X::AbstractArray) = vec(any(x -> x != 0, X, dims = 2))
