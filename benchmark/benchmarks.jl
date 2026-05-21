@@ -54,13 +54,13 @@ ba2 = firbasis(τ = (-0.2, 1), sfreq = sfreq, name = "B")
 
 f1 = @formula 0 ~ 1 + A
 f1_spl = @formula 0 ~
-         1 +
-         A +
-         spl(continuousA, 5) +
-         spl(continuousB, 5) +
-         spl(continuousC, 5) +
-         spl(continuousD, 5) +
-         spl(continuousE, 5)
+    1 +
+    A +
+    spl(continuousA, 5) +
+    spl(continuousB, 5) +
+    spl(continuousC, 5) +
+    spl(continuousD, 5) +
+    spl(continuousE, 5)
 f2 = @formula 0 ~ 1 + B
 
 f1_lmm = @formula 0 ~ 1 + A + (1 + A | subject)

@@ -16,6 +16,7 @@ using DataFrames
 The easiest way to showcase this is to simply use a demo-dataset from MNE.
 
 To extract the metadata, we need `Pandas` which is not installed by default, we therefore need to install it via `CondaPkg`
+
 ```@Example main
 using CondaPkg
 CondaPkg.add("pandas")
@@ -33,8 +34,6 @@ limo_epochs
 After loading, we can fit an `Unfold` model to it.
 
 First extract the data & convert it to Julia/Unfold requirements
-
-
 
 ```@Example main
 data = pyconvert(Array,limo_epochs.get_data(picks="B11"))

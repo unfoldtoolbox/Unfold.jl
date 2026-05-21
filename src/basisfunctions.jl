@@ -346,7 +346,7 @@ function hrfkernel(e, TR, p)
     hrf = hrf ./ sum(hrf)
     hrf = conv1D(box_mt, hrf)'
     #println(box_mt)
-    hrf = hrf[((range(0, stop = Int(floor(p[7] ./ TR+duration)))*mt)) .+ 1]
+    hrf = hrf[((range(0, stop = Int(floor(p[7] ./ TR + duration)))*mt)).+1]
 
 
 
