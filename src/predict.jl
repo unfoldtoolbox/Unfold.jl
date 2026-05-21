@@ -515,7 +515,7 @@ end
 
 
 """
-        StatsAPI.r2(model::UnfoldModel, data::AbstractArray; skipmissing=false, skip_notmodelled=false)
+        StatsAPI.r2(model::UnfoldModel, data::AbstractArray; skip_missing=false, skip_notmodelled=false)
 
 Compute the coefficient of determination (`R^2`) for an `UnfoldModel`.
 
@@ -524,7 +524,7 @@ Compute the coefficient of determination (`R^2`) for an `UnfoldModel`.
 along the last dimension of the residual and data arrays.
 
 # Keyword arguments
-- `skipmissing=false`: Ignore `missing` values in data when computing variances.
+- `skip_missing=false`: Ignore `missing` values in data when computing variances.
 - `skip_notmodelled=false`: Restrict the computation to sample indices where the
     design matrix has non-zero rows. This is only useful for time-continuous
     models where parts of the signal can be outside the modelled range. For
@@ -537,7 +537,7 @@ along the last dimension of the residual and data arrays.
 function StatsAPI.r2(
     model::UnfoldModel,
     data::AbstractArray;
-    skipmissing = false,
+    skip_missing = false,
     skip_notmodelled = false,
 )
 
@@ -573,7 +573,7 @@ function StatsAPI.r2(
 
 
     maxdim = length(size(res))
-    if skipmissing
+    if skip_missing
         # can't use skipmissing directly, because it flattens everything
         res_var = mapslices(x -> var(Base.skipmissing(x)), _res, dims = maxdim)
         null_var = mapslices(x -> var(Base.skipmissing(x)), _data, dims = maxdim)

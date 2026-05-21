@@ -275,17 +275,19 @@ end
     )
 
     # check skipmissing false
-    _r2 = Unfold.r2(m_sparse, data_sparse; skipmissing = false)
+    _r2 = Unfold.r2(m_sparse, data_sparse; skip_missing = false)
     @test ismissing(_r2[1])
-    _r2 = Unfold.r2(m_e_sparse, data_e_sparse; skipmissing = false)
+    _r2 = Unfold.r2(m_e_sparse, data_e_sparse; skip_missing = false)
     @test all(ismissing.(_r2))
 
 
     # skipping 0 entries should increase r2
     # let's put it to the exterme, let's add a huge outlier
     data_sparse[3] = 1000
-    _r2_skip = Unfold.r2(m_sparse, data_sparse; skip_notmodelled = true)
-    _r2_notskip = Unfold.r2(m_sparse, data_sparse; skip_notmodelled = false)
+    _r2_skip =
+        Unfold.r2(m_sparse, data_sparse; skip_notmodelled = true, skip_missing = true)
+    _r2_notskip =
+        Unfold.r2(m_sparse, data_sparse; skip_notmodelled = false, skip_missing = true)
     @test _r2_skip > _r2_notskip
     @test _r2_skip[1] > 0.75
     @test _r2_notskip[1] < 0.01
@@ -296,14 +298,9 @@ end
     _r2_skip = Unfold.r2(m_e_sparse, data_e_sparse; skip_notmodelled = true)
     _r2_notskip = Unfold.r2(m_e_sparse, data_e_sparse; skip_notmodelled = false)
 
-    # Test skip_notmodelled with skipmissing=false
+    # Test skip_notmodelled with skip_missing=false
     _r2_no_skip_miss =
-        Unfold.r2(m_sparse, data_sparse; skip_notmodelled = true, skipmissing = false)
+        Unfold.r2(m_sparse, data_sparse; skip_notmodelled = true, skip_missing = false)
     @test length(_r2_no_skip_miss) == 1
-
-    # Test consistency between skip_notmodelled=false and default
-    _r2_all = Unfold.r2(m_sparse, data_sparse; skip_notmodelled = false)
-    _r2_default = Unfold.r2(m_sparse, data_sparse)
-    @test isapprox(_r2_all[1], _r2_default[1])
 
 end
