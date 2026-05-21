@@ -28,8 +28,8 @@ yhat_tul = predict(m_tul, evts_grid)
 
 Unfold.result_to_table(m_mul, yhat_mul, [evts_grid])
 
-@test all(yhat_mul[1][:] .≈ mean(data[data .!= 0]))
-@test all(yhat_tul[1][:] .≈ mean(data[data .!= 0]))
+@test all(yhat_mul[1][:] .≈ mean(data[data.!=0]))
+@test all(yhat_tul[1][:] .≈ mean(data[data.!=0]))
 
 ## Case with multiple formulas
 f = @formula 0 ~ 1 + conditionA + continuousA# 1
@@ -155,7 +155,7 @@ pt = Unfold.result_to_table(
     resids_e = Unfold.residuals(m_mul, data_e)
 
     @test size(resids_e)[2:3] == size(data_e)
-    @test maximum(abs.(data_e .- (resids_e .+ predict(m_mul)[1])[1, :, :])) < 0.0000001
+    @test maximum(abs.(data_e .- (resids_e.+predict(m_mul)[1])[1, :, :])) < 0.0000001
 
 
     ##
@@ -171,6 +171,16 @@ pt = Unfold.result_to_table(
     # yhat longer
     @test all(Unfold._residuals(UnfoldModel, [1 2 3 4; 3 4 5 6], [1 2 3; 3 4 5]) .== 0)
 
+end
+
+
+@testset "non_zero_rows" begin
+    dense = [0 1 0 3; 2 0 3 4; 0 0 0 0]
+    @test Unfold.non_zero_rows(dense) == [true, true, false]
+    @test Unfold.non_zero_rows(zeros(2, 3)) == [false, false]
+
+    sparse_dense = sparse(dense)
+    @test sort(Unfold.non_zero_rows(sparse_dense)) == [1, 2]
 end
 
 
@@ -196,10 +206,24 @@ end
         evts,
         data_e;
     )
+    m_e2 = fit(
+        UnfoldModel,
+        [
+            "face" => (@formula(0 ~ 1), 1:size(data_e, 1)),
+            "car" => (@formula(0 ~ 1), 1:size(data_e, 1)),
+        ],
+        evts,
+        data_e;
+        eventcolumn = :condition,
+    )
+
+
     _r2 = Unfold.r2(m, data)
     @test length(_r2) == 1
     @test isapprox(_r2[1], 0.74, atol = 0.01)
     _r2 = Unfold.r2(m_e, data_e)
+    _r2_e2 = Unfold.r2(m_e2, data_e)
+    @test all(_r2 .≈ _r2_e2)
     @test length(_r2) == size(data_e, 1)
     @test all(_r2 .< 1)
     @test isapprox(_r2[1], 0.001, atol = 0.01)
@@ -223,5 +247,60 @@ end
     @test length(_r2) == 1
     _r2 = Unfold.r2(m_e_reshape, data_e_reshape)
     @test size(_r2) == (1, size(data_e_reshape, 2))
+
+
+    # Create data with sparse events (some rows with no modelling)
+    data_sparse = allowmissing(data)
+    data_sparse[1:2] .= missing
+    evts_sparse = deepcopy(evts)
+    evts_e_sparse = deepcopy(evts)
+
+    data_e_sparse = allowmissing(data_e)
+    data_e_sparse[1, :] .= missing
+    data_e_sparse[:, 1] .= missing
+    data_e_sparse[2, 2] = missing
+
+    # Create models with sparse conditions to have non-modelled rows
+    m_sparse = fit(
+        UnfoldModel,
+        [Any => (@formula(0 ~ 1 + condition), firbasis((-0.1, 1), 100))],
+        evts_sparse,
+        data_sparse;
+    )
+    m_e_sparse = fit(
+        UnfoldModel,
+        [Any => (@formula(0 ~ 1 + condition), 1:size(data_e_sparse, 1))],
+        evts_sparse,
+        data_e_sparse;
+    )
+
+    # check skipmissing false
+    _r2 = Unfold.r2(m_sparse, data_sparse; skip_missing = false)
+    @test ismissing(_r2[1])
+    _r2 = Unfold.r2(m_e_sparse, data_e_sparse; skip_missing = false)
+    @test all(ismissing.(_r2))
+
+
+    # skipping 0 entries should increase r2
+    # let's put it to the exterme, let's add a huge outlier
+    data_sparse[3] = 1000
+    _r2_skip =
+        Unfold.r2(m_sparse, data_sparse; skip_notmodelled = true, skip_missing = true)
+    _r2_notskip =
+        Unfold.r2(m_sparse, data_sparse; skip_notmodelled = false, skip_missing = true)
+    @test _r2_skip > _r2_notskip
+    @test _r2_skip[1] > 0.75
+    @test _r2_notskip[1] < 0.01
+
+
+    # Test skip_notmodelled = true for epoched
+    data_e_sparse[3, 3] = 1000
+    _r2_skip = Unfold.r2(m_e_sparse, data_e_sparse; skip_notmodelled = true)
+    _r2_notskip = Unfold.r2(m_e_sparse, data_e_sparse; skip_notmodelled = false)
+
+    # Test skip_notmodelled with skip_missing=false
+    _r2_no_skip_miss =
+        Unfold.r2(m_sparse, data_sparse; skip_notmodelled = true, skip_missing = false)
+    @test length(_r2_no_skip_miss) == 1
 
 end
