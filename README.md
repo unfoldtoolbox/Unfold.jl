@@ -12,7 +12,7 @@
 
 |Estimation|Visualisation|Simulation|BIDS pipeline|Decoding|Statistics|MixedModelling|
 |---|---|---|---|---|---|---|
-| <a href="https://github.com/unfoldtoolbox/Unfold.jl/tree/main"><img src="https://github-production-user-asset-6210df.s3.amazonaws.com/10183650/277623787-757575d0-aeb9-4d94-a5f8-832f13dcd2dd.png" alt="Unfold.jl Logo"></a> | <a href="https://github.com/unfoldtoolbox/UnfoldMakie.jl"><img  src="https://github-production-user-asset-6210df.s3.amazonaws.com/10183650/277623793-37af35a0-c99c-4374-827b-40fc37de7c2b.png" alt="UnfoldMakie.jl Logo"></a>|<a href="https://github.com/unfoldtoolbox/UnfoldSim.jl"><img src="https://github-production-user-asset-6210df.s3.amazonaws.com/10183650/277623795-328a4ccd-8860-4b13-9fb6-64d3df9e2091.png" alt="UnfoldSim.jl Logo"></a>|<a href="https://github.com/unfoldtoolbox/UnfoldBIDS.jl"><img src="https://github-production-user-asset-6210df.s3.amazonaws.com/10183650/277622460-2956ca20-9c48-4066-9e50-c5d25c50f0d1.png" alt="UnfoldBIDS.jl Logo"></a>|<a href="https://github.com/unfoldtoolbox/UnfoldDecode.jl"><img src="https://github-production-user-asset-6210df.s3.amazonaws.com/10183650/277622487-802002c0-a1f2-4236-9123-562684d39dcf.png" alt="UnfoldDecode.jl Logo"></a>|<a href="https://github.com/unfoldtoolbox/UnfoldStats.jl"><img  src="https://github-production-user-asset-6210df.s3.amazonaws.com/10183650/277623799-4c8f2b5a-ea84-4ee3-82f9-01ef05b4f4c6.png" alt="UnfoldStats.jl Logo"></a>|<a href="https://github.com/unfoldtoolbox/UnfoldMixedModels.jl"><img src="https://github.com/user-attachments/assets/ffb2bba6-3a30-48b7-9849-7d4e7195b297" alt="UnfoldMixedModels.jl logo"></a>|
+|<a href="https://github.com/unfoldtoolbox/Unfold.jl/tree/main"><img src="https://github-production-user-asset-6210df.s3.amazonaws.com/10183650/277623787-757575d0-aeb9-4d94-a5f8-832f13dcd2dd.png" alt="Unfold.jl Logo"></a>|<a href="https://github.com/unfoldtoolbox/UnfoldMakie.jl"><img  src="https://github-production-user-asset-6210df.s3.amazonaws.com/10183650/277623793-37af35a0-c99c-4374-827b-40fc37de7c2b.png" alt="UnfoldMakie.jl Logo"></a>|<a href="https://github.com/unfoldtoolbox/UnfoldSim.jl"><img src="https://github-production-user-asset-6210df.s3.amazonaws.com/10183650/277623795-328a4ccd-8860-4b13-9fb6-64d3df9e2091.png" alt="UnfoldSim.jl Logo"></a>|<a href="https://github.com/unfoldtoolbox/UnfoldBIDS.jl"><img src="https://github-production-user-asset-6210df.s3.amazonaws.com/10183650/277622460-2956ca20-9c48-4066-9e50-c5d25c50f0d1.png" alt="UnfoldBIDS.jl Logo"></a>|<a href="https://github.com/unfoldtoolbox/UnfoldDecode.jl"><img src="https://github-production-user-asset-6210df.s3.amazonaws.com/10183650/277622487-802002c0-a1f2-4236-9123-562684d39dcf.png" alt="UnfoldDecode.jl Logo"></a>|<a href="https://github.com/unfoldtoolbox/UnfoldStats.jl"><img  src="https://github-production-user-asset-6210df.s3.amazonaws.com/10183650/277623799-4c8f2b5a-ea84-4ee3-82f9-01ef05b4f4c6.png" alt="UnfoldStats.jl Logo"></a>|<a href="https://github.com/unfoldtoolbox/UnfoldMixedModels.jl"><img src="https://github.com/user-attachments/assets/ffb2bba6-3a30-48b7-9849-7d4e7195b297" alt="UnfoldMixedModels.jl logo"></a>|
 
 Package (-family) to perform linear / GAM / hierarchical / deconvolution regression on biological signals.
 
@@ -82,12 +82,12 @@ times = range(0,length=size(epochs,3),step=1/sampling_rate)
 
 To fit any of the models, Unfold.jl offers a unified syntax:
 
-| Overlap-Correction | Mixed Modelling | julia syntax |
+|Overlap-Correction|Mixed Modelling|julia syntax|
 |:---:|:---:|---|
-|  |  | `fit(UnfoldModel,[Any=>(f,times)),evts,data_epoch]` |
-| x |  | `fit(UnfoldModel,[Any=>(f,basis)),evts,data]` |
-|  | x | `fit(UnfoldModel,[Any=>(fLMM,times)),evts,data_epoch]` |
-| x | x | `fit(UnfoldModel,[Any=>(fLMM,basis)),evts,data]` |
+|||`fit(UnfoldModel,[Any=>(f,times)),evts,data_epoch]`|
+|x||`fit(UnfoldModel,[Any=>(f,basis)),evts,data]`|
+||x|`fit(UnfoldModel,[Any=>(fLMM,times)),evts,data_epoch]`|
+|x|x|`fit(UnfoldModel,[Any=>(fLMM,basis)),evts,data]`|
 
 ## Comparison to Unfold (matlab)
 
@@ -96,27 +96,26 @@ To fit any of the models, Unfold.jl offers a unified syntax:
 
 The matlab version is still maintained, but active development happens in Julia.
 
-| Feature                 | Unfold | unmixed (defunct) | Unfold.jl |
-|-------------------------|--------|---------|-----------|
-| overlap correction      | x      | x       | x         |
-| non-linear splines      | x      | x       | x         |
-| speed |       |  🐌      | ⚡ 2-100x        |
-| GPU support | | | 🚀|
-| plotting tools          | x      |         | [UnfoldMakie.jl](https://unfoldtoolbox.github.io/UnfoldDocs/UnfoldMakie.jl/)  |
-| Interactive plotting  |       |         | stay tuned - coming soon! |
-| simulation tools          | x      |         | [UnfoldSim.jl](https://unfoldtoolbox.github.io/UnfoldDocs/UnfoldSim.jl)  |
-| BIDS support          | x      |         | alpha: [UnfoldBIDS.jl](https://unfoldtoolbox.github.io/UnfoldDocs/UnfoldBIDS.jl))  |
-| sanity checks           | x      |         | x         |
-| tutorials               | x      |         | x       |
-| unittests               | x      |         | x         |
-| Alternative bases e.g. HRF (fMRI)        |        |         | x         |
-| mix different basisfunctions      |        |         | x         |
-| different timewindows per event   |        |         | x         |
-| mixed models            |        | x       | x         |
-| item & subject effects  |        | (x)       | x         |
-| decoding  |        |        | [UnfoldDecode.jl](https://unfoldtoolbox.github.io/UnfoldDocs/UnfoldDecode.jl)         |
-| outlier-robust fits  |        |        |  [many options (but slower)](https://unfoldtoolbox.github.io/UnfoldDocs/Unfold.jl/dev/HowTo/custom_solvers/#Robust-Solvers)   |
-| 🐍Python support | | | [via juliacall](https://unfoldtoolbox.github.io/UnfoldDocs/Unfold.jl/dev/generated/HowTo/juliacall_unfold/)|
+| Feature | Unfold | Unfold.jl |
+| --- | --- | --- |
+| overlap correction | x | x |
+| non-linear splines | x | x |
+| speed | | ⚡ 2-100x |
+| GPU support | | 🚀 |
+| plotting tools | x | [UnfoldMakie.jl](https://unfoldtoolbox.github.io/UnfoldDocs/UnfoldMakie.jl/) |
+| Interactive plotting | | ERPExplorer.jl |
+| simulation tools | x | [UnfoldSim.jl](https://unfoldtoolbox.github.io/UnfoldDocs/UnfoldSim.jl) |
+| BIDS support | x | [UnfoldBIDS.jl](https://unfoldtoolbox.github.io/UnfoldDocs/UnfoldBIDS.jl)) |
+| tutorials | x | x |
+| unittests | x | x |
+| Alternative bases e.g. HRF (fMRI) | | x |
+| Duration modelling (e.g. Hassal style) | | x |
+| mix different basisfunctions | | x |
+| different timewindows per event | | x |
+| linear mixed models | | x |
+| decoding | | [UnfoldDecode.jl](https://unfoldtoolbox.github.io/UnfoldDocs/UnfoldDecode.jl) |
+| outlier-robust fits | | [many options (but slower)](https://unfoldtoolbox.github.io/UnfoldDocs/Unfold.jl/dev/HowTo/custom_solvers/#Robust-Solvers) |
+| 🐍Python support | | [via juliacall](https://unfoldtoolbox.github.io/UnfoldDocs/Unfold.jl/dev/generated/HowTo/juliacall_unfold/) |
 
 </details>
 
