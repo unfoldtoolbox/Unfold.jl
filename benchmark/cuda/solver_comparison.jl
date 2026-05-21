@@ -206,19 +206,19 @@ function df_to_md(data)
     rename!(data_subset, :min_bytes => :GB, :min_time => :time)
     #allowmissing!(data_subset, [:time, :GB])
 
-    data_subset.time[data_subset[:, :comment] .!= ""] .= 0
-    data_subset.GB[data_subset[:, :comment] .!= ""] .= 0
+    data_subset.time[data_subset[:, :comment].!=""] .= 0
+    data_subset.GB[data_subset[:, :comment].!=""] .= 0
     data_subset = data_subset[:, Not([:nnz, :sfreq, :n_repeats, :n_splines])]
     hl_time = MarkdownHighlighter(
         (d, i, j) ->
             isa(d[i, j], Float64) &&
-            (d[i, j] ≈ minimum(data_subset.time[data_subset[:, :comment] .== ""])),
+                (d[i, j] ≈ minimum(data_subset.time[data_subset[:, :comment].==""])),
         MarkdownDecoration(bold = true),
     )
     hl_alloc = MarkdownHighlighter(
         (d, i, j) ->
             isa(d[i, j], Float64) &&
-            (d[i, j] ≈ minimum(data_subset.GB[data_subset[:, :comment] .== ""])),
+                (d[i, j] ≈ minimum(data_subset.GB[data_subset[:, :comment].==""])),
         MarkdownDecoration(bold = true),
     )
     select!(

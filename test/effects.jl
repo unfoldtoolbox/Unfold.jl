@@ -157,8 +157,8 @@ m_tul = fit(Unfold.UnfoldModel, Dict(Any => (f, firbasis([0, 0.05], 10))), evts,
 
     @test eff_m.yhat ≈ eff_t.yhat
     @test length(unique(eff_m.channel)) == 3
-    @test eff_m[eff_m.channel .== 1, :yhat] ≈ eff_m[eff_m.channel .== 2, :yhat] ./ 2
-    @test eff_m[eff_m.channel .== 1, :yhat] ≈ [2, 5, 2, 5.0] # these are the perfect predicted values - note that we requested them twice
+    @test eff_m[eff_m.channel.==1, :yhat] ≈ eff_m[eff_m.channel.==2, :yhat] ./ 2
+    @test eff_m[eff_m.channel.==1, :yhat] ≈ [2, 5, 2, 5.0] # these are the perfect predicted values - note that we requested them twice
 
 end
 
@@ -169,7 +169,8 @@ end
     evts[!, :continuousB] = rand(MersenneTwister(43), nrow(evts))
     ixA = evts.type .== "eventA"
     evts.continuousB[ixA] = evts.continuousB[ixA] .- mean(evts.continuousB[ixA]) .- 5
-    evts.continuousB[.!ixA] = evts.continuousB[.!ixA] .- mean(evts.continuousB[.!ixA]) .+ 0.5
+    evts.continuousB[.!ixA] =
+        evts.continuousB[.!ixA] .- mean(evts.continuousB[.!ixA]) .+ 0.5
     b1 = firbasis(τ = (0.0, 0.02), sfreq = 20, name = "eventA")
     b2 = firbasis(τ = (1.0, 1.02), sfreq = 20, name = "eventB")
     f1 = @formula 0 ~ 1 + continuousA # 1
@@ -221,7 +222,7 @@ end
     @test all(eff.eventname[4:end] .== "eventB")
     @test eff.yhat ≈ [
         0.0,
-        mean(evts.continuousB[evts.type .== "eventA"] .== "x") * coef(m_tul)[4] +
+        mean(evts.continuousB[evts.type.=="eventA"] .== "x") * coef(m_tul)[4] +
         1 * coef(m_tul)[2],
         0.0,
         0.0,
