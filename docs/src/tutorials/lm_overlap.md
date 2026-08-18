@@ -60,12 +60,11 @@ bf_vec|> DisplayAs.withcontext(:is_pluto=>true) # hide
 !!! note
       The `Any` means to use all rows in `evts`. In case you have multiple events, you'd want to specify multiple basisfunctions e.g.
       ```
-bfDict = ["stimulus"=>(f1,basisfunction1),
-                    "response"=>(f2,basisfunction2)]
+      bfDict = ["stimulus"=>(f1,basisfunction1), "response"=>(f2,basisfunction2)]
       ```
       You likely have to specify a further argument to `fit`: `eventcolumn="type"` with `type` being the column in `evts` that codes for the event (stimulus / response in this case)
 
-Now we are ready to fit a `UnfoldLinearModel`. Not that instead of `times` as in the mass-univariate case, we have to provide the `BasisFunction` type now.
+Now we are ready to fit a `UnfoldLinearModel`. Note that instead of `times` as in the mass-univariate case, we have to provide the `BasisFunction` type now.
 
 ```@example Main
 m = fit(UnfoldModel,bf_vec,evts,data);
