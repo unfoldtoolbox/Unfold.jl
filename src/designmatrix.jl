@@ -421,7 +421,7 @@ function timeexpand_rows(onsets, bases, shift, ncolsX)
     # this shift is necessary as some basisfunction time-points can be negative. But a matrix is always from 1:τ. Thus we have to shift it backwards in time.
     # The onsets are onsets-1 XXX not sure why.
     for r in eachindex(rows)
-        rows[r] .+= floor(onsets[r] - 1) .+ shift
+        rows[r] .+= floor(onsets[r, 1] - 1) .+ shift
     end
 
 
