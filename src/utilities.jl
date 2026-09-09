@@ -178,52 +178,58 @@ end
 poolArray(x) = PooledArray(x; compress = true)
 
 
-begin
 
-    function peak_to_peak(signal::AbstractMatrix; kwargs...)
-        sample_mask = falses(size(signal))
-        for ch = 1:size(signal, 1)
-            @views sample_mask[ch, :] = peak_to_peak(signal[ch, :]; kwargs...)
-        end
-        return sample_mask
+
+function detectbad_peak_to_peak(signal::AbstractMatrix; kwargs...)
+    sample_mask = falses(size(signal))
+    for ch = 1:size(signal, 1)
+        @views sample_mask[ch, :] = detectbad_peak_to_peak(signal[ch, :]; kwargs...)
     end
+    return sample_mask
+end
 
 
-    """
-        peak_to_peak(signal::AbstractVector{<:Real}; threshold::Real=150., sfreq::Int,window::Real = .2, stepsize=0.05, #s
+"""
+        detectbad_peak_to_peak(signal::AbstractVector{<:Real}; threshold::Real=150.0, sfreq::Int, window::Real=0.2, stepsize=0.05)
+        detectbad_peak_to_peak(signal::AbstractMatrix; kwargs...)
+
+Detect moving-window peak-to-peak artifacts for EEG-like signals.
+
+A window is marked as bad when `maximum(window) - minimum(window) > threshold`.
+All samples within any offending window are set to `true` in the returned mask.
+
+# Keyword arguments
+- `threshold=150.0`: Peak-to-peak threshold in signal units.
+- `sfreq`: Sampling frequency in Hz (needed to translate window/stepsize to samples).
+- `window=0.2`: Sliding-window size in seconds.
+- `stepsize=0.05`: Step size in seconds between consecutive windows. Values larger than one sample can, in principle, miss very short artifacts.
+
+# Returns
+- For 1D input (`samples`): a boolean vector mask of length `samples`.
+- For 2D input (`channels x samples`): a boolean matrix mask of size `channels x samples`.
+
+Function greatly inspired by the EegFun.jl toolbox (MIT licensed):
+https://github.com/igmmgi/EegFun.jl/blob/main/src/analysis/processing/artifact_detection.jl
+"""
+function detectbad_peak_to_peak(
+    signal::AbstractVector{<:Real};
+    threshold::Real = 150.0, #µV
+    sfreq::Int,
+    window::Real = 0.2, #s
+    stepsize = 0.05, #s
 )
-        peak_to_peak(signal::AbstractMatrix; kwargs...)
+    @assert window > stepsize "We do not support stepsizes larger than the window size"
+    window_samples = Int(round(sfreq*window))
+    n = length(signal)
+    mask = falses(n)
+    w = max(1, window_samples)
+    stepsize_samples = max(1, Int(round(stepsize*sfreq)))
 
-    Detect moving-window peak-to-peak artifacts (max - min > threshold).
-    Returns a boolean mask where all samples within any offending window are true.
-
-    `AbstractMatrix` (ch x times) applies it to each channel separately and returns a boolean matrix mask
-
-    `stepsize` (0.05s) a stepsize unequal to one sample point could in theory lead to missed bad data segments. In practice, bad data rarely comes alone, so we should be good.
-
-
-    Function greatly inspired by EegFun.jl toolbox (MIT licensed https://github.com/igmmgi/EegFun.jl/blob/main/src/analysis/processing/artifact_detection.jl)
-    """
-    function peak_to_peak(
-        signal::AbstractVector{<:Real};
-        threshold::Real = 150.0, #µV
-        sfreq::Int,
-        window::Real = 0.2, #s
-        stepsize = 0.05, #s
-    )
-        @assert window > stepsize "We do not support stepsizes larger than the window size"
-        window_samples = Int(round(sfreq*window))
-        n = length(signal)
-        mask = falses(n)
-        w = max(1, window_samples)
-        stepsize_samples = max(1, Int(round(stepsize*sfreq)))
-
-        @inbounds for i = 1:stepsize_samples:(n-w+1)
-            w_view = view(signal, i:(i+w-1))
-            if (maximum(w_view) - minimum(w_view)) > threshold
-                mask[i:(i+w-1)] .= true
-            end
+    @inbounds for i = 1:stepsize_samples:(n-w+1)
+        w_view = view(signal, i:(i+w-1))
+        if (maximum(w_view) - minimum(w_view)) > threshold
+            mask[i:(i+w-1)] .= true
         end
-        return mask
     end
+    return mask
 end
