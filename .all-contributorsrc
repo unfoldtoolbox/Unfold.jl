@@ -164,6 +164,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "morenococo",
+      "name": "moreno",
+      "avatar_url": "https://avatars.githubusercontent.com/u/5392844?v=4",
+      "profile": "https://github.com/morenococo",
+      "contributions": [
+        "bug"
+      ]
     }
   ]
 }
