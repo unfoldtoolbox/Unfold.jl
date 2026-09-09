@@ -95,9 +95,23 @@ end
 end
 
 @testset "timespline" begin
-    splinebase = Unfold.splinebasis(τ = (-1, 1), sfreq = 20, nsplines = 10, name = "basisA")
+    splinebase = Unfold.splinebasis(τ = (-1, 1), sfreq = 20, nsplines = 10, name = "car")
 
     @test length(Unfold.colnames(splinebase)) == size(Unfold.kernel(splinebase, 3.1))[2]
     @test length(Unfold.times(splinebase)) == size(Unfold.kernel(splinebase, 3.1))[1]
+
+    # Use the basis in an actual model fit/predict cycle.
+    dat, evts = UnfoldSim.predef_eeg(sfreq = 20, n_repeats = 5)
+    m = fit(
+        UnfoldModel,
+        ["car" => (@formula(0 ~ 1), splinebase)],
+        evts,
+        dat,
+        eventcolumn = :condition,
+    )
+
+    yhat = predict(m)
+    @test size(modelmatrix(m), 2) == size(coef(m), 2)
+
 
 end
