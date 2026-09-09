@@ -159,6 +159,7 @@ You are very welcome to raise issues and start pull requests!
     </tr>
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/CherryClementine"><img src="https://avatars.githubusercontent.com/u/156665249?v=4?s=100" width="100px;" alt="Sanaz "/><br /><sub><b>Sanaz </b></sub></a><br /><a href="#doc-CherryClementine" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/morenococo"><img src="https://avatars.githubusercontent.com/u/5392844?v=4?s=100" width="100px;" alt="moreno"/><br /><sub><b>moreno</b></sub></a><br /><a href="#bug-morenococo" title="Bug reports">🐛</a></td>
     </tr>
   </tbody>
 </table>
