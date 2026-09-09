@@ -155,8 +155,8 @@ end
 function clean_data(
     data::AbstractArray{T,2},
     winrej::AbstractArray{<:Number,2},
-) where {T<:Union{Float64,Missing}}
-    data = Array{Union{Float64,Missing}}(data)
+) where {T<:Union{Real,Missing}}
+    data = Array{Union{T,Missing}}(data)
     for row = 1:size(winrej, 1)
         data[:, Int.(winrej[row, 1]:winrej[row, 2])] .= missing
     end
