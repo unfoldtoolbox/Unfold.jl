@@ -28,10 +28,21 @@ f = lines(data[1:1000])
 f
 
 # Clearly this data is bad and we should rather remove it!
+# We can detect the bad data using `detectbad_peak_to_peak`
+
+mask = detectbad_peak_to_peak(data; threshold = 45, sfreq = 100, window = 0.2)
+
+
+# n of missed negatives:
+length(setdiff(ix, findall(mask)))
+
+# n of false positives:
+length(findall(mask), ix)
+
 # We can use Julias `missing` data-type to indicate those portions.
 using Missings
 data_missing = allowmissing(data)
-data_missing[ix] .= missing
+data_missing[mask] .= missing
 
 lines(f.figure[2, 1], data_missing[1:1000])
 f
