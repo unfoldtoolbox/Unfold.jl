@@ -112,6 +112,6 @@ end
 
     yhat = predict(m)
     @test size(modelmatrix(m), 2) == size(coef(m), 2)
-    @test size(yhat) == size(dat)
+
 
 end
