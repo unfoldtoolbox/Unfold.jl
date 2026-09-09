@@ -18,9 +18,7 @@ StatsModels.coef(mf::LinearModelFit) = mf.estimate
 
 
 
-@traitfn function StatsModels.coeftable(
-    uf::T,
-) where {T <: UnfoldModel; ContinuousTimeTrait{T}}
+@traitfn function StatsModels.coeftable(uf::T) where {T<:UnfoldModel;ContinuousTimeTrait{T}}
     coefsRaw = get_coefnames(uf) |> poolArray
     coefs = extract_coef_info(coefsRaw, 2) |> poolArray
     #colnames_basis_raw = get_basis_colnames(formulas(uf))# this is unconverted basisfunction basis,
@@ -55,7 +53,7 @@ StatsModels.coef(mf::LinearModelFit) = mf.estimate
 
         for (b, d) in zip(basiskeys, designkeys)
 
-            eventnames[basisnames.==b] .= d
+            eventnames[basisnames .== b] .= d
         end
     else
         @warn "No design found, falling back to basisnames instead of eventnames"
@@ -77,7 +75,7 @@ end
 
 @traitfn function StatsModels.coeftable(
     uf::T,
-) where {T <: UnfoldModel; !ContinuousTimeTrait{T}}
+) where {T<:UnfoldModel;!ContinuousTimeTrait{T}}
     # Mass Univariate Case
     coefnames = get_coefnames(uf)
 
@@ -171,7 +169,7 @@ Return the basisnames for all predictor terms as a vector.
 The returned vector contains the name of the event type/basis, repeated by their actual coefficient number (after StatsModels.apply_schema / timeexpansion).
 If a model has more than one event type (e.g. stimulus and fixation), the vectors are concatenated.
 """
-@traitfn function get_basis_names(m::T) where {T <: UnfoldModel; !ContinuousTimeTrait{T}}
+@traitfn function get_basis_names(m::T) where {T<:UnfoldModel;!ContinuousTimeTrait{T}}
 
     # Extract the event names from the design
     design_keys = first.((Unfold.design(m)))
@@ -185,7 +183,7 @@ If a model has more than one event type (e.g. stimulus and fixation), the vector
 end
 
 
-@traitfn get_basis_names(m::T) where {T <: UnfoldModel; ContinuousTimeTrait{T}} =
+@traitfn get_basis_names(m::T) where {T<:UnfoldModel;ContinuousTimeTrait{T}} =
     get_basis_names.(formulas(m))
 function get_basis_names(m::FormulaTerm)
     bf = m.rhs.basisfunction

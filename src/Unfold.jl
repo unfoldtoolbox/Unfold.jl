@@ -96,6 +96,8 @@ export predict, residuals
 export copy_eventinfo, copy_eventinfo!
 export solver_cv, LinearModelFitCV
 
+export detectbad_peak_to_peak
+
 if !isdefined(Base, :get_extension)
     ## Extension Compatabality with julia  pre 1.9
     include("../ext/UnfoldRobustModelsExt.jl")

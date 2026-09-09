@@ -12,7 +12,7 @@ function benchmark_data(;
     return_events_too = false,
 )
     data, evts = UnfoldSim.predef_eeg(StableRNG(1); n_repeats, sfreq)
-    evts = evts[1:end-2, :]
+    evts = evts[1:(end-2), :]
     data = reshape(data, 1, :)
     evts.type = rand(StableRNG(1), [0, 1], nrow(evts))
 

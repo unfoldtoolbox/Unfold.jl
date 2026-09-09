@@ -194,7 +194,7 @@ function designmatrix(
                     join(names(tbl), ","),
                 )
             end
-            eventTbl = @view tbl[tbl[:, eventcolumn].==eventname, :] # we need a view so we can remap later if needed
+            eventTbl = @view tbl[tbl[:, eventcolumn] .== eventname, :] # we need a view so we can remap later if needed
         end
         if isempty(eventTbl)
             error(
@@ -590,7 +590,7 @@ function time_expand_firdiag(
 
     @assert (minimum(onsets) + shift_onset(basisfunction) .- 1 + w) > 0
 
-    neg_fix = sum(adjusted_onsets[adjusted_onsets.<1] .- 1)
+    neg_fix = sum(adjusted_onsets[adjusted_onsets .< 1] .- 1)
     ncoeffs = w * size(Xorg, 1) * size(Xorg, 2) .+ neg_fix * size(Xorg, 2)
 
 

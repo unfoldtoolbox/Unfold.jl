@@ -155,8 +155,8 @@ end
 function clean_data(
     data::AbstractArray{T,2},
     winrej::AbstractArray{<:Number,2},
-) where {T<:Union{Float64,Missing}}
-    data = Array{Union{Float64,Missing}}(data)
+) where {T<:Union{Real,Missing}}
+    data = Array{Union{T,Missing}}(data)
     for row = 1:size(winrej, 1)
         data[:, Int.(winrej[row, 1]:winrej[row, 2])] .= missing
     end
@@ -176,3 +176,60 @@ end
 
 
 poolArray(x) = PooledArray(x; compress = true)
+
+
+
+
+function detectbad_peak_to_peak(signal::AbstractMatrix; kwargs...)
+    sample_mask = falses(size(signal))
+    for ch = 1:size(signal, 1)
+        @views sample_mask[ch, :] = detectbad_peak_to_peak(signal[ch, :]; kwargs...)
+    end
+    return sample_mask
+end
+
+
+"""
+        detectbad_peak_to_peak(signal::AbstractVector{<:Real}; threshold::Real=150.0, sfreq::Int, window::Real=0.2, stepsize=0.05)
+        detectbad_peak_to_peak(signal::AbstractMatrix; kwargs...)
+
+Detect moving-window peak-to-peak artifacts for EEG-like signals.
+
+A window is marked as bad when `maximum(window) - minimum(window) > threshold`.
+All samples within any offending window are set to `true` in the returned mask.
+
+# Keyword arguments
+- `threshold=150.0`: Peak-to-peak threshold in signal units.
+- `sfreq`: Sampling frequency in Hz (needed to translate window/stepsize to samples).
+- `window=0.2`: Sliding-window size in seconds.
+- `stepsize=0.05`: Step size in seconds between consecutive windows. Values larger than one sample can, in principle, miss very short artifacts.
+
+# Returns
+- For 1D input (`samples`): a boolean vector mask of length `samples`.
+- For 2D input (`channels x samples`): a boolean matrix mask of size `channels x samples`.
+
+Function greatly inspired by the EegFun.jl toolbox (MIT licensed):
+https://github.com/igmmgi/EegFun.jl/blob/main/src/analysis/processing/artifact_detection.jl
+"""
+function detectbad_peak_to_peak(
+    signal::AbstractVector{<:Real};
+    threshold::Real = 150.0, #µV
+    sfreq::Int,
+    window::Real = 0.2, #s
+    stepsize = 0.05, #s
+)
+    @assert window > stepsize "We do not support stepsizes larger than the window size"
+    window_samples = Int(round(sfreq*window))
+    n = length(signal)
+    mask = falses(n)
+    w = max(1, window_samples)
+    stepsize_samples = max(1, Int(round(stepsize*sfreq)))
+
+    @inbounds for i = 1:stepsize_samples:(n-w+1)
+        w_view = view(signal, i:(i+w-1))
+        if (maximum(w_view) - minimum(w_view)) > threshold
+            mask[i:(i+w-1)] .= true
+        end
+    end
+    return mask
+end

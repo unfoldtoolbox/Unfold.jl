@@ -10,8 +10,7 @@ function Unfold.prepare(X, data::CuArray{T,2}) where {T<:Number}
     Ĥ = CUDA.zeros(T, size(Y, 2), size(X, 2))
     return Ĥ, Y, (X_out,)
 end
-prepare_XTX(Ĥ, data::Adjoint{T,CuArray}, X) where {T} =
-    prepare_XTX(Ĥ, CuArray{T}(data), X)
+prepare_XTX(Ĥ, data::Adjoint{T,CuArray}, X) where {T} = prepare_XTX(Ĥ, CuArray{T}(data), X)
 
 function Unfold.prepare(X, data::CuArray{T,3}) where {T<:Number}
     X_out = CuSparseMatrixCSC{T}(X)
