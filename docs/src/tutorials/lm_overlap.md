@@ -4,7 +4,7 @@
       We recommend you briefly go over the mass-univariate linear modelling tutorial
 
 In this notebook we will fit regression models to (simulated) EEG data. We will see that we need some type of overlap correction, as the events are close in time to each other, so that the respective brain responses overlap.
-If you want more detailed introduction to this topic check out [our paper](https://peerj.com/articles/7838/).
+If you want more detailed introduction to this topic check out [our paper](https://doi.org/10.7717/peerj.7838).
 
 ## Setting up & loading the data
 

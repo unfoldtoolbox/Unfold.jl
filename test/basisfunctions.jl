@@ -65,7 +65,7 @@ end
         eventfields = [:latency, :duration],
     )
     @test size(coef(m)) == (1, 31)
-    evts.duration[evts.condition.=="face"] .= 1 # don't duration scale other predictors
+    evts.duration[evts.condition .== "face"] .= 1 # don't duration scale other predictors
     m = fit(
         UnfoldModel,
         [
@@ -77,7 +77,7 @@ end
         eventcolumn = :condition,
         eventfields = [:latency, :duration],
     )
-    @test unique(modelmatrix(m)[1:100, end÷2+1:end]) == [0.0, 1.0] # test that the duration of "1" is used
+    @test unique(modelmatrix(m)[1:100, (end÷2+1):end]) == [0.0, 1.0] # test that the duration of "1" is used
     @test size(coef(m)) == (1, 31 * 2)
 
 end

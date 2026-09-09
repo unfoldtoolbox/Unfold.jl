@@ -22,8 +22,8 @@ s = Unfold.formulas(fit(UnfoldModel, f_spl, evts, data_e, times))[1].rhs.terms[3
     # test safe prediction
     m = fit(UnfoldModel, f_spl, evts, data_e, times)
     r = Unfold.predicttable(m, DataFrame(conditionA = [0, 0], continuousA = [0.9, 1.9]))
-    @test all(ismissing.(r.yhat[r.continuousA.==1.9]))
-    @test !any(ismissing.(r.yhat[r.continuousA.==0.9]))
+    @test all(ismissing.(r.yhat[r.continuousA .== 1.9]))
+    @test !any(ismissing.(r.yhat[r.continuousA .== 0.9]))
 end
 
 basisfunction = firbasis(τ = (-1, 1), sfreq = 10, name = "A")
@@ -37,7 +37,7 @@ end
     m = fit(UnfoldModel, f_spl, evts, data_r, basisfunction)
 
     p = predicttable(m, DataFrame(conditionA = [0, 0, 0], continuousA = [0.9, 0.9, 1.9]))
-    @test all(ismissing.(p[p.continuousA.==1.9, :yhat]))
+    @test all(ismissing.(p[p.continuousA .== 1.9, :yhat]))
 
 end
 #@test_broken all(ismissing.)
@@ -70,9 +70,9 @@ end
     effValues = range(-1.1, 1.1, step = 0.1)
     effSingle = effects(Dict(:continuousA => effValues), m)
     tmp = subset(effSingle, :time => x -> x .== -1.0)
-    @test tmp.yhat[tmp.continuousA.==-1.1] ≈ tmp.yhat[tmp.continuousA.==0.9]
-    @test tmp.yhat[tmp.continuousA.==-1.0] ≈ tmp.yhat[tmp.continuousA.==1]
-    @test tmp.yhat[tmp.continuousA.==-0.9] ≈ tmp.yhat[tmp.continuousA.==1.1]
+    @test tmp.yhat[tmp.continuousA .== -1.1] ≈ tmp.yhat[tmp.continuousA .== 0.9]
+    @test tmp.yhat[tmp.continuousA .== -1.0] ≈ tmp.yhat[tmp.continuousA .== 1]
+    @test tmp.yhat[tmp.continuousA .== -0.9] ≈ tmp.yhat[tmp.continuousA .== 1.1]
 
 end
 

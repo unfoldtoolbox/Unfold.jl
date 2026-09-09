@@ -35,7 +35,7 @@ permDat = cluster_permutation(mres, epoch_dat, tRange, 2, nPerm)
 @test size(permDat, 2) == nPerm
 @test size(permDat, 1) == length(tRange)
 
-tRange = 5:length(times)-5
+tRange = 5:(length(times)-5)
 permDat = cluster_permutation(mres, epoch_dat, tRange, 2, nPerm)
 @test size(permDat, 1) == length(tRange)
 
