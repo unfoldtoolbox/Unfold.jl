@@ -42,7 +42,7 @@ makedocs(
             "Change contrasts / coding schema" => "generated/HowTo/contrasts.md",
             "Mark bad data segments" => "generated/HowTo/baddata.md",
             "Standard errors" => "HowTo/standarderrors.md",
-            "Marginal effects (must read re: splines)" => "generated/HowTo/effects.md",
+            "Marginal effects" => "generated/HowTo/effects.md",
             "Circular splines" => "generated/HowTo/circular_splines.md",
             "Alternative Solvers (Robust, GPU, B2B)" => "HowTo/custom_solvers.md",
             "Cross-validated Unfold models" => "generated/HowTo/solver_cv.md",
