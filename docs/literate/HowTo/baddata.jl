@@ -30,7 +30,7 @@ f
 # Clearly this data is bad and we should rather remove it!
 # We can detect the bad data using `detectbad_peak_to_peak`
 
-mask = detectbad_peak_to_peak(data; threshold = 45, sfreq = 100, window = 0.2)
+mask = detectbad_peak_to_peak(data; threshold = 45, sfreq = 100, window = 0.2, stepsize = 0.02)
 
 
 # n of missed negatives:
