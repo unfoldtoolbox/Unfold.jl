@@ -36,6 +36,7 @@ makedocs(
         "Tutorials" => [
             "rERP (mass univariate)" => "tutorials/lm_mu.md",
             "rERP (overlap correction)" => "tutorials/lm_overlap.md",
+            "Variance Inflation Factors (VIF)" => "generated/tutorials/vif.md",
         ],
         "HowTo" => [
             "Multiple events" => "HowTo/multiple_events.md",
