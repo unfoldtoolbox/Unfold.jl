@@ -193,6 +193,16 @@ end
         return_epoched = true,
     )
 
+    # The simulated data differs between Julia <1.13 and >=1.13: `predef_eeg`
+    # shuffles the design with stdlib `Random.randperm`, which changed
+    # implementation in Julia 1.13 (JuliaLang/julia#50509) and thus produces
+    # a different trial order for the same `StableRNG` seed.
+    if VERSION < v"1.13.0"
+        expected_r2 = (0.74, 0.001, 0.806)
+    else
+        expected_r2 = (0.761, 0.010, 0.784)
+    end
+
     # time expanded
     m = fit(
         UnfoldModel,
@@ -220,14 +230,14 @@ end
 
     _r2 = Unfold.r2(m, data)
     @test length(_r2) == 1
-    @test isapprox(_r2[1], 0.74, atol = 0.01)
+    @test isapprox(_r2[1], expected_r2[1], atol = 0.01)
     _r2 = Unfold.r2(m_e, data_e)
     _r2_e2 = Unfold.r2(m_e2, data_e)
     @test all(_r2 .≈ _r2_e2)
     @test length(_r2) == size(data_e, 1)
     @test all(_r2 .< 1)
-    @test isapprox(_r2[1], 0.001, atol = 0.01)
-    @test isapprox(_r2[16], 0.806, atol = 0.01)
+    @test isapprox(_r2[1], expected_r2[2], atol = 0.01)
+    @test isapprox(_r2[16], expected_r2[3], atol = 0.01)
 
     data_reshape = reshape(data, 1, :)
     data_e_reshape = reshape(data_e, 1, size(data_e)...)
