@@ -27,3 +27,8 @@ StatsModels = "3eaba693-59b7-5ba5-a881-562e759f1c8d"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Unfold = "181c99d8-e21b-4ff3-b70b-c233eddec679"
 UnfoldSim = "ed8ae6d2-84d3-44c6-ab46-0baf21700804"
+
+# path dep (not registry) so that Pkg.test runs the tests against the
+# local checkout rather than against a released registry version
+[sources]
+Unfold = {path = ".."}
