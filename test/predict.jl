@@ -108,10 +108,19 @@ pt = Unfold.result_to_table(
 #@test_broken all(isapprox.(pt[[1, 2, 3], :yhat], 0.24672; atol = 0.01)) # test broken until UnfoldSim.jl is updated!!
 @test all(pt[[1, 2, 3], :channel] .== [1, 2, 3])
 # spot check to see if the order changed somehow
-@test_broken all(
-    pt[[1, 5000, 25123], :yhat] .≈
-    [0.23833130331025282, 0.07879460692911115, 0.016934637133599384],
-)
+# The values depend on the trial order of `UnfoldSim.predef_eeg`, which changed
+# in Julia 1.13 (JuliaLang/julia#50509); on older Julia the original values hold.
+if VERSION < v"1.13.0"
+    @test all(
+        pt[[1, 5000, 25123], :yhat] .≈
+        [0.23833130331025282, 0.07879460692911115, 0.016934637133599384],
+    )
+else
+    @test_broken all(
+        pt[[1, 5000, 25123], :yhat] .≈
+        [0.23833130331025282, 0.07879460692911115, 0.016934637133599384],
+    )
+end
 
 
 

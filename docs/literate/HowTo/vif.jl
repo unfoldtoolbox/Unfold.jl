@@ -1,4 +1,6 @@
 # # [Variance Inflation Factors (VIF)](@id vif)
+# @warn "This page was drafted with the help of an LLM. Please [report any errors or inconsistencies](https://github.com/unfoldtoolbox/Unfold.jl/issues)."
+#
 # The **Variance Inflation Factor (VIF)** is a diagnostic for *collinearity* in a linear model's designmatrix. For each coefficient, it measures how much the variance of its estimate is inflated compared to the case where that predictor would be orthogonal to all other predictors:
 #
 # $$\text{VIF}_j = \frac{1}{1 - R^2_j}$$
