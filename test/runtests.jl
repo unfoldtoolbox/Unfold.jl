@@ -31,6 +31,10 @@ end
     include("effects.jl")
 end
 
+@testset "VIF" begin
+    include("vif.jl")
+end
+
 
 @testset "Utilities" begin
     include("utilities.jl")

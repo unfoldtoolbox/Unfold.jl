@@ -45,6 +45,7 @@ import StatsBase: modelmatrix
 import StatsBase: predict
 import StatsModels: width
 import StatsModels: terms
+import StatsModels: vif
 using Random # for MersenneTwister
 
 import StatsBase.quantile
@@ -66,6 +67,7 @@ include("condense.jl")
 #include("solver.jl")
 include("predict.jl")
 include("effects.jl")
+include("vif.jl")
 include("io.jl")
 include("show.jl") # pretty printing
 
@@ -162,6 +164,7 @@ export spl, circspl
 
 
 export effects # effects.jl
+export vif # vif.jl (method for UnfoldModel defined on StatsModels.vif)
 import StatsModels.@formula # for exporting
 export @formula
 
