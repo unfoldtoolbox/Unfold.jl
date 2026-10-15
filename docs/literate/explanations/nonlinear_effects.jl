@@ -53,7 +53,7 @@ lines!(p_spl3.x, coalesce.(p_spl3.yhat, NaN))
 lines!(p_spl10.x, coalesce.(p_spl10.yhat, NaN))
 pl
 
-# We see here, that the linear effect (blue line) underfits the data, the yellow `spl(x, 10)` overfits it, but the green `spl(x, 4)` fits it perfectly.
+# We see here, that the linear effect (blue line) underfits the data, the green `spl(x, 10)` overfits it, but the yellow `spl(x, 4)` fits it perfectly.
 
 
 # ## Looking under the hood
