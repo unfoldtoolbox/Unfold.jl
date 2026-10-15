@@ -76,9 +76,12 @@ b1 = firbasis(τ = (0.0, 0.95), sfreq = 20, name = "eventA")
 b2 = firbasis(τ = (0.0, 0.95), sfreq = 20, name = "eventB")
 b3 = firbasis(τ = (0.0, 0.95), sfreq = 20, name = "eventC")
 f = @formula 0 ~ 1 # 1
+# NOTE: use a vector of pairs (not a Dict) so the event order is deterministic:
+# Dict iteration order depends on the hash of the keys, and Julia 1.13 changed
+# string hashing (JuliaLang/julia#59691), which reordered Dict-based fits.
 m_tul = fit(
     UnfoldModel,
-    Dict("eventA" => (f, b1), "eventB" => (f, b2)),
+    ["eventA" => (f, b1), "eventB" => (f, b2)],
     evts,
     data,
     eventcolumn = "type",
@@ -101,7 +104,7 @@ end
     evts_3.type[50:100] .= "eventD"
     m_tul_3 = fit(
         UnfoldModel,
-        Dict("eventA" => (f, b1), "eventB" => (f, b2), "eventC" => (f, b3)),
+        ["eventA" => (f, b1), "eventB" => (f, b2), "eventC" => (f, b3)],
         evts_3,
         data,
         eventcolumn = "type",
@@ -124,7 +127,7 @@ end
     f2 = @formula 0 ~ 1 + continuousA # 1
     m_tul = fit(
         UnfoldModel,
-        Dict("eventA" => (f1, b1), "eventB" => (f2, b2)),
+        ["eventA" => (f1, b1), "eventB" => (f2, b2)],
         evts,
         data,
         eventcolumn = "type",
@@ -176,7 +179,7 @@ end
     f2 = @formula 0 ~ 1 + continuousB # 1
     m_tul = fit(
         UnfoldModel,
-        Dict("eventA" => (f1, b1), "eventB" => (f2, b2)),
+        ["eventA" => (f1, b1), "eventB" => (f2, b2)],
         evts,
         data,
         eventcolumn = "type",

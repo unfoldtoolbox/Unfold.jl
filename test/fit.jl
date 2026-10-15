@@ -226,7 +226,9 @@ basisfunction = firbasis(τ = (-1, 1), sfreq = 20)
         filter(x -> (x.conditionA == 1), evts),
         b2,
     )
-    uf = UnfoldLinearModelContinuousTime(Dict(0 => (f1, b1), 1 => (f2, b2)), X1 + X2)
+    # vector (not Dict) so the event order matches X1 + X2 on all Julia versions
+    # (Julia 1.13 changed key hashing, JuliaLang/julia#59691, which reordered Dicts)
+    uf = UnfoldLinearModelContinuousTime([0 => (f1, b1), 1 => (f2, b2)], X1 + X2)
     @time fit!(uf, data_r)
     tmp = coeftable(uf)
 
