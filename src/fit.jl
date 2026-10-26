@@ -185,7 +185,19 @@ function StatsModels.fit!(
             # to do the same for the data, but data and designmatrix dont know much about each other.
             # Thus we use parentindices() to get the original indices of the @view events[...] from desigmatrix.jl
             @debug typeof(X) typeof(events(d)[m])
-            push!(modelfits, solver(X[m], @view data[:, :, parentindices(events(d)[m])[1]]))
+            ev_ix = parentindices(events(d)[m])[1]
+            if _contains_channelterm(formulas(d)[m].rhs)
+                # channel-varying predictors (bychannel): each channel is fit on its own
+                # designmatrix (e.g. its own baseline), then concatenated along channels
+                X_ch = modelcols_bychannel(formulas(d)[m].rhs, events(d)[m])
+                @assert size(X_ch, 1) == size(data, 1) "channel-varying designmatrix (bychannel) has $(size(X_ch,1)) channels, but data has $(size(data,1)) - did you maybe order the events/baseline values differently than the data channels?"
+                ch_fits = map(1:size(data, 1)) do ch
+                    solver(view(X_ch, ch, :, :), @view data[ch:ch, :, ev_ix])
+                end
+                push!(modelfits, _cat_channel(ch_fits))
+            else
+                push!(modelfits, solver(X[m], @view data[:, :, ev_ix]))
+            end
         end
 
         _modelfits = typeof(modelfits[1])[modelfits...]
@@ -222,6 +234,23 @@ function _cat(modelfits::AbstractArray{T}) where {T<:LinearModelFitCV}
         [c.info for c in modelfits],
         cat([c.standarderror for c in modelfits]..., dims = 3),
         [c.folds for c in modelfits],
+    )
+end
+
+# concatenate per-channel modelfits (from bychannel designmatrices) along the channel dimension
+function _cat_channel(modelfits::AbstractVector{T}) where {T<:LinearModelFit}
+    T(
+        cat([c.estimate for c in modelfits]..., dims = 1),
+        vcat([c.info for c in modelfits]...),
+        cat([c.standarderror for c in modelfits]..., dims = 1),
+    )
+end
+function _cat_channel(modelfits::AbstractVector{T}) where {T<:LinearModelFitCV}
+    T(
+        cat([c.estimate for c in modelfits]..., dims = 1),
+        vcat([c.info for c in modelfits]...),
+        cat([c.standarderror for c in modelfits]..., dims = 1),
+        vcat([c.folds for c in modelfits]...),
     )
 end
 

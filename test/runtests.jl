@@ -11,6 +11,10 @@ include("setup.jl")
     include("basisfunctions.jl")
 end
 
+@testset "ChannelVarying" begin
+    include("channelterm.jl")
+end
+
 @testset "Fitting" begin
     include("fit.jl")
 end

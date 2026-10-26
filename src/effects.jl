@@ -115,7 +115,12 @@ end
     out = FormulaTerm[]
     for k = 1:length(form)
         tmpf = typify(reference_grid, form[k], m[k]; typical = typical)
-        push!(out, FormulaTerm(form[k].lhs, tmpf))
+        # channel-varying (bychannel) predictors are fixed to 0, i.e. effects are
+        # conditional on them (reference-grid values for them are ignored)
+        push!(
+            out,
+            FormulaTerm(form[k].lhs, Unfold._zerobychannel_typify(tmpf, reference_grid)),
+        )
     end
     @debug :_typify typeof(form)
     return out

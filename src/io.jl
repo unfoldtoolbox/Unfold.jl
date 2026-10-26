@@ -16,7 +16,7 @@ end
 """
     _modelcols(form::FormulaTerm, events)
 """
-_modelcols(form::FormulaTerm, events) = modelcols(form.rhs, events)
+_modelcols(form::FormulaTerm, events) = _modelmatrix_cols(form, events)
 
 
 """

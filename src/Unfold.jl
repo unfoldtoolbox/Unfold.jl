@@ -59,6 +59,7 @@ using MLUtils # for solver_cv
 include("typedefinitions.jl")
 include("basisfunctions.jl")
 include("timeexpandedterm.jl")
+include("channelterm.jl")
 include("designmatrix.jl")
 include("fit.jl")
 include("utilities.jl")
@@ -97,6 +98,7 @@ export predict, residuals
 
 export copy_eventinfo, copy_eventinfo!
 export solver_cv, LinearModelFitCV
+export bychannel
 
 export detectbad_peak_to_peak
 
