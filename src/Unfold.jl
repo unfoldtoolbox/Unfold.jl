@@ -96,7 +96,7 @@ export modelfit
 export predict, residuals
 
 export copy_eventinfo, copy_eventinfo!
-export solver_cv, LinearModelFitCV
+export solver_cv, LinearModelFitCV, fold_assignment
 
 export detectbad_peak_to_peak
 
