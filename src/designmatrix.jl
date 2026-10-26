@@ -110,7 +110,14 @@ function designmatrix(
     )
 
     # Evaluate the designmatrix
-    X = modelcols(form.rhs, tbl_nomissing)
+    # channel-varying predictors (bychannel) are not supported for time-expanded models,
+    # as the per-channel values would have to be time-expanded as well
+    if basisfunction !== nothing && _contains_channelterm(form.rhs.term)
+        error(
+            "bychannel() predictors are not supported for time-expanded (deconvolution) models.",
+        )
+    end
+    X = _modelmatrix_cols(form, tbl_nomissing)
 
 
     designmatrixtype = typeof(designmatrix(unfoldmodeltype())[1])
