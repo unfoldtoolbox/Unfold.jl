@@ -13,7 +13,6 @@ using Unfold
 using UnfoldSim
 using UnfoldMakie,CairoMakie
 using DataFrames
-using DisplayAs # hide
 
 data, evts = UnfoldSim.predef_eeg()
 nothing # hide
@@ -54,7 +53,7 @@ The formula and basisfunction is not enough on their own. We also need to specif
 
 ```@example Main
 bf_vec = [Any=>(f,basisfunction)]
-bf_vec|> DisplayAs.withcontext(:is_pluto=>true) # hide
+bf_vec # hide
 ```
 
 !!! note
