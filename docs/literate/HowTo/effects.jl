@@ -13,8 +13,6 @@ using Random
 using CSV
 using UnfoldMakie
 using UnfoldSim
-using UnfoldMakie
-using DisplayAs # hide
 
 # Generate data and fit a model with a 2-level categorical predictor and a continuous predictor without interaction.
 data, evts = UnfoldSim.predef_eeg(; noiselevel = 8)
@@ -24,7 +22,7 @@ basisfunction = firbasis(τ = (-0.1, 0.5), sfreq = 100; interpolate = false)
 f = @formula 0 ~ 1 + condition + continuous # 1
 
 m = fit(UnfoldModel, [Any => (f, basisfunction)], evts, data, eventcolumn = "type")
-m |> DisplayAs.withcontext(:is_pluto => true) # hide
+m # hide
 
 # Plot the results
 plot_erp(coeftable(m))

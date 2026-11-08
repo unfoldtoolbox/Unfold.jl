@@ -5,7 +5,6 @@ using Interpolations
 using UnfoldSim
 using UnfoldMakie, CairoMakie
 using DataFrames
-using DisplayAs # hide
 
 data, evts = UnfoldSim.predef_eeg(sfreq = 10, n_repeats = 1)
 
