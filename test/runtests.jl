@@ -19,6 +19,10 @@ end
     include("designmatrix.jl")
 end
 
+@testset "DenseDesign" begin
+    include("densedesign.jl")
+end
+
 @testset "Splines" begin
     include("splines.jl")
 end

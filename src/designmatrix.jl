@@ -319,6 +319,29 @@ extend_to_larger(modelmatrix::Vector{<:SparseMatrixCSC}) = extend_to_larger(mode
 extend_to_larger(modelmatrix1::SparseMatrixCSC, modelmatrix2::SparseMatrixCSC, args...) =
     extend_to_larger(extend_to_larger(modelmatrix1, modelmatrix2), args...)
 
+# dense time-expanded designmatrices: same extend-to-larger logic as the sparse case, but dense
+extend_to_larger(modelmatrix1::Matrix, modelmatrix2::Matrix, args...) =
+    extend_to_larger(extend_to_larger(modelmatrix1, modelmatrix2), args...)
+
+function extend_to_larger(modelmatrix1::Matrix, modelmatrix2::Matrix)
+    sX1 = size(modelmatrix1, 1)
+    sX2 = size(modelmatrix2, 1)
+
+    # append 0-rows to the shorter designmat
+    if sX1 < sX2
+        modelmatrix1 = vcat(
+            modelmatrix1,
+            zeros(eltype(modelmatrix1), sX2 - sX1, size(modelmatrix1, 2)),
+        )
+    elseif sX2 < sX1
+        modelmatrix2 = vcat(
+            modelmatrix2,
+            zeros(eltype(modelmatrix2), sX1 - sX2, size(modelmatrix2, 2)),
+        )
+    end
+    return hcat(modelmatrix1, modelmatrix2)
+end
+
 function extend_to_larger(modelmatrix1::SparseMatrixCSC, modelmatrix2::SparseMatrixCSC)
     sX1 = size(modelmatrix1, 1)
     sX2 = size(modelmatrix2, 1)
@@ -349,7 +372,10 @@ end
     StatsModels.modelmatrix(uf::UnfoldLinearModelContinuousTime, basisfunction = true)
 Setting the optional second args to false, will return the modelmatrix without the timeexpansion / basisfunction applied.
 """
-function StatsModels.modelmatrix(uf::UnfoldLinearModelContinuousTime, basisfunction = true)
+function StatsModels.modelmatrix(
+    uf::Union{UnfoldLinearModelContinuousTime,UnfoldLinearModelContinuousTimeDenseDesign},
+    basisfunction = true,
+)
     if basisfunction
         return modelmatrix(designmatrix(uf))
         #return hcat(modelmatrix(designmatrix(uf))...)
@@ -372,6 +398,12 @@ StatsModels.modelmatrix(uf::UnfoldModel) = modelmatrix(designmatrix(uf))#modelma
 StatsModels.modelmatrix(d::AbstractDesignMatrix) = modelmatrices(d)
 StatsModels.modelmatrix(d::Vector{<:AbstractDesignMatrix}) =
     extend_to_larger(modelmatrices.(d))
+
+# dense time-expanded designmatrices are concatenated like the sparse ones. Dispatch on the
+# designmatrix type, not on the matrix type: a `Vector{<:Matrix}` is also the mass-univariate
+# modelmatrix, which has to stay a vector of per-event matrices.
+StatsModels.modelmatrix(d::Vector{<:DesignMatrixLinearModelContinuousTimeDense}) =
+    extend_to_larger(modelmatrices.(d)...)
 
 
 """

@@ -166,14 +166,16 @@ function StatsModels.fit!(
     @assert ~isempty(designmatrix(uf))
 
 
-    if isa(uf, UnfoldLinearModel)
+    # trait-based instead of isa(uf, UnfoldLinearModel), so that other non-continuous-time
+    # subtypes of UnfoldModel dispatch through here as well
+    if !SimpleTraits.istrait(ContinuousTimeTrait{typeof(uf)})
         @assert length(times(uf)[1]) == size(data, length(size(data)) - 1) "Times Vector does not match second last dimension of input data - forgot to cut into epochs?"
     end
 
     X = modelmatrix(uf)
 
 
-    if isa(uf, UnfoldLinearModel)
+    if !SimpleTraits.istrait(ContinuousTimeTrait{typeof(uf)})
 
         d = designmatrix(uf)
 
