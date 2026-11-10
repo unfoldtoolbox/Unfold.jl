@@ -65,19 +65,20 @@ size(modelfit(m_cv).estimate)
 # `coef` and `coeftable` again report the fold-averaged estimates.
 first(coeftable(m_cv), 6)
 
-# # Reusing a fold split
-# `fold_assignment` returns, for each fold, the observations (trials, or segments for deconvolved models) held out in that fold.
-# Passing the result of a previous fit back as the `fold_assignment` keyword evaluates a different model on the *identical* held-out segments — useful for delta-R² comparisons between a full model and a reduced model (with the reduced model, auto-detection would not produce the same segments, so give both fits the same manual `breaks`).
-fold_assignment(modelfit(m_cv))
-
 # # Reusing a split: `fold_assignment`
 # For model comparisons — e.g. a delta-R² analysis in which an effect of interest is removed from the model — the full and the reduced model need to be evaluated on the *same* held-out segments.
 # Instead of constructing the split manually, extract it from the finished fit with `fold_assignment` (one list of held-out segments per fold) and pass it to the next fit:
 f_red = @formula 0 ~ 1 # reduced model: the effect of interest is removed
 fa = fold_assignment(modelfit(m_cv))
 
-# The entries of `fa` must partition the segments of the new fit (which are detected the same way as for the full model, so the split applies directly).
-m_red = fit(UnfoldModel, [Any => (f_red, bf)], evts, eeg_cont; solver = solver_cv(n_folds = 5, fold_assignment = fa))
+# The entries of `fa` must partition the segments of the new fit. In this example both design matrices have the same non-zero stretches, so the auto-detected segments match and the split applies directly - if the two designs could auto-detect different segments, give both fits the same manual `breaks`.
+m_red = fit(
+    UnfoldModel,
+    [Any => (f_red, bf)],
+    evts,
+    eeg_cont;
+    solver = solver_cv(n_folds = 5, fold_assignment = fa),
+)
 
 # Both fits now hold out identical segments per fold, so the fold columns of the two fits can be compared directly (e.g. to compute a per-fold delta-R²).
 fold_assignment(modelfit(m_red)) == fa

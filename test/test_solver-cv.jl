@@ -44,6 +44,19 @@ using Logging
 
     # the per-fold test sets can be extracted with fold_assignment
     @test sort(vcat(fold_assignment(fit_cv)...)) == collect(1:12)
+
+    # breaks/fold_assignment only apply to deconvolved models: warn + ignore
+    @test_logs (:warn, r"only apply to deconvolved") begin
+        solver_cv(;
+            n_folds = 3,
+            shuffle = false,
+            inner_solver = inner_solver,
+            breaks = [1, 2],
+        )(
+            X,
+            y,
+        )
+    end
 end
 
 @testset "LinearModelFitCV" begin
@@ -96,7 +109,38 @@ end
     @test cat_cv.folds == [c1.folds, c2.folds]
 end
 
-using Logging
+@testset "solver_cv multi-event fold_assignment" begin
+    # multi-event mass-univariate fits concatenate one LinearModelFitCV per
+    # event type, so fold_assignment returns one entry per event type (each
+    # event type has its own trial subset)
+    evts = DataFrame(
+        latency = [1, 20, 40, 60, 80],
+        condition = ["a", "b", "a", "b", "a"],
+        event = ["x", "x", "x", "y", "y"],
+    )
+    data_e = rand(MersenneTwister(1), 1, 10, 5) # ch x time x trials
+    f = @formula 0 ~ 1 + condition
+    times = range(-0.1, 0.3, length = 10)
+
+    m = fit(
+        UnfoldModel,
+        ["x" => (f, times), "y" => (f, times)],
+        evts,
+        data_e;
+        solver = solver_cv(n_folds = 2, rng = MersenneTwister(1)),
+        eventcolumn = :event,
+    )
+    mf = modelfit(m)
+    @test size(mf.estimate) == (1, 10, 4, 2) # chan x time x coeff x fold
+
+    fa = fold_assignment(mf)
+    @test length(fa) == 2 # one entry per event type
+    @test all(fa_i -> length(fa_i) == 2, fa) # n_folds per event type
+    # every trial of each event type is held out exactly once; the indices are
+    # positions within that event type's trial subset (3 trials for x, 2 for y)
+    @test sort(vcat(fa[1]...)) == [1, 2, 3]
+    @test sort(vcat(fa[2]...)) == [1, 2]
+end
 
 @testset "solver_cv deconvolved" begin
     # a sparse design matrix with 3 active blocks separated by all-zero gaps
@@ -111,17 +155,18 @@ using Logging
     y = rand(MersenneTwister(1), 2, n)
 
     # stub inner solver that records how many rows it was fitted on
-    inner_solver = (X_, y_) -> begin
-        n_rows = size(X_, 1)
-        estimate = [n_rows n_rows; sum(y_) sum(y_)]
-        standarderror = estimate ./ 10
-        return Unfold.LinearModelFit(estimate, (n_rows = n_rows,), standarderror)
-    end
+    inner_solver =
+        (X_, y_) -> begin
+            n_rows = size(X_, 1)
+            estimate = [n_rows n_rows; sum(y_) sum(y_)]
+            standarderror = estimate ./ 10
+            return Unfold.LinearModelFit(estimate, (n_rows = n_rows,), standarderror)
+        end
 
     # --- auto-detected segments (maximal stretches of non-zero rows) ---
     m = solver_cv(n_folds = 2, shuffle = false, inner_solver = inner_solver)(X, y)
 
-    @test m isa LinearModelFitCV{Float64, 3}
+    @test m isa LinearModelFitCV{Float64,3}
     @test size(m.estimate) == (2, 2, 2)
     @test size(m.standarderror) == (2, 2, 2)
     @test m.info.segments == UnitRange{Int}[1:30, 40:70, 80:100]
@@ -144,13 +189,19 @@ using Logging
         shuffle = true,
         rng = MersenneTwister(3),
         inner_solver = inner_solver,
-    )(X, y)
+    )(
+        X,
+        y,
+    )
     m_b = solver_cv(
         n_folds = 2,
         shuffle = true,
         rng = MersenneTwister(3),
         inner_solver = inner_solver,
-    )(X, y)
+    )(
+        X,
+        y,
+    )
     @test m_a.estimate == m_b.estimate
     @test m_a.folds == m_b.folds
 
@@ -161,7 +212,10 @@ using Logging
             shuffle = false,
             inner_solver = inner_solver,
             breaks = [40, 80],
-        )(X, y)
+        )(
+            X,
+            y,
+        )
         @test m_clean.info.segments == UnitRange{Int}[1:39, 40:79, 80:100]
     end
 
@@ -172,7 +226,10 @@ using Logging
             shuffle = false,
             inner_solver = inner_solver,
             breaks = [50, 80],
-        )(X, y)
+        )(
+            X,
+            y,
+        )
         @test m_dirty.info.segments == UnitRange{Int}[1:49, 50:79, 80:100]
     end
 
@@ -182,12 +239,30 @@ using Logging
         shuffle = false,
         inner_solver = inner_solver,
         breaks = DataFrame(latency = [40, 80]),
-    )(X, y)
+    )(
+        X,
+        y,
+    )
     @test m_df.info.segments == UnitRange{Int}[1:39, 40:79, 80:100]
 
     # n_folds cannot exceed the number of segments
-    @test_throws ArgumentError solver_cv(n_folds = 5, shuffle = false, inner_solver = inner_solver)(
-        X, y,
+    @test_throws ArgumentError solver_cv(
+        n_folds = 5,
+        shuffle = false,
+        inner_solver = inner_solver,
+    )(
+        X,
+        y,
+    )
+
+    # n_folds = 1 would leave the training set empty
+    @test_throws ArgumentError solver_cv(
+        n_folds = 1,
+        shuffle = false,
+        inner_solver = inner_solver,
+    )(
+        X,
+        y,
     )
 
     # fit_test=true also returns the estimates of the held-out segments
@@ -196,7 +271,10 @@ using Logging
         shuffle = false,
         inner_solver = inner_solver,
         fit_test = true,
-    )(X, y)
+    )(
+        X,
+        y,
+    )
     @test size(m_ft.info.test_estimates) == (2, 2, 2)
 end
 
@@ -213,17 +291,24 @@ end
     X[84:95, 1] .= 1.0
     y = rand(MersenneTwister(1), 2, n)
 
-    inner_solver = (X_, y_) -> begin
-        n_rows = size(X_, 1)
-        estimate = [n_rows; sum(y_)]
-        return Unfold.LinearModelFit(estimate, (n_rows = n_rows,), estimate ./ 10)
-    end
+    inner_solver =
+        (X_, y_) -> begin
+            n_rows = size(X_, 1)
+            estimate = [n_rows; sum(y_)]
+            return Unfold.LinearModelFit(estimate, (n_rows = n_rows,), estimate ./ 10)
+        end
 
     breaks = [20, 40, 60, 80]
     # with shuffle=false and n_folds = n_segments, fold i holds out segment i
     m = solver_cv(
-        n_folds = 5, shuffle = false, inner_solver = inner_solver, breaks = breaks,
-    )(X, y)
+        n_folds = 5,
+        shuffle = false,
+        inner_solver = inner_solver,
+        breaks = breaks,
+    )(
+        X,
+        y,
+    )
     @test fold_assignment(m) == [[1], [2], [3], [4], [5]]
     @test [info.n_rows for info in m.info.inner_infos] == [81, 80, 80, 80, 79]
 
@@ -236,7 +321,10 @@ end
         inner_solver = inner_solver,
         breaks = breaks,
         fold_assignment = fold_assignment(m),
-    )(X, y)
+    )(
+        X,
+        y,
+    )
     @test fold_assignment(m2) == fold_assignment(m)
     @test m2.estimate == m.estimate
     @test m2.folds == m.folds
@@ -249,24 +337,60 @@ end
         inner_solver = inner_solver,
         breaks = breaks,
         fold_assignment = fa,
-    )(X, y)
+    )(
+        X,
+        y,
+    )
     @test fold_assignment(m3) == fa
     @test m3.info.inner_infos[1].n_rows == 80
     @test m3.info.inner_infos[2].n_rows == 81
 
     # invalid assignments are rejected
     @test_throws ArgumentError solver_cv(
-        n_folds = 5, inner_solver = inner_solver, breaks = breaks,
+        n_folds = 5,
+        inner_solver = inner_solver,
+        breaks = breaks,
         fold_assignment = [[1], [2], [3]],
-    )(X, y) # too few entries
+    )(
+        X,
+        y,
+    ) # too few entries
     @test_throws ArgumentError solver_cv(
-        n_folds = 5, inner_solver = inner_solver, breaks = breaks,
+        n_folds = 5,
+        inner_solver = inner_solver,
+        breaks = breaks,
         fold_assignment = [[1], [2], [3], [5], [6]],
-    )(X, y) # segment 4 missing, 6 out of range
+    )(
+        X,
+        y,
+    ) # segment 4 missing, 6 out of range
     @test_throws ArgumentError solver_cv(
-        n_folds = 5, inner_solver = inner_solver, breaks = breaks,
+        n_folds = 5,
+        inner_solver = inner_solver,
+        breaks = breaks,
         fold_assignment = [[1, 1], [2], [3], [4], [5]],
-    )(X, y) # duplicated segment
+    )(
+        X,
+        y,
+    ) # duplicated segment
+    @test_throws ArgumentError solver_cv(
+        n_folds = 1,
+        inner_solver = inner_solver,
+        breaks = breaks,
+        fold_assignment = [[1, 2, 3, 4, 5]],
+    )(
+        X,
+        y,
+    ) # holds out all segments: training set would be empty
+    @test_throws ArgumentError solver_cv(
+        n_folds = 3,
+        inner_solver = inner_solver,
+        breaks = breaks,
+        fold_assignment = [1, 2, 3],
+    )(
+        X,
+        y,
+    ) # flat vector instead of one vector per fold
 end
 
 @testset "solver_cv deconvolved end-to-end" begin
@@ -279,7 +403,7 @@ end
     data = 0.5 * randn(MersenneTwister(2), 2, n)
     τ = (-0.2, 0.6)
     for o in onsets
-        w = (o - 20):(o + 60)
+        w = (o-20):(o+60)
         w = w[(w .>= 1) .& (w .<= n)]
         data[:, w] .+= 8.0
     end
@@ -312,8 +436,8 @@ end
         test_rows = test_rows[test_rows .<= n_used]
         ytest = yall[:, test_rows]
         yhat = mf.estimate[:, :, k] * Xd[test_rows, :]'
-        ss_res = vec(sum((ytest .- yhat).^2, dims = 2))
-        ss_tot = vec(sum((ytest .- ȳ).^2, dims = 2))
+        ss_res = vec(sum((ytest .- yhat) .^ 2, dims = 2))
+        ss_tot = vec(sum((ytest .- ȳ) .^ 2, dims = 2))
         @test all((1 .- ss_res ./ ss_tot) .> 0.5)
     end
 end
@@ -335,7 +459,7 @@ end
     # better than the reduced (common-response-only) model
     data = 0.5 * randn(MersenneTwister(2), 2, n)
     for (o, c) in zip(onsets, evts[!, :condition])
-        data[:, (o - 20):(o + 60)] .+= (c == "a" ? 6.0 : 10.0)
+        data[:, (o-20):(o+60)] .+= (c == "a" ? 6.0 : 10.0)
     end
 
     m_full = fit(

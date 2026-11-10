@@ -31,12 +31,19 @@ function solver_cv(;
     # constructing the solver-function called by Unfold's fit()
     function cv_kernel(X, y)
         if ndims(y) == 3
-            return _cv_mass_univariate(
-                X, y; n_folds, shuffle, rng, inner_solver, fit_test,
-            )
+            (isnothing(breaks) && isnothing(fold_assignment)) ||
+                @warn "solver_cv: `breaks` and `fold_assignment` only apply to deconvolved models - ignoring them for mass-univariate (epoched) data"
+            return _cv_mass_univariate(X, y; n_folds, shuffle, rng, inner_solver, fit_test)
         elseif ndims(y) == 2
             return _cv_deconvolved(
-                X, y; n_folds, shuffle, rng, inner_solver, fit_test, breaks,
+                X,
+                y;
+                n_folds,
+                shuffle,
+                rng,
+                inner_solver,
+                fit_test,
+                breaks,
                 fold_assignment,
             )
         else
@@ -85,8 +92,7 @@ function _cv_mass_univariate(X, y; n_folds, shuffle, rng, inner_solver, fit_test
     info_dict = (
         inner_infos = [r.info for r in train_results],
         test_estimates = fit_test ?
-                         cat([r.estimate for r in test_results]..., dims = 4) :
-                         nothing,
+                         cat([r.estimate for r in test_results]..., dims = 4) : nothing,
     )
     return LinearModelFitCV(
         estimate = all_estimates,
@@ -112,19 +118,27 @@ folds and the model is fitted on all samples outside the held-out segments. If
 `kfolds` (each entry lists the segments held out in that fold).
 """
 function _cv_deconvolved(
-    X, y; n_folds, shuffle, rng, inner_solver, fit_test, breaks, fold_assignment,
+    X,
+    y;
+    n_folds,
+    shuffle,
+    rng,
+    inner_solver,
+    fit_test,
+    breaks,
+    fold_assignment,
 )
     n = size(y, 2)
     @assert size(X, 1) == n "solver_cv: design matrix ($(size(X, 1)) rows) and data ($(n) samples) have different lengths"
 
-    segments = isnothing(breaks) ? _cv_segments_autodetect(X) :
-                _cv_segments_manual(breaks, n)
+    segments =
+        isnothing(breaks) ? _cv_segments_autodetect(X) : _cv_segments_manual(breaks, n)
     n_segments = length(segments)
 
     # (train_segments, test_segments) per fold
-    fold_split = isnothing(fold_assignment) ?
-                 _kfolds_split(n_folds, n_segments; shuffle, rng) :
-                 _fold_split_from_assignment(fold_assignment, n_folds, n_segments)
+    fold_split =
+        isnothing(fold_assignment) ? _kfolds_split(n_folds, n_segments; shuffle, rng) :
+        _fold_split_from_assignment(fold_assignment, n_folds, n_segments)
 
     # which fold (test set) each segment belongs to
     seg_fold = zeros(Int, n_segments)
@@ -164,8 +178,8 @@ function _cv_deconvolved(
     # all-zero rows of the design matrix, so no response can cross them.
     if !isnothing(breaks)
         warned = Int[]
-        for i in 1:(n_segments - 1)
-            if seg_fold[i] != seg_fold[i + 1] && sum(abs, X[last(segments[i]), :]) > 0
+        for i = 1:(n_segments-1)
+            if seg_fold[i] != seg_fold[i+1] && sum(abs, X[last(segments[i]), :]) > 0
                 push!(warned, last(segments[i]))
             end
         end
@@ -184,8 +198,7 @@ function _cv_deconvolved(
         inner_infos = [r.info for r in train_results],
         segments = segments,
         test_estimates = fit_test ?
-                         cat([r.estimate for r in test_results]..., dims = 3) :
-                         nothing,
+                         cat([r.estimate for r in test_results]..., dims = 3) : nothing,
     )
     return LinearModelFitCV(
         estimate = all_estimates,
@@ -199,15 +212,19 @@ end
 # (train_segments, test_segments) per fold: the standard k-fold partition of the
 # segments
 function _kfolds_split(n_folds, n_segments; shuffle, rng)
+    n_folds >= 2 || throw(
+        ArgumentError(
+            "solver_cv: n_folds must be at least 2 - with n_folds = 1 the training set would be empty",
+        ),
+    )
     n_folds <= n_segments || throw(
         ArgumentError(
             "solver_cv: n_folds ($n_folds) exceeds the number of segments ($n_segments) - provide more `breaks` or use fewer folds",
         ),
     )
     return [
-        (collect(train_seg), collect(test_seg))
-        for (train_seg, test_seg) in
-           kfolds(shuffle ? shuffleobs(rng, 1:n_segments) : 1:n_segments, k = n_folds)
+        (collect(train_seg), collect(test_seg)) for (train_seg, test_seg) in
+        kfolds(shuffle ? shuffleobs(rng, 1:n_segments) : 1:n_segments, k = n_folds)
     ]
 end
 
@@ -222,9 +239,19 @@ function _fold_split_from_assignment(fold_assignment, n_folds, n_segments)
             "solver_cv: fold_assignment has $(length(fold_assignment)) entries but n_folds = $n_folds",
         ),
     )
+    all(te -> te isa AbstractVector, fold_assignment) || throw(
+        ArgumentError(
+            "solver_cv: fold_assignment must be a vector of per-fold segment-index vectors, e.g. [[1, 2], [3], [4, 5]]",
+        ),
+    )
     sort(vcat(fold_assignment...)) == collect(1:n_segments) || throw(
         ArgumentError(
             "solver_cv: fold_assignment must hold out every segment (1:$n_segments) exactly once - for comparable fits, use the same `breaks`",
+        ),
+    )
+    all(te -> length(te) < n_segments, fold_assignment) || throw(
+        ArgumentError(
+            "solver_cv: fold_assignment must not hold out all segments in one fold - the training set would be empty",
         ),
     )
     return [(setdiff(1:n_segments, te), collect(te)) for te in fold_assignment]
@@ -241,7 +268,7 @@ function _cv_segments_manual(breaks, n)
     segments = UnitRange{Int}[]
     prev = 1
     for bi in b
-        push!(segments, prev:(bi - 1))
+        push!(segments, prev:(bi-1))
         prev = bi
     end
     push!(segments, prev:n)
@@ -265,7 +292,7 @@ function _cv_segments_autodetect(X)
     while i <= n
         if active[i]
             j = i
-            while j < n && active[j + 1]
+            while j < n && active[j+1]
                 j += 1
             end
             push!(segments, i:j)
@@ -285,11 +312,18 @@ coef(m::LinearModelFitCV{T,N}) where {T,N} = dropdims(mean(m.estimate, dims = N)
 # indices for deconvolved fits); pass the result of a previous fit as the
 # `fold_assignment` keyword to evaluate another model on the very same held-out
 # observations (e.g. a reduced model for a delta-R² comparison)
-fold_assignment(mf::LinearModelFitCV) = [collect(f.test) for f in mf.folds]
+fold_assignment(mf::LinearModelFitCV) = _fold_assignment(mf.folds)
+
+# multi-event mass-univariate fits concatenate one LinearModelFitCV per event
+# type, so `folds` is one list of folds per event type; the indices are
+# positions within that event type's trial subset, not global trial indices
+_fold_assignment(folds::AbstractVector{<:AbstractVector}) =
+    [_fold_assignment(f) for f in folds]
+_fold_assignment(folds) = [collect(f.test) for f in folds]
 
 function stderror(m::LinearModelFitCV{T,N}) where {T,N}
     if isempty(m.standarderror)
-        stderror = fill(nothing, size(m.estimate)[1:N-1])
+        stderror = fill(nothing, size(m.estimate)[1:(N-1)])
     else
         stderror = dropdims(mean(T.(m.standarderror), dims = N), dims = N)
     end
