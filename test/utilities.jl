@@ -144,7 +144,7 @@ end
     @testset "threshold defaults to 150.0" begin
         sig = zeros(20)
         sig[5] = 151.0
-        mask = detectbad_peak_to_peak(sig; sfreq = 100, window = 0.05, stepsize = 0.01)  # w = 5, threshold = 50 (default)
+        mask = detectbad_peak_to_peak(sig; sfreq = 100, window = 0.05, stepsize = 0.01)  # w = 5, threshold = 150 (default)
         @test findall(mask) == collect(1:9)
     end
 

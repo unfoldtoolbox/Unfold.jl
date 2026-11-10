@@ -2,55 +2,52 @@ using Unfold
 
 include("setup.jl")
 
+@testset "Unfold" begin
+    @testset "BasisFunctions" begin
+        include("basisfunctions.jl")
+    end
 
-# sanity checks, auto-quality control
-#using Aqua
-#Aqua.test_all(Unfold)
+    @testset "ChannelVarying" begin
+        include("channelterm.jl")
+    end
 
-@testset "BasisFunctions" begin
-    include("basisfunctions.jl")
+    @testset "Fitting" begin
+        include("fit.jl")
+    end
+
+    @testset "Designmatrix" begin
+        include("designmatrix.jl")
+    end
+
+    @testset "TimeExpand" begin
+        include("time_expand.jl")
+    end
+
+    @testset "Splines" begin
+        include("splines.jl")
+    end
+
+    @testset "Predict" begin
+        include("predict.jl")
+    end
+
+    @testset "Effects" begin
+        include("effects.jl")
+    end
+
+    @testset "VIF" begin
+        include("vif.jl")
+    end
+
+    @testset "Utilities" begin
+        include("utilities.jl")
+    end
+
+    @testset "IO" begin
+        include("io.jl")
+    end
+
+    @testset "solver_cv" begin
+        include("test_solver-cv.jl")
+    end
 end
-
-@testset "ChannelVarying" begin
-    include("channelterm.jl")
-end
-
-@testset "Fitting" begin
-    include("fit.jl")
-end
-
-@testset "Designmatrix" begin
-    include("designmatrix.jl")
-end
-
-@testset "Splines" begin
-    include("splines.jl")
-end
-
-@testset "Predict" begin
-    include("predict.jl")
-end
-
-@testset "Effects" begin
-    include("effects.jl")
-end
-
-@testset "VIF" begin
-    include("vif.jl")
-end
-
-
-@testset "Utilities" begin
-    include("utilities.jl")
-end
-
-@testset "IO" begin
-    include("io.jl")
-end
-
-@testset "solver_cv" begin
-    include("test_solver-cv.jl")
-end
-#@testset "ClusterPermutation" begin
-#include("clusterpermutation.jl")
-#end

@@ -1,70 +1,67 @@
-data, evts = loadtestdata("test_case_3a") #
+data, evts = loadtestdata("test_case_3a")
 
 data_r = reshape(data, (1, :))
 data_e, times = Unfold.epoch(data = data_r, tbl = evts, τ = (0, 0.05), sfreq = 10) # cut the data into epochs
 
-f = @formula 0 ~ 1 + conditionA + continuousA # 1
-m_mul = fit(Unfold.UnfoldModel, [Any => (f, times)], evts, data_e)
+f = @formula 0 ~ 1 + conditionA + continuousA
+m_mul = fit(UnfoldModel, [Any => (f, times)], evts, data_e)
 ##---
 @testset "Mass Univariate, all specified" begin
 
 
     # test simple case
-    eff = Unfold.effects(Dict(:conditionA => [0, 1], :continuousA => [0]), m_mul)
+    eff = effects(Dict(:conditionA => [0, 1], :continuousA => [0]), m_mul)
     @test size(eff, 1) == 2 # we specified 2 levels @ 1 time point
     @test eff.conditionA ≈ [0.0, 1.0] # we want to different levels
     @test eff.yhat ≈ [2.0, 5.0] # these are the perfect predicted values
 
     # combination 2 levels /  6 values
-    eff = Unfold.effects(Dict(:conditionA => [0, 1], :continuousA => [-2, 0, 2]), m_mul)
+    eff = effects(Dict(:conditionA => [0, 1], :continuousA => [-2, 0, 2]), m_mul)
     @test size(eff, 1) == 6 # we want 6 values
     @test eff.conditionA ≈ [0.0, 0.0, 0.0, 1.0, 1.0, 1.0]
     @test eff.continuousA ≈ [-2, 0, 2, -2, 0, 2.0]
 end
 @testset "Mass Univariate, typified" begin
     # testing typical value
-    eff_man = Unfold.effects(
+    eff_man = effects(
         Dict(:conditionA => [0, 1], :continuousA => [mean(evts.continuousA)]),
         m_mul,
     )
-    eff_typ = Unfold.effects(Dict(:conditionA => [0, 1]), m_mul)
+    eff_typ = effects(Dict(:conditionA => [0, 1]), m_mul)
     @test eff_man.yhat ≈ eff_typ.yhat
 end
 
 ## Testing Splines
-f_spl = @formula 0 ~ 1 + conditionA + spl(continuousA, 4) # 1
+f_spl = @formula 0 ~ 1 + conditionA + spl(continuousA, 4)
 m_mul_spl = fit(UnfoldModel, f_spl, evts, data_e, times)
 
 @testset "Mass Univariate, splines" begin
 
-    eff = Unfold.effects(Dict(:conditionA => [0, 1], :continuousA => [0]), m_mul_spl)
+    eff = effects(Dict(:conditionA => [0, 1], :continuousA => [0]), m_mul_spl)
     @test size(eff, 1) == 2 # we specified 2 levels @ 1 time point
     @test eff.conditionA ≈ [0.0, 1.0] # we want to different levels
     @test eff.yhat ≈ [2.0, 5.0] # these are the perfect predicted values
 
     # combination 2 levels /  6 values
-    eff = Unfold.effects(
-        Dict(:conditionA => [0, 1], :continuousA => [-0.5, 0, 0.5]),
-        m_mul_spl,
-    )
+    eff = effects(Dict(:conditionA => [0, 1], :continuousA => [-0.5, 0, 0.5]), m_mul_spl)
     @test size(eff, 1) == 6 # we want 6 values
     @test eff.conditionA ≈ [0.0, 0.0, 0.0, 1.0, 1.0, 1.0]
     @test eff.continuousA ≈ [-0.5, 0, 0.5, -0.5, 0, 0.5]
     @test eff.yhat ≈ [0, 2, 4, 3, 5, 7]
 
     # testing for safe predictions
-    eff = Unfold.effects(Dict(:conditionA => [0, 1], :continuousA => [2]), m_mul_spl)
+    eff = effects(Dict(:conditionA => [0, 1], :continuousA => [2]), m_mul_spl)
     @test all(ismissing.(eff.yhat))
 end
 
 ## Timeexpansion
-data, evts = loadtestdata("test_case_3a") #
-f = @formula 0 ~ 1 + conditionA + continuousA # 1
+data, evts = loadtestdata("test_case_3a")
+f = @formula 0 ~ 1 + conditionA + continuousA
 
 @testset "Time Expansion, one event" begin
 
-    uf = fit(Unfold.UnfoldModel, Dict(Any => (f, firbasis([0, 0.1], 10))), evts, data)
-    eff = Unfold.effects(Dict(:conditionA => [0, 1], :continuousA => [0]), uf)
+    uf = fit(UnfoldModel, [Any => (f, firbasis([0, 0.1], 10))], evts, data)
+    eff = effects(Dict(:conditionA => [0, 1], :continuousA => [0]), uf)
     @test nrow(eff) == 4
     @test eff.yhat ≈ [2.0, 2.0, 5.0, 5.0]
     @test eff.conditionA ≈ [0.0, 0.0, 1.0, 1.0]
@@ -75,7 +72,7 @@ data, evts = loadtestdata("test_case_4a") #
 b1 = firbasis(τ = (0.0, 0.95), sfreq = 20, name = "eventA")
 b2 = firbasis(τ = (0.0, 0.95), sfreq = 20, name = "eventB")
 b3 = firbasis(τ = (0.0, 0.95), sfreq = 20, name = "eventC")
-f = @formula 0 ~ 1 # 1
+f = @formula 0 ~ 1
 # NOTE: use a vector of pairs (not a Dict) so the event order is deterministic:
 # Dict iteration order depends on the hash of the keys, and Julia 1.13 changed
 # string hashing (JuliaLang/julia#59691), which reordered Dict-based fits.
@@ -89,12 +86,12 @@ m_tul = fit(
 
 @testset "Time Expansion, two events" begin
 
-    eff = Unfold.effects(Dict(:conditionA => [0, 1], :continuousA => [0]), m_tul)
+    eff = effects(Dict(:conditionA => [0, 1], :continuousA => [0]), m_tul)
     @test unique(eff.eventname) == ["eventA", "eventB"]
     @test unique(eff.yhat) ≈ [2, 3]
     @test size(eff, 1) == 2 * 2 * 20 # 2 basisfunctions, 2x conditionA, 1s a 20Hz
 
-    eff = Unfold.effects(Dict(:conditionA => [0, 1], :continuousA => [-1, 0, 1]), m_tul)
+    eff = effects(Dict(:conditionA => [0, 1], :continuousA => [-1, 0, 1]), m_tul)
     @test size(eff, 1) == 2 * 6 * 20
 
 end
@@ -110,7 +107,7 @@ end
         eventcolumn = "type",
     )
 
-    eff = Unfold.effects(Dict(:conditionA => [0, 1], :continuousA => [0]), m_tul_3)
+    eff = effects(Dict(:conditionA => [0, 1], :continuousA => [0]), m_tul_3)
 
     @test size(eff, 1) == 3 * 2 * 20 # 2 basisfunctions, 2x conditionA, 1s a 20Hz
 
@@ -123,8 +120,8 @@ end
     evts[!, :continuousA] = rand(MersenneTwister(42), nrow(evts))
     b1 = firbasis(τ = (0.0, 0.95), sfreq = 20, name = "eventA")
     b2 = firbasis(τ = (0.0, 0.5), sfreq = 20, name = "eventB")
-    f1 = @formula 0 ~ 1 # 1
-    f2 = @formula 0 ~ 1 + continuousA # 1
+    f1 = @formula 0 ~ 1
+    f2 = @formula 0 ~ 1 + continuousA
     m_tul = fit(
         UnfoldModel,
         ["eventA" => (f1, b1), "eventB" => (f2, b2)],
@@ -132,7 +129,7 @@ end
         data,
         eventcolumn = "type",
     )
-    eff = Unfold.effects(Dict(:conditionA => [0, 1], :continuousA => [-1, 0, 1]), m_tul)
+    eff = effects(Dict(:conditionA => [0, 1], :continuousA => [-1, 0, 1]), m_tul)
     @test nrow(eff) == (length(Unfold.times(b1)) + length(Unfold.times(b2))) * 6
     @test sum(eff.eventname .== "eventA") == 120
     @test sum(eff.eventname .== "eventB") == 66
@@ -140,7 +137,7 @@ end
 end
 
 ## Test two channels
-data, evts = loadtestdata("test_case_3a") #
+data, evts = loadtestdata("test_case_3a")
 
 data_r = repeat(reshape(data, (1, :)), 3, 1)
 data_r[2, :] = data_r[2, :] .* 2
@@ -149,14 +146,14 @@ data_r[2, :] = data_r[2, :] .* 2
 data_e, times = Unfold.epoch(data = data_r, tbl = evts, τ = (0, 0.05), sfreq = 10) # cut the data into epochs
 
 #
-f = @formula 0 ~ 1 + conditionA + continuousA # 1
-m_mul = fit(Unfold.UnfoldModel, Dict(Any => (f, times)), evts, data_e)
-m_tul = fit(Unfold.UnfoldModel, Dict(Any => (f, firbasis([0, 0.05], 10))), evts, data_r)
+f = @formula 0 ~ 1 + conditionA + continuousA
+m_mul = fit(UnfoldModel, [Any => (f, times)], evts, data_e)
+m_tul = fit(UnfoldModel, [Any => (f, firbasis([0, 0.05], 10))], evts, data_r)
 @testset "Two channels" begin
 
     # test simple case
-    eff_m = Unfold.effects(Dict(:conditionA => [0, 1, 0, 1], :continuousA => [0]), m_mul)
-    eff_t = Unfold.effects(Dict(:conditionA => [0, 1, 0, 1], :continuousA => [0]), m_tul)
+    eff_m = effects(Dict(:conditionA => [0, 1, 0, 1], :continuousA => [0]), m_mul)
+    eff_t = effects(Dict(:conditionA => [0, 1, 0, 1], :continuousA => [0]), m_tul)
 
     @test eff_m.yhat ≈ eff_t.yhat
     @test length(unique(eff_m.channel)) == 3
@@ -175,8 +172,8 @@ end
     evts.continuousB[.!ixA] = evts.continuousB[.!ixA] .- mean(evts.continuousB[.!ixA]) .+ 0.5
     b1 = firbasis(τ = (0.0, 0.02), sfreq = 20, name = "eventA")
     b2 = firbasis(τ = (1.0, 1.02), sfreq = 20, name = "eventB")
-    f1 = @formula 0 ~ 1 + continuousA # 1
-    f2 = @formula 0 ~ 1 + continuousB # 1
+    f1 = @formula 0 ~ 1 + continuousA
+    f2 = @formula 0 ~ 1 + continuousB
     m_tul = fit(
         UnfoldModel,
         ["eventA" => (f1, b1), "eventB" => (f2, b2)],
@@ -186,8 +183,8 @@ end
     )
 
     m_tul.modelfit.estimate .= [0 -1 0 6]
-    eff = Unfold.effects(Dict(:continuousA => [0, 1]), m_tul)
-    eff = Unfold.effects(Dict(:continuousA => [0, 1], :continuousB => [0.5]), m_tul)
+    eff = effects(Dict(:continuousA => [0, 1]), m_tul)
+    eff = effects(Dict(:continuousA => [0, 1], :continuousB => [0.5]), m_tul)
 
 
     @test eff.yhat[3] == eff.yhat[4]
@@ -206,8 +203,8 @@ end
 
     b1 = firbasis(τ = (0.0, 0.02), sfreq = 20, name = "eventA")
     b2 = firbasis(τ = (1.0, 1.02), sfreq = 20, name = "eventB")
-    f1 = @formula 0 ~ 1 + continuousA * continuousB # 1
-    f2 = @formula 0 ~ 1 + continuousB # 1
+    f1 = @formula 0 ~ 1 + continuousA * continuousB
+    f2 = @formula 0 ~ 1 + continuousB
     m_tul = fit(
         UnfoldModel,
         ["eventA" => (f1, b1), "eventB" => (f2, b2)],
@@ -218,7 +215,7 @@ end
 
     m_tul.modelfit.estimate .= [0, -1, 0, 2.0, 0.0, 0.0]'
 
-    eff = Unfold.effects(Dict(:continuousA => [0, 1]), m_tul)
+    eff = effects(Dict(:continuousA => [0, 1]), m_tul)
     @test size(eff, 1) == 4
     @test all(eff.eventname[1:2] .== "eventA")
     @test all(eff.eventname[4:end] .== "eventB")
@@ -230,12 +227,12 @@ end
         0.0,
     ]
 
-    eff = Unfold.effects(Dict(:continuousB => ["m", "x"]), m_tul)
+    eff = effects(Dict(:continuousB => ["m", "x"]), m_tul)
     @test eff.yhat[1] == -eff.yhat[2]
     @test all(eff.yhat[3:4] .≈ 0.0)
 
 
-    eff = Unfold.effects(Dict(:continuousA => [0, 1], :continuousB => ["m", "x"]), m_tul)
+    eff = effects(Dict(:continuousA => [0, 1], :continuousB => ["m", "x"]), m_tul)
     @test eff.yhat[3:4] == [-1, 1]
     @test all(eff.yhat[1:2, 5:end] .== 0)
 end
@@ -256,10 +253,10 @@ end
         tbl.event = string.(tbl.event)
 
         # prior to the Missing disallow sanity check, this gave an error
-        design = Dict(
+        design = [
             "1" => (@formula(0 ~ spl(a, 4) + spl(b, 4) + d + e), firbasis((0, 2), 1)),
             "2" => (@formula(0 ~ a + d), firbasis((0, 1), 1)),
-        )
+        ]
         m = fit(UnfoldModel, design, tbl, data)
         effects(Dict(:a => [1, 2, 3], :b => [1, 1.5]), m)
     end
@@ -274,22 +271,22 @@ end
     di = Dict(:conditionA => [0, 1], :continuousA => [0])
     # deconvolve case
     uf = fit(
-        Unfold.UnfoldModel,
+        UnfoldModel,
         ["car" => (f, firbasis([0, 0.1], 10)), "face" => (f, firbasis([0, 0.1], 10))],
         evts,
         data,
         eventcolumn = "condition",
     )
-    eff = Unfold.effects(di, uf)
+    eff = effects(di, uf)
     uf_cu = fit(
-        Unfold.UnfoldModel,
+        UnfoldModel,
         ["car" => (f, firbasis([0, 0.1], 10)), "face" => (f, firbasis([0, 0.1], 10))],
         evts,
         data,
         eventcolumn = "condition",
         eventfield = "customeventfield",
     )
-    eff_cu = Unfold.effects(di, uf_cu)
+    eff_cu = effects(di, uf_cu)
 
     @test eff == eff_cu
 

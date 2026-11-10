@@ -55,7 +55,7 @@ end
     @test size(Xdc) == (5, 4)
 end
 @testset "customized eventfields" begin
-    tbl2 = tbl = DataFrame([1 4]', [:onset])
+    tbl = DataFrame([1 4]', [:onset])
 
     timeexpandterm_latency = Unfold.TimeExpandedTerm(FormulaTerm(Term, Term), basisfunction)
     timeexpandterm_onset = Unfold.TimeExpandedTerm(

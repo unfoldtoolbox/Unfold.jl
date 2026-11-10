@@ -1,5 +1,5 @@
-data, evts = loadtestdata("test_case_3a") #
-f = @formula 0 ~ 1 + conditionA + continuousA # 1
+data, evts = loadtestdata("test_case_3a")
+f = @formula 0 ~ 1 + conditionA + continuousA
 
 # prepare data
 data_r = reshape(data, (1, :))
@@ -26,7 +26,7 @@ data_e, times = Unfold.epoch(data = data_r, tbl = evts, τ = (-1.0, 1.9), sfreq 
     @test eltype(coef(uf)) == Float32
 end
 #---
-@testset "test manual pathway" begin
+@testset "manual pathway" begin
     uf = UnfoldLinearModel{Union{Float64,Missing}}([Any => (f, times)])
     designmatrix!(uf, evts; eventcolumn = "type")
     fit!(uf, data_e)
@@ -57,12 +57,12 @@ end
     c2 = coeftable(uf_2events)
     @test c2[c2.eventname .== "A", :] == c
 
-    e_uf = effects(Dict(:condtionA => [0, 1]), uf)
-    e_uf2 = effects(Dict(:condtionA => [0, 1]), uf_2events)
+    effects(Dict(:conditionA => [0, 1]), uf)
+    effects(Dict(:conditionA => [0, 1]), uf_2events)
 
 end
 
-@testset "test Autodetection" begin
+@testset "Autodetection" begin
     @test Unfold.design_to_modeltype([Any => (@formula(0 ~ 1), 0:10)]) == UnfoldLinearModel
     @test Unfold.design_to_modeltype([Any => (@formula(0 ~ 1 + A), 0:10)]) ==
           UnfoldLinearModel
@@ -118,36 +118,33 @@ end
     # test 2D call for UnfoldLinearModel
     m_mul_autoreshape =
         coeftable(fit(UnfoldLinearModel, f, evts, data_e_noreshape[1, :, :], times))
-    m_mul_autoreshape == m_mul_noreshape
+    @test m_mul_autoreshape == m_mul_noreshape
     # Add Missing in Data
     data_e_missing = deepcopy(data_e)
     #data_e_missing[1, 25:end, :] .= missing
-    m_mul_missing = Unfold.fit(UnfoldLinearModel, f, evts, data_e_missing, times)
+    m_mul_missing = fit(UnfoldLinearModel, f, evts, data_e_missing, times)
 
     _evts, _data_e = Unfold.drop_missing_epochs(evts, data_e)
-    m_mul_nomissing = Unfold.fit(UnfoldLinearModel, f, _evts, _data_e, times)
+    m_mul_nomissing = fit(UnfoldLinearModel, f, _evts, _data_e, times)
 
     @test all(isapprox.(coef(m_mul_missing), coef(m_mul_nomissing)))
 
-    # Special solver solver_lsmr_se with Standard Error
-    se_solver = solver = (x, y) -> Unfold.solver_default(x, y; stderror = true)
-    m_mul_se =
-        coeftable(Unfold.fit(UnfoldModel, f, evts, data_e, times; solver = se_solver))
+    # solver with standard error
+    se_solver = (x, y) -> Unfold.solver_default(x, y; stderror = true)
+    m_mul_se = coeftable(fit(UnfoldModel, f, evts, data_e, times; solver = se_solver))
     @test all(m_mul_se.estimate .≈ m_mul.estimate)
     @test !all(isnothing.(m_mul_se.stderror))
 
     # robust solver
-    #ext = Base.get_extension(Unfold, :UnfoldRobustModelsExt)
-    rob_solver = (x, y) -> Unfold.solver_robust(x, y)#,rlmOptions=(initial_coef=zeros(3 *length(times)),))
+    rob_solver = (x, y) -> Unfold.solver_robust(x, y)
     data_outlier = copy(data_e)
     data_outlier[:, 31, 1] .= 1000
-    m_mul_rob = coeftable(
-        Unfold.fit(UnfoldModel, f, evts, data_outlier, times, solver = rob_solver),
-    )
+    m_mul_rob =
+        coeftable(fit(UnfoldModel, f, evts, data_outlier, times, solver = rob_solver))
     ix = findall(m_mul_rob.time .≈ 0.5)
     @test all(m_mul_rob.estimate[ix] .≈ m_mul.estimate[ix])
 
-    m_mul_outlier = coeftable(Unfold.fit(UnfoldModel, f, evts, data_outlier, times))
+    fit(UnfoldModel, f, evts, data_outlier, times)
 end
 
 @testset "standard-errors solver" begin
@@ -199,8 +196,8 @@ basisfunction = firbasis(τ = (-1, 1), sfreq = 20)
     b1 = firbasis(τ = (-1, 1), sfreq = 20)
     b2 = firbasis(τ = (-1, 1), sfreq = 20)
 
-    f1 = @formula 0 ~ 1 + continuousA # 1
-    f2 = @formula 0 ~ 1 + continuousA # 1
+    f1 = @formula 0 ~ 1 + continuousA
+    f2 = @formula 0 ~ 1 + continuousA
 
     # Fast-lane new implementation
     res = coeftable(
@@ -229,7 +226,7 @@ basisfunction = firbasis(τ = (-1, 1), sfreq = 20)
     # vector (not Dict) so the event order matches X1 + X2 on all Julia versions
     # (Julia 1.13 changed key hashing, JuliaLang/julia#59691, which reordered Dicts)
     uf = UnfoldLinearModelContinuousTime([0 => (f1, b1), 1 => (f2, b2)], X1 + X2)
-    @time fit!(uf, data_r)
+    fit!(uf, data_r)
     tmp = coeftable(uf)
 
     # test fast way & slow way to be identical
@@ -240,42 +237,25 @@ end
 @testset "runtime tests" begin
 
     # runntime tests - does something explode?
-    for k = 1:4
-        local f
-        if k == 1
-            f = @formula 0 ~ 1
-        elseif k == 2
-            f = @formula 0 ~ 1 + conditionA
-        elseif k == 3
-            f = @formula 0 ~ 0 + conditionA
-        elseif k == 4
-            f = @formula 0 ~ 1 + continuousA
-        end
-
+    for f in [
+        @formula(0 ~ 1),
+        @formula(0 ~ 1 + conditionA),
+        @formula(0 ~ 0 + conditionA),
+        @formula(0 ~ 1 + continuousA),
+    ]
         fit(UnfoldModel, f, evts, data_e, times)
         fit(UnfoldModel, f, evts, data, basisfunction)
     end
 end
 
-@testset "automatic, non-dictionary call" begin
-    m_mul = coeftable(fit(UnfoldLinearModel, f, evts, data_e, times))
 
-    @test m_mul[(m_mul.channel .== 1) .& (m_mul.time .== 0.1), :estimate] ≈ [2, 3, 4]
-end
-
-
-@testset "Special solver solver_lsmr_se with Standard Error" begin
-    se_solver = solver = (x, y) -> Unfold.solver_default(x, y, stderror = true)
+@testset "stderror solver, time-expanded" begin
+    se_solver = (x, y) -> Unfold.solver_default(x, y, stderror = true)
     m_tul_se =
         coeftable(fit(UnfoldModel, f, evts, data_r, basisfunction, solver = se_solver)) #with
     m_tul = coeftable(fit(UnfoldModel, f, evts, data_r, basisfunction)) #without
     @test all(m_tul_se.estimate .== m_tul.estimate)
     @test !all(isnothing.(m_tul_se.stderror))
-
-    #m_mul_se,m_mul_se = fit(UnfoldLinearModel,f,evts,data_e.+randn(size(data_e)).*5,times,solver=se_solver)
-    #plot(m_mul_se[m_mul_se.channel.==1,:],se=true)
-    #m_tul_se,m_tul_se = fit(UnfoldLinearModel,f,evts,data_r.+randn(size(data_r)).*5,basisfunction,solver=se_solver)
-    #plot(m_tul_se[m_tul_se.channel.==1,:],se=true)
 
 end
 
@@ -287,7 +267,7 @@ end
     evts.latency .= evts.latency + rand(length(evts.latency))
     f = @formula 0 ~ 1 + condition + continuous
     # generate ModelStruct
-    m = fit(UnfoldModel, [Any => (f, firbasis([-0.111, 0.2312], 100))], evts, data;)
+    fit(UnfoldModel, [Any => (f, firbasis([-0.111, 0.2312], 100))], evts, data)
 end
 
 @testset "missing data modelfit" begin
@@ -298,7 +278,7 @@ end
 
     f = @formula 0 ~ 1 + condition + continuous
     # generate ModelStruct
-    m = fit(UnfoldModel, [Any => (f, firbasis([-0.111, 0.2312], 100))], evts, data;)
+    fit(UnfoldModel, [Any => (f, firbasis([-0.111, 0.2312], 100))], evts, data)
 end
 
 

@@ -1,6 +1,4 @@
-using UnfoldSim
-using DataFrames
-save_path = mktempdir(; cleanup = false)#tempdir()
+save_path = mktempdir()
 
 ## 1. Test data set:
 # - Generate a P1/N1/P3 complex for one subject (using UnfoldSim)
@@ -29,9 +27,9 @@ for deconv in [false, true]
 
     if deconv
 
-        m1 = Unfold.fit(UnfoldModel, bfDict1, evts1, data1, eventcolumn = "type")
+        m1 = fit(UnfoldModel, bfDict1, evts1, data1, eventcolumn = "type")
     else
-        m1 = Unfold.fit(UnfoldLinearModel, bfDict1_e, evts1, data1_e; eventcolumn = "type")
+        m1 = fit(UnfoldLinearModel, bfDict1_e, evts1, data1_e; eventcolumn = "type")
     end
     @testset "SingleSubjectDesign with two event types and splines" begin
         # save the model to a compressed .jld2 file and load it again
@@ -43,7 +41,7 @@ for deconv in [false, true]
             generate_Xs = true,
         )
 
-        @test isempty(Unfold.modelmatrices(designmatrix(m1_loaded))[1]) == false
+        @test !isempty(Unfold.modelmatrices(designmatrix(m1_loaded))[1])
         @test typeof(m1) == typeof(m1_loaded)
         @test coeftable(m1) == coeftable(m1_loaded)
         @test m1.modelfit.estimate == m1_loaded.modelfit.estimate

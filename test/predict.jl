@@ -1,129 +1,115 @@
-
-data, evts = loadtestdata("test_case_3a") #
+data, evts = loadtestdata("test_case_3a")
 data_r = reshape(data, (1, :))
 
-data_e, times = Unfold.epoch(data = data_r, evts = evts, τ = (0.0, 0.95), sfreq = 20) # cut the data into epochs
+data_e, times = Unfold.epoch(data = data_r, evts = evts, τ = (0.0, 0.95), sfreq = 20)
 basisfunction = firbasis(τ = (0.0, 0.95), sfreq = 20)
 
-f = @formula 0 ~ 1 # 1
-m_mul = fit(UnfoldModel, f, evts, data_e, times)
-m_tul = fit(UnfoldModel, f, evts, data_r, basisfunction)
-m_mul_results = coeftable(m_mul)
-m_tul_results = coeftable(m_tul)
+f = @formula 0 ~ 1
 
-conditionA = [0, 1.0]
-continuousA = [-1.0, 0, 1.0]
+@testset "predict simple" begin
+    m_mul = fit(UnfoldModel, f, evts, data_e, times)
+    m_tul = fit(UnfoldModel, f, evts, data_r, basisfunction)
 
-tmp = reshape(
-    [[x, y] for x in conditionA, y in continuousA],
-    length(conditionA) * length(continuousA),
-)
-evts_grid = DataFrame(collect(hcat(tmp...)'), ["conditionA", "continuousA"])
+    evts_grid = gridexpand()
 
+    yhat_mul = predict(m_mul, evts_grid)
+    yhat_tul = predict(m_tul, evts_grid)
 
-yhat_mul = predict(m_mul, evts_grid)
-yhat_tul = predict(m_tul, evts_grid)
+    @test yhat_mul ≈ yhat_tul
 
-@test yhat_mul ≈ yhat_tul
+    Unfold.result_to_table(m_mul, yhat_mul, [evts_grid])
 
-Unfold.result_to_table(m_mul, yhat_mul, [evts_grid])
+    @test all(yhat_mul[1][:] .≈ mean(data[data .!= 0]))
+    @test all(yhat_tul[1][:] .≈ mean(data[data .!= 0]))
+end
 
-@test all(yhat_mul[1][:] .≈ mean(data[data .!= 0]))
-@test all(yhat_tul[1][:] .≈ mean(data[data .!= 0]))
+@testset "predict multiple predictors" begin
+    f = @formula 0 ~ 1 + conditionA + continuousA
+    m_tul = fit(UnfoldModel, f, evts, data_r, basisfunction)
+    m_mul = fit(UnfoldModel, f, evts, data_e, times)
 
-## Case with multiple formulas
-f = @formula 0 ~ 1 + conditionA + continuousA# 1
-m_tul = fit(UnfoldModel, f, evts, data_r, basisfunction)
-m_mul = fit(UnfoldModel, f, evts, data_e, times)
+    evts_grid = gridexpand()
 
-m_mul_results = coeftable(m_mul)
-m_tul_results = coeftable(m_tul)
+    yhat_tul = predict(m_tul, evts_grid)
+    yhat_mul = predict(m_mul, evts_grid)
 
-yhat_tul = predict(m_tul, evts_grid)
-yhat_mul = predict(m_mul, evts_grid)
-#@test predict(m_mul,evts).yhat ≈ yhat.yhat
+    @test isapprox(sum(coef(m_tul)[[5, 25, 45]]), yhat_tul[1][end-3], atol = 0.001)
 
+    @test isapprox(yhat_tul[1], yhat_mul[1], atol = 0.001)
+    @test isapprox(yhat_tul[1][1, 5, :], [-2, 1, 2, 5, 6, 9.0], atol = 0.0001)
+end
 
-@test isapprox(sum(coef(m_tul)[[5, 25, 45]]), yhat_tul[1][end-3], atol = 0.001)
+@testset "predict two events" begin
+    data, evts = loadtestdata("test_case_4a")
+    data_e, times = Unfold.epoch(data = data, evts = evts, τ = (0.0, 0.95), sfreq = 20)
+    b1 = firbasis(τ = (0.0, 0.95), sfreq = 20)
+    b2 = firbasis(τ = (0.0, 0.95), sfreq = 20)
+    f = @formula 0 ~ 1
 
+    m_tul = fit(
+        UnfoldModel,
+        ["eventA" => (f, b1), "eventB" => (f, b2)],
+        evts,
+        data,
+        eventcolumn = "type",
+    )
+    p = predict(m_tul, DataFrame(:Cond => [1]))
+    @test length(p) == 2
+    @test size(p[1], 2) == size(p[2], 2) == 20
 
-@test isapprox(yhat_tul[1], yhat_mul[1], atol = 0.001)
-@test isapprox(yhat_tul[1][1, 5, :], [-2, 1, 2, 5, 6, 9.0], atol = 0.0001)
+    # mass-univariate
+    m_mul = fit(
+        UnfoldModel,
+        ["eventA" => (f, times), "eventB" => (f, times)],
+        evts,
+        data_e,
+        eventcolumn = "type",
+    )
+    p = predict(m_mul, DataFrame(:Cond => [1, 2, 3]))
+    @test length(p) == 2
+    @test size(p[2]) == (1, 20, 3)
+end
 
-## two events
-data, evts = loadtestdata("test_case_4a") #
-data_e, times = Unfold.epoch(data = data, evts = evts, τ = (0.0, 0.95), sfreq = 20) # cut the data into epochs
-b1 = firbasis(τ = (0.0, 0.95), sfreq = 20)
-b2 = firbasis(τ = (0.0, 0.95), sfreq = 20)
-f = @formula 0 ~ 1 # 1
-m_tul = fit(
-    UnfoldModel,
-    ["eventA" => (f, b1), "eventB" => (f, b2)],
-    evts,
-    data,
-    eventcolumn = "type",
-)
+@testset "result_to_table" begin
+    data, evts = UnfoldSim.predef_eeg(StableRNG(1); n_repeats = 5, noiselevel = 0.8)
+    m = fit(
+        UnfoldModel,
+        [
+            "car" => (@formula(0 ~ 1 + spl(continuous, 4)), firbasis((-0.1, 1), 100)),
+            "face" => (@formula(0 ~ 1 + continuous^2), firbasis((-0.2, 0.4), 100)),
+        ],
+        evts,
+        repeat(data, 1, 3)';
+        eventcolumn = "condition",
+        show_progress = false,
+    )
+    p = predict(m; overlap = false)
+    pt = Unfold.result_to_table(
+        m,
+        p,
+        [
+            subset(evts, :condition => ByRow(==("car"))),
+            subset(evts, :condition => ByRow(==("face"))),
+        ],
+    )
 
-p = predict(m_tul, DataFrame(:Cond => [1]))
-@test length(p) == 2
-@test size(p[1], 2) == size(p[2], 2) == 20
-
-## two events mass-univariate
-m_mul = fit(
-    UnfoldModel,
-    ["eventA" => (f, times), "eventB" => (f, times)],
-    evts,
-    data_e,
-    eventcolumn = "type",
-)
-
-p = predict(m_mul, DataFrame(:Cond => [1, 2, 3]))
-@test length(p) == 2
-@test size(p[2]) == (1, 20, 3)
-
-## result_to_table
-data, evts = UnfoldSim.predef_eeg(StableRNG(1); n_repeats = 5, noiselevel = 0.8)
-m = fit(
-    UnfoldModel,
-    [
-        "car" => (@formula(0 ~ 1 + spl(continuous, 4)), firbasis((-0.1, 1), 100)),
-        "face" => (@formula(0 ~ 1 + continuous^2), firbasis((-0.2, 0.4), 100)),
-    ],
-    evts,
-    repeat(data, 1, 3)';
-    eventcolumn = "condition",
-    show_progress = false,
-)
-p = predict(m; overlap = false)
-pt = Unfold.result_to_table(
-    m,
-    p,
-    [
-        subset(evts, :condition => ByRow(==("car"))),
-        subset(evts, :condition => ByRow(==("face"))),
-    ],
-) #repeat([evts], 2))
-
-@show pt[[1, 2, 3], :yhat]
-#@test_broken all(isapprox.(pt[[1, 2, 3], :yhat], 0.24672; atol = 0.01)) # test broken until UnfoldSim.jl is updated!!
-@test all(pt[[1, 2, 3], :channel] .== [1, 2, 3])
-# spot check to see if the order changed somehow
-@test all(
-    isapprox.(
-        pt[[1, 5000, 25123], :yhat],
-        [0.23833130331025282, 0.07879460692911115, 0.016934637133599384];
-        atol = 1e-4,
-    ),
-)
-
-
+    @test all(pt[[1, 2, 3], :channel] .== [1, 2, 3])
+    # spot check to see if the order changed somehow
+    @test all(
+        isapprox.(
+            pt[[1, 5000, 25123], :yhat],
+            [0.23833130331025282, 0.07879460692911115, 0.016934637133599384];
+            atol = 1e-4,
+        ),
+    )
+end
 
 @testset "residuals" begin
     data, evts = UnfoldSim.predef_eeg(StableRNG(1); n_repeats = 5, noiselevel = 0.8)
 
     # time expanded
     m = fit(UnfoldModel, [Any => (@formula(0 ~ 1), firbasis((-0.1, 1), 100))], evts, data;)
-    @test size(Unfold.residuals(m, data)) == (1, length(data))
+    @test size(residuals(m, data)) == (1, length(data))
 
     # time expanded + multichannel
     m = fit(
@@ -132,8 +118,7 @@ pt = Unfold.result_to_table(
         evts,
         repeat(data, 1, 3)';
     )
-    @test size(Unfold.residuals(m, data)) == (3, length(data))
-
+    @test size(residuals(m, data)) == (3, length(data))
 
     # time expanded, data longer
     m = fit(
@@ -142,27 +127,19 @@ pt = Unfold.result_to_table(
         evts,
         repeat(data, 1, 3)';
     )
-    resids = Unfold.residuals(m, repeat(data, 1, 3)')
+    resids = residuals(m, repeat(data, 1, 3)')
     @test size(resids) == (3, length(data))
     @test all(resids[1, (end-2):end] .≈ data[(end-2):end])
-
-    #
 
     data_e, evts =
         UnfoldSim.predef_eeg(; n_repeats = 5, noiselevel = 0.8, return_epoched = true)
 
-
-
     times = 1:size(data_e, 1)
     m_mul = fit(UnfoldModel, @formula(0 ~ 1), evts, data_e, times)
-    resids_e = Unfold.residuals(m_mul, data_e)
+    resids_e = residuals(m_mul, data_e)
 
     @test size(resids_e)[2:3] == size(data_e)
     @test maximum(abs.(data_e .- (resids_e .+ predict(m_mul)[1])[1, :, :])) < 0.0000001
-
-
-    ##
-
 
     @test all(Unfold._residuals(UnfoldModel, [1 2 3; 3 4 5], [1 2 3; 3 4 5]) .== 0)
 
@@ -176,7 +153,6 @@ pt = Unfold.result_to_table(
 
 end
 
-
 @testset "non_zero_rows" begin
     dense = [0 1 0 3; 2 0 3 4; 0 0 0 0]
     @test Unfold.non_zero_rows(dense) == [true, true, false]
@@ -185,7 +161,6 @@ end
     sparse_dense = sparse(dense)
     @test sort(Unfold.non_zero_rows(sparse_dense)) == [1, 2]
 end
-
 
 @testset "r2" begin
     data, evts = UnfoldSim.predef_eeg(StableRNG(1); n_repeats = 1, noiselevel = 1)
@@ -220,7 +195,6 @@ end
         eventcolumn = :condition,
     )
 
-
     _r2 = Unfold.r2(m, data)
     @test length(_r2) == 1
     @test isapprox(_r2[1], 0.74, atol = 0.01)
@@ -250,7 +224,6 @@ end
     @test length(_r2) == 1
     _r2 = Unfold.r2(m_e_reshape, data_e_reshape)
     @test size(_r2) == (1, size(data_e_reshape, 2))
-
 
     # Create data with sparse events (some rows with no modelling)
     data_sparse = allowmissing(data)
@@ -283,7 +256,6 @@ end
     _r2 = Unfold.r2(m_e_sparse, data_e_sparse; skip_missing = false)
     @test all(ismissing.(_r2))
 
-
     # skipping 0 entries should increase r2
     # let's put it to the exterme, let's add a huge outlier
     data_sparse[3] = 1000
@@ -294,7 +266,6 @@ end
     @test _r2_skip > _r2_notskip
     @test _r2_skip[1] > 0.75
     @test _r2_notskip[1] < 0.01
-
 
     # Test skip_notmodelled = true for epoched
     data_e_sparse[3, 3] = 1000
