@@ -11,10 +11,8 @@ relaxations of the spots that block new model types.
 
 | Where | What |
 |---|---|
-| `src/typedefinitions.jl` | `struct DesignMatrixLinearModelContinuousTimeDense{T}` — like `DesignMatrixLinearModelContinuousTime` but `modelmatrix::Matrix{T}`. The sparse time-expanded matrix produced by the existing `time_expand` machinery is converted on construction (`convert(Matrix{T}, sparse)` is a plain struct-field conversion, no code path change). |
-| `src/typedefinitions.jl` | `mutable struct UnfoldLinearModelContinuousTimeDenseDesign{T} <: UnfoldModel{T}` + the same 5-constructor chain as `UnfoldLinearModelContinuousTime` (empty model, dict-deprecated, design-only, single designmatrix, no-modelfit with `LinearModelFit{T,2}`). |
-| `src/typedefinitions.jl` | `@traitimpl ContinuousTimeTrait{UnfoldLinearModelContinuousTimeDenseDesign}` — one line makes *all* `@traitfn`-based machinery (check_data, coeftable, times, get_basis_names, residuals, predict_no_overlap, predict_partial_overlap, effects/_typify) work for the new model. |
-| `src/Unfold.jl` | export of the new model type. |
+| `src/denseDesign.jl` | *All* DenseDesign-specific code in one file (~75 lines): the `DesignMatrixLinearModelContinuousTimeDense{T}` struct (like `DesignMatrixLinearModelContinuousTime` but `modelmatrix::Matrix{T}`; the sparse time-expanded matrix produced by the existing `time_expand` machinery is converted on construction — a plain struct-field conversion, no code path change), the `UnfoldLinearModelContinuousTimeDenseDesign{T} <: UnfoldModel{T}` model with the same 5-constructor chain as `UnfoldLinearModelContinuousTime`, the `@traitimpl ContinuousTimeTrait{...}` (one line makes *all* `@traitfn`-based machinery work), and one `modelmatrix` routing method. Everything else (design, fit, solver, predict, effects, io) works via the trait or generic `AbstractMatrix` dispatch. |
+| `src/Unfold.jl` | `include("denseDesign.jl")` + export of the new model type. |
 | `test/densedesign.jl` | new tests: construction & type checks, sparse↔dense estimate equivalence (single- and multi-event), user-facing interface (coeftable, predict, residuals/r², effects, modelmatrix-without-basisfunction, times, manual `designmatrix!`/`fit!` pathway), end-to-end on `UnfoldSim.predef_eeg` with the known r²≈0.74 value measured with the sparse model, save/load roundtrip. |
 
 ## Inventory: hardcoded spots that had to be touched
@@ -26,17 +24,25 @@ relaxations of the spots that block new model types.
    element-wise by `fit!`, `coeftable`, `get_basis_names`, `predict`). This is the single hardest
    blocker: a dense time-expanded modelmatrix is also a `Vector{<:Matrix}`, so dispatching
    "concatenate vs. keep vector" on the matrix element type *conflates* "mass-univariate" with
-   "dense". **Resolution:** the pairwise dense methods `extend_to_larger(::Matrix, ::Matrix[,
-   args...])` (vcat 0-rows + hcat, mirroring the sparse version) were added, and the routing was
-   moved up one level to dispatch on the *designmatrix* type:
+   "dense". **Resolution:** the pairwise sparse methods were generalized to
+   `extend_to_larger(::AbstractMatrix, ::AbstractMatrix[, args...])` (per the code review), with a
+   small `padzeros` helper dispatching the padding (sparse: reuse the stored `colptr`/`rowval`
+   structure, no copy; dense: `vcat` zero rows) — one varargs-reduction and one base method serve
+   both storages. The routing, however, cannot key on the matrix element type: it is moved up one
+   level to dispatch on the *designmatrix* type (in `src/denseDesign.jl`):
    `StatsModels.modelmatrix(d::Vector{<:DesignMatrixLinearModelContinuousTimeDense}) =
    extend_to_larger(modelmatrices.(d)...)`. The generic `Vector{<:AbstractMatrix}` method is
    untouched, so mass-univariate behavior is provably unchanged.
 
-2. **`src/designmatrix.jl` — `modelmatrix(uf, basisfunction=false)` was bound to the concrete sparse type.**
-   Called by `effects` to get the design matrix without the time-expansion. Signature widened from
-   `UnfoldLinearModelContinuousTime` to
-   `Union{UnfoldLinearModelContinuousTime,UnfoldLinearModelContinuousTimeDenseDesign}`. Body unchanged.
+2. **`src/designmatrix.jl` — `modelmatrix(uf, basisfunction)` was bound to the concrete sparse type.**
+   Called by `effects` (`modelmatrix(model, false)`) to get the design matrix without the
+   time-expansion. Per the code review, the `Union{...}` of CT model types was replaced with a
+   `@traitfn ... where {T<:UnfoldModel;ContinuousTimeTrait{T}}` — future CT models are covered by
+   the trait instead of being added to a `Union`. The default `= true` was dropped: it created a
+   1-arg method competing (definition-order-dependently) with the generic
+   `modelmatrix(uf::UnfoldModel)`; one-argument calls now always go through the generic (identical
+   behavior — its body is the same `modelmatrix(designmatrix(uf))`), two-argument calls through
+   the traitfn.
 
 3. **`src/fit.jl` — two `isa(uf, UnfoldLinearModel)` checks in `fit!`.**
    Replaced with `!SimpleTraits.istrait(ContinuousTimeTrait{typeof(uf)})` — the same trait check
@@ -96,9 +102,9 @@ relaxations of the spots that block new model types.
    model `generate_Xs=false` leaves an empty designmatrix, exactly like the sparse CT model. Not
    a blocker; belongs to the same "key on trait, not concrete type" cleanup as fit!.
 
-5. **`modelmatrix(uf, basisfunction=false)` Union widening** — a *future* CT model type must be
-   added to the `Union` (or the method lifted to a shared supertype/CT trait). Recorded as the
-   small recurring tax of the current design.
+5. **`modelmatrix(uf, basisfunction)` `Union` widening** — *resolved* in the code review: the
+   method is now a `@traitfn` on `ContinuousTimeTrait`, so future CT model types are covered
+   without touching this signature.
 
 ## Verdict: how modular is `UnfoldModel` already?
 
@@ -117,9 +123,11 @@ relaxations of the spots that block new model types.
   needs one-line additions to 1–2 Unions/signatures.
 
 **What should be relaxed/unified for future model types (recommended, not implemented here):**
-1. Route *all* storage-vs-vector decisions through the designmatrix type (finish the
-   `extend_to_larger` → `modelmatrix(d)` move; there is no other element-type-dispatched
-   behavior left after this branch).
+1. Route *all* storage-vs-vector decisions through the designmatrix type. The pairwise
+   `extend_to_larger` methods are now storage-shared (`AbstractMatrix` + `padzeros`); the
+   remaining element-type-dispatched behavior after this branch is only the
+   `Vector{<:SparseMatrixCSC}` splat-routing, which the sparse CT model could move to the same
+   designmatrix-type pattern for symmetry.
 2. Replace the two remaining `isa(uf, UnfoldLinearModel)`-style checks (io.jl) with the trait.
 3. Consider a parametric storage axis (`UnfoldLinearModelContinuousTime{T,Storage}`) or a
    `StorageStyle` trait if a third representation (e.g. banded/woodbury, or per-channel) appears;
