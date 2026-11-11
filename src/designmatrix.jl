@@ -26,6 +26,8 @@ Base.:+(X1::Nothing, X2::AbstractDesignMatrix) = [X2]
 # helper to get the fixef of lmm but the normal matrix elsewhere
 
 modelmatrices(modelmatrix::AbstractMatrix) = modelmatrix
+# bychannel designs: one designmatrix per channel
+modelmatrices(modelmatrix::AbstractVector{<:AbstractMatrix}) = modelmatrix
 
 
 
@@ -102,6 +104,12 @@ function designmatrix(
     @debug "applying schema $unfoldmodeltype"
     form = unfold_apply_schema(unfoldmodeltype, f, schema(f, tbl_nomissing, contrasts))
 
+    # channel-varying predictors (bychannel) are not supported for time-expanded models,
+    # as the per-channel values would have to be time-expanded as well
+    form.rhs isa BychannelMatrixTerm && basisfunction !== nothing && error(
+        "bychannel() predictors are not supported for time-expanded (deconvolution) models.",
+    )
+
     form = apply_basisfunction(
         form,
         basisfunction,
@@ -110,14 +118,7 @@ function designmatrix(
     )
 
     # Evaluate the designmatrix
-    # channel-varying predictors (bychannel) are not supported for time-expanded models,
-    # as the per-channel values would have to be time-expanded as well
-    if basisfunction !== nothing && _contains_channelterm(form.rhs.term)
-        error(
-            "bychannel() predictors are not supported for time-expanded (deconvolution) models.",
-        )
-    end
-    X = _modelmatrix_cols(form, tbl_nomissing)
+    X = modelcols(form.rhs, tbl_nomissing)
 
 
     designmatrixtype = typeof(designmatrix(unfoldmodeltype())[1])
@@ -142,7 +143,14 @@ wrapper to make apply_schema mixed models as extension possible
 
 Note: type is not necessary here, but for LMM it is for multiple dispatch reasons!
 """
-unfold_apply_schema(type, f, schema) = apply_schema(f, schema, UnfoldModel)
+function unfold_apply_schema(type, f, schema)
+    form = apply_schema(f, schema, UnfoldModel)
+    # formulas with bychannel() predictors get their rhs wrapped, so that `modelcols`
+    # returns one designmatrix per channel (`rhs isa BychannelMatrixTerm` doubles as the
+    # bychannel flag)
+    return isempty(_bychannel_cols(form.rhs)) ? form :
+           FormulaTerm(form.lhs, BychannelMatrixTerm(form.rhs))
+end
 
 
 # specify for abstract interface
@@ -318,8 +326,8 @@ extend_to_larger(modelmatrix::AbstractMatrix) = modelmatrix
 extend_to_larger(modelmatrix::Tuple) =
     (extend_to_larger(modelmatrix[1]), modelmatrix[2:end]...)
 
-# UnfoldLinearModel - they have to be equal already
-extend_to_larger(modelmatrix::Vector{<:AbstractMatrix}) = modelmatrix
+# UnfoldLinearModel - they have to be equal already (bychannel: one per-channel designmatrix-Vector per event)
+extend_to_larger(modelmatrix::Vector) = modelmatrix
 
 #UnfoldLinearModelContinuousTime
 extend_to_larger(modelmatrix::Vector{<:SparseMatrixCSC}) = extend_to_larger(modelmatrix...)

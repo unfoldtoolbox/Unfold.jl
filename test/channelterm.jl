@@ -25,26 +25,26 @@ f = @formula 0 ~ 1 + effect + bychannel(bsl)
 m = fit(UnfoldLinearModel, [Any => (f, times)], evts, data; show_progress = false)
 
 # the per-channel designmatrices, as used during fitting
-X3d = Unfold.modelcols_bychannel(designmatrix(m)[1].formula.rhs, designmatrix(m)[1].events)
+X3d = StatsModels.modelcols(designmatrix(m)[1].formula.rhs, designmatrix(m)[1].events)
 
 @testset "bychannel: fit" begin
     @test Unfold.get_coefnames(m) == ["(Intercept)", "effect", "bsl"]
     @test size(Unfold.coef(m)) == (nch, ntime, 3)
     X = modelmatrix(m)
     @test length(X) == 1
-    @test size(X[1]) == (ntr, 3)
+    @test length(X[1]) == nch
 
-    # the stored designmatrix corresponds to the first channel
-    @test X[1] == X3d[1, :, :]
+    # the stored designmatrix is the per-channel Vector
+    @test X[1] == X3d
 
     # per-channel designs: shared predictors identical across channels, bychannel ones not
-    @test all(X3d[1, :, 1:2] .== X3d[2, :, 1:2]) # intercept + effect
-    @test !all(X3d[1, :, 3] .== X3d[2, :, 3]) # bsl differs
+    @test all(X3d[1][:, 1:2] .== X3d[2][:, 1:2]) # intercept + effect
+    @test !all(X3d[1][:, 3] .== X3d[2][:, 3]) # bsl differs
 
     # estimates are identical to fitting each channel separately with its own designmatrix
     est_manual = similar(Unfold.coef(m))
     for ch = 1:nch
-        Xch = X3d[ch, :, :]
+        Xch = X3d[ch]
         Y = permutedims(reshape(@view(data[ch:ch, :, :]), ntime, ntr))
         est_manual[ch, :, :] .= permutedims(pinv(Xch) * Y, (2, 1))
     end
@@ -130,7 +130,7 @@ end
     Unfold.FileIO.save(f_tmp, m)
     m_loaded = Unfold.FileIO.load(f_tmp, UnfoldLinearModel)
     @test maximum(abs.(Unfold.coef(m_loaded) .- Unfold.coef(m))) ≈ 0.0
-    @test size(modelmatrix(m_loaded)[1]) == (ntr, 3)
+    @test length(modelmatrix(m_loaded)[1]) == nch
     @test modelmatrix(m_loaded)[1] ≈ modelmatrix(m)[1]
     eff_l = Unfold.effects(Dict(:effect => [0.0]), m_loaded)
     eff_o = Unfold.effects(Dict(:effect => [0.0]), m)

@@ -21,8 +21,17 @@ Type that keeps an Array of  `formulas`, designmatrices `modelmatrix` (Array or 
 """
 struct DesignMatrixLinearModel{T} <: AbstractDesignMatrix{T}
     formula::FormulaTerm # "Array of formulas"
-    modelmatrix::Array{T,2} #"A concatenated designmatric. In case of Mixed Models an array, where the first one is a FeMat, later ones ReMats. "
+    modelmatrix::Union{Array{T,2},Vector{<:Array{T,2}}} #"A concatenated designmatric. In case of Mixed Models an array, where the first one is a FeMat, later ones ReMats. bychannel: one designmatrix per channel"
     events::Union{<:SubDataFrame,<:DataFrame} #"Event table with all events"
+end
+
+# widen a modelmatrix (or a bychannel Vector of them) to the DesignMatrix eltype
+function Base.convert(
+    ::Type{Union{Array{T,2},Vector{<:Array{T,2}}}},
+    X::AbstractArray,
+) where {T}
+    return X isa AbstractVector ? [convert(Array{T,2}, x) for x in X] :
+           convert(Array{T,2}, X)
 end
 
 struct DesignMatrixLinearModelContinuousTime{T} <: AbstractDesignMatrix{T}

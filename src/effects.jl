@@ -114,7 +114,9 @@ end
     @debug length(form), length(m), typeof(m)
     out = FormulaTerm[]
     for k = 1:length(form)
-        tmpf = typify(reference_grid, form[k], m[k]; typical = typical)
+        # bychannel designs have one designmatrix per channel - typical values from the first
+        mk = m[k] isa AbstractMatrix ? m[k] : first(m[k])
+        tmpf = typify(reference_grid, form[k], mk; typical = typical)
         # channel-varying (bychannel) predictors are fixed to 0, i.e. effects are
         # conditional on them (reference-grid values for them are ignored)
         push!(
