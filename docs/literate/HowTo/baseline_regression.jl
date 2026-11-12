@@ -20,17 +20,22 @@ using Random
 # ```
 
 # # Simulate data with a slow drift
-# We simulate multichannel EEG with `UnfoldSim.jl` - deliberately with only 200 events and little noise - and add a low-frequency oscillation to the signal, with channel-specific amplitude and phase. The simulation projects the components onto all 227 channels; for this tutorial we keep three example channels:
+# We simulate multichannel EEG with `UnfoldSim.jl` - deliberately with only 200 events and little noise - and add a slow drift to the signal: exponentially correlated noise (`ExponentialNoise`) with channel-specific amplitude. We also present the two conditions in blocks (`event_order_function`), so each condition is recorded against a different level of the drift - like a real block experiment where the environment changes over the session. The simulation projects the components onto all 227 channels; for this tutorial we keep three example channels:
 data, evts = UnfoldSim.predef_eeg(;
-    multichannel = true, n_repeats = 10, overlap = (2, 0.2), noiselevel = 0.1)
+    multichannel = true, n_repeats = 10, overlap = (2, 0.2), noiselevel = 0.1,
+    # conditions in blocks: each condition sees a different level of the drift
+    event_order_function = (rng, x) -> sort(x, :condition),
+)
 data = data[[130, 184, 50], :]
 
 sfreq = 100
-t = (0:size(data, 2)-1) ./ sfreq
 amps = [5.0, 4.0, 3.0]
-phases = 2π .* rand(MersenneTwister(1), 3)
+rng = MersenneTwister(1)
 for ch in 1:3
-    data[ch, :] .+= amps[ch] .* sin.(2π .* 0.5 .* t .+ phases[ch])
+    # τ = 250 samples = 2.5 s: comparable to the 1.7 s epochs, so the drift varies within the epoch
+    data[ch, :] .+= simulate_noise(
+        rng, ExponentialNoise(noiselevel = amps[ch], τ = 250), size(data, 2),
+    )
 end
 
 # We drop the last events, whose epochs would run past the end of the recording, and cut the continuous data into epochs:
@@ -52,7 +57,7 @@ plot_erp(ct[ct.coefname.=="bsl", :]; mapping = (; col = :channel))
 
 # How to read this plot:
 # - Within the baseline window, the beta averages exactly 1 for every channel - by construction, the covariate *is* the window mean.
-# - Beyond the window, the beta follows the oscillation: it is large in absolute value wherever the drift is in phase with its baseline value, and flips sign where the phase is opposite. A slow oscillation therefore co-varies with the **entire** epoch - the baseline is not just noise, and this plot makes its reach visible.
+# - Beyond the window, the beta decays with the drift's autocorrelation reach - to roughly 0.7 beyond 500 ms. A slow drift therefore co-varies with the **entire** epoch - the baseline is not just noise, and this plot makes its reach visible.
 
 # # The baseline issue
 # What does this mean for the classical approach? We baseline-correct the same epochs (subtract the baseline mean) and fit a plain model:
@@ -60,7 +65,7 @@ data_corr = data_e .- mean(data_e[:, bsl_ix, :]; dims = 2)
 f_plain = @formula 0 ~ 1 + condition
 m_corr = fit(UnfoldLinearModel, [Any => (f_plain, times)], evts, data_corr)
 
-# Comparing the estimated `condition` effects, baseline correction is contaminated by the drift: with only 200 events, the drift does not average out between the two conditions, so subtracting a condition-specific baseline leaves an oscillation-shaped spurious effect. Baseline regression, which estimates the drift's influence per channel instead, keeps the effect flat:
+# Comparing the estimated `condition` effects: the conditions come in blocks, so each condition is seen against a different drift level - but with a stationary drift these differences average out over the trials of each block, and both approaches estimate similar effects. Neither removes the part of the drift the baseline cannot predict, late in the epoch - which is why baseline correction is no substitute for high-pass filtering. The difference between the methods is what they assume: correction fixes the baseline's influence at β = 1 at every latency, regression estimates it - and the coefficient plot above shows when that assumption holds.
 ct_corr = coeftable(m_corr)
 cmp = vcat(ct_corr, ct)
 cmp.baseline = vcat(fill("correction", nrow(ct_corr)), fill("regression", nrow(ct)))
@@ -69,4 +74,4 @@ plot_erp(
     mapping = (; col = :channel, color = :baseline),
 )
 
-# This is the baseline issue: whenever the baseline co-varies with the epoch, classical baseline correction subtracts signal along with the noise, and with few events the leftover drift enters the effects. Baseline regression instead estimates (and thereby removes) exactly this co-variance per channel - keeping the effects of interest conditional on the baseline.
+# This is the baseline issue: whenever the baseline co-varies with the epoch, classical baseline correction subtracts signal along with the noise, and assumes its influence is β = 1 at every latency. Baseline regression instead estimates (and thereby removes) exactly this influence per channel - keeping the effects of interest conditional on the baseline.
