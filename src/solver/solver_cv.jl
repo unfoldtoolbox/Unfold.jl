@@ -28,39 +28,40 @@ function solver_cv(;
     fold_assignment = nothing,
 )
 
-    # constructing the solver-function called by Unfold's fit()
-    function cv_kernel(X, y)
-        if ndims(y) == 3
-            (isnothing(breaks) && isnothing(fold_assignment)) ||
-                @warn "solver_cv: `breaks` and `fold_assignment` only apply to deconvolved models - ignoring them for mass-univariate (epoched) data"
-            return _cv_mass_univariate(X, y; n_folds, shuffle, rng, inner_solver, fit_test)
-        elseif ndims(y) == 2
-            return _cv_deconvolved(
-                X,
-                y;
-                n_folds,
-                shuffle,
-                rng,
-                inner_solver,
-                fit_test,
-                breaks,
-                fold_assignment,
-            )
-        else
-            error(
-                "solver_cv: unsupported data dimensionality $(ndims(y)) - expected 2 (deconvolved model) or 3 (mass-univariate model)",
-            )
-        end
-    end
-
-    return cv_kernel
+    # the solver-function called by Unfold's fit(); the options are captured
+    # here, `cv_kernel` dispatches on the data dimensionality
+    return (X, y) -> cv_kernel(
+        X,
+        y;
+        n_folds,
+        shuffle,
+        rng,
+        inner_solver,
+        fit_test,
+        breaks,
+        fold_assignment,
+    )
 end
 
 
 # ---------------------------------------------------------------------------
-# mass-univariate: observations are the trials (rows of X / 3rd dimension of y)
+# mass-univariate (3-d data): observations are the trials
+# (rows of X / 3rd dimension of y)
 # ---------------------------------------------------------------------------
-function _cv_mass_univariate(X, y; n_folds, shuffle, rng, inner_solver, fit_test)
+function cv_kernel(
+    X,
+    y::AbstractArray{<:Any,3};
+    n_folds,
+    shuffle,
+    rng,
+    inner_solver,
+    fit_test,
+    breaks,
+    fold_assignment,
+)
+    (isnothing(breaks) && isnothing(fold_assignment)) ||
+        @warn "solver_cv: `breaks` and `fold_assignment` only apply to deconvolved models - ignoring them for mass-univariate (epoched) data"
+
     n_trials = size(y, 3)
     indices = 1:n_trials
 
@@ -107,7 +108,7 @@ end
 # deconvolved: observations are contiguous segments of the time course
 # ---------------------------------------------------------------------------
 """
-    _cv_deconvolved(X, y; n_folds, shuffle, rng, inner_solver, fit_test, breaks, fold_assignment)
+    cv_kernel(X, y::AbstractArray{<:Any,2}; n_folds, shuffle, rng, inner_solver, fit_test, breaks, fold_assignment)
 
 k-fold cross-validation for deconvolved (continuous-time) models.
 
@@ -117,9 +118,9 @@ folds and the model is fitted on all samples outside the held-out segments. If
 `fold_assignment` is provided, the partition is taken from it instead of from
 `kfolds` (each entry lists the segments held out in that fold).
 """
-function _cv_deconvolved(
+function cv_kernel(
     X,
-    y;
+    y::AbstractArray{<:Any,2};
     n_folds,
     shuffle,
     rng,
@@ -132,26 +133,45 @@ function _cv_deconvolved(
     @assert size(X, 1) == n "solver_cv: design matrix ($(size(X, 1)) rows) and data ($(n) samples) have different lengths"
 
     segments =
-        isnothing(breaks) ? _cv_segments_autodetect(X) : _cv_segments_manual(breaks, n)
+        isnothing(breaks) ? cv_segments_autodetect(X) : cv_segments_manual(breaks, n)
     n_segments = length(segments)
 
     # (train_segments, test_segments) per fold
     fold_split =
-        isnothing(fold_assignment) ? _kfolds_split(n_folds, n_segments; shuffle, rng) :
-        _fold_split_from_assignment(fold_assignment, n_folds, n_segments)
+        isnothing(fold_assignment) ? kfolds_split(n_folds, n_segments; shuffle, rng) :
+        fold_split_from_assignment(fold_assignment, n_folds, n_segments)
 
     # which fold (test set) each segment belongs to
     seg_fold = zeros(Int, n_segments)
+    for (i, (_, test_seg)) in enumerate(fold_split)
+        for s in test_seg
+            seg_fold[s] = i
+        end
+    end
+
+    # Leakage check (only meaningful for user-provided breaks): a non-zero row at
+    # the boundary between two segments that belong to different folds means a
+    # response is still active at the break and can leak across the
+    # train/test boundary. For auto-detected segments the boundaries are
+    # all-zero rows of the design matrix, so no response can cross them.
+    # Emitted before the fits so the user can quit early on a warning.
+    if !isnothing(breaks)
+        warned = Int[]
+        for i = 1:(n_segments-1)
+            if seg_fold[i] != seg_fold[i+1] && sum(abs, X[last(segments[i]), :]) > 0
+                push!(warned, last(segments[i]))
+            end
+        end
+        if !isempty(warned)
+            @warn "cross-validation boundary at row(s) $warned is non-zero in the design matrix: a response is still active at the break and may leak across the train/test boundary. Consider placing breaks in quiet intervals."
+        end
+    end
 
     train_results = []
     test_results = [] # Only used if fit_test=true
     fold_indices = []
 
     for (i, (train_seg, test_seg)) in enumerate(fold_split)
-        for s in test_seg
-            seg_fold[s] = i
-        end
-
         # test rows: all samples inside the held-out segments,
         # fit rows: everything else
         in_test = falses(n)
@@ -169,23 +189,6 @@ function _cv_deconvolved(
             push!(test_results, res_test)
         end
         push!(fold_indices, (train = train_seg, test = test_seg))
-    end
-
-    # Leakage check (only meaningful for user-provided breaks): a non-zero row at
-    # the boundary between two segments that belong to different folds means a
-    # response is still active at the break and can leak across the
-    # train/test boundary. For auto-detected segments the boundaries are
-    # all-zero rows of the design matrix, so no response can cross them.
-    if !isnothing(breaks)
-        warned = Int[]
-        for i = 1:(n_segments-1)
-            if seg_fold[i] != seg_fold[i+1] && sum(abs, X[last(segments[i]), :]) > 0
-                push!(warned, last(segments[i]))
-            end
-        end
-        if !isempty(warned)
-            @warn "cross-validation boundary at row(s) $warned is non-zero in the design matrix: a response is still active at the break and may leak across the train/test boundary. Consider placing breaks in quiet intervals."
-        end
     end
 
     # Concatenate results along a new 3rd dimension (the folds)
@@ -208,10 +211,17 @@ function _cv_deconvolved(
     )
 end
 
+# anything that is not a 2-d or 3-d array-like
+function cv_kernel(X, y; kwargs...)
+    error(
+        "solver_cv: unsupported data dimensionality $(ndims(y)) - expected 2 (deconvolved model) or 3 (mass-univariate model)",
+    )
+end
+
 
 # (train_segments, test_segments) per fold: the standard k-fold partition of the
 # segments
-function _kfolds_split(n_folds, n_segments; shuffle, rng)
+function kfolds_split(n_folds, n_segments; shuffle, rng)
     n_folds >= 2 || throw(
         ArgumentError(
             "solver_cv: n_folds must be at least 2 - with n_folds = 1 the training set would be empty",
@@ -233,7 +243,7 @@ end
 # in that fold; the entries must partition the segments 1:n_segments. This is
 # how the split of a previous fit (e.g. via fold_assignment(modelfit)) can be
 # reused in another fit, so both are evaluated on identical held-out segments.
-function _fold_split_from_assignment(fold_assignment, n_folds, n_segments)
+function fold_split_from_assignment(fold_assignment, n_folds, n_segments)
     length(fold_assignment) == n_folds || throw(
         ArgumentError(
             "solver_cv: fold_assignment has $(length(fold_assignment)) entries but n_folds = $n_folds",
@@ -261,7 +271,7 @@ end
 # segments defined by user-provided breaks: each break onset starts a new segment;
 # the prefix before the first break and the suffix after the last break are
 # segments as well
-function _cv_segments_manual(breaks, n)
+function cv_segments_manual(breaks, n)
     b = breaks isa DataFrame ? breaks[!, :latency] : breaks
     b = sort(unique(Int[round(bi) for bi in b]))
     b = filter(bi -> 1 < bi <= n, b)
@@ -279,7 +289,7 @@ end
 # segments detected automatically: maximal stretches of rows with non-zero design
 # matrix values. Requires an always-on term (e.g. an intercept) so that event
 # windows are non-zero throughout their support.
-function _cv_segments_autodetect(X)
+function cv_segments_autodetect(X)
     n = size(X, 1)
     active = vec(sum(abs.(X), dims = 2)) .> 0
     any(active) || throw(
@@ -312,14 +322,14 @@ coef(m::LinearModelFitCV{T,N}) where {T,N} = dropdims(mean(m.estimate, dims = N)
 # indices for deconvolved fits); pass the result of a previous fit as the
 # `fold_assignment` keyword to evaluate another model on the very same held-out
 # observations (e.g. a reduced model for a delta-R² comparison)
-fold_assignment(mf::LinearModelFitCV) = _fold_assignment(mf.folds)
+fold_assignment(mf::LinearModelFitCV) = fold_assignment(mf.folds)
 
 # multi-event mass-univariate fits concatenate one LinearModelFitCV per event
 # type, so `folds` is one list of folds per event type; the indices are
 # positions within that event type's trial subset, not global trial indices
-_fold_assignment(folds::AbstractVector{<:AbstractVector}) =
-    [_fold_assignment(f) for f in folds]
-_fold_assignment(folds) = [collect(f.test) for f in folds]
+fold_assignment(folds::AbstractVector{<:AbstractVector}) =
+    [fold_assignment(f) for f in folds]
+fold_assignment(folds) = [collect(f.test) for f in folds]
 
 function stderror(m::LinearModelFitCV{T,N}) where {T,N}
     if isempty(m.standarderror)
