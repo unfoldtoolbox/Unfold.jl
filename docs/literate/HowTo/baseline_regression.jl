@@ -23,7 +23,6 @@ using Random
 # We simulate multichannel EEG with `UnfoldSim.jl` - deliberately with only 200 events and little noise - and add a slow drift to the signal: exponentially correlated noise (`ExponentialNoise`) with channel-specific amplitude. We also present the two conditions in blocks (`event_order_function`), so each condition is recorded against a different level of the drift - like a real block experiment where the environment changes over the session. The simulation projects the components onto all 227 channels; for this tutorial we keep three example channels:
 data, evts = UnfoldSim.predef_eeg(;
     multichannel = true, n_repeats = 10, overlap = (2, 0.2), noiselevel = 0.1,
-    # conditions in blocks: each condition sees a different level of the drift
     event_order_function = (rng, x) -> sort(x, :condition),
 )
 data = data[[130, 184, 50], :]
@@ -31,8 +30,8 @@ data = data[[130, 184, 50], :]
 sfreq = 100
 amps = [5.0, 4.0, 3.0]
 rng = MersenneTwister(1)
+# τ = 250 samples = 2.5 s: comparable to the 1.7 s epochs, so the drift varies within the epoch
 for ch in 1:3
-    # τ = 250 samples = 2.5 s: comparable to the 1.7 s epochs, so the drift varies within the epoch
     data[ch, :] .+= simulate_noise(
         rng, ExponentialNoise(noiselevel = amps[ch], τ = 250), size(data, 2),
     )

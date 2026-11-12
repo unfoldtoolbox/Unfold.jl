@@ -37,7 +37,7 @@ mask = detectbad_peak_to_peak(data; threshold = 45, sfreq = 100, window = 0.2, s
 length(setdiff(ix, findall(mask)))
 
 # n of false positives:
-length(findall(mask), ix)
+length(setdiff(findall(mask), ix))
 
 # We can use Julias `missing` data-type to indicate those portions.
 using Missings
