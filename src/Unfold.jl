@@ -61,6 +61,7 @@ include("basisfunctions.jl")
 include("timeexpandedterm.jl")
 include("channelterm.jl")
 include("designmatrix.jl")
+include("denseDesign.jl")
 include("fit.jl")
 include("utilities.jl")
 include("eventhandling.jl")
@@ -88,7 +89,8 @@ export AbstractDesignMatrix, AbstractModelFit, UnfoldModel
 export UnfoldLinearModel,
     UnfoldLinearMixedModel,
     UnfoldLinearMixedModelContinuousTime,
-    UnfoldLinearModelContinuousTime
+    UnfoldLinearModelContinuousTime,
+    UnfoldLinearModelContinuousTimeDenseDesign
 export FIRBasis, HRFBasis, SplineBasis
 export modelmatrix, modelmatrices
 export formulas, design, designmatrix, coef

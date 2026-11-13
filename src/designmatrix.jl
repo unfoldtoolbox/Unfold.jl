@@ -329,42 +329,37 @@ extend_to_larger(modelmatrix::Tuple) =
 # UnfoldLinearModel - they have to be equal already (bychannel: one per-channel designmatrix-Vector per event)
 extend_to_larger(modelmatrix::Vector) = modelmatrix
 
-#UnfoldLinearModelContinuousTime
+# UnfoldLinearModelContinuousTime (sparse) & dense designs: pairwise-reduce to equal row counts
 extend_to_larger(modelmatrix::Vector{<:SparseMatrixCSC}) = extend_to_larger(modelmatrix...)
-extend_to_larger(modelmatrix1::SparseMatrixCSC, modelmatrix2::SparseMatrixCSC, args...) =
+extend_to_larger(modelmatrix1::AbstractMatrix, modelmatrix2::AbstractMatrix, args...) =
     extend_to_larger(extend_to_larger(modelmatrix1, modelmatrix2), args...)
 
-function extend_to_larger(modelmatrix1::SparseMatrixCSC, modelmatrix2::SparseMatrixCSC)
+# pad the shorter matrix with zero rows (sparse: reuse the stored structure, no copy)
+padzeros(m::SparseMatrixCSC, n) = SparseMatrixCSC(n, m.n, m.colptr, m.rowval, m.nzval)
+padzeros(m::AbstractMatrix, n) = vcat(m, zeros(eltype(m), n - size(m, 1), size(m, 2)))
+
+function extend_to_larger(modelmatrix1::AbstractMatrix, modelmatrix2::AbstractMatrix)
     sX1 = size(modelmatrix1, 1)
     sX2 = size(modelmatrix2, 1)
 
-    # append 0 to the shorter designmat
+    # append 0-rows to the shorter designmat
     if sX1 < sX2
-        modelmatrix1 = SparseMatrixCSC(
-            sX2,
-            modelmatrix1.n,
-            modelmatrix1.colptr,
-            modelmatrix1.rowval,
-            modelmatrix1.nzval,
-        )
+        modelmatrix1 = padzeros(modelmatrix1, sX2)
     elseif sX2 < sX1
-        modelmatrix2 = SparseMatrixCSC(
-            sX1,
-            modelmatrix2.n,
-            modelmatrix2.colptr,
-            modelmatrix2.rowval,
-            modelmatrix2.nzval,
-        )
+        modelmatrix2 = padzeros(modelmatrix2, sX1)
     end
     return hcat(modelmatrix1, modelmatrix2)
 end
 
 
 """
-    StatsModels.modelmatrix(uf::UnfoldLinearModelContinuousTime, basisfunction = true)
-Setting the optional second args to false, will return the modelmatrix without the timeexpansion / basisfunction applied.
+    StatsModels.modelmatrix(uf::UnfoldModel, basisfunction)
+Defined for ContinuousTime models only. Setting the second args to false, will return the modelmatrix without the timeexpansion / basisfunction applied; calling with one argument (or true) returns the time-expanded one.
 """
-function StatsModels.modelmatrix(uf::UnfoldLinearModelContinuousTime, basisfunction = true)
+@traitfn function StatsModels.modelmatrix(
+    uf::T,
+    basisfunction,
+) where {T<:UnfoldModel;ContinuousTimeTrait{T}}
     if basisfunction
         return modelmatrix(designmatrix(uf))
         #return hcat(modelmatrix(designmatrix(uf))...)

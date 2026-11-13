@@ -167,6 +167,7 @@ UnfoldLinearModelContinuousTime{T}(
     X::Vector{<:AbstractDesignMatrix{T}},
 ) where {T} = UnfoldLinearModelContinuousTime{T}(deepcopy(d), X, LinearModelFit{T,2}())
 
+
 #----
 # Traits definitions
 @traitdef ContinuousTimeTrait{X}
