@@ -33,13 +33,17 @@ function solver_cv(;
         test_results = [] # Only used if fit_test=true
         fold_indices = []
 
+        # bychannel designs are a Vector with one designmatrix per channel - subset each of them
+        subset = ix ->
+            X isa AbstractVector{<:AbstractMatrix} ? [x[ix, :] for x in X] : X[ix, :]
+
         for (i, (train_idx, test_idx)) in enumerate(folds_iterator)
             # Split the data
-            res_train = inner_solver(X[train_idx, :], y[:, :, train_idx])
+            res_train = inner_solver(subset(train_idx), y[:, :, train_idx])
             push!(train_results, res_train)
 
             if fit_test
-                res_test = inner_solver(X[test_idx, :], y[:, :, test_idx])
+                res_test = inner_solver(subset(test_idx), y[:, :, test_idx])
                 push!(test_results, res_test)
             end
             push!(fold_indices, (train = train_idx, test = test_idx))

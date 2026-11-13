@@ -99,7 +99,10 @@ end
     else
         eventnames = String[]
         for (ix, evt) in enumerate(designkeys)
-            push!(eventnames, repeat([evt], size(modelmatrix(uf)[ix], 2))...)
+            X_ix = modelmatrix(uf)[ix]
+            # bychannel designs store one designmatrix per channel - all share the column count
+            ncols_ix = X_ix isa AbstractMatrix ? size(X_ix, 2) : size(X_ix[1], 2)
+            push!(eventnames, repeat([evt], ncols_ix)...)
         end
     end
 

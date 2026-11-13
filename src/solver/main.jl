@@ -24,7 +24,7 @@ end
 """
     $(SIGNATURES)
 
-helper function that returns solver with appropriate prepare-pipelines and fitting solver-functions. X is a (typically sparse) designmatrix, y is a 2D or 3D array.
+helper function that returns solver with appropriate prepare-pipelines and fitting solver-functions. `X` is a (typically sparse) designmatrix - or, for bychannel designs, a `Vector` with one designmatrix per channel - and `y` is a 2D or 3D array.
 
 `solver` : one of `:cg`, `:pinv`, `:intern`, `:qr`, `:cholesky`, `:lsmr` (default)
 
@@ -38,7 +38,7 @@ Testing this empirically is somewhat complicated, as depending on your sparsity 
 All solvers except :lsmr support GPU calculations. For lsmr on the GPU try `solver_krylov` instead
 
 """
-function solver_predefined(X, y_in::AbstractMatrix; solver = :lsmr, kwargs...)
+function solver_predefined(X, y_in; solver = :lsmr, kwargs...)
     prepare_fun = if solver ∈ [:cg, :intern]
         (x, y) -> prepare(x, y) |> prepare_XTX
     elseif solver == :pinv
@@ -121,8 +121,8 @@ function solver_main(
         for t = 1:size(dataP, 3) # for 2D, this will aways be one; for 3D this will traverse timepoints
             view_Ĥ = view(Ĥ, ch, :, t)
             view_dataP = view(dataP, :, ch, t)
-            # run the solver function
-            h = solver_fun!(view_Ĥ, view_dataP, prepared...)
+            # run the solver function - bychannel designs have one prepared entry per channel
+            h = solver_fun!(view_Ĥ, view_dataP, _channel_prepared(prepared, ch)...)
 
             # save the history
             solver_history[ch] = h
@@ -155,6 +155,11 @@ function solver_main(
     return modelfit
 
 end
+
+# bychannel designs: `prepared` is a Vector with one entry per channel; shared designs are a
+# Tuple and are the same for all channels
+_channel_prepared(p::AbstractVector, ch) = p[ch]
+_channel_prepared(p, ch) = p
 _permuteback(Ĥ::AbstractArray) = permutedims(Ĥ, (1, 3, 2))
 _permuteback(Ĥ::AbstractMatrix) = Ĥ
 
@@ -220,3 +225,14 @@ function calculate_stderror(
     end
     return se
 end
+
+# bychannel: each channel is fit on its own designmatrix - reuse the shared implementation
+# channel-wise, which gives the per-channel hat matrix
+calculate_stderror(
+    Xs::AbstractVector{<:AbstractMatrix},
+    data::AbstractArray{<:Union{Missing,<:Number},3},
+    beta,
+) = cat(
+    [calculate_stderror(Xs[ch], data[ch:ch, :, :], beta[ch:ch, :, :]) for ch = axes(data, 1)]...;
+    dims = 1,
+)

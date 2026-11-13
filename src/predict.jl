@@ -223,7 +223,7 @@ function predict(
     # channel-varying predictors (bychannel) need per-channel designmatrices, which the
     # regular (shared designmatrix) prediction cannot represent. Typified formulas
     # (e.g. from `effects`) do not contain raw bychannel terms and pass through.
-    any(ff -> _contains_channelterm(ff.rhs), f) && error(
+    any(ff -> ff.rhs isa BychannelMatrixTerm, f) && error(
         "predict() is not implemented for models with bychannel() predictors, as each channel has its own designmatrix. Write an issue if you need this functionality.",
     )
 

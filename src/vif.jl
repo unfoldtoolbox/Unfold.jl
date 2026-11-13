@@ -54,12 +54,15 @@ function vif(m::UnfoldModel)
         vals = Float64[]
         for (k, key) in enumerate(keys)
             names = StatsModels.coefnames(formulas(m)[k].rhs)
-            @assert length(names) == size(X[k], 2) "coefnames ($(length(names))) do not match the designmatrix ($(size(X[k], 2)))"
+            # bychannel designs store one designmatrix per channel, all with the same
+            # column layout - compute the VIF on the first channel
+            Xk = X[k] isa AbstractVector ? first(X[k]) : X[k]
+            @assert length(names) == size(Xk, 2) "coefnames ($(length(names))) do not match the designmatrix ($(size(Xk, 2)))"
             for nm in names
                 push!(eventnames, string(key))
                 push!(terms, string(nm))
             end
-            vals = vcat(vals, _vif(X[k]))
+            vals = vcat(vals, _vif(Xk))
         end
         return DataFrame(:eventname => eventnames, :coefname => terms, :VIF => vals)
     end
