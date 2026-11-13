@@ -46,6 +46,7 @@ makedocs(
             "Marginal effects" => "generated/HowTo/effects.md",
             "Baseline regression" => "generated/HowTo/baseline_regression.md",
             "Circular splines" => "generated/HowTo/circular_splines.md",
+            "Non-linear splines" => "generated/HowTo/nonlinear_splines.md",
             "Alternative Solvers (Robust, GPU, B2B)" => "HowTo/custom_solvers.md",
             "Cross-validated Unfold models" => "generated/HowTo/solver_cv.md",
             #"Time domain basis functions"=>"generated/HowTo/timesplines.md",
